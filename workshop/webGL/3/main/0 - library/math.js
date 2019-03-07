@@ -220,3 +220,19 @@ this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
     if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
     return mux*realLength;
 };
+this.blendColours = function(rgba_1,rgba_2,ratio){
+    return {
+        r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
+        g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
+        b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
+        a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
+    };           
+};
+this.multiBlendColours = function(rgbaList,ratio){
+    //special cases
+        if(ratio == 0){return rgbaList[0];}
+        if(ratio == 1){return rgbaList[rgbaList.length-1];}
+    //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+        var p = ratio*(rgbaList.length-1);
+        return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+};

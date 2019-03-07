@@ -42,6 +42,12 @@ this.group = function(){
         var children = [];
         this.children = function(){return children;};
         this.getChildByName = getChildByName;
+        this.contains = function(child){
+            for(var a = 0; a < children.length; a++){
+                if(children[a] === child){return true;}
+            }
+            return false;
+        };
         this.append = function(shape){
             if( !isValidShape(shape) ){ return; }
 
@@ -165,7 +171,7 @@ this.group = function(){
                 departingShape.computeExtremities(false,newOffset);
             //remove matching points from points list
                 var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
-                if(index == undefined){console.error("group shape: departing shape points not found");}
+                if(index == undefined){console.error("core:: group shape: departing shape points not found");}
                 self.extremities.points.splice(index, index+departingShape.extremities.points.length);
             //recalculate bounding box
                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);

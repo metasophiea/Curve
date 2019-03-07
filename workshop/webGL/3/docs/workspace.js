@@ -230,6 +230,22 @@
                         if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
                         return mux*realLength;
                     };
+                    this.blendColours = function(rgba_1,rgba_2,ratio){
+                        return {
+                            r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
+                            g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
+                            b: (1-ratio)*rgba_1.b + ratio*rgba_2.b,
+                            a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
+                        };           
+                    };
+                    this.multiBlendColours = function(rgbaList,ratio){
+                        //special cases
+                            if(ratio == 0){return rgbaList[0];}
+                            if(ratio == 1){return rgbaList[rgbaList.length-1];}
+                        //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
+                            var p = ratio*(rgbaList.length-1);
+                            return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
+                    };
                 };
                 this.gsls = new function(){
                     this.geometry = `
@@ -1362,173 +1378,12 @@
                 
                 this.shape = new function(){
                     this.library = new function(){
-                        // this.polygon = function(){
-                        //     var self = this;
-                        
-                        //     //attributes 
-                        //         //protected attributes
-                        //             const type = 'polygon'; this.getType = function(){return type;}
-                        
-                        //         //simple attributes
-                        //             this.name = '';
-                        //             this.parent = undefined;
-                        //             this.dotFrame = false;
-                        //             this.extremities = { points:[], boundingBox:{}, isChanged:true };
-                        //             this.ignored = false;
-                        //             this.colour = {r:1,g:0,b:0,a:1};
-                        
-                        //         //attributes pertinent to extremity calculation
-                        //             var pointsChanged = true;
-                        //             var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged = true; computeExtremities(); pointsChanged = true; };
-                        //             var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; computeExtremities(); };
-                        
-                        //             this.pointsAsXYArray = function(a){
-                        //                 if(a==undefined){
-                        //                     var output = [];
-                        //                     for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                        //                     return points;
-                        //                 }
-                        
-                        //                 var array = [];
-                        //                 a.forEach(a => array = array.concat([a.x,a.y]));
-                        //                 this.points(array);
-                        //             };
-                            
-                        //     //addressing
-                        //         this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
-                        
-                        //     //webGL rendering functions
-                        //         var vertexShaderSource = 
-                        //             _canvas_.library.gsls.geometry + `
-                        //             //variables
-                        //                 struct location{
-                        //                     vec2 xy;
-                        //                     float scale;
-                        //                     float angle;
-                        //                 };
-                        //                 uniform location offset;
-                            
-                        //                 attribute vec2 point;
-                        //                 uniform vec2 resolution;
-                            
-                        //             void main(){    
-                        //                 //adjust point by offset
-                        //                     vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
-                            
-                        //                 //convert from unit space to clipspace
-                        //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        //             }
-                        //         `;
-                        //         var fragmentShaderSource = `  
-                        //             precision mediump float;
-                        //             uniform vec4 colour;
-                                                                                                
-                        //             void main(){
-                        //                 gl_FragColor = colour;
-                        //             }
-                        //         `;
-                        //         var point = { buffer:undefined, attributeLocation:undefined };
-                        //         var uniformLocations;
-                        //         function updateGLAttributes(context,offset){
-                        //             //buffers
-                        //                 //points
-                        //                     if(point.buffer == undefined || pointsChanged){
-                        //                         point.attributeLocation = context.getAttribLocation(program, "point");
-                        //                         point.buffer = context.createBuffer();
-                        //                         context.enableVertexAttribArray(point.attributeLocation);
-                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                        //                         pointsChanged = false;
-                        //                     }else{
-                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        //                     }
-                        
-                        //             //uniforms
-                        //                 if( uniformLocations == undefined ){
-                        //                     uniformLocations = {
-                        //                         "offset.xy": context.getUniformLocation(program, "offset.xy"),
-                        //                         "offset.scale": context.getUniformLocation(program, "offset.scale"),
-                        //                         "offset.angle": context.getUniformLocation(program, "offset.angle"),
-                        //                         "resolution": context.getUniformLocation(program, "resolution"),
-                        //                         "colour": context.getUniformLocation(program, "colour"),
-                        //                     };
-                        //                 }
-                        
-                        //                 context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
-                        //                 context.uniform1f(uniformLocations["offset.scale"], offset.scale);
-                        //                 context.uniform1f(uniformLocations["offset.angle"], offset.angle);
-                        //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                        //                 context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                        //         }
-                        //         var program;
-                        //         function activateGLRender(context,adjust){
-                        //             if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                            
-                        //             context.useProgram(program);
-                        //             updateGLAttributes(context,adjust);
-                        
-                        //             context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
-                        //         }
-                        
-                        //     //extremities
-                        //         function computeExtremities(informParent=true,offset){
-                        //             //get offset from parent
-                        //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                        //             //calculate points based on the offset
-                        //                 self.extremities.points = [];
-                        //                 for(var a = 0; a < points.length; a+=2){
-                        //                     var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
-                        //                     self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                        //                 }
-                        //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
-                        //             //if told to do so, inform parent (if there is one) that extremities have changed
-                        //                 if(informParent){ if(self.parent){self.parent.computeExtremities();} }
-                        //         }
-                        //         var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                        //         this.computeExtremities = function(informParent,offset){
-                        //             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                        //             if(
-                        //                 this.extremities.isChanged ||
-                        //                 oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                        //             ){
-                        //                 computeExtremities(informParent,offset);
-                        //                 this.extremities.isChanged = false;
-                        //                 oldOffset.x = offset.x;
-                        //                 oldOffset.y = offset.y;
-                        //                 oldOffset.scale = offset.scale;
-                        //                 oldOffset.angle = offset.angle;
-                        //             }
-                        //         };
-                        
-                        //     //lead render
-                        //         function drawDotFrame(){
-                        //             self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                        //             var tl = self.extremities.boundingBox.topLeft;
-                        //             var br = self.extremities.boundingBox.bottomRight;
-                        //             core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                        //             core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
-                        //         }
-                        //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
-                        //             //activate shape render code
-                        //                 activateGLRender(context,offset);
-                        
-                        //             //if requested; draw dot frame
-                        //                 if(self.dotFrame){drawDotFrame();}
-                        //         };
-                        // };
-                        
-                        this.polygon = function(){
+                        this.canvas = function(){
                             var self = this;
                         
                             //attributes 
                                 //protected attributes
-                                    const type = 'polygon'; this.getType = function(){return type;}
+                                    const type = 'canvas'; this.getType = function(){return type;}
                         
                                 //simple attributes
                                     this.name = '';
@@ -1536,224 +1391,47 @@
                                     this.dotFrame = false;
                                     this.extremities = { points:[], boundingBox:{}, isChanged:true };
                                     this.ignored = false;
-                                    this.colour = {r:1,g:0,b:0,a:1};
                         
                                 //attributes pertinent to extremity calculation
-                                    var pointsChanged = true;
-                                    var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged = true; computeExtremities(); pointsChanged = true; };
-                                    var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; computeExtremities(); };
+                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
+                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
+                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
+                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
+                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
+                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
+                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
                         
-                                    this.pointsAsXYArray = function(a){
-                                        if(a==undefined){
-                                            var output = [];
-                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                                            return points;
-                                        }
+                                //subCanvas
+                                    var subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1, isChanged:true };
+                                    subCanvas.context = subCanvas.object.getContext('2d');
                         
-                                        var array = [];
-                                        a.forEach(a => array = array.concat([a.x,a.y]));
-                                        this.points(array);
+                                    function updateDimentions(){
+                                        subCanvas.object.setAttribute('width',width*subCanvas.resolution);
+                                        subCanvas.object.setAttribute('height',height*subCanvas.resolution);
+                                        subCanvas.isChanged = true;
+                                    }
+                                    updateDimentions();
+                        
+                                    this._ = subCanvas.context;
+                                    this.$ = function(a){return a*subCanvas.resolution;};
+                                    this.resolution = function(a){
+                                        if(a == undefined){return subCanvas.resolution;}
+                                        subCanvas.resolution = a;
+                                        updateDimentions();
                                     };
-                            
-                            //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
-                        
-                            //webGL rendering functions
-                                var vertexShaderSource = 
-                                    _canvas_.library.gsls.geometry + `
-                                    //variables
-                                        struct location{
-                                            vec2 xy;
-                                            float scale;
-                                            float angle;
-                                        };
-                                        uniform location offset;
-                            
-                                        attribute vec2 point;
-                                        uniform vec2 resolution;
-                            
-                                    void main(){    
-                                        //adjust point by offset
-                                            vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
-                            
-                                        //convert from unit space to clipspace
-                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                                    }
-                                `;
-                                var fragmentShaderSource = `  
-                                    precision mediump float;
-                                    uniform vec4 colour;
-                                                                                                
-                                    void main(){
-                                        gl_FragColor = colour;
-                                    }
-                                `;
-                                var point = { buffer:undefined, attributeLocation:undefined };
-                                var drawingPoints = [];
-                                var uniformLocations;
-                                function updateGLAttributes(context,offset){
-                                    //buffers
-                                        //points
-                                            if(point.buffer == undefined || pointsChanged){
-                                                point.attributeLocation = context.getAttribLocation(program, "point");
-                                                point.buffer = context.createBuffer();
-                                                context.enableVertexAttribArray(point.attributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
-                                                pointsChanged = false;
-                                            }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                            }
-                        
-                                    //uniforms
-                                        if( uniformLocations == undefined ){
-                                            uniformLocations = {
-                                                "offset.xy": context.getUniformLocation(program, "offset.xy"),
-                                                "offset.scale": context.getUniformLocation(program, "offset.scale"),
-                                                "offset.angle": context.getUniformLocation(program, "offset.angle"),
-                                                "resolution": context.getUniformLocation(program, "resolution"),
-                                                "colour": context.getUniformLocation(program, "colour"),
-                                            };
-                                        }
-                        
-                                        context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
-                                        context.uniform1f(uniformLocations["offset.scale"], offset.scale);
-                                        context.uniform1f(uniformLocations["offset.angle"], offset.angle);
-                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                                }
-                                var program;
-                                function activateGLRender(context,adjust){
-                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                            
-                                    context.useProgram(program);
-                                    updateGLAttributes(context,adjust);
-                        
-                                    context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
-                                }
-                        
-                            //extremities
-                                function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    //calculate points based on the offset
-                                        self.extremities.points = [];
-                                        for(var a = 0; a < points.length; a+=2){
-                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
-                                            self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                                        }
-                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
-                                    //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
-                                }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
-                        
-                            //lead render
-                                function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
-                                }
-                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
-                                    //activate shape render code
-                                        activateGLRender(context,offset);
-                        
-                                    //if requested; draw dot frame
-                                        if(self.dotFrame){drawDotFrame();}
-                                };
-                        };
-                        this.rectangleWithOutline = function(){
-                            var self = this;
-                        
-                            //attributes 
-                                //protected attributes
-                                    const type = 'rectangleWithOutline'; this.getType = function(){return type;}
-                        
-                                //simple attributes
-                                    this.name = '';
-                                    this.parent = undefined;
-                                    this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
-                                    this.ignored = false;
-                                    this.colour = {r:1,g:0,b:0,a:1};
-                                    this.lineColour = {r:0,g:0,b:0,a:0};
-                        
-                                //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}         x = a;         this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}         y = a;         this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;}    anchor = a;    this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}     width = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;}    height = a;    this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; this.extremities.isChanged = true; this.computeExtremities(); };
+                                    this.requestUpdate = function(){ subCanvas.isChanged = true; };
                         
                             //addressing
                                 this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
                         
-                            //webGL rendering functions
+                            //webGL rendering
                                 var points = [
                                     0,0,
                                     1,0,
                                     1,1,
-                                    0,0,
-                                    1,1,
-                                    0,1,
-                        
-                                    0,0,
-                                    1,0,
-                                    1,1,
-                                    0,0,
-                                    1,1,
-                                    0,1,
-                        
-                                    0,0,
-                                    1,0,
-                                    1,1,
-                                    0,0,
-                                    1,1,
-                                    0,1,
-                        
-                                    0,0,
-                                    1,0,
-                                    1,1,
-                                    0,0,
-                                    1,1,
-                                    0,1,
-                        
-                                    0,0,
-                                    1,0,
-                                    1,1,
-                                    0,0,
-                                    1,1,
                                     0,1,
                                 ];
                                 var vertexShaderSource = `
-                                    //index
-                                        attribute lowp float index;
-                                        
                                     //constants
                                         attribute vec2 point;
                         
@@ -1767,36 +1445,24 @@
                         
                                         uniform vec2 resolution;
                                         uniform vec2 dimensions;
-                                        uniform float thickness;
                                         uniform vec2 anchor;
                         
-                                        uniform vec4 colour;
-                                        uniform vec4 lineColour;
-                                    
-                                    //varyings
-                                        varying vec4 activeColour;
+                                    //vertex/fragment shader transfer variables
+                                        varying vec2 textureCoordinates;
                         
                                     void main(){
-                                        //create triangle
-                                            vec2 P = vec2(0,0);
+                                        //transfer point to fragment shader
+                                            textureCoordinates = point;
                         
-                                            if(index < 6.0){ //body
-                                                P = dimensions * (point * adjust.scale - anchor);
-                                            }else if(index < 12.0){ //outline: top
-                                                P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;
-                                            }else if(index < 18.0){ //outline: bottom
-                                                P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,-dimensions.y/thickness + 0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;;
-                                            }else if(index < 24.0){ //outline: left
-                                                P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
-                                            }else if(index < 30.0){ //outline: right
-                                                P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(-dimensions.x/thickness + 0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
-                                            }
-                                            
-                                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-                        
-                                        //select colour
-                                            activeColour = index < 6.0 ? colour : lineColour;
+                                        //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+                                        //(including scale adjust)
+                                            vec2 P = point * dimensions * adjust.scale;
+                                            P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
+                                            P = vec2( 
+                                                P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
+                                                P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
+                                            );
+                                            P += adjust.xy;
                         
                                         //convert from unit space to clipspace
                                             gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
@@ -1804,44 +1470,47 @@
                                 `;
                                 var fragmentShaderSource = `  
                                     precision mediump float;
-                                    varying vec4 activeColour;
+                        
+                                    uniform sampler2D textureImage;
+                                    varying vec2 textureCoordinates;
                                                                                                 
                                     void main(){
-                                        gl_FragColor = activeColour;
+                                        gl_FragColor = texture2D(textureImage, textureCoordinates);
                                     }
                                 `;
-                        
-                                var index = { buffer:undefined, attributeLocation:undefined };
-                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var pointBuffer;
+                                var pointAttributeLocation;
                                 var uniformLocations;
+                                var subCanvasTexture;
                                 function updateGLAttributes(context,adjust){
-                                    //index
-                                        if(index.buffer == undefined){
-                                            index.attributeLocation = context.getAttribLocation(program, "index");
-                                            index.buffer = context.createBuffer();
-                                            context.enableVertexAttribArray(index.attributeLocation);
-                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
-                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                            context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
-                                        }else{
-                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
-                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                        }
-                        
                                     //buffers
                                         //points
-                                            if(point.buffer == undefined){
-                                                point.attributeLocation = context.getAttribLocation(program, "point");
-                                                point.buffer = context.createBuffer();
-                                                context.enableVertexAttribArray(point.attributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            if(pointBuffer == undefined){
+                                                pointAttributeLocation = context.getAttribLocation(program, "point");
+                                                pointBuffer = context.createBuffer();
+                                                context.enableVertexAttribArray(pointAttributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
+                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
                                                 context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                             }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
+                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
                                             }
-                                    
+                        
+                                        //texture
+                                            if(subCanvas.isChanged){
+                                                subCanvas.isChanged = false;
+                                                subCanvasTexture = context.createTexture();
+                                                context.bindTexture(context.TEXTURE_2D, subCanvasTexture);
+                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
+                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
+                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
+                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
+                                                context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, subCanvas.object);
+                                            }else{
+                                                context.bindTexture(context.TEXTURE_2D, subCanvasTexture);
+                                            }
+                        
                                     //uniforms
                                         if( uniformLocations == undefined ){
                                             uniformLocations = {
@@ -1850,10 +1519,7 @@
                                                 "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
                                                 "resolution": context.getUniformLocation(program, "resolution"),
                                                 "dimensions": context.getUniformLocation(program, "dimensions"),
-                                                "thickness": context.getUniformLocation(program, "thickness"),
                                                 "anchor": context.getUniformLocation(program, "anchor"),
-                                                "colour": context.getUniformLocation(program, "colour"),
-                                                "lineColour": context.getUniformLocation(program, "lineColour"),
                                             };
                                         }
                         
@@ -1862,18 +1528,15 @@
                                         context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                                         context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                                         context.uniform2f(uniformLocations["dimensions"], width, height);
-                                        context.uniform1f(uniformLocations["thickness"], thickness);
                                         context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                                        context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
                                 }
                                 var program;
                                 function activateGLRender(context,adjust){
-                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                            
+                                    if(program == undefined){ program = core.render.produceProgram('canvas', vertexShaderSource, fragmentShaderSource); }
+                                    
                                     context.useProgram(program);
                                     updateGLAttributes(context,adjust);
-                                    context.drawArrays(context.TRIANGLES, 0, points.length/2);
+                                    context.drawArrays(context.TRIANGLE_FAN, 0, 4);
                                 }
                         
                             //extremities
@@ -2143,218 +1806,240 @@
                                         if(self.dotFrame){drawDotFrame();}
                                 };
                         };
-                        this.canvas = function(){
+                        this.group = function(){
                             var self = this;
                         
                             //attributes 
                                 //protected attributes
-                                    const type = 'canvas'; this.getType = function(){return type;}
+                                    const type = 'group'; this.getType = function(){return type;}
                         
                                 //simple attributes
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
                                     this.ignored = false;
-                        
+                                    this.heedCamera = false;
+                                
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                        
-                                //subCanvas
-                                    var subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1, isChanged:true };
-                                    subCanvas.context = subCanvas.object.getContext('2d');
-                        
-                                    function updateDimentions(){
-                                        subCanvas.object.setAttribute('width',width*subCanvas.resolution);
-                                        subCanvas.object.setAttribute('height',height*subCanvas.resolution);
-                                        subCanvas.isChanged = true;
-                                    }
-                                    updateDimentions();
-                        
-                                    this._ = subCanvas.context;
-                                    this.$ = function(a){return a*subCanvas.resolution;};
-                                    this.resolution = function(a){
-                                        if(a == undefined){return subCanvas.resolution;}
-                                        subCanvas.resolution = a;
-                                        updateDimentions();
-                                    };
-                                    this.requestUpdate = function(){ subCanvas.isChanged = true; };
+                                    var x = 0;     this.x =     function(a){ if(a==undefined){return x;}     x = a;     computeExtremities(); };
+                                    var y = 0;     this.y =     function(a){ if(a==undefined){return y;}     y = a;     computeExtremities(); };
+                                    var angle = 0; this.angle = function(a){ if(a==undefined){return angle;} angle = a; computeExtremities(); };
+                                    var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
                         
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
-                            //webGL rendering
-                                var points = [
-                                    0,0,
-                                    1,0,
-                                    1,1,
-                                    0,1,
-                                ];
-                                var vertexShaderSource = `
-                                    //constants
-                                        attribute vec2 point;
-                        
-                                    //variables
-                                        struct location{
-                                            vec2 xy;
-                                            float scale;
-                                            float angle;
-                                        };
-                                        uniform location adjust;
-                        
-                                        uniform vec2 resolution;
-                                        uniform vec2 dimensions;
-                                        uniform vec2 anchor;
-                        
-                                    //vertex/fragment shader transfer variables
-                                        varying vec2 textureCoordinates;
-                        
-                                    void main(){
-                                        //transfer point to fragment shader
-                                            textureCoordinates = point;
-                        
-                                        //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                        //(including scale adjust)
-                                            vec2 P = point * dimensions * adjust.scale;
-                                            P = vec2( P.x - dimensions.x*anchor.x, P.y - dimensions.y*anchor.y );
-                                            P = vec2( 
-                                                P.x*cos(adjust.angle) + P.y*sin(adjust.angle), 
-                                                P.y*cos(adjust.angle) - P.x*sin(adjust.angle)
-                                            );
-                                            P += adjust.xy;
-                        
-                                        //convert from unit space to clipspace
-                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                            //group functions
+                                function getChildByName(name){ return children.find(a => a.name == name); }
+                                function checkForName(name){ return getChildByName(name) != undefined; }
+                                function isValidShape(shape){
+                                    if( shape == undefined ){ return false; }
+                                    if( shape.name.length == 0 ){
+                                        console.warn('group error: shape with no name being inserted into group "'+self.getAddress()+'", therefore; the shape will not be added');
+                                        return false;
                                     }
-                                `;
-                                var fragmentShaderSource = `  
-                                    precision mediump float;
-                        
-                                    uniform sampler2D textureImage;
-                                    varying vec2 textureCoordinates;
-                                                                                                
-                                    void main(){
-                                        gl_FragColor = texture2D(textureImage, textureCoordinates);
+                                    if( checkForName(shape.name) ){
+                                        console.warn('group error: shape with name "'+shape.name+'" already exists in group "'+self.getAddress()+'", therefore; the shape will not be added');
+                                        return false;
                                     }
-                                `;
-                                var pointBuffer;
-                                var pointAttributeLocation;
-                                var uniformLocations;
-                                var subCanvasTexture;
-                                function updateGLAttributes(context,adjust){
-                                    //buffers
-                                        //points
-                                            if(pointBuffer == undefined){
-                                                pointAttributeLocation = context.getAttribLocation(program, "point");
-                                                pointBuffer = context.createBuffer();
-                                                context.enableVertexAttribArray(pointAttributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                            }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                            }
                         
-                                        //texture
-                                            if(subCanvas.isChanged){
-                                                subCanvas.isChanged = false;
-                                                subCanvasTexture = context.createTexture();
-                                                context.bindTexture(context.TEXTURE_2D, subCanvasTexture);
-                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
-                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
-                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
-                                                context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
-                                                context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, subCanvas.object);
-                                            }else{
-                                                context.bindTexture(context.TEXTURE_2D, subCanvasTexture);
-                                            }
+                                    return true;
+                                }
                         
-                                    //uniforms
-                                        if( uniformLocations == undefined ){
-                                            uniformLocations = {
-                                                "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                                "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                                "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                                "resolution": context.getUniformLocation(program, "resolution"),
-                                                "dimensions": context.getUniformLocation(program, "dimensions"),
-                                                "anchor": context.getUniformLocation(program, "anchor"),
-                                            };
+                                var children = [];
+                                this.children = function(){return children;};
+                                this.getChildByName = getChildByName;
+                                this.contains = function(child){
+                                    for(var a = 0; a < children.length; a++){
+                                        if(children[a] === child){return true;}
+                                    }
+                                    return false;
+                                };
+                                this.append = function(shape){
+                                    if( !isValidShape(shape) ){ return; }
+                        
+                                    children.push(shape); 
+                                    shape.parent = this;
+                                    augmentExtremities_addChild(shape); 
+                                };
+                                this.prepend = function(shape){
+                                    if( !isValidShape(shape) ){ return; }
+                        
+                                    children.unshift(shape); 
+                                    shape.parent = this;
+                                    augmentExtremities_addChild(shape);
+                                };
+                                this.remove = function(shape){ augmentExtremities_removeChild(shape); children.splice(children.indexOf(shape), 1); };
+                                this.clear = function(){ children = []; };
+                                this.getElementsUnderPoint = function(x,y){
+                                    var returnList = [];
+                        
+                                    for(var a = children.length-1; a >= 0; a--){
+                                        var item = children[a];
+                        
+                                        if(item.ignored){continue;}
+                        
+                                        if( _canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, item.extremities.boundingBox ) ){
+                                            if( item.getType() == 'group' ){
+                                                returnList = returnList.concat( item.getElementsUnderPoint(x,y) );
+                                            }else{
+                                                if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, item.extremities.points ) ){
+                                                    returnList = returnList.concat( item );
+                                                }
+                                            }
                                         }
+                                    }
                         
-                                        context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                                        context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                                        context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                                        context.uniform2f(uniformLocations["dimensions"], width, height);
-                                        context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                                }
-                                var program;
-                                function activateGLRender(context,adjust){
-                                    if(program == undefined){ program = core.render.produceProgram('canvas', vertexShaderSource, fragmentShaderSource); }
-                                    
-                                    context.useProgram(program);
-                                    updateGLAttributes(context,adjust);
-                                    context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-                                }
+                                    return returnList;
+                                };
+                                this.getElementsUnderArea = function(points){
+                                    var returnList = [];
+                                    children.forEach(function(item){
+                                        if(item.ignored){return;}
+                        
+                                        if( _canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){
+                                            if( item.getType() == 'group' ){
+                                                returnList = returnList.concat( item.getElementUnderArea(points) );
+                                            }else{
+                                                if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){
+                                                    returnList = returnList.concat( item );
+                                                }
+                                            }
+                                        }
+                                    });
+                        
+                                    return returnList;
+                                };
+                                this.getTree = function(){
+                                    var result = {name:this.name,type:type,children:[]};
+                        
+                                    children.forEach(function(a){
+                                        if(a.getType() == 'group'){
+                                            result.children.push( a.getTree() );
+                                        }else{
+                                            result.children.push({ type:a.getType(), name:a.name });
+                                        }
+                                    });
+                        
+                                    return result;
+                                };
+                        
+                            //clipping
+                                var clipping = { stencil:undefined, active:false };
+                                this.stencil = function(shape){
+                                    if(shape == undefined){return this.clipping.stencil;}
+                                    clipping.stencil = shape;
+                                    clipping.stencil.parent = this;
+                                    computeExtremities();
+                                };
+                                this.clipActive = function(bool){
+                                    if(bool == undefined){return clipping.active;}
+                                    clipping.active = bool;
+                                    computeExtremities();
+                                };
                         
                             //extremities
-                                function computeExtremities(informParent=true,offset){
+                                function augmentExtremities_addChild(newShape){
+                                    //if we're in clipping mode, no addition of a shape can effect the extremities 
+                                        if(clipping.active && clipping.stencil != undefined){return;}
                                     //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    //calculate points based on the offset
+                                        var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                                    //combine offset with group's position, angle and scale to produce new offset for chilren
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var adjusted = { 
+                                        var newOffset = { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale*scale,
-                                            angle: -(offset.angle + angle),
+                                            angle: offset.angle + angle,
+                                        };
+                                    //run computeExtremities on new child
+                                        newShape.computeExtremities(false,newOffset);
+                                    //add points to points list
+                                        self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
+                                    //recalculate bounding box
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    //inform parent of change
+                                        if(self.parent){self.parent.computeExtremities();}
+                                }
+                                function augmentExtremities_removeChild(departingShape){
+                                    //if we're in clipping mode, no removal of a shape can effect the extremities 
+                                        if(clipping.active && clipping.stencil != undefined){return;}
+                                    //get offset from parent
+                                        var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                                    //combine offset with group's position, angle and scale to produce new offset for chilren
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var newOffset = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: offset.angle + angle,
+                                        };
+                                    //run computeExtremities on departing child
+                                        departingShape.computeExtremities(false,newOffset);
+                                    //remove matching points from points list
+                                        var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
+                                        if(index == undefined){console.error("core:: group shape: departing shape points not found");}
+                                        self.extremities.points.splice(index, index+departingShape.extremities.points.length);
+                                    //recalculate bounding box
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    //inform parent of change
+                                        if(self.parent){self.parent.computeExtremities();}
+                                }
+                                function computeExtremities(informParent=true,offset){
+                                    //get offset from parent
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    //combine offset with group's position, angle and scale to produce new offset for chilren
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var newOffset = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: offset.angle + angle,
                                         };
                         
-                                        self.extremities.points = [];
-                                        for(var a = 0; a < points.length; a+=2){
-                                            var P = {
-                                                x: adjusted.scale * width * (points[a] - anchor.x), 
-                                                y: adjusted.scale * height * (points[a+1] - anchor.y), 
-                                            };
+                                    //run computeExtremities on all children
+                                        children.forEach(a => a.computeExtremities(false,newOffset));
+                                    
+                                    //run computeExtremities on stencil (if applicable)
+                                        if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
                         
-                                            self.extremities.points.push({ 
-                                                x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-                                                y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-                                            });
+                                    //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
+                                    //otherwise, gather extremities from children and calculate extremities here
+                                        self.extremities.points = [];
+                                        if(clipping.active && clipping.stencil != undefined){
+                                            self.extremities.points = self.extremities.points.concat(clipping.stencil.extremities.points);
+                                        }else{ 
+                                            children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    
+                        
                                     //if told to do so, inform parent (if there is one) that extremities have changed
                                         if(informParent){ if(self.parent){self.parent.computeExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                this.computeExtremities = computeExtremities;
+                                this.getOffset = function(){
+                                    if(this.parent){
+                                        var offset = this.parent.getOffset();
                         
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var adjust = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale * scale,
+                                            angle: offset.angle + angle,
+                                        };
+                        
+                                        return adjust;
+                                    }else{
+                                        return {x:x ,y:y ,scale:scale ,angle:angle};
                                     }
                                 };
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    // self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y,2,{r:0,g:0,b:1,a:1}) );
                         
                                     var tl = self.extremities.boundingBox.topLeft;
                                     var br = self.extremities.boundingBox.bottomRight;
@@ -2362,21 +2047,47 @@
                                     core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                                    //combine offset with shape's position, angle and scale to produce adjust value for render
+                                    //combine offset with group's position, angle and scale to produce new offset for children
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var adjust = { 
+                                        var newOffset = { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale*scale,
-                                            angle: -(offset.angle + angle),
+                                            angle: offset.angle + angle,
                                         };
                         
-                                    //activate shape render code
-                                        activateGLRender(context,adjust);
+                                    //activate clipping (if requested, and is possible)
+                                        if(clipping.active && clipping.stencil != undefined){
+                                            //active stencil drawing mode
+                                                context.enable(context.STENCIL_TEST);
+                                                context.colorMask(false,false,false,false);
+                                                context.stencilFunc(context.ALWAYS,1,0xFF);
+                                                context.stencilOp(context.KEEP,context.KEEP,context.REPLACE);
+                                                context.stencilMask(0xFF);
+                                            //draw stencil
+                                                clipping.stencil.render(context,newOffset);
+                                            //reactive regular rendering
+                                                context.colorMask(true,true,true,true);
+                                                context.stencilFunc(context.EQUAL,1,0xFF);
+                                                context.stencilMask(0x00);
+                                        }
+                                    
+                                    //render children
+                                        children.forEach(function(a){
+                                            if(
+                                                _canvas_.library.math.detectOverlap.boundingBoxes(
+                                                    clipping.active ? self.extremities.boundingBox : core.viewport.getBoundingBox(),
+                                                    a.extremities.boundingBox
+                                                )
+                                            ){ a.render(context,newOffset); }
+                                        });
+                        
+                                    //disactivate clipping
+                                        if(clipping.active){ context.disable(context.STENCIL_TEST); }
                         
                                     //if requested; draw dot frame
                                         if(self.dotFrame){drawDotFrame();}
-                                };
+                                }
                         };
                         this.image = function(){
                             var self = this;
@@ -2402,15 +2113,18 @@
                                     var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; this.computeExtremities(); };
                         
                                 //image data
-                                    var image = { object:undefined, url:'', isLoaded:false, isChanged:true };
+                                    var image = { object:undefined, url:'', isLoaded:false, isChanged:true, defaultURL:'http://0.0.0.0:8000/testImages/noimageimage.png' };
                                     this.imageURL = function(a){
                                         if(a==undefined){return image.url;}
                                         image.url = a;
+                        
+                                        if(image.url === ''){ image.url = image.defaultURL; }
                         
                                         image.object = new Image();
                                         image.object.src = image.url;
                                         image.isLoaded = false; image.object.onload = function(){ image.isLoaded = true; image.isChanged = true; };
                                     };
+                                    this.imageURL('');
                         
                             //addressing
                                 this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
@@ -2921,6 +2635,328 @@
                                         if(self.dotFrame){drawDotFrame();}
                                 };
                         };
+                        // this.polygon = function(){
+                        //     var self = this;
+                        
+                        //     //attributes 
+                        //         //protected attributes
+                        //             const type = 'polygon'; this.getType = function(){return type;}
+                        
+                        //         //simple attributes
+                        //             this.name = '';
+                        //             this.parent = undefined;
+                        //             this.dotFrame = false;
+                        //             this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                        //             this.ignored = false;
+                        //             this.colour = {r:1,g:0,b:0,a:1};
+                        
+                        //         //attributes pertinent to extremity calculation
+                        //             var pointsChanged = true;
+                        //             var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged = true; computeExtremities(); pointsChanged = true; };
+                        //             var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; computeExtremities(); };
+                        
+                        //             this.pointsAsXYArray = function(a){
+                        //                 if(a==undefined){
+                        //                     var output = [];
+                        //                     for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
+                        //                     return points;
+                        //                 }
+                        
+                        //                 var array = [];
+                        //                 a.forEach(a => array = array.concat([a.x,a.y]));
+                        //                 this.points(array);
+                        //             };
+                            
+                        //     //addressing
+                        //         this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                        
+                        //     //webGL rendering functions
+                        //         var vertexShaderSource = 
+                        //             _canvas_.library.gsls.geometry + `
+                        //             //variables
+                        //                 struct location{
+                        //                     vec2 xy;
+                        //                     float scale;
+                        //                     float angle;
+                        //                 };
+                        //                 uniform location offset;
+                            
+                        //                 attribute vec2 point;
+                        //                 uniform vec2 resolution;
+                            
+                        //             void main(){    
+                        //                 //adjust point by offset
+                        //                     vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+                            
+                        //                 //convert from unit space to clipspace
+                        //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                        //             }
+                        //         `;
+                        //         var fragmentShaderSource = `  
+                        //             precision mediump float;
+                        //             uniform vec4 colour;
+                                                                                                
+                        //             void main(){
+                        //                 gl_FragColor = colour;
+                        //             }
+                        //         `;
+                        //         var point = { buffer:undefined, attributeLocation:undefined };
+                        //         var uniformLocations;
+                        //         function updateGLAttributes(context,offset){
+                        //             //buffers
+                        //                 //points
+                        //                     if(point.buffer == undefined || pointsChanged){
+                        //                         point.attributeLocation = context.getAttribLocation(program, "point");
+                        //                         point.buffer = context.createBuffer();
+                        //                         context.enableVertexAttribArray(point.attributeLocation);
+                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                        //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                        //                         pointsChanged = false;
+                        //                     }else{
+                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                        //                     }
+                        
+                        //             //uniforms
+                        //                 if( uniformLocations == undefined ){
+                        //                     uniformLocations = {
+                        //                         "offset.xy": context.getUniformLocation(program, "offset.xy"),
+                        //                         "offset.scale": context.getUniformLocation(program, "offset.scale"),
+                        //                         "offset.angle": context.getUniformLocation(program, "offset.angle"),
+                        //                         "resolution": context.getUniformLocation(program, "resolution"),
+                        //                         "colour": context.getUniformLocation(program, "colour"),
+                        //                     };
+                        //                 }
+                        
+                        //                 context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
+                        //                 context.uniform1f(uniformLocations["offset.scale"], offset.scale);
+                        //                 context.uniform1f(uniformLocations["offset.angle"], offset.angle);
+                        //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                        //                 context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                        //         }
+                        //         var program;
+                        //         function activateGLRender(context,adjust){
+                        //             if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                            
+                        //             context.useProgram(program);
+                        //             updateGLAttributes(context,adjust);
+                        
+                        //             context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
+                        //         }
+                        
+                        //     //extremities
+                        //         function computeExtremities(informParent=true,offset){
+                        //             //get offset from parent
+                        //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                        //             //calculate points based on the offset
+                        //                 self.extremities.points = [];
+                        //                 for(var a = 0; a < points.length; a+=2){
+                        //                     var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                        //                     self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
+                        //                 }
+                        //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        
+                        //             //if told to do so, inform parent (if there is one) that extremities have changed
+                        //                 if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                        //         }
+                        //         var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+                        //         this.computeExtremities = function(informParent,offset){
+                        //             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                        //             if(
+                        //                 this.extremities.isChanged ||
+                        //                 oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+                        //             ){
+                        //                 computeExtremities(informParent,offset);
+                        //                 this.extremities.isChanged = false;
+                        //                 oldOffset.x = offset.x;
+                        //                 oldOffset.y = offset.y;
+                        //                 oldOffset.scale = offset.scale;
+                        //                 oldOffset.angle = offset.angle;
+                        //             }
+                        //         };
+                        
+                        //     //lead render
+                        //         function drawDotFrame(){
+                        //             self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                        
+                        //             var tl = self.extremities.boundingBox.topLeft;
+                        //             var br = self.extremities.boundingBox.bottomRight;
+                        //             core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+                        //             core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                        //         }
+                        //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                        //             //activate shape render code
+                        //                 activateGLRender(context,offset);
+                        
+                        //             //if requested; draw dot frame
+                        //                 if(self.dotFrame){drawDotFrame();}
+                        //         };
+                        // };
+                        
+                        this.polygon = function(){
+                            var self = this;
+                        
+                            //attributes 
+                                //protected attributes
+                                    const type = 'polygon'; this.getType = function(){return type;}
+                        
+                                //simple attributes
+                                    this.name = '';
+                                    this.parent = undefined;
+                                    this.dotFrame = false;
+                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.ignored = false;
+                                    this.colour = {r:1,g:0,b:0,a:1};
+                        
+                                //attributes pertinent to extremity calculation
+                                    var pointsChanged = true;
+                                    var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged = true; computeExtremities(); pointsChanged = true; };
+                                    var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; computeExtremities(); };
+                        
+                                    this.pointsAsXYArray = function(a){
+                                        if(a==undefined){
+                                            var output = [];
+                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
+                                            return points;
+                                        }
+                        
+                                        var array = [];
+                                        a.forEach(a => array = array.concat([a.x,a.y]));
+                                        this.points(array);
+                                    };
+                            
+                            //addressing
+                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                        
+                            //webGL rendering functions
+                                var vertexShaderSource = 
+                                    _canvas_.library.gsls.geometry + `
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location offset;
+                            
+                                        attribute vec2 point;
+                                        uniform vec2 resolution;
+                            
+                                    void main(){    
+                                        //adjust point by offset
+                                            vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+                            
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                    }
+                                `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    uniform vec4 colour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = colour;
+                                    }
+                                `;
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var drawingPoints = [];
+                                var uniformLocations;
+                                function updateGLAttributes(context,offset){
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
+                                                pointsChanged = false;
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                        
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "offset.xy": context.getUniformLocation(program, "offset.xy"),
+                                                "offset.scale": context.getUniformLocation(program, "offset.scale"),
+                                                "offset.angle": context.getUniformLocation(program, "offset.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                            };
+                                        }
+                        
+                                        context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
+                                        context.uniform1f(uniformLocations["offset.scale"], offset.scale);
+                                        context.uniform1f(uniformLocations["offset.angle"], offset.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                            
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                        
+                                    context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
+                                }
+                        
+                            //extremities
+                                function computeExtremities(informParent=true,offset){
+                                    //get offset from parent
+                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    //calculate points based on the offset
+                                        self.extremities.points = [];
+                                        for(var a = 0; a < points.length; a+=2){
+                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                                            self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
+                                        }
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                }
+                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+                                this.computeExtremities = function(informParent,offset){
+                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    if(
+                                        this.extremities.isChanged ||
+                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+                                    ){
+                                        computeExtremities(informParent,offset);
+                                        this.extremities.isChanged = false;
+                                        oldOffset.x = offset.x;
+                                        oldOffset.y = offset.y;
+                                        oldOffset.scale = offset.scale;
+                                        oldOffset.angle = offset.angle;
+                                    }
+                                };
+                        
+                            //lead render
+                                function drawDotFrame(){
+                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                        
+                                    var tl = self.extremities.boundingBox.topLeft;
+                                    var br = self.extremities.boundingBox.bottomRight;
+                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                }
+                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                                    //activate shape render code
+                                        activateGLRender(context,offset);
+                        
+                                    //if requested; draw dot frame
+                                        if(self.dotFrame){drawDotFrame();}
+                                };
+                        };
                         this.rectangle = function(){
                             var self = this;
                         
@@ -3109,234 +3145,249 @@
                                         if(self.dotFrame){drawDotFrame();}
                                 };
                         };
-                        this.group = function(){
+                        this.rectangleWithOutline = function(){
                             var self = this;
                         
                             //attributes 
                                 //protected attributes
-                                    const type = 'group'; this.getType = function(){return type;}
+                                    const type = 'rectangleWithOutline'; this.getType = function(){return type;}
                         
                                 //simple attributes
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
+                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
                                     this.ignored = false;
-                                    this.heedCamera = false;
-                                
+                                    this.colour = {r:1,g:0,b:0,a:1};
+                                    this.lineColour = {r:0,g:0,b:0,a:0};
+                        
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;     this.x =     function(a){ if(a==undefined){return x;}     x = a;     computeExtremities(); };
-                                    var y = 0;     this.y =     function(a){ if(a==undefined){return y;}     y = a;     computeExtremities(); };
-                                    var angle = 0; this.angle = function(a){ if(a==undefined){return angle;} angle = a; computeExtremities(); };
-                                    var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
+                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}         x = a;         this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}         y = a;         this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;}    anchor = a;    this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}     width = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;}    height = a;    this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; this.extremities.isChanged = true; this.computeExtremities(); };
                         
                             //addressing
-                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
                         
-                            //group functions
-                                function getChildByName(name){ return children.find(a => a.name == name); }
-                                function checkForName(name){ return getChildByName(name) != undefined; }
-                                function isValidShape(shape){
-                                    if( shape == undefined ){ return false; }
-                                    if( shape.name.length == 0 ){
-                                        console.warn('group error: shape with no name being inserted into group "'+self.getAddress()+'", therefore; the shape will not be added');
-                                        return false;
-                                    }
-                                    if( checkForName(shape.name) ){
-                                        console.warn('group error: shape with name "'+shape.name+'" already exists in group "'+self.getAddress()+'", therefore; the shape will not be added');
-                                        return false;
-                                    }
+                            //webGL rendering functions
+                                var points = [
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
                         
-                                    return true;
-                                }
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
                         
-                                var children = [];
-                                this.children = function(){return children;};
-                                this.getChildByName = getChildByName;
-                                this.append = function(shape){
-                                    if( !isValidShape(shape) ){ return; }
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
                         
-                                    children.push(shape); 
-                                    shape.parent = this;
-                                    augmentExtremities_addChild(shape); 
-                                };
-                                this.prepend = function(shape){
-                                    if( !isValidShape(shape) ){ return; }
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
                         
-                                    children.unshift(shape); 
-                                    shape.parent = this;
-                                    augmentExtremities_addChild(shape);
-                                };
-                                this.remove = function(shape){ augmentExtremities_removeChild(shape); children.splice(children.indexOf(shape), 1); };
-                                this.clear = function(){ children = []; };
-                                this.getElementsUnderPoint = function(x,y){
-                                    var returnList = [];
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                                    0,0,
+                                    1,1,
+                                    0,1,
+                                ];
+                                var vertexShaderSource = `
+                                    //index
+                                        attribute lowp float index;
+                                        
+                                    //constants
+                                        attribute vec2 point;
                         
-                                    for(var a = children.length-1; a >= 0; a--){
-                                        var item = children[a];
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location adjust;
                         
-                                        if(item.ignored){continue;}
+                                        uniform vec2 resolution;
+                                        uniform vec2 dimensions;
+                                        uniform float thickness;
+                                        uniform vec2 anchor;
                         
-                                        if( _canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, item.extremities.boundingBox ) ){
-                                            if( item.getType() == 'group' ){
-                                                returnList = returnList.concat( item.getElementsUnderPoint(x,y) );
-                                            }else{
-                                                if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, item.extremities.points ) ){
-                                                    returnList = returnList.concat( item );
-                                                }
+                                        uniform vec4 colour;
+                                        uniform vec4 lineColour;
+                                    
+                                    //varyings
+                                        varying vec4 activeColour;
+                        
+                                    void main(){
+                                        //create triangle
+                                            vec2 P = vec2(0,0);
+                        
+                                            if(index < 6.0){ //body
+                                                P = dimensions * (point * adjust.scale - anchor);
+                                            }else if(index < 12.0){ //outline: top
+                                                P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;
+                                            }else if(index < 18.0){ //outline: bottom
+                                                P = vec2( dimensions.x + thickness, thickness ) * ((point - vec2(0.0,-dimensions.y/thickness + 0.5)) * adjust.scale - anchor) - vec2(thickness/2.0,0.0)*adjust.scale;;
+                                            }else if(index < 24.0){ //outline: left
+                                                P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
+                                            }else if(index < 30.0){ //outline: right
+                                                P = vec2( thickness, dimensions.y - thickness ) * ((point - vec2(-dimensions.x/thickness + 0.5,0.0)) * adjust.scale - anchor) + vec2(0.0,thickness/2.0)*adjust.scale;
                                             }
-                                        }
+                                            
+                                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+                                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
+                        
+                                        //select colour
+                                            activeColour = index < 6.0 ? colour : lineColour;
+                        
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                     }
+                                `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    varying vec4 activeColour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = activeColour;
+                                    }
+                                `;
                         
-                                    return returnList;
-                                };
-                                this.getElementsUnderArea = function(points){
-                                    var returnList = [];
-                                    children.forEach(function(item){
-                                        if(item.ignored){return;}
-                        
-                                        if( _canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){
-                                            if( item.getType() == 'group' ){
-                                                returnList = returnList.concat( item.getElementUnderArea(points) );
-                                            }else{
-                                                if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){
-                                                    returnList = returnList.concat( item );
-                                                }
-                                            }
-                                        }
-                                    });
-                        
-                                    return returnList;
-                                };
-                                this.getTree = function(){
-                                    var result = {name:this.name,type:type,children:[]};
-                        
-                                    children.forEach(function(a){
-                                        if(a.getType() == 'group'){
-                                            result.children.push( a.getTree() );
+                                var index = { buffer:undefined, attributeLocation:undefined };
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var uniformLocations;
+                                function updateGLAttributes(context,adjust){
+                                    //index
+                                        if(index.buffer == undefined){
+                                            index.attributeLocation = context.getAttribLocation(program, "index");
+                                            index.buffer = context.createBuffer();
+                                            context.enableVertexAttribArray(index.attributeLocation);
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                            context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                         }else{
-                                            result.children.push({ type:a.getType(), name:a.name });
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
                                         }
-                                    });
                         
-                                    return result;
-                                };
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                                    
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+                                                "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+                                                "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "dimensions": context.getUniformLocation(program, "dimensions"),
+                                                "thickness": context.getUniformLocation(program, "thickness"),
+                                                "anchor": context.getUniformLocation(program, "anchor"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                                "lineColour": context.getUniformLocation(program, "lineColour"),
+                                            };
+                                        }
                         
-                            //clipping
-                                var clipping = { stencil:undefined, active:false };
-                                this.stencil = function(shape){
-                                    if(shape == undefined){return this.clipping.stencil;}
-                                    clipping.stencil = shape;
-                                    clipping.stencil.parent = this;
-                                    computeExtremities();
-                                };
-                                this.clipActive = function(bool){
-                                    if(bool == undefined){return clipping.active;}
-                                    clipping.active = bool;
-                                    computeExtremities();
-                                };
+                                        context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+                                        context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+                                        context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform2f(uniformLocations["dimensions"], width, height);
+                                        context.uniform1f(uniformLocations["thickness"], thickness);
+                                        context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                        context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
+                                }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                            
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                                    context.drawArrays(context.TRIANGLES, 0, points.length/2);
+                                }
                         
                             //extremities
-                                function augmentExtremities_addChild(newShape){
-                                    //if we're in clipping mode, no addition of a shape can effect the extremities 
-                                        if(clipping.active && clipping.stencil != undefined){return;}
-                                    //get offset from parent
-                                        var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                                    //combine offset with group's position, angle and scale to produce new offset for chilren
-                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var newOffset = { 
-                                            x: point.x*offset.scale + offset.x,
-                                            y: point.y*offset.scale + offset.y,
-                                            scale: offset.scale*scale,
-                                            angle: offset.angle + angle,
-                                        };
-                                    //run computeExtremities on new child
-                                        newShape.computeExtremities(false,newOffset);
-                                    //add points to points list
-                                        self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
-                                    //recalculate bounding box
-                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    //inform parent of change
-                                        if(self.parent){self.parent.computeExtremities();}
-                                }
-                                function augmentExtremities_removeChild(departingShape){
-                                    //if we're in clipping mode, no removal of a shape can effect the extremities 
-                                        if(clipping.active && clipping.stencil != undefined){return;}
-                                    //get offset from parent
-                                        var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                                    //combine offset with group's position, angle and scale to produce new offset for chilren
-                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var newOffset = { 
-                                            x: point.x*offset.scale + offset.x,
-                                            y: point.y*offset.scale + offset.y,
-                                            scale: offset.scale*scale,
-                                            angle: offset.angle + angle,
-                                        };
-                                    //run computeExtremities on departing child
-                                        departingShape.computeExtremities(false,newOffset);
-                                    //remove matching points from points list
-                                        var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
-                                        if(index == undefined){console.error("group shape: departing shape points not found");}
-                                        self.extremities.points.splice(index, index+departingShape.extremities.points.length);
-                                    //recalculate bounding box
-                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    //inform parent of change
-                                        if(self.parent){self.parent.computeExtremities();}
-                                }
                                 function computeExtremities(informParent=true,offset){
                                     //get offset from parent
-                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         
-                                    //combine offset with group's position, angle and scale to produce new offset for chilren
+                                    //calculate points based on the offset
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var newOffset = { 
+                                        var adjusted = { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale*scale,
-                                            angle: offset.angle + angle,
+                                            angle: -(offset.angle + angle),
                                         };
                         
-                                    //run computeExtremities on all children
-                                        children.forEach(a => a.computeExtremities(false,newOffset));
-                                    
-                                    //run computeExtremities on stencil (if applicable)
-                                        if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
-                        
-                                    //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
-                                    //otherwise, gather extremities from children and calculate extremities here
                                         self.extremities.points = [];
-                                        if(clipping.active && clipping.stencil != undefined){
-                                            self.extremities.points = self.extremities.points.concat(clipping.stencil.extremities.points);
-                                        }else{ 
-                                            children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
+                                        for(var a = 0; a < points.length; a+=2){
+                                            var P = {
+                                                x: adjusted.scale * width * (points[a] - anchor.x), 
+                                                y: adjusted.scale * height * (points[a+1] - anchor.y), 
+                                            };
+                        
+                                            self.extremities.points.push({ 
+                                                x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
+                                                y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
+                                            });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
+                                    
                                     //if told to do so, inform parent (if there is one) that extremities have changed
                                         if(informParent){ if(self.parent){self.parent.computeExtremities();} }
                                 }
-                                this.computeExtremities = computeExtremities;
-                                this.getOffset = function(){
-                                    if(this.parent){
-                                        var offset = this.parent.getOffset();
+                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+                                this.computeExtremities = function(informParent,offset){
+                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         
-                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var adjust = { 
-                                            x: point.x*offset.scale + offset.x,
-                                            y: point.y*offset.scale + offset.y,
-                                            scale: offset.scale * scale,
-                                            angle: offset.angle + angle,
-                                        };
-                        
-                                        return adjust;
-                                    }else{
-                                        return {x:x ,y:y ,scale:scale ,angle:angle};
+                                    if(
+                                        this.extremities.isChanged ||
+                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+                                    ){
+                                        computeExtremities(informParent,offset);
+                                        this.extremities.isChanged = false;
+                                        oldOffset.x = offset.x;
+                                        oldOffset.y = offset.y;
+                                        oldOffset.scale = offset.scale;
+                                        oldOffset.angle = offset.angle;
                                     }
                                 };
                         
                             //lead render
                                 function drawDotFrame(){
-                                    // self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y,2,{r:0,g:0,b:1,a:1}) );
+                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
                         
                                     var tl = self.extremities.boundingBox.topLeft;
                                     var br = self.extremities.boundingBox.bottomRight;
@@ -3344,47 +3395,252 @@
                                     core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                                    //combine offset with group's position, angle and scale to produce new offset for children
+                                    //combine offset with shape's position, angle and scale to produce adjust value for render
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var newOffset = { 
+                                        var adjust = { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale*scale,
-                                            angle: offset.angle + angle,
+                                            angle: -(offset.angle + angle),
                                         };
                         
-                                    //activate clipping (if requested, and is possible)
-                                        if(clipping.active && clipping.stencil != undefined){
-                                            //active stencil drawing mode
-                                                context.enable(context.STENCIL_TEST);
-                                                context.colorMask(false,false,false,false);
-                                                context.stencilFunc(context.ALWAYS,1,0xFF);
-                                                context.stencilOp(context.KEEP,context.KEEP,context.REPLACE);
-                                                context.stencilMask(0xFF);
-                                            //draw stencil
-                                                clipping.stencil.render(context,newOffset);
-                                            //reactive regular rendering
-                                                context.colorMask(true,true,true,true);
-                                                context.stencilFunc(context.EQUAL,1,0xFF);
-                                                context.stencilMask(0x00);
-                                        }
-                                    
-                                    //render children
-                                        children.forEach(function(a){
-                                            if(
-                                                _canvas_.library.math.detectOverlap.boundingBoxes(
-                                                    clipping.active ? self.extremities.boundingBox : core.viewport.getBoundingBox(),
-                                                    a.extremities.boundingBox
-                                                )
-                                            ){ a.render(context,newOffset); }
-                                        });
-                        
-                                    //disactivate clipping
-                                        if(clipping.active){ context.disable(context.STENCIL_TEST); }
+                                    //activate shape render code
+                                        activateGLRender(context,adjust);
                         
                                     //if requested; draw dot frame
                                         if(self.dotFrame){drawDotFrame();}
+                                };
+                        };
+                        this.character = function(){
+                            var self = this;
+                        
+                            //attributes 
+                                //protected attributes
+                                    const type = 'character'; this.getType = function(){return type;}
+                                    const vectorLibrary = {
+                                        '':[
+                                            0,0,
+                                            1,0,
+                                            1,1,
+                                
+                                            0,0,
+                                            1,1,
+                                            0,1,
+                                        ],
+                                        A:_canvas_.library.thirdparty.earcut([ 0,1, 0.4,0, 0.6,0, 1,1, 0.8,1, 0.5,0.2, 0.4,0.5, 0.65,0.5, 0.7,0.7, 0.3,0.7, 0.2,1 ]),
+                                        B:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.7,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 0.9,0.1, 0.9,0.3, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0,1 ]),
+                                        C:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.7,0.8, 0.8,0.7, 1,0.8, 0.8,1, 0.3,1, 0,0.7, 0,0.3 ]),
+                                        D:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0,1 ]),
+                                        E:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,0.8, 1,0.8, 1,1, 0,1 ]),
+                                        F:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,1, 0,1 ]),
+                                        G:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.8,0.8, 0.8,0.6, 1,0.6, 1,1, 0.3,1, 0,0.7, 0,0.3 ]),
+                                        H:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 0.8,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.6, 0.2,0.6, 0.2,1, 0,1 ]),
+                                        I:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.4,0.8, 0.4,0.2, 0,0.2 ]),
+                                        J:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 0.4,1, 0,1, 0,0.8, 0.3,0.8, 0.4,0.7, 0.4,0.2, 0,0.2 ]),
+                                        K:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 1,0, 1,0.2, 0.5,0.4, 1,1, 0.75,1, 0.3,0.45, 0.2,0.5, 0.2,1, 0,1, ]),
+                                        L:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 1,0.8, 1,1, 0,1 ]),
+                                        M:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.3, 0.5,0.7, 0.2,0.3, 0.2,1, 0,1 ]),
+                                        N:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.8,0.7, 0.8,0, 1,0, 1,1, 0.8,1, 0.2,0.3, 0.2,1, 0,1 ]),
+                                        O:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.7,1, 0.3,1, 0,0.7, 0,0.3, 0.3,0, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2 ]),
+                                        P:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]),
+                                        Q:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.95,0.75, 1,0.8, 1,1, 0.8,1, 0.5,0.7, 0.5,0.5, 0.7,0.5, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.75,0.95, 0.7,1, 0.3,1, 0,0.7, 0,0.3 ]),
+                                        R:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.6,0.6, 1,1, 0.75,1, 0.35,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]),
+                                        S:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2 ]),
+                                    };
+                        
+                                //simple attributes
+                                    this.name = '';
+                                    this.parent = undefined;
+                                    this.dotFrame = false;
+                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.ignored = false;
+                                    this.colour = {r:1,g:0,b:0,a:1};
+                        
+                                //attributes pertinent to extremity calculation
+                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}         x = a;         this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}         y = a;         this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;}    anchor = a;    this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}     width = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;}    height = a;    this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var character = '';     
+                                    this.character = function(a){ 
+                                        if(a==undefined){return character;} 
+                                        character = a; 
+                        
+                                        points = vectorLibrary[a];
+                        
+                                        this.extremities.isChanged = true; 
+                                        this.computeExtremities(); 
+                                    }; setTimeout(function(){ self.character(character);},1);
+                        
+                            //addressing
+                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                        
+                            //webGL rendering functions
+                                var points = [
+                                    0,0,
+                                    1,0,
+                                    1,1,
+                        
+                                    0,0,
+                                    1,1,
+                                    0,1,
+                                ];
+                                var vertexShaderSource = `
+                                    //constants
+                                        attribute vec2 point;
+                        
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location adjust;
+                        
+                                        uniform vec2 resolution;
+                                        uniform vec2 dimensions;
+                                        uniform vec2 anchor;
+                        
+                                    void main(){
+                                        //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+                                            vec2 P = dimensions * adjust.scale * (point - anchor);
+                                            P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
+                        
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                    }
+                                `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    uniform vec4 colour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = colour;
+                                    }
+                                `;
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var uniformLocations;
+                                function updateGLAttributes(context,adjust){
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                                    
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+                                                "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+                                                "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "dimensions": context.getUniformLocation(program, "dimensions"),
+                                                "anchor": context.getUniformLocation(program, "anchor"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                            };
+                                        }
+                        
+                                        context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+                                        context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+                                        context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform2f(uniformLocations["dimensions"], width, height);
+                                        context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
                                 }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                            
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                                    context.drawArrays(context.TRIANGLES, 0, points.length/2);
+                                }
+                        
+                            //extremities
+                                function computeExtremities(informParent=true,offset){
+                                    //get offset from parent
+                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    //calculate points based on the offset
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var adjusted = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: -(offset.angle + angle),
+                                        };
+                        
+                                        self.extremities.points = [];
+                                        for(var a = 0; a < points.length; a+=2){
+                                            var P = {
+                                                x: adjusted.scale * width * (points[a] - anchor.x), 
+                                                y: adjusted.scale * height * (points[a+1] - anchor.y), 
+                                            };
+                        
+                                            self.extremities.points.push({ 
+                                                x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
+                                                y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
+                                            });
+                                        }
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                }
+                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
+                                this.computeExtremities = function(informParent,offset){
+                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        
+                                    if(
+                                        this.extremities.isChanged ||
+                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
+                                    ){
+                                        computeExtremities(informParent,offset);
+                                        this.extremities.isChanged = false;
+                                        oldOffset.x = offset.x;
+                                        oldOffset.y = offset.y;
+                                        oldOffset.scale = offset.scale;
+                                        oldOffset.angle = offset.angle;
+                                    }
+                                };
+                        
+                            //lead render
+                                function drawDotFrame(){
+                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                        
+                                    var tl = self.extremities.boundingBox.topLeft;
+                                    var br = self.extremities.boundingBox.bottomRight;
+                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
+                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                };
+                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                                    //combine offset with shape's position, angle and scale to produce adjust value for render
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var adjust = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: -(offset.angle + angle),
+                                        };
+                        
+                                    //activate shape render code
+                                        activateGLRender(context,adjust);
+                        
+                                    //if requested; draw dot frame
+                                        if(self.dotFrame){drawDotFrame();}
+                                };
                         };
                     };
                 
@@ -3749,6 +4005,11 @@
                             this.calculateViewportExtremities();
                         };
                         this.getBoundingBox = function(){ return viewbox.boundingBox; };
+                        this.cursor = function(type){
+                            //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
+                            if(type == undefined){return document.body.style.cursor;}
+                            document.body.style.cursor = type;
+                        };
                 };
                 this.viewport.refresh();
                 
@@ -4024,115 +4285,52 @@
                 var interface = this;
             
                 this.circuit = new function(){
-                    this.recorder = function(context){
-                    
-                        //state
-                            var state = {
-                                recordedChunks: [],
-                                recordingStartTime: -1,
-                                recordingLength: 0,
+                    this.audio2percentage = function(){
+                        return new function(){
+                            var analyser = {
+                                timeDomainDataArray: null,
+                                frequencyData: null,
+                                refreshRate: 30,
+                                refreshInterval: null,
+                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                resolution: 128
                             };
+                            analyser.analyserNode = _canvas_.library.audio.context.createAnalyser();
+                            analyser.analyserNode.fftSize = analyser.resolution;
+                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
                     
-                        //flow
-                            //flow chain
-                                var flow = {
-                                    leftIn:{}, rightIn:{},
-                                    recordingNode:{},
-                                    leftOut:{}, rightOut:{},
-                                };
+                            this.__render = function(){
+                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
                     
-                            //leftIn
-                                flow.leftIn.node = context.createAnalyser();
-                            //rightIn
-                                flow.rightIn.node = context.createAnalyser();
+                                    var numbers = [];
+                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                        numbers.push(
+                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                        );
+                                    }
                     
-                            //recordingNode
-                                flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
-                                flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
+                                    var val = 0;
+                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
                     
-                                flow.recordingNode.node.onstart = function(){};
-                                flow.recordingNode.node.ondataavailable = function(e){
-                                    state.recordedChunks.push(e.data);
-                                };
-                                flow.recordingNode.node.onpause = function(){};
-                                flow.recordingNode.node.onresume = function(){};
-                                flow.recordingNode.node.onerror = function(error){console.log(error);};
-                                flow.recordingNode.node.onstop = function(){};
-                    
-                                flow.leftIn.node.connect(flow.recordingNode.audioDest);
-                                flow.rightIn.node.connect(flow.recordingNode.audioDest);
-                    
-                            //leftOut
-                                flow.leftOut.node = context.createAnalyser();
-                                flow.leftIn.node.connect(flow.leftOut.node);
-                            //rightIn
-                                flow.rightOut.node = context.createAnalyser();
-                                flow.rightIn.node.connect(flow.rightOut.node);
-                    
-                    
-                        //internal functions
-                            function getRecordingLength(){
-                                switch(flow.recordingNode.node.state){
-                                    case 'inactive': case 'paused':
-                                        return state.recordingLength;
-                                    break;
-                                    case 'recording':
-                                        return context.currentTime - state.recordingStartTime;
-                                    break;
-                                }            
+                                    this.newValue(val);
                             }
                     
-                        //controls
-                            this.clear =  function(){
-                                this.stop();
-                                state.recordedChunks = [];
-                                state.recordingStartTime = -1;
-                                state.recordingLength = 0;
-                            };
-                            this.start =  function(){
-                                this.clear();
-                                flow.recordingNode.node.start();
-                                state.recordingStartTime = context.currentTime;
-                            };
-                            this.pause =  function(){
-                                if(this.state() == 'inactive'){return;}
-                                state.recordingLength = getRecordingLength();
-                                flow.recordingNode.node.pause();
-                            };
-                            this.resume = function(){
-                                flow.recordingNode.node.resume();
-                                state.recordingStartTime = context.currentTime - state.recordingLength;
-                            };
-                            this.stop =   function(){
-                                if(this.state() == 'inactive'){return;}
-                                state.recordingLength = getRecordingLength();
-                                flow.recordingNode.node.stop();
-                            };
-                            this.export = function(){
-                                return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
-                            };
-                            this.save = function(filename='output'){
-                                var a = document.createElement('a');
-                                a.href = URL.createObjectURL(this.export());
-                                a.download = filename+'.ogg';
-                                document.body.appendChild(a);
-                                a.click();
-                                document.body.removeChild(a);
-                            };
+                            //audio connections
+                                this.audioIn = function(){return analyser.analyserNode;};
                     
-                            this.state = function(){return flow.recordingNode.node.state;};
-                            this.recordingTime = function(){
-                                return getRecordingLength();
-                            };
-                            this.getTrack = function(){return this.export(); };
+                            //methods
+                                this.start = function(){
+                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                                };
+                                this.stop = function(){
+                                    clearInterval(analyser.refreshInterval);
+                                };
                     
-                        //io
-                            this.in_left  =  function(){return flow.leftIn.node;};
-                            this.in_right =  function(){return flow.rightIn.node;};
-                            this.out_left  = function(){return flow.leftOut.node;};
-                            this.out_right = function(){return flow.rightOut.node;};
+                            //callbacks
+                                this.newValue = function(a){};
+                        };
                     };
-
                     this.audioIn = function(
                         context, setupConnect=true
                     ){
@@ -4181,6 +4379,176 @@
                         //setup
                             if(setupConnect){this.selectDevice('default');}
                     };
+                    this.channelMultiplier = function(
+                        context, outputCount=2
+                    ){
+                        //flow
+                            //flow chain
+                                var flow = {
+                                    in: {},
+                                    outs:[],
+                                    out_0: {}, out_1: {},
+                                };
+                            
+                            //in
+                                flow.in.gain = 1;
+                                flow.in.node = context.createGain();    
+                                _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                    
+                            //outs
+                                for(var a = 0; a < outputCount; a++){
+                                    var temp = { gain:0.5, node:context.createGain() };
+                                    _canvas_.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                    flow.outs.push(temp);
+                                    flow.in.node.connect(temp.node);
+                                }
+                    
+                        //input/output node
+                            this.in = function(){return flow.in.node;}
+                            this.out = function(a){return flow.outs[a].node;}
+                    
+                        //controls
+                            this.inGain = function(a){
+                                if(a == undefined){return flow.in.gain;}
+                                flow.in.gain = a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                            };
+                            this.outGain = function(a,value){
+                                if(value == undefined){ return flow.outs[a].gain; }
+                                flow.outs[a].gain = value;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+                            };
+                    };
+                        
+                    this.distortionUnit = function(
+                        context,
+                    ){
+                        //flow chain
+                        var flow = {
+                            inAggregator: {},
+                            distortionNode: {},
+                            outAggregator: {},
+                        };
+                    
+                        //inAggregator
+                            flow.inAggregator.gain = 0;
+                            flow.inAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                        //distortionNode
+                            flow.distortionNode.distortionAmount = 0;
+                            flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
+                            flow.distortionNode.resolution = 100;
+                            function makeDistortionNode(){
+                                flow.inAggregator.node.disconnect();
+                                if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
+                                
+                                flow.distortionNode.node = context.createWaveShaper();
+                                    flow.distortionNode.curve = new Float32Array(_canvas_.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                                    flow.distortionNode.node.curve = flow.distortionNode.curve;
+                                    flow.distortionNode.node.oversample = flow.distortionNode.oversample;
+                                    
+                                flow.inAggregator.node.connect(flow.distortionNode.node);
+                                flow.distortionNode.node.connect(flow.outAggregator.node);
+                            }
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 0;
+                            flow.outAggregator.node = context.createGain();    
+                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                        //controls
+                            this.inGain = function(a){
+                                if(a==null){return flow.inAggregator.gain;}
+                                flow.inAggregator.gain=a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.outGain = function(a){
+                                if(a==null){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain=a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.distortionAmount = function(a){
+                                if(a==null){return flow.distortionNode.distortionAmount;}
+                                flow.distortionNode.distortionAmount=a;
+                                makeDistortionNode();
+                            };
+                            this.oversample = function(a){
+                                if(a==null){return flow.distortionNode.oversample;}
+                                flow.distortionNode.oversample=a;
+                                makeDistortionNode();
+                            };
+                            this.resolution = function(a){
+                                if(a==null){return flow.distortionNode.resolution;}
+                                flow.distortionNode.resolution = a>=2?a:2;
+                                makeDistortionNode();
+                            };
+                    
+                        //setup
+                            makeDistortionNode();
+                    };
+                    this.filterUnit = function(
+                        context
+                    ){
+                        //flow chain
+                            var flow = {
+                                inAggregator: {},
+                                filterNode: {},
+                                outAggregator: {},
+                            };
+                    
+                        //inAggregator
+                            flow.inAggregator.gain = 1;
+                            flow.inAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                        //filterNode
+                            flow.filterNode.node = context.createBiquadFilter();
+                    	    flow.filterNode.node.type = "lowpass";
+                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
+                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
+                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 1;
+                            flow.outAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                    
+                        //do connections
+                            flow.inAggregator.node.connect(flow.filterNode.node);
+                            flow.filterNode.node.connect(flow.outAggregator.node);
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                        //methods
+                            this.type = function(type){flow.filterNode.node.type = type;};
+                            this.frequency = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
+                            this.gain = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
+                            this.Q = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+                            this.measureFrequencyResponse = function(start,end,step){
+                                var frequencyArray = [];
+                                for(var a = start; a < end; a += step){frequencyArray.push(a);}
+                            
+                                return this.measureFrequencyResponse_values(frequencyArray);
+                            };
+                            this.measureFrequencyResponse_values = function(frequencyArray){
+                                var Float32_frequencyArray = new Float32Array(frequencyArray);
+                                var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                            
+                                flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                                return [magResponseOutput,frequencyArray];
+                            };
+                    };
+
                     this.looper = function(context){
                         //state
                             var state = {
@@ -4280,355 +4648,6 @@
                                 state.loop.start = data.start!=undefined ? data.start : state.loop.start;
                                 state.loop.end   = data.end!=undefined ? data.end : state.loop.end;
                             };
-                    };
-
-                    this.oneShot_single = function(context){
-                        //state
-                            var state = {
-                                itself:this,
-                                fileLoaded:false,
-                                rate:1,
-                            };
-                    
-                        //flow
-                            //chain
-                            var flow = {
-                                track:{},
-                                bufferSource:null,
-                                channelSplitter:{},
-                                leftOut:{}, rightOut:{}
-                            };
-                    
-                            //channelSplitter
-                                flow.channelSplitter = context.createChannelSplitter(2);
-                    
-                            //leftOut
-                                flow.leftOut.gain = 1;
-                                flow.leftOut.node = context.createGain();
-                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.leftOut.node, 0);
-                            //rightOut
-                                flow.rightOut.gain = 1;
-                                flow.rightOut.node = context.createGain();
-                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.rightOut.node, 1);
-                    
-                            //output node
-                                this.out_left  = function(){return flow.leftOut.node;}
-                                this.out_right = function(){return flow.rightOut.node;}
-                    
-                                
-                        //controls
-                            this.load = function(type,callback,url=''){
-                                state.fileLoaded = false;
-                                _canvas_.library.audio.loadAudioFile(
-                                    function(data){
-                                        state.itself.stop();
-                                        flow.track = data;
-                                        state.fileLoaded = true;
-                                        state.needlePosition = 0.0;
-                                        callback(data);
-                                    },
-                                type,url);
-                            };
-                            this.fire = function(){
-                                //check if we should play at all (the file must be loaded)
-                                    if(!state.fileLoaded){return;}
-                                //stop any previous buffers, load buffer, enter settings and start from zero
-                                    if(flow.bufferSource){
-                                        flow.bufferSource.onended = function(){};
-                                        flow.bufferSource.stop(0);
-                                    }
-                                    flow.bufferSource = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
-                                    flow.bufferSource.playbackRate.value = state.rate;
-                                    flow.bufferSource.start(0,0);
-                                    flow.bufferSource.onended = function(){flow.bufferSource = null;};
-                            };
-                            this.stop = function(){
-                                if(!state.fileLoaded){return;}
-                                flow.bufferSource.stop(0);
-                                flow.bufferSource = undefined;
-                            };
-                            this.rate = function(){
-                                state.rate = value;
-                            };
-                    
-                        //info
-                            this.duration = function(){
-                                if(!state.fileLoaded){return -1;}
-                                return flow.track.duration;
-                            };
-                            this.title = function(){
-                                if(!state.fileLoaded){return '';}
-                                return flow.track.name;
-                            };
-                            this.waveformSegment = function(data={start:0,end:1}){
-                                if(data==undefined){return [];}
-                                if(!state.fileLoaded){return [];}
-                                return _canvas_.library.audio.waveformSegment(flow.track.buffer,data);
-                            };
-                    };
-
-                    this.oneShot_multi = function(context){
-                        //state
-                            var state = {
-                                itself:this,
-                                fileLoaded:false,
-                                rate:1,
-                            };
-                    
-                        //flow
-                            //chain
-                            var flow = {
-                                track:{},
-                                bufferSource:null,
-                                bufferSourceArray:[],
-                                channelSplitter:{},
-                                leftOut:{}, rightOut:{}
-                            };
-                    
-                            //channelSplitter
-                                flow.channelSplitter = context.createChannelSplitter(2);
-                    
-                            //leftOut
-                                flow.leftOut.gain = 1;
-                                flow.leftOut.node = context.createGain();
-                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.leftOut.node, 0);
-                            //rightOut
-                                flow.rightOut.gain = 1;
-                                flow.rightOut.node = context.createGain();
-                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
-                                flow.channelSplitter.connect(flow.rightOut.node, 1);
-                    
-                            //output node
-                                this.audioOut = function(channel){
-                                    switch(channel){
-                                        case 'r': return flow.rightOut.node; break;
-                                        case 'l': return flow.leftOut.node; break;
-                                        default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
-                                    }
-                                };
-                                this.out_left  = function(){return this.audioOut('l');}
-                                this.out_right = function(){return this.audioOut('r');}
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                        //loading/unloading
-                            this.loadRaw = function(data){
-                                if(Object.keys(data).length === 0){return;}
-                                flow.track = data;
-                                state.fileLoaded = true;
-                                state.needlePosition = 0.0;
-                            };
-                            this.load = function(type,callback,url){
-                                state.fileLoaded = false;
-                                _canvas_.library.audio.loadAudioFile(
-                                    function(data){
-                                        state.itself.loadRaw(data);
-                                        if(callback != undefined){ callback(data); }
-                                    },
-                                type,url);
-                            };
-                            this.unloadRaw = function(){
-                                return flow.track;
-                            };
-                    
-                        //control
-                            //play
-                                this.fire = function(start=0,duration){
-                                    //check if we should play at all (the file must be loaded)
-                                        if(!state.fileLoaded){return;}
-                                    //load buffer, add onend code, enter rate setting, start and add to the array
-                                        var temp = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
-                                            flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
-                                        });
-                                        temp.playbackRate.value = state.rate;
-                                        temp.start(0,start*state.rate,duration*state.rate);
-                                        flow.bufferSourceArray.push(temp);
-                                };
-                                this.panic = function(){
-                                    while(flow.bufferSourceArray.length > 0){
-                                        flow.bufferSourceArray.shift().stop(0);
-                                    }
-                                };
-                            //options
-                                this.rate = function(value){ 
-                                    if(value == undefined){return state.rate;}
-                                    if(value == 0){value = 1/1000000;}
-                                    state.rate = value;
-                                };
-                    
-                        //info
-                            this.duration = function(){
-                                if(!state.fileLoaded){return -1;}
-                                return flow.track.duration / state.rate;
-                            };
-                            this.title = function(){
-                                if(!state.fileLoaded){return '';}
-                                return flow.track.name;
-                            };
-                            this.waveformSegment = function(data={start:0,end:1}){
-                                if(data==undefined){return [];}
-                                if(!state.fileLoaded){return [];}
-                                return _canvas_.library.audio.waveformSegment(flow.track.buffer,data);
-                            };
-                    };
-                    this.audio2percentage = function(){
-                        return new function(){
-                            var analyser = {
-                                timeDomainDataArray: null,
-                                frequencyData: null,
-                                refreshRate: 30,
-                                refreshInterval: null,
-                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                resolution: 128
-                            };
-                            analyser.analyserNode = _canvas_.library.audio.context.createAnalyser();
-                            analyser.analyserNode.fftSize = analyser.resolution;
-                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
-                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
-                    
-                            this.__render = function(){
-                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
-                    
-                                    var numbers = [];
-                                    for(var a = 0; a < analyser.timeDomainDataArray.length; a++){
-                                        numbers.push(
-                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
-                                        );
-                                    }
-                    
-                                    var val = 0;
-                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
-                    
-                                    this.newValue(val);
-                            }
-                    
-                            //audio connections
-                                this.audioIn = function(){return analyser.analyserNode;};
-                    
-                            //methods
-                                this.start = function(){
-                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
-                                };
-                                this.stop = function(){
-                                    clearInterval(analyser.refreshInterval);
-                                };
-                    
-                            //callbacks
-                                this.newValue = function(a){};
-                        };
-                    };
-                    this.reverbUnit = function(
-                        context,
-                    ){
-                        //flow chain
-                            var flow = {
-                                inAggregator: {},
-                                reverbGain: {}, bypassGain: {},
-                                reverbNode: {},
-                                outAggregator: {},
-                            };
-                    
-                        //inAggregator
-                            flow.inAggregator.gain = 1;
-                            flow.inAggregator.node = context.createGain();
-                            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                    
-                        //reverbGain / bypassGain
-                            flow.reverbGain.gain = 0.5;
-                            flow.bypassGain.gain = 0.5;
-                            flow.reverbGain.node = context.createGain();
-                            flow.bypassGain.node = context.createGain();
-                            _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                            _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                    
-                        //reverbNode
-                            flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
-                            flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
-                            flow.reverbNode.node = context.createConvolver();
-                    
-                            function setReverbType(repoURL,type,callback){
-                                var ajaxRequest = new XMLHttpRequest();
-                                ajaxRequest.open('GET', repoURL+type, true);
-                                ajaxRequest.responseType = 'arraybuffer';
-                                ajaxRequest.onload = function(){
-                                    //undo connections
-                                        flow.reverbNode.node.disconnect();
-                                    //create new convolver
-                                        flow.reverbNode.node = context.createConvolver();
-                                    //redo connections
-                                        flow.reverbGain.node.connect(flow.reverbNode.node);
-                                        flow.reverbNode.node.connect(flow.outAggregator.node);
-                                    //load in new buffer
-                                        context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
-                                    //run any callbacks
-                                        if(callback){callback();}  
-                                };
-                                ajaxRequest.send();
-                            }
-                            function getReverbTypeList(repoURL,callback=null){
-                                var ajaxRequest = new XMLHttpRequest();
-                                ajaxRequest.open('GET', repoURL+'available2.list', true);
-                                ajaxRequest.onload = function() {
-                                    var list = ajaxRequest.response.split('\n'); var temp = '';
-                                    
-                                    list[list.length-1] = list[list.length-1].split(''); 
-                                    list[list.length-1].pop();
-                                    list[list.length-1] = list[list.length-1].join('');		
-                    
-                                    list.splice(-1,1);
-                                    
-                                    if(callback == null){console.log(list);}
-                                    else{callback(list);}
-                                }
-                                ajaxRequest.send();
-                            }	
-                    
-                        //outAggregator
-                            flow.outAggregator.gain = 1;
-                            flow.outAggregator.node = context.createGain();    
-                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                    
-                        //do connections
-                            flow.inAggregator.node.connect(flow.reverbGain.node);
-                            flow.inAggregator.node.connect(flow.bypassGain.node);
-                            flow.reverbGain.node.connect(flow.reverbNode.node);
-                            flow.bypassGain.node.connect(flow.outAggregator.node);
-                            flow.reverbNode.node.connect(flow.outAggregator.node);
-                    
-                        //input/output node
-                            this.in = function(){return flow.inAggregator.node;}
-                            this.out = function(){return flow.outAggregator.node;}
-                        
-                        //controls
-                            this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
-                            this.type = function(name,callback){
-                                if(name==null){return flow.reverbNode.selectedReverbType;}
-                                flow.reverbNode.selectedReverbType = name;
-                                setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
-                            };
-                            this.outGain = function(a){
-                                if(a==null){return flow.outAggregator.gain;}
-                                flow.outAggregator.gain=a;
-                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                            };
-                            this.wetdry = function(a){
-                                if(a==null){return flow.reverbGain.gain;}
-                                flow.reverbGain.gain=a;
-                                flow.bypassGain.gain=1-a;
-                                _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-                                _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
-                            };
-                    
-                        //setup
-                            setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                     };
 
                     this.multibandFilter = function(
@@ -4757,78 +4776,203 @@
                                     return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
                             };
                     };
-                    this.distortionUnit = function(
-                        context,
-                    ){
-                        //flow chain
-                        var flow = {
-                            inAggregator: {},
-                            distortionNode: {},
-                            outAggregator: {},
-                        };
-                    
-                        //inAggregator
-                            flow.inAggregator.gain = 0;
-                            flow.inAggregator.node = context.createGain();
-                            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
-                    
-                        //distortionNode
-                            flow.distortionNode.distortionAmount = 0;
-                            flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
-                            flow.distortionNode.resolution = 100;
-                            function makeDistortionNode(){
-                                flow.inAggregator.node.disconnect();
-                                if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
-                                
-                                flow.distortionNode.node = context.createWaveShaper();
-                                    flow.distortionNode.curve = new Float32Array(_canvas_.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
-                                    flow.distortionNode.node.curve = flow.distortionNode.curve;
-                                    flow.distortionNode.node.oversample = flow.distortionNode.oversample;
-                                    
-                                flow.inAggregator.node.connect(flow.distortionNode.node);
-                                flow.distortionNode.node.connect(flow.outAggregator.node);
-                            }
-                    
-                        //outAggregator
-                            flow.outAggregator.gain = 0;
-                            flow.outAggregator.node = context.createGain();    
-                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
-                    
-                    
-                        //input/output node
-                            this.in = function(){return flow.inAggregator.node;}
-                            this.out = function(){return flow.outAggregator.node;}
-                    
-                        //controls
-                            this.inGain = function(a){
-                                if(a==null){return flow.inAggregator.gain;}
-                                flow.inAggregator.gain=a;
-                                _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
-                            };
-                            this.outGain = function(a){
-                                if(a==null){return flow.outAggregator.gain;}
-                                flow.outAggregator.gain=a;
-                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
-                            };
-                            this.distortionAmount = function(a){
-                                if(a==null){return flow.distortionNode.distortionAmount;}
-                                flow.distortionNode.distortionAmount=a;
-                                makeDistortionNode();
-                            };
-                            this.oversample = function(a){
-                                if(a==null){return flow.distortionNode.oversample;}
-                                flow.distortionNode.oversample=a;
-                                makeDistortionNode();
-                            };
-                            this.resolution = function(a){
-                                if(a==null){return flow.distortionNode.resolution;}
-                                flow.distortionNode.resolution = a>=2?a:2;
-                                makeDistortionNode();
+                    this.oneShot_multi = function(context){
+                        //state
+                            var state = {
+                                itself:this,
+                                fileLoaded:false,
+                                rate:1,
                             };
                     
-                        //setup
-                            makeDistortionNode();
+                        //flow
+                            //chain
+                            var flow = {
+                                track:{},
+                                bufferSource:null,
+                                bufferSourceArray:[],
+                                channelSplitter:{},
+                                leftOut:{}, rightOut:{}
+                            };
+                    
+                            //channelSplitter
+                                flow.channelSplitter = context.createChannelSplitter(2);
+                    
+                            //leftOut
+                                flow.leftOut.gain = 1;
+                                flow.leftOut.node = context.createGain();
+                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.leftOut.node, 0);
+                            //rightOut
+                                flow.rightOut.gain = 1;
+                                flow.rightOut.node = context.createGain();
+                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.rightOut.node, 1);
+                    
+                            //output node
+                                this.audioOut = function(channel){
+                                    switch(channel){
+                                        case 'r': return flow.rightOut.node; break;
+                                        case 'l': return flow.leftOut.node; break;
+                                        default: console.error('"part.circuit.alpha.oneShot_multi.audioOut" unknown channel "'+channel+'"'); break;
+                                    }
+                                };
+                                this.out_left  = function(){return this.audioOut('l');}
+                                this.out_right = function(){return this.audioOut('r');}
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                        //loading/unloading
+                            this.loadRaw = function(data){
+                                if(Object.keys(data).length === 0){return;}
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.needlePosition = 0.0;
+                            };
+                            this.load = function(type,callback,url){
+                                state.fileLoaded = false;
+                                _canvas_.library.audio.loadAudioFile(
+                                    function(data){
+                                        state.itself.loadRaw(data);
+                                        if(callback != undefined){ callback(data); }
+                                    },
+                                type,url);
+                            };
+                            this.unloadRaw = function(){
+                                return flow.track;
+                            };
+                    
+                        //control
+                            //play
+                                this.fire = function(start=0,duration){
+                                    //check if we should play at all (the file must be loaded)
+                                        if(!state.fileLoaded){return;}
+                                    //load buffer, add onend code, enter rate setting, start and add to the array
+                                        var temp = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
+                                            flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
+                                        });
+                                        temp.playbackRate.value = state.rate;
+                                        temp.start(0,start*state.rate,duration*state.rate);
+                                        flow.bufferSourceArray.push(temp);
+                                };
+                                this.panic = function(){
+                                    while(flow.bufferSourceArray.length > 0){
+                                        flow.bufferSourceArray.shift().stop(0);
+                                    }
+                                };
+                            //options
+                                this.rate = function(value){ 
+                                    if(value == undefined){return state.rate;}
+                                    if(value == 0){value = 1/1000000;}
+                                    state.rate = value;
+                                };
+                    
+                        //info
+                            this.duration = function(){
+                                if(!state.fileLoaded){return -1;}
+                                return flow.track.duration / state.rate;
+                            };
+                            this.title = function(){
+                                if(!state.fileLoaded){return '';}
+                                return flow.track.name;
+                            };
+                            this.waveformSegment = function(data={start:0,end:1}){
+                                if(data==undefined){return [];}
+                                if(!state.fileLoaded){return [];}
+                                return _canvas_.library.audio.waveformSegment(flow.track.buffer,data);
+                            };
                     };
+                    this.oneShot_single = function(context){
+                        //state
+                            var state = {
+                                itself:this,
+                                fileLoaded:false,
+                                rate:1,
+                            };
+                    
+                        //flow
+                            //chain
+                            var flow = {
+                                track:{},
+                                bufferSource:null,
+                                channelSplitter:{},
+                                leftOut:{}, rightOut:{}
+                            };
+                    
+                            //channelSplitter
+                                flow.channelSplitter = context.createChannelSplitter(2);
+                    
+                            //leftOut
+                                flow.leftOut.gain = 1;
+                                flow.leftOut.node = context.createGain();
+                                flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.leftOut.node, 0);
+                            //rightOut
+                                flow.rightOut.gain = 1;
+                                flow.rightOut.node = context.createGain();
+                                flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                flow.channelSplitter.connect(flow.rightOut.node, 1);
+                    
+                            //output node
+                                this.out_left  = function(){return flow.leftOut.node;}
+                                this.out_right = function(){return flow.rightOut.node;}
+                    
+                                
+                        //controls
+                            this.load = function(type,callback,url=''){
+                                state.fileLoaded = false;
+                                _canvas_.library.audio.loadAudioFile(
+                                    function(data){
+                                        state.itself.stop();
+                                        flow.track = data;
+                                        state.fileLoaded = true;
+                                        state.needlePosition = 0.0;
+                                        callback(data);
+                                    },
+                                type,url);
+                            };
+                            this.fire = function(){
+                                //check if we should play at all (the file must be loaded)
+                                    if(!state.fileLoaded){return;}
+                                //stop any previous buffers, load buffer, enter settings and start from zero
+                                    if(flow.bufferSource){
+                                        flow.bufferSource.onended = function(){};
+                                        flow.bufferSource.stop(0);
+                                    }
+                                    flow.bufferSource = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                                    flow.bufferSource.playbackRate.value = state.rate;
+                                    flow.bufferSource.start(0,0);
+                                    flow.bufferSource.onended = function(){flow.bufferSource = null;};
+                            };
+                            this.stop = function(){
+                                if(!state.fileLoaded){return;}
+                                flow.bufferSource.stop(0);
+                                flow.bufferSource = undefined;
+                            };
+                            this.rate = function(){
+                                state.rate = value;
+                            };
+                    
+                        //info
+                            this.duration = function(){
+                                if(!state.fileLoaded){return -1;}
+                                return flow.track.duration;
+                            };
+                            this.title = function(){
+                                if(!state.fileLoaded){return '';}
+                                return flow.track.name;
+                            };
+                            this.waveformSegment = function(data={start:0,end:1}){
+                                if(data==undefined){return [];}
+                                if(!state.fileLoaded){return [];}
+                                return _canvas_.library.audio.waveformSegment(flow.track.buffer,data);
+                            };
+                    };
+
                     this.player = function(context){
                         //state
                             var state = {
@@ -5030,54 +5174,123 @@
                             };
                     };
 
-                    this.channelMultiplier = function(
-                        context, outputCount=2
-                    ){
+                    this.recorder = function(context){
+                    
+                        //state
+                            var state = {
+                                recordedChunks: [],
+                                recordingStartTime: -1,
+                                recordingLength: 0,
+                            };
+                    
                         //flow
                             //flow chain
                                 var flow = {
-                                    in: {},
-                                    outs:[],
-                                    out_0: {}, out_1: {},
+                                    leftIn:{}, rightIn:{},
+                                    recordingNode:{},
+                                    leftOut:{}, rightOut:{},
                                 };
-                            
-                            //in
-                                flow.in.gain = 1;
-                                flow.in.node = context.createGain();    
-                                _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
                     
-                            //outs
-                                for(var a = 0; a < outputCount; a++){
-                                    var temp = { gain:0.5, node:context.createGain() };
-                                    _canvas_.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
-                                    flow.outs.push(temp);
-                                    flow.in.node.connect(temp.node);
-                                }
+                            //leftIn
+                                flow.leftIn.node = context.createAnalyser();
+                            //rightIn
+                                flow.rightIn.node = context.createAnalyser();
                     
-                        //input/output node
-                            this.in = function(){return flow.in.node;}
-                            this.out = function(a){return flow.outs[a].node;}
+                            //recordingNode
+                                flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
+                                flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
+                    
+                                flow.recordingNode.node.onstart = function(){};
+                                flow.recordingNode.node.ondataavailable = function(e){
+                                    state.recordedChunks.push(e.data);
+                                };
+                                flow.recordingNode.node.onpause = function(){};
+                                flow.recordingNode.node.onresume = function(){};
+                                flow.recordingNode.node.onerror = function(error){console.log(error);};
+                                flow.recordingNode.node.onstop = function(){};
+                    
+                                flow.leftIn.node.connect(flow.recordingNode.audioDest);
+                                flow.rightIn.node.connect(flow.recordingNode.audioDest);
+                    
+                            //leftOut
+                                flow.leftOut.node = context.createAnalyser();
+                                flow.leftIn.node.connect(flow.leftOut.node);
+                            //rightIn
+                                flow.rightOut.node = context.createAnalyser();
+                                flow.rightIn.node.connect(flow.rightOut.node);
+                    
+                    
+                        //internal functions
+                            function getRecordingLength(){
+                                switch(flow.recordingNode.node.state){
+                                    case 'inactive': case 'paused':
+                                        return state.recordingLength;
+                                    break;
+                                    case 'recording':
+                                        return context.currentTime - state.recordingStartTime;
+                                    break;
+                                }            
+                            }
                     
                         //controls
-                            this.inGain = function(a){
-                                if(a == undefined){return flow.in.gain;}
-                                flow.in.gain = a;
-                                _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                            this.clear =  function(){
+                                this.stop();
+                                state.recordedChunks = [];
+                                state.recordingStartTime = -1;
+                                state.recordingLength = 0;
                             };
-                            this.outGain = function(a,value){
-                                if(value == undefined){ return flow.outs[a].gain; }
-                                flow.outs[a].gain = value;
-                                _canvas_.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+                            this.start =  function(){
+                                this.clear();
+                                flow.recordingNode.node.start();
+                                state.recordingStartTime = context.currentTime;
                             };
+                            this.pause =  function(){
+                                if(this.state() == 'inactive'){return;}
+                                state.recordingLength = getRecordingLength();
+                                flow.recordingNode.node.pause();
+                            };
+                            this.resume = function(){
+                                flow.recordingNode.node.resume();
+                                state.recordingStartTime = context.currentTime - state.recordingLength;
+                            };
+                            this.stop =   function(){
+                                if(this.state() == 'inactive'){return;}
+                                state.recordingLength = getRecordingLength();
+                                flow.recordingNode.node.stop();
+                            };
+                            this.export = function(){
+                                return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
+                            };
+                            this.save = function(filename='output'){
+                                var a = document.createElement('a');
+                                a.href = URL.createObjectURL(this.export());
+                                a.download = filename+'.ogg';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                            };
+                    
+                            this.state = function(){return flow.recordingNode.node.state;};
+                            this.recordingTime = function(){
+                                return getRecordingLength();
+                            };
+                            this.getTrack = function(){return this.export(); };
+                    
+                        //io
+                            this.in_left  =  function(){return flow.leftIn.node;};
+                            this.in_right =  function(){return flow.rightIn.node;};
+                            this.out_left  = function(){return flow.leftOut.node;};
+                            this.out_right = function(){return flow.rightOut.node;};
                     };
-                        
-                    this.filterUnit = function(
-                        context
+
+                    this.reverbUnit = function(
+                        context,
                     ){
                         //flow chain
                             var flow = {
                                 inAggregator: {},
-                                filterNode: {},
+                                reverbGain: {}, bypassGain: {},
+                                reverbNode: {},
                                 outAggregator: {},
                             };
                     
@@ -5086,46 +5299,94 @@
                             flow.inAggregator.node = context.createGain();
                             _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
                     
-                        //filterNode
-                            flow.filterNode.node = context.createBiquadFilter();
-                    	    flow.filterNode.node.type = "lowpass";
-                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
-                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
-                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
+                        //reverbGain / bypassGain
+                            flow.reverbGain.gain = 0.5;
+                            flow.bypassGain.gain = 0.5;
+                            flow.reverbGain.node = context.createGain();
+                            flow.bypassGain.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                            _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                    
+                        //reverbNode
+                            flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
+                            flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
+                            flow.reverbNode.node = context.createConvolver();
+                    
+                            function setReverbType(repoURL,type,callback){
+                                var ajaxRequest = new XMLHttpRequest();
+                                ajaxRequest.open('GET', repoURL+type, true);
+                                ajaxRequest.responseType = 'arraybuffer';
+                                ajaxRequest.onload = function(){
+                                    //undo connections
+                                        flow.reverbNode.node.disconnect();
+                                    //create new convolver
+                                        flow.reverbNode.node = context.createConvolver();
+                                    //redo connections
+                                        flow.reverbGain.node.connect(flow.reverbNode.node);
+                                        flow.reverbNode.node.connect(flow.outAggregator.node);
+                                    //load in new buffer
+                                        context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
+                                    //run any callbacks
+                                        if(callback){callback();}  
+                                };
+                                ajaxRequest.send();
+                            }
+                            function getReverbTypeList(repoURL,callback=null){
+                                var ajaxRequest = new XMLHttpRequest();
+                                ajaxRequest.open('GET', repoURL+'available2.list', true);
+                                ajaxRequest.onload = function() {
+                                    var list = ajaxRequest.response.split('\n'); var temp = '';
+                                    
+                                    list[list.length-1] = list[list.length-1].split(''); 
+                                    list[list.length-1].pop();
+                                    list[list.length-1] = list[list.length-1].join('');		
+                    
+                                    list.splice(-1,1);
+                                    
+                                    if(callback == null){console.log(list);}
+                                    else{callback(list);}
+                                }
+                                ajaxRequest.send();
+                            }	
                     
                         //outAggregator
                             flow.outAggregator.gain = 1;
-                            flow.outAggregator.node = context.createGain();
+                            flow.outAggregator.node = context.createGain();    
                             _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
                     
-                    
                         //do connections
-                            flow.inAggregator.node.connect(flow.filterNode.node);
-                            flow.filterNode.node.connect(flow.outAggregator.node);
+                            flow.inAggregator.node.connect(flow.reverbGain.node);
+                            flow.inAggregator.node.connect(flow.bypassGain.node);
+                            flow.reverbGain.node.connect(flow.reverbNode.node);
+                            flow.bypassGain.node.connect(flow.outAggregator.node);
+                            flow.reverbNode.node.connect(flow.outAggregator.node);
                     
                         //input/output node
                             this.in = function(){return flow.inAggregator.node;}
                             this.out = function(){return flow.outAggregator.node;}
+                        
+                        //controls
+                            this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
+                            this.type = function(name,callback){
+                                if(name==null){return flow.reverbNode.selectedReverbType;}
+                                flow.reverbNode.selectedReverbType = name;
+                                setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
+                            };
+                            this.outGain = function(a){
+                                if(a==null){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain=a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.wetdry = function(a){
+                                if(a==null){return flow.reverbGain.gain;}
+                                flow.reverbGain.gain=a;
+                                flow.bypassGain.gain=1-a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                                _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                            };
                     
-                        //methods
-                            this.type = function(type){flow.filterNode.node.type = type;};
-                            this.frequency = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
-                            this.gain = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
-                            this.Q = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
-                            this.measureFrequencyResponse = function(start,end,step){
-                                var frequencyArray = [];
-                                for(var a = start; a < end; a += step){frequencyArray.push(a);}
-                            
-                                return this.measureFrequencyResponse_values(frequencyArray);
-                            };
-                            this.measureFrequencyResponse_values = function(frequencyArray){
-                                var Float32_frequencyArray = new Float32Array(frequencyArray);
-                                var magResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                                var phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
-                            
-                                flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
-                                return [magResponseOutput,frequencyArray];
-                            };
+                        //setup
+                            setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
                     };
 
                     this.synthesizer = function(
@@ -5363,44 +5624,6 @@
                     
                     this.collection = new function(){
                         this.basic = new function(){
-                            this.polygon = function( name=null, points=[], ignored=false, colour={r:1,g:0,b:1,a:1}, pointsAsXYArray=[] ){
-                                var temp = _canvas_.core.shape.create('polygon');
-                                temp.name = name;
-                                temp.ignored = ignored;
-                                temp.colour = colour;
-                                
-                                if(points.length != 0){ temp.points(points); }
-                                else{ temp.pointsAsXYArray(pointsAsXYArray); }
-                                return temp;
-                            }
-                            this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=0, lineColour={r:0,g:0,b:0,a:0} ){
-                                var temp = _canvas_.core.shape.create('rectangleWithOutline');
-                                temp.name = name;
-                                temp.ignored = ignored;
-                                temp.colour = colour;
-                                temp.lineColour = lineColour;
-                                
-                                temp.x(x); 
-                                temp.y(y);
-                                temp.width(width); 
-                                temp.height(height);
-                                temp.angle(angle);
-                                temp.anchor(anchor);
-                                temp.thickness(thickness);
-                                return temp;
-                            };
-                            this.circle = function( name=null, x=0, y=0, angle=0, radius=10, ignored=false, colour={r:1,g:0,b:1,a:1} ){
-                                var temp = _canvas_.core.shape.create('circle');
-                                temp.name = name;
-                                temp.ignored = ignored;
-                                temp.colour = colour;
-                                
-                                temp.x(x);
-                                temp.y(y);
-                                temp.angle(angle);
-                                temp.radius(radius);
-                                return temp;
-                            };
                             this.canvas = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1 ){
                                 var temp = _canvas_.core.shape.create('canvas');
                                 temp.name = name;
@@ -5415,6 +5638,28 @@
                                 temp.resolution(resolution);
                                 return temp;
                             };
+                            this.circle = function( name=null, x=0, y=0, angle=0, radius=10, ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                                var temp = _canvas_.core.shape.create('circle');
+                                temp.name = name;
+                                temp.ignored = ignored;
+                                temp.colour = colour;
+                                
+                                temp.x(x);
+                                temp.y(y);
+                                temp.angle(angle);
+                                temp.radius(radius);
+                                return temp;
+                            };
+                            this.group = function( name=null, x=0, y=0, angle=0, ignored=false ){
+                                var temp = _canvas_.core.shape.create('group');
+                                temp.name = name;
+                                temp.ignored = ignored;
+                                
+                                temp.x(x); 
+                                temp.y(y);
+                                temp.angle(angle);
+                                return temp;
+                            }
                             this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url='' ){
                                 var temp = _canvas_.core.shape.create('image');
                                 temp.name = name;
@@ -5451,6 +5696,16 @@
                                 temp.thickness(thickness); 
                                 return temp;
                             }
+                            this.polygon = function( name=null, points=[], ignored=false, colour={r:1,g:0,b:1,a:1}, pointsAsXYArray=[] ){
+                                var temp = _canvas_.core.shape.create('polygon');
+                                temp.name = name;
+                                temp.ignored = ignored;
+                                temp.colour = colour;
+                                
+                                if(points.length != 0){ temp.points(points); }
+                                else{ temp.pointsAsXYArray(pointsAsXYArray); }
+                                return temp;
+                            }
                             this.rectangle = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1} ){
                                 var temp = _canvas_.core.shape.create('rectangle');
                                 temp.name = name;
@@ -5465,24 +5720,990 @@
                                 temp.anchor(anchor);
                                 return temp;
                             };
-                            this.group = function( name=null, x=0, y=0, angle=0, ignored=false ){
-                                var temp = _canvas_.core.shape.create('group');
+                            this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=0, lineColour={r:0,g:0,b:0,a:0} ){
+                                var temp = _canvas_.core.shape.create('rectangleWithOutline');
                                 temp.name = name;
                                 temp.ignored = ignored;
+                                temp.colour = colour;
+                                temp.lineColour = lineColour;
                                 
                                 temp.x(x); 
                                 temp.y(y);
+                                temp.width(width); 
+                                temp.height(height);
                                 temp.angle(angle);
+                                temp.anchor(anchor);
+                                temp.thickness(thickness);
                                 return temp;
-                            }
+                            };
                         };
                         this.control = new function(){
-                            this.slidePanel_image = function(
-                                name='slidePanel_image', 
-                                x, y, width=80, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                            this.button_ = function(
+                                name='',
+                                x, y, angle=0, interactable=true,
+                                active=true, hoverable=true, selectable=false, pressable=true,
                             
-                                handleURL, backingURL, slotURL, overlayURL,
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            
+                                subject
+                            ){
+                                if(subject == undefined){console.warn('button_ : No subject provided');}
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //subject
+                                        object.append(subject);
+                            
+                                //state
+                                    object.state = {
+                                        hovering:false,
+                                        glowing:false,
+                                        selected:false,
+                                        pressed:false,
+                                    };
+                            
+                                //control
+                                    object.press = function(event){
+                                        if(!active){return;}
+                            
+                                        if( pressable ){
+                                            if(this.state.pressed){return;}
+                                            this.state.pressed = true;
+                                            if(this.onpress){this.onpress(this, event);}
+                                        }
+                                        
+                                        this.select( !this.select(), event );
+                            
+                                        object.activateGraphicalState(object.state);
+                                    };
+                                    object.release = function(event){
+                                        if(!active || !pressable){return;}
+                            
+                                        if(!this.state.pressed){return;}
+                                        this.state.pressed = false;
+                                        object.activateGraphicalState(object.state);
+                                        if(this.onrelease){this.onrelease(this, event);}
+                                    };
+                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; object.activateGraphicalState(object.state); };
+                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  object.activateGraphicalState(object.state); };
+                                    object.select = function(bool,event,callback=true){ 
+                                        if(!active){return;}
+                            
+                                        if(bool == undefined){return this.state.selected;}
+                                        if(!selectable){return;}
+                                        if(this.state.selected == bool){return;}
+                                        this.state.selected = bool; object.activateGraphicalState(object.state);
+                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                                    object.forceMouseLeave = function(){
+                                        object.state.hovering = false; 
+                                        object.release('forced'); 
+                                        object.activateGraphicalState(object.state); 
+                                        if(object.onleave){object.onleave('forced');}
+                                    };
+                            
+                            
+                            
+                            
+                                //interactivity
+                                    subject.cover.onmouseenter = function(x,y,event){
+                                        object.state.hovering = true;  
+                                        object.activateGraphicalState(object.state);
+                                        if(object.onenter){object.onenter(event);}
+                                        if(event.buttons == 1){subject.cover.onmousedown(event);} 
+                                    };
+                                    subject.cover.onmouseleave = function(x,y,event){ 
+                                        object.state.hovering = false; 
+                                        object.release(event); 
+                                        object.activateGraphicalState(object.state); 
+                                        if(object.onleave){object.onleave(event);}
+                                    };
+                                    subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
+                                    subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
+                                    subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
+                                    
+                            
+                            
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselect = onselect;
+                                    object.ondeselect = ondeselect;
+                            
+                                return object;
+                            };
+                            this.button_circle = function(
+                                name='button_circle',
+                                x, y, radius=15,  angle=0, interactable=true,
+                                text_centre='',
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__off__lineThickness=                     0,
+                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__up__lineThickness=                      0,
+                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__press__lineThickness=                   0,
+                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select__lineThickness=                  0.75,
+                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select_press__lineThickness=            0.75,
+                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow__lineThickness=                    0,
+                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow_press__lineThickness=              0,
+                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select__lineThickness=             0.75,
+                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select_press__lineThickness=       0.75,
+                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover__lineThickness=                   0,
+                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_press__lineThickness=             0,
+                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select__lineThickness=            0.75,
+                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select_press__lineThickness=      0.75,
+                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow__lineThickness=              0,
+                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow_press__lineThickness=        0,
+                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select__lineThickness=       0.75,
+                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backing__off__colour});
+                                        subject.append(backing);
+                                    //outline
+                                        var outline = interfacePart.builder('path','outline',{ points:[0,radius, radius,0, 0,-radius, -radius,0, 0,radius], thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
+                                        subject.append(outline);
+                                    // //text
+                                    //     var text_centre = interfacePart.builder('text','centre', {
+                                    //         text:text_centre, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'center',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_centre);
+                                    //cover
+                                        subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.colour = backing__off__colour;
+                                            outline.colour = backing__off__lineColour;
+                                            outline.thickness( backing__off__lineThickness );
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
+                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
+                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
+                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
+                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
+                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
+                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
+                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
+                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
+                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
+                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
+                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
+                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
+                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
+                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
+                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.colour = styles[i].colour;
+                                        outline.colour = styles[i].lineColour;
+                                        outline.thickness( styles[i].lineThickness );
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_image = function(
+                                name='button_image',
+                                x, y, width=30, height=20, angle=0, interactable=true,
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                backingURL__off,
+                                backingURL__up,
+                                backingURL__press,
+                                backingURL__select,
+                                backingURL__select_press,
+                                backingURL__glow,
+                                backingURL__glow_press,
+                                backingURL__glow_select,
+                                backingURL__glow_select_press,
+                                backingURL__hover,
+                                backingURL__hover_press,
+                                backingURL__hover_select,
+                                backingURL__hover_select_press,
+                                backingURL__hover_glow,
+                                backingURL__hover_glow_press,
+                                backingURL__hover_glow_select,
+                                backingURL__hover_glow_select_press,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(
+                                        backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
+                                        backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
+                                        backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
+                                        backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
+                                        backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
+                                        backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
+                                    ){
+                                        return this.button_rectangle(
+                                            name, x, y, width, height, angle, interactable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            active, hoverable, selectable, pressable,
+                                            undefined, undefined, undefined, undefined, undefined,
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
+                                            undefined, undefined, undefined, undefined, undefined, undefined,
+                                            onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
+                                        );
+                                    }
+                            
+                            
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
+                                        subject.append(backing);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.imageURL(backingURL__off);
+                                            return;
+                                        }
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        backing.imageURL([
+                                            backingURL__up,                     
+                                            backingURL__press,                  
+                                            backingURL__select,                 
+                                            backingURL__select_press,           
+                                            backingURL__glow,                   
+                                            backingURL__glow_press,             
+                                            backingURL__glow_select,            
+                                            backingURL__glow_select_press,      
+                                            backingURL__hover,                  
+                                            backingURL__hover_press,            
+                                            backingURL__hover_select,           
+                                            backingURL__hover_select_press,     
+                                            backingURL__hover_glow,             
+                                            backingURL__hover_glow_press,       
+                                            backingURL__hover_glow_select,      
+                                            backingURL__hover_glow_select_press,
+                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]);
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_polygon = function(
+                                name='button_polygon',
+                                x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, interactable=true,
+                                text_centre='',
+                                
+                                active=true, hoverable=true, selectable=false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__off__lineThickness=                     0,
+                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__up__lineThickness=                      0,
+                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__press__lineThickness=                   0,
+                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select__lineThickness=                  0.75,
+                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select_press__lineThickness=            0.75,
+                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow__lineThickness=                    0,
+                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow_press__lineThickness=              0,
+                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select__lineThickness=             0.75,
+                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select_press__lineThickness=       0.75,
+                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover__lineThickness=                   0,
+                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_press__lineThickness=             0,
+                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select__lineThickness=            0.75,
+                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select_press__lineThickness=      0.75,
+                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow__lineThickness=              0,
+                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow_press__lineThickness=        0,
+                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select__lineThickness=       0.75,
+                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:points, colour:backing__off__colour});
+                                        subject.append(backing);
+                                    //outline
+                                        var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
+                                        subject.append(outline);
+                                    // //text
+                                    //      var avgPoint = workspace.library.math.averagePoint(points);
+                                    //      var text_centre = interfacePart.builder('text','centre', {
+                                    //         x:avgPoint.x, y:avgPoint.y,
+                                    //         text:text_centre, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'center',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_centre);
+                                    //cover
+                                        subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:points, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.colour = backing__off__colour;
+                                            outline.colour = backing__off__lineColour;
+                                            outline.thickness( backing__off__lineThickness );
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
+                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
+                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
+                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
+                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
+                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
+                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
+                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
+                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
+                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
+                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
+                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
+                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
+                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
+                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
+                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.colour = styles[i].colour;
+                                        outline.colour = styles[i].lineColour;
+                                        outline.thickness( styles[i].lineThickness );
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.button_rectangle = function(
+                                name='button_rectangle',
+                                x, y, width=30, height=20, angle=0, interactable=true,
+                                text_centre='', text_left='', text_right='',
+                                textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
+                                
+                                active=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__off__lineThickness=                     0,
+                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__up__lineThickness=                      0,
+                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__press__lineThickness=                   0,
+                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select__lineThickness=                  0.75,
+                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__select_press__lineThickness=            0.75,
+                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow__lineThickness=                    0,
+                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__glow_press__lineThickness=              0,
+                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select__lineThickness=             0.75,
+                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__glow_select_press__lineThickness=       0.75,
+                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover__lineThickness=                   0,
+                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_press__lineThickness=             0,
+                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select__lineThickness=            0.75,
+                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_select_press__lineThickness=      0.75,
+                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow__lineThickness=              0,
+                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                backing__hover_glow_press__lineThickness=        0,
+                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select__lineThickness=       0.75,
+                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                backing__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter = function(event){},
+                                onleave = function(event){},
+                                onpress = function(event){},
+                                ondblpress = function(event){},
+                                onrelease = function(event){},
+                                onselect = function(event){},
+                                ondeselect = function(event){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
+                                        subject.append(backing);
+                                    // //text
+                                    //     var text_centre = interfacePart.builder('text','centre', {
+                                    //         x:width/2, 
+                                    //         y:height*textVerticalOffsetMux, 
+                                    //         text:text_centre, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'center',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_centre);
+                                    //     var text_left = interfacePart.builder('text','left',     {
+                                    //         x:width*textHorizontalOffsetMux, 
+                                    //         y:height*textVerticalOffsetMux, 
+                                    //         text:text_left, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'left',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_left);
+                                    //     var text_right = interfacePart.builder('text','right',   {
+                                    //         x:width-(width*textHorizontalOffsetMux), 
+                                    //         y:height*textVerticalOffsetMux, 
+                                    //         text:text_right, 
+                                    //         style:{
+                                    //             font:text_font,
+                                    //             testBaseline:text_textBaseline,
+                                    //             fill:text_fill,
+                                    //             stroke:text_stroke,
+                                    //             lineWidth:text_lineWidth,
+                                    //             textAlign:'right',
+                                    //             textBaseline:'middle',
+                                    //         }
+                                    //     });
+                                    //     subject.append(text_right);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0} });
+                                        subject.append(subject.cover);
+                            
+                                //generic button part
+                                    var object = interfacePart.builder(
+                                        'button_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                            onenter:onenter,
+                                            onleave:onleave,
+                                            onpress:onpress,
+                                            ondblpress:ondblpress,
+                                            onrelease:onrelease,
+                                            onselect:onselect,
+                                            ondeselect:ondeselect,
+                            
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.activateGraphicalState = function(state){
+                                        if(!active){ 
+                                            backing.colour = backing__off__colour;
+                                            backing.lineColour = backing__off__lineColour;
+                                            backing.thickness( backing__off__lineThickness );
+                                            return;
+                                        }
+                            
+                                        var styles = [
+                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
+                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
+                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
+                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
+                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
+                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
+                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
+                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
+                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
+                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
+                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
+                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
+                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
+                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
+                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
+                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
+                                        ];
+                            
+                                        if(!hoverable && state.hovering ){ state.hovering = false; }
+                                        if(!selectable && state.selected ){ state.selected = false; }
+                            
+                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+                                        backing.colour = styles[i].colour;
+                                        backing.lineColour = styles[i].lineColour;
+                                        backing.thickness( styles[i].lineThickness );
+                                    };
+                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
+                            
+                                return object;
+                            };
+                            this.checkbox_ = function(
+                                name='checkbox_',
+                                x, y, angle=0, interactable=true,
+                            
+                                onchange = function(){},
+                            
+                                subject
+                            ){
+                                if(subject == undefined){console.warn('checkbox_ : No subject provided');}
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //subject
+                                        object.append(subject);
+                            
+                                //state
+                                    var state = {
+                                        checked:false,
+                                        glowing:false,
+                                    };
+                            
+                                //methods
+                                    object.get = function(){ return state.checked; };
+                                    object.set = function(value, update=true){
+                                        state.checked = value;
+                                        
+                                        object.updateGraphics(state);
+                                
+                                        if(update&&this.onchange){ this.onchange(value); }
+                                    };
+                                    object.light = function(state){
+                                        if(state == undefined){ return state.glowing; }
+                            
+                                        state.glowing = state;
+                            
+                                        object.updateGraphics(state);
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                                //interactivity
+                                    subject.cover.onclick = function(event){
+                                        if(!interactable){return;}
+                                        object.set(!object.get());
+                                    };
+                                    subject.cover.onmousedown = function(){};
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            this.checkbox_circle = function(
+                                name='checkbox_circle',
+                                x, y, radius=10, angle=0, interactable=true,
+                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backingStyle});
+                                        subject.append(backing);
+                                    //check
+                                        var checkcirc = interfacePart.builder('circle','checkcirc',{radius:radius*0.8, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(checkcirc);
+                                    //cover
+                                        subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.colour = backingGlowStyle;
+                                            checkcirc.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
+                                        }else{
+                                            backing.colour = backingStyle;
+                                            checkcirc.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_image = function(
+                                name='checkbox_image',
+                                x, y, width=20, height=20, angle=0, interactable=true,
+                                uncheckURL='', checkURL='', uncheckGlowURL='', checkGlowStyle='',
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:uncheckURL});
+                                        subject.append(backing);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.imageURL(state.checked ? checkGlowStyle : uncheckGlowURL);
+                                        }else{
+                                            backing.imageURL(state.checked ? checkURL : uncheckURL);
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_polygon = function(
+                                name='checkbox_polygon',
+                                x, y, 
+                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
+                                innerPoints=[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
+                                angle=0, interactable=true,
+                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup',{});
+                                    //backing
+                                        var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:outterPoints, colour:backingStyle});
+                                        subject.append(backing);
+                                    //check
+                                        var checkpoly = interfacePart.builder('polygon','checkpoly',{pointsAsXYArray:innerPoints, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(checkpoly);
+                                    //cover
+                                        subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:outterPoints, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.colour = backingGlowStyle;
+                                            checkpoly.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
+                                        }else{
+                                            backing.colour = backingStyle;
+                                            checkpoly.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.checkbox_rectangle = function(
+                                name='checkbox_rectangle',
+                                x, y, width=20, height=20, angle=0, interactable=true,
+                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                onchange = function(){},
+                            ){
+                                //adding on the specific shapes
+                                    //main
+                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
+                                        subject.append(backing);
+                                    //check
+                                        var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(checkrect);
+                                    //cover
+                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        subject.append(subject.cover);
+                            
+                                //generic checkbox part
+                                    var object = interfacePart.builder(
+                                        'checkbox_', name, {
+                                            x:x, y:y, angle:angle, interactable:interactable,
+                                            onchange:onchange,
+                                            subject:subject,
+                                        }
+                                    );
+                            
+                                //graphical state adjust
+                                    object.updateGraphics = function(state){
+                                        if(state.glowing){
+                                            backing.colour = backingGlowStyle;
+                                            checkrect.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
+                                        }else{
+                                            backing.colour = backingStyle;
+                                            checkrect.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
+                                        }
+                                    };
+                                    object.updateGraphics({checked:false,glowing:false});
+                            
+                                return object;
+                            };
+                            this.dial_continuous = function(
+                                name='dial_continuous',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=-1,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
+                                slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
+                                needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
                             
                                 onchange=function(){},
                                 onrelease=function(){},
@@ -5490,35 +6711,1328 @@
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //slides
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder(
-                                                'slide_image', 'slide_'+a, {
-                                                    x:a*(width/count), y:0,
-                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
-                                                    value:startValue, resetValue:resetValue,
-                                                    handleURL:handleURL, backingURL:backingURL, slotURL:slotURL,
-                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
-                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
-                                                }
-                                            );
-                                            temp.__calculationAngle = angle;
-                                            object.append(temp);
-                                        }
-                                    //overlay
-                                        if(overlayURL != undefined){
-                                            var overlay = interfacePart.builder('image','overlay',{width:width, height:height, url:overlayURL});
-                                            object.append(overlay);
-                                        }
+                                    
+                                    //slot
+                                        var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, colour:slotStyle});
+                                        object.append(slot);
                             
+                                    //handle
+                                        var handle = interfacePart.builder('circle','handle',{radius:radius, colour:handleStyle});
+                                        object.append(handle);
+                            
+                                    //needle group
+                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+                                        object.append(needleGroup);
+                            
+                                        //needle
+                                            var needleWidth = radius/5;
+                                            var needleLength = radius;
+                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, colour:needleStyle});
+                                            needleGroup.append(needle);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        value = a;
+                                        needleGroup.angle(startAngle + maxAngle*value);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
+                                    };
                             
-                                        for(var a = 0; a < count; a++){
-                                            object.children[a].interactable(bool);
+                            
+                            
+                            
+                                //interaction
+                                    var turningSpeed = radius*4;
+                                    
+                                    handle.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue); 
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                                        
+                                        var move = event.deltaY/100;
+                                        var globalScale = _canvas_.core.viewport.scale();
+                                        set( value - move/(10*globalScale) );
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var value = initialValue;
+                                                var numerator = event.y - initialY;
+                                                var divider = _canvas_.core.viewport.scale();
+                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_discrete = function(
+                                name='dial_discrete',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=0, optionCount=5,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
+                                slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
+                                needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //dial
+                                        var dial = interfacePart.builder('dial_continuous',name,{
+                                            x:0, y:0, radius:radius, angle:0, interactable:interactable,
+                                            startAngle:startAngle, maxAngle:maxAngle,
+                                            style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
+                                        });
+                                        //clean out built-in interaction
+                                        dial.getChildByName('handle').ondblclick = undefined;
+                                        dial.getChildByName('handle').onwheel = undefined;
+                                        dial.getChildByName('handle').onmousedown = undefined;
+                            
+                                        object.append(dial);
+                                    
+                            
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        a = Math.round(a);
+                                        value = a;
+                                        dial.set( value/(optionCount-1) );
+                                    };
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var acc = 0;
+                            
+                                    dial.getChildByName('handle').ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue);
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    dial.getChildByName('handle').onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value -1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
                                         }
                                     };
+                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var diff = Math.round( (event.y - initialY)/25 );
+                                                set( initialValue - diff );
+                                                if(object.onchange != undefined){object.onchange(value);}
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_continuous_image = function(
+                                name='dial_continuous_image',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=-1,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleURL, slotURL, needleURL,
+                                
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //default to non-image version if image links are missing
+                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
+                                        return this.dial_continuous(
+                                            name, x, y, radius, angle, interactable, value, resetValue, startAngle, maxAngle,
+                                            undefined, undefined, undefined,
+                                            onchange, onrelease
+                                        );
+                                    }
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //slot
+                                        var slot = interfacePart.builder('image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
+                                        object.append(slot);
+                            
+                                    //handle
+                                        var handle = interfacePart.builder('image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+                                        object.append(handle);
+                            
+                                    //needle group
+                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+                                        object.append(needleGroup);
+                            
+                                        //needle
+                                            var needleWidth = radius/5;
+                                            var needleLength = radius;
+                                            var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                                                needleGroup.append(needle);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        value = a;
+                                        needleGroup.angle(startAngle + maxAngle*value);
+                                        handle.angle(startAngle + maxAngle*value);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var turningSpeed = radius*4;
+                                    
+                                    handle.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue); 
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                                        
+                                        var move = event.deltaY/100;
+                                        var globalScale = _canvas_.core.viewport.scale();
+                                        set( value - move/(10*globalScale) );
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    handle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var value = initialValue;
+                                                var numerator = event.y - initialY;
+                                                var divider = _canvas_.core.viewport.scale();
+                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.dial_discrete_image = function(
+                                name='dial_discrete_image',
+                                x, y, radius=15, angle=0, interactable=true,
+                                value=0, resetValue=0, optionCount=5,
+                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                            
+                                handleURL, slotURL, needleURL,
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //dial
+                                        var dial = interfacePart.builder('dial_continuous_image',name,{
+                                            x:0, y:0, radius:radius, angle:0, interactable:interactable,
+                                            startAngle:startAngle, maxAngle:maxAngle,
+                                            handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
+                                        });
+                                        //clean out built-in interaction
+                                        dial.getChildByName('handle').ondblclick = undefined;
+                                        dial.getChildByName('handle').onwheel = undefined;
+                                        dial.getChildByName('handle').onmousedown = undefined;
+                            
+                                        object.append(dial);
+                                    
+                            
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                            
+                                        a = Math.round(a);
+                                        value = a;
+                                        dial.set( value/(optionCount-1) );
+                                    };
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    var acc = 0;
+                            
+                                    dial.getChildByName('handle').ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue);
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    dial.getChildByName('handle').onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value -1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        }
+                                    };
+                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var initialValue = value;
+                                        var initialY = event.y;
+                            
+                                        grappled = true;
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var diff = Math.round( (event.y - initialY)/25 );
+                                                set( initialValue - diff );
+                                                if(object.onchange != undefined){object.onchange(value);}
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.list = function(
+                                name='list', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
+                            
+                                text_font = '5pt Arial',
+                                text_textBaseline = 'alphabetic',
+                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                            
+                                item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+                                item__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+                                item__off__lineThickness=                     0,
+                                item__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+                                item__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+                                item__up__lineThickness=                      0,
+                                item__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+                                item__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                item__press__lineThickness=                   0,
+                                item__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+                                item__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+                                item__select__lineThickness=                  0.75,
+                                item__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+                                item__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                item__select_press__lineThickness=            0.75,
+                                item__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+                                item__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+                                item__glow__lineThickness=                    0,
+                                item__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+                                item__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                item__glow_press__lineThickness=              0,
+                                item__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+                                item__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+                                item__glow_select__lineThickness=             0.75,
+                                item__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+                                item__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                item__glow_select_press__lineThickness=       0.75,
+                                item__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+                                item__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover__lineThickness=                   0,
+                                item__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover_press__lineThickness=             0,
+                                item__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+                                item__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_select__lineThickness=            0.75,
+                                item__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_select_press__lineThickness=      0.75,
+                                item__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover_glow__lineThickness=              0,
+                                item__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+                                item__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+                                item__hover_glow_press__lineThickness=        0,
+                                item__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+                                item__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_glow_select__lineThickness=       0.75,
+                                item__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+                                item__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+                                item__hover_glow_select_press__lineThickness= 0.75,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backing_style});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            colour:{r:1,g:0,b:0,a:0},
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            colour:break_style
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_rectangle', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                                                            text_left: list[a].text_left,
+                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
+                                                            text_right: list[a].text_right,
+                            
+                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            style:{
+                                                                text_font:text_font,
+                                                                text_textBaseline:text_textBaseline,
+                                                                text_colour:text_colour,
+                            
+                                                                background__off__colour:                            item__off__colour,
+                                                                background__off__lineColour:                        item__off__lineColour,
+                                                                background__off__lineThickness:                     item__off__lineThickness,
+                                                                background__up__colour:                             item__up__colour,
+                                                                background__up__lineColour:                         item__up__lineColour,
+                                                                background__up__lineThickness:                      item__up__lineThickness,
+                                                                background__press__colour:                          item__press__colour,
+                                                                background__press__lineColour:                      item__press__lineColour,
+                                                                background__press__lineThickness:                   item__press__lineThickness,
+                                                                background__select__colour:                         item__select__colour,
+                                                                background__select__lineColour:                     item__select__lineColour,
+                                                                background__select__lineThickness:                  item__select__lineThickness,
+                                                                background__select_press__colour:                   item__select_press__colour,
+                                                                background__select_press__lineColour:               item__select_press__lineColour,
+                                                                background__select_press__lineThickness:            item__select_press__lineThickness,
+                                                                background__glow__colour:                           item__glow__colour,
+                                                                background__glow__lineColour:                       item__glow__lineColour,
+                                                                background__glow__lineThickness:                    item__glow__lineThickness,
+                                                                background__glow_press__colour:                     item__glow_press__colour,
+                                                                background__glow_press__lineColour:                 item__glow_press__lineColour,
+                                                                background__glow_press__lineThickness:              item__glow_press__lineThickness,
+                                                                background__glow_select__colour:                    item__glow_select__colour,
+                                                                background__glow_select__lineColour:                item__glow_select__lineColour,
+                                                                background__glow_select__lineThickness:             item__glow_select__lineThickness,
+                                                                background__glow_select_press__colour:              item__glow_select_press__colour,
+                                                                background__glow_select_press__lineColour:          item__glow_select_press__lineColour,
+                                                                background__glow_select_press__lineThickness:       item__glow_select_press__lineThickness,
+                                                                background__hover__colour:                          item__hover__colour,
+                                                                background__hover__lineColour:                      item__hover__lineColour,
+                                                                background__hover__lineThickness:                   item__hover__lineThickness,
+                                                                background__hover_press__colour:                    item__hover_press__colour,
+                                                                background__hover_press__lineColour:                item__hover_press__lineColour,
+                                                                background__hover_press__lineThickness:             item__hover_press__lineThickness,
+                                                                background__hover_select__colour:                   item__hover_select__colour,
+                                                                background__hover_select__lineColour:               item__hover_select__lineColour,
+                                                                background__hover_select__lineThickness:            item__hover_select__lineThickness,
+                                                                background__hover_select_press__colour:             item__hover_select_press__colour,
+                                                                background__hover_select_press__lineColour:         item__hover_select_press__lineColour,
+                                                                background__hover_select_press__lineThickness:      item__hover_select_press__lineThickness,
+                                                                background__hover_glow__colour:                     item__hover_glow__colour,
+                                                                background__hover_glow__lineColour:                 item__hover_glow__lineColour,
+                                                                background__hover_glow__lineThickness:              item__hover_glow__lineThickness,
+                                                                background__hover_glow_press__colour:               item__hover_glow_press__colour,
+                                                                background__hover_glow_press__lineColour:           item__hover_glow_press__lineColour,
+                                                                background__hover_glow_press__lineThickness:        item__hover_glow_press__lineThickness,
+                                                                background__hover_glow_select__colour:              item__hover_glow_select__colour,
+                                                                background__hover_glow_select__lineColour:          item__hover_glow_select__lineColour,
+                                                                background__hover_glow_select__lineThickness:       item__hover_glow_select__lineThickness,
+                                                                background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
+                                                                background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
+                                                                background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
+                                                            }
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
+                                        object.stencil(stencil);
+                                        object.clipActive(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                        refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
+                                return object;
+                            };
+                            this.list_image = function(
+                                name='list_image', 
+                                x, y, width=50, height=100, angle=0, interactable=true,
+                                list=[],
+                            
+                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                            
+                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
+                                breakHeightMux=0.0025, breakWidthMux=0.9, 
+                                spacingHeightMux=0.005,
+                                backingURL, breakURL,
+                            
+                                itemURL__off,
+                                itemURL__up,
+                                itemURL__press,
+                                itemURL__select,
+                                itemURL__select_press,
+                                itemURL__glow,
+                                itemURL__glow_press,
+                                itemURL__glow_select,
+                                itemURL__glow_select_press,
+                                itemURL__hover,
+                                itemURL__hover_press,
+                                itemURL__hover_select,
+                                itemURL__hover_select_press,
+                                itemURL__hover_glow,
+                                itemURL__hover_glow_press,
+                                itemURL__hover_glow_select,
+                                itemURL__hover_glow_select_press,
+                            
+                                onenter=function(){},
+                                onleave=function(){},
+                                onpress=function(){},
+                                ondblpress=function(){},
+                                onrelease=function(){},
+                                onselection=function(){},
+                                onpositionchange=function(){},
+                            ){
+                                //state
+                                    var itemArray = [];
+                                    var selectedItems = [];
+                                    var lastNonShiftClicked = 0;
+                                    var position = 0;
+                                    var calculatedListHeight;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                        object.append(backing);
+                                    //item collection
+                                        var itemCollection = interfacePart.builder('group','itemCollection');
+                                        object.append(itemCollection);
+                                        function refreshList(){
+                                            //clean out all values
+                                                itemArray = [];
+                                                itemCollection.clear();
+                                                selectedItems = [];
+                                                position = 0;
+                                                lastNonShiftClicked = 0;
+                            
+                                            //populate list
+                                                var accumulativeHeight = 0;
+                                                for(var a = 0; a < list.length; a++){
+                                                    if( list[a] == 'space' ){
+                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
+                                                            x:0, y:accumulativeHeight,
+                                                            width:width, height:height*spacingHeightMux,
+                                                            colour:{r:0,g:0,b:0,a:0}
+                                                        });
+                            
+                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else if( list[a] == 'break'){
+                                                        var temp = interfacePart.builder('image',''+a,{
+                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*breakWidthMux, height:height*breakHeightMux,
+                                                            url:breakURL
+                                                        });
+                            
+                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                    }else{
+                                                        var temp = interfacePart.builder( 'button_image', ''+a, {
+                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
+                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
+                            
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                            
+                                                            backingURL__off:                     itemURL__off,
+                                                            backingURL__up:                      itemURL__up,
+                                                            backingURL__press:                   itemURL__press,
+                                                            backingURL__select:                  itemURL__select,
+                                                            backingURL__select_press:            itemURL__select_press,
+                                                            backingURL__glow:                    itemURL__glow,
+                                                            backingURL__glow_press:              itemURL__glow_press,
+                                                            backingURL__glow_select:             itemURL__glow_select,
+                                                            backingURL__glow_select_press:       itemURL__glow_select_press,
+                                                            backingURL__hover:                   itemURL__hover,
+                                                            backingURL__hover_press:             itemURL__hover_press,
+                                                            backingURL__hover_select:            itemURL__hover_select,
+                                                            backingURL__hover_select_press:      itemURL__hover_select_press,
+                                                            backingURL__hover_glow:              itemURL__hover_glow,
+                                                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
+                                                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
+                                                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
+                                                        });
+                            
+                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
+                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
+                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease(a);
+                                                            }
+                                                        }(a);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                            
+                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
+                                                        itemCollection.append( temp );
+                                                        itemArray.push( temp );
+                                                    }
+                                                }
+                            
+                                            return accumulativeHeight - height*itemSpacingMux;
+                                        }
+                                        calculatedListHeight = refreshList();
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
+                                    //stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.stencil(stencil);
+                                        object.clipActive(true);
+                            
+                            
+                                //interaction
+                                    cover.onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        var move = event.deltaY/100;
+                                        object.position( object.position() + move/10 );
+                                        for(var a = 0; a < itemArray.length; a++){
+                                            itemArray[a].forceMouseLeave();
+                                        }
+                                    };
+                                
+                                //controls
+                                    object.position = function(a,update=true){
+                                        if(a == undefined){return position;}
+                                        a = a < 0 ? 0 : a;
+                                        a = a > 1 ? 1 : a;
+                                        position = a;
+                            
+                                        if( calculatedListHeight < height ){return;}
+                                        var movementSpace = calculatedListHeight - height;
+                                        itemCollection.y( -a*movementSpace );
+                                        
+                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
+                                    };
+                                    object.select = function(a,state,event,update=true){
+                                        if(!selectable){return;}
+                            
+                                        //where multi selection is not allowed
+                                            if(!multiSelect){
+                                                //where we want to select an item, which is not already selected
+                                                    if(state && !selectedItems.includes(a) ){
+                                                        //deselect all other items
+                                                            while( selectedItems.length > 0 ){
+                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                selectedItems.shift();
+                                                            }
+                            
+                                                        //select current item
+                                                            selectedItems.push(a);
+                            
+                                                //where we want to deselect an item that is selected
+                                                    }else if(!state && selectedItems.includes(a)){
+                                                        selectedItems = [];
+                                                    }
+                            
+                                            //do not update the item itself, in the case that it was the item that sent this command
+                                            //(which would cause a little loop)
+                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                            
+                                        //where multi selection is allowed
+                                            }else{
+                                                //wherer range-selection is to be done
+                                                    if( event != undefined && event.shiftKey ){
+                                                        //gather top and bottom item
+                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                            var min = Math.min(lastNonShiftClicked, a);
+                                                            var max = Math.max(lastNonShiftClicked, a);
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( itemArray[b].name == ''+min ){min = b;}
+                                                                if( itemArray[b].name == ''+max ){max = b;}
+                                                            }
+                            
+                                                        //deselect all outside the range
+                                                            selectedItems = [];
+                                                            for(var b = 0; b < itemArray.length; b++){
+                                                                if( b > max || b < min ){
+                                                                    if( itemArray[b].select() ){
+                                                                        itemArray[b].select(false,undefined,false);
+                                                                    }
+                                                                }
+                                                            }
+                            
+                                                        //select those within the range (that aren't already selected)
+                                                            for(var b = min; b <= max; b++){
+                                                                if( !itemArray[b].select() ){
+                                                                    itemArray[b].select(true,undefined,false);
+                                                                    selectedItems.push(b);
+                                                                }
+                                                            }
+                                                //where range-selection is not to be done
+                                                    }else{
+                                                        if(update){ itemArray[a].select(state); }
+                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
+                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
+                                                        lastNonShiftClicked = a;
+                                                    }
+                                            }
+                            
+                                        object.onselection(selectedItems);
+                                    };
+                                    object.add = function(item){
+                                        list.push(item);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.remove = function(a){
+                                        list.splice(a,1);
+                                        calculatedListHeight = refreshList();
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                        refreshList();
+                                    };
+                            
+                                //callbacks
+                                    object.onenter = onenter;
+                                    object.onleave = onleave;
+                                    object.onpress = onpress;
+                                    object.ondblpress = ondblpress;
+                                    object.onrelease = onrelease;
+                                    object.onselection = onselection;
+                                    object.onpositionchange = onpositionchange;
+                                    
+                                return object;
+                            };
+                            this.rangeslide = function(
+                                name='rangeslide', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
+                                handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
+                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                spanStyle={r:0.78,g:0,b:0.78,a:0.5},
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                var grappled = false;
+                                var handleNames = ['start','end'];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
+                                            backingAndSlot.append(backing);
+                                        //slot
+                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
+                                            backingAndSlot.append(slot);
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                            
+                                    //span
+                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, colour:spanStyle });
+                                        object.append(span);
+                            
+                                    //handles
+                                        var handles = {}
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            //grouping
+                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
+                                                object.append(handles[handleNames[a]]);
+                                            //handle
+                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, colour:handleStyle});
+                                                handles[handleNames[a]].append(handle);
+                                            //invisible handle
+                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
+                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
+                                                handles[handleNames[a]].append(invisibleHandle);
+                                        }
+                            
+                                    //cover
+                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,handle,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        //make sure the handle order is maintained
+                                        //if necessary, one handle should push the other, though not past the ends
+                                            switch(handle){
+                                                default: console.error('unknown handle to adjust'); break;
+                                                case 'start':
+                                                    //don't allow start slide to encrouch on end slider's space
+                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
+                            
+                                                    //if start slide bumps up against end slide; move end slide accordingly
+                                                        var start_rightEdge = a + (1-a)*handleHeight;
+                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.end = start_rightEdge/(1-handleHeight);
+                                                        }
+                                                break;
+                                                case 'end':
+                                                    //don't allow end slide to encrouch on start slider's space
+                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
+                            
+                                                    //if end slide bumps up against start slide; move start slide accordingly
+                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
+                                                        var end_leftEdge = a - (a)*handleHeight;
+                                                        if( start_rightEdge >= end_leftEdge ){
+                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
+                                                        }
+                                                break;
+                                            }
+                            
+                                        //fill in data
+                                            values[handle] = a;
+                            
+                                        //adjust y positions
+                                            handles.start.y( values.start*height*(1-handleHeight) );
+                                            handles.end.y( values.end*height*(1-handleHeight) );
+                            
+                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
+                                            span.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                                            span.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                            
+                                        if(update && object.onchange){object.onchange(values);}
+                                    }
+                                    function pan(a){
+                                        var diff = values.end - values.start;
+                            
+                                        var newPositions = [ a, a+diff ];
+                                        if(newPositions[0] <= 0){
+                                            newPositions[1] = newPositions[1] - newPositions[0];
+                                            newPositions[0] = 0;
+                                        }
+                                        else if(newPositions[1] >= 1){
+                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
+                                            newPositions[1] = 1;
+                                        }
+                            
+                                        set( newPositions[0],'start' );
+                                        set( newPositions[1],'end' );
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    object.get = function(){return values;};
+                                    object.set = function(values,update){
+                                        if(grappled){return;}
+                                        if(values.start != undefined){set(values.start,'start',update);}
+                                        if(values.end != undefined){set(values.end,'end',update);}
+                                    };
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                                    
+                                //interaction
+                                    function getPositionWithinFromMouse(x,y){
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: x - (backingAndSlot.x()     + offset.x),
+                                                y: y - (backingAndSlot.y()     + offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
+                                            };
+                            
+                                        return _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
+                                    }
+                            
+                                    //background click
+                                        //to stop clicks passing through the span
+                                            span.onmousedown = function(){};
+                                            span.onclick = function(){};
+                                            
+                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(x,y,event){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var d = getPositionWithinFromMouse(x,y);
+                            
+                                            //use the distance to calculate the correct value to set the slide to
+                                            //taking into account the slide handle's size also
+                                                var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                            //whichever handle is closer; move that handle to the mouse's position
+                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
+                                        };
+                            
+                                    //double-click reset
+                                        cover.ondblclick = function(){
+                                            if(!interactable){return;}
+                                            if(resetValues.start<0 || resetValues.end<0){return;}
+                                            if(grappled){return;}
+                            
+                                            set(resetValues.start,'start');
+                                            set(resetValues.end,'end');
+                                            object.onrelease(values);
+                                        };
+                            
+                                    //span panning - expand/shrink
+                                        cover.onwheel = function(){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                            
+                                            var move = event.deltaY/100;
+                                            var globalScale = _canvas_.core.viewport.scale();
+                                            var val = move/(10*globalScale);
+                            
+                                            set(values.start-val,'start');
+                                            set(values.end+val,'end');
+                                        };
+                            
+                                    //span panning - drag
+                                        span.onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
+                                            grappled = true;
+                            
+                                            var initialValue = values.start;
+                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                            
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var livePosition = getPositionWithinFromMouse(event.x,event.y);
+                                                    pan( initialValue+(livePosition-initialPosition) )
+                                                    object.onchange(values);
+                                                },
+                                                function(event){
+                                                    object.onrelease(values);
+                                                    grappled = false;
+                                                }
+                                            );
+                                        };
+                            
+                                    //handle movement
+                                        for(var a = 0; a < handleNames.length; a++){
+                                            handles[handleNames[a]].children()[1].onmousedown = (function(a){
+                                                return function(x,y,event){
+                                                    if(!interactable){return;}
+                                                    grappled = true;
+                                        
+                                                    var initialValue = values[handleNames[a]];
+                                                    var initialPosition = getPositionWithinFromMouse(x,y);
+                                                    
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            var livePosition = getPositionWithinFromMouse(event.x,event.y);
+                                                            set( initialValue + (livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                                            object.onchange(values);
+                                                        },
+                                                        function(event){
+                                                            object.onrelease(values);
+                                                            grappled = false;
+                                                        }
+                                                    );
+                                                }
+                                            })(a);
+                                        }
+                              
+                            
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;  
+                            
+                                //setup
+                                    set(0,'start');
+                                    set(1,'end');
                             
                                 return object;
                             };
@@ -5979,6 +8493,51 @@
                             
                                 return object;
                             };
+                            this.slidePanel_image = function(
+                                name='slidePanel_image', 
+                                x, y, width=80, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                            
+                                handleURL, backingURL, slotURL, overlayURL,
+                            
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //slides
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder(
+                                                'slide_image', 'slide_'+a, {
+                                                    x:a*(width/count), y:0,
+                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
+                                                    value:startValue, resetValue:resetValue,
+                                                    handleURL:handleURL, backingURL:backingURL, slotURL:slotURL,
+                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
+                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
+                                                }
+                                            );
+                                            temp.__calculationAngle = angle;
+                                            object.append(temp);
+                                        }
+                                    //overlay
+                                        if(overlayURL != undefined){
+                                            var overlay = interfacePart.builder('image','overlay',{width:width, height:height, url:overlayURL});
+                                            object.append(overlay);
+                                        }
+                            
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                            
+                                        for(var a = 0; a < count; a++){
+                                            object.children[a].interactable(bool);
+                                        }
+                                    };
+                            
+                                return object;
+                            };
                             this.slide_image = function(
                                 name='slide_image', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -6139,2306 +8698,1965 @@
                             
                                 return object;
                             };
-                            this.rangeslide = function(
-                                name='rangeslide', 
-                                x, y, width=10, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
-                                handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
-                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
-                                spanStyle={r:0.78,g:0,b:0.78,a:0.5},
-                                onchange=function(){},
-                                onrelease=function(){},
+                            this.rastorgrid = function(
+                                name='rastorgrid', 
+                                x, y, width=80, height=80, angle=0, interactable=true,
+                                xcount=5, ycount=5,
+                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                onchange = function(){},
                             ){
-                                var grappled = false;
-                                var handleNames = ['start','end'];
-                            
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing and slot group
-                                        var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-                                        object.append(backingAndSlot);
-                                        //backing
-                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
-                                            backingAndSlot.append(backing);
-                                        //slot
-                                            var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
-                                            backingAndSlot.append(slot);
-                                        //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                            backingAndSlot.append(backingAndSlotCover);
-                            
-                                    //span
-                                        var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, colour:spanStyle });
-                                        object.append(span);
-                            
-                                    //handles
-                                        var handles = {}
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            //grouping
-                                                handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
-                                                object.append(handles[handleNames[a]]);
-                                            //handle
-                                                var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, colour:handleStyle});
-                                                handles[handleNames[a]].append(handle);
-                                            //invisible handle
-                                                var invisibleHandleHeight = height*handleHeight + height*0.01;
-                                                var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
-                                                handles[handleNames[a]].append(invisibleHandle);
-                                        }
-                            
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                        object.append(cover);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,handle,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        //make sure the handle order is maintained
-                                        //if necessary, one handle should push the other, though not past the ends
-                                            switch(handle){
-                                                default: console.error('unknown handle to adjust'); break;
-                                                case 'start':
-                                                    //don't allow start slide to encrouch on end slider's space
-                                                        if( a / (1-(handleHeight/(1-handleHeight))) >= 1 ){ a = 1-(handleHeight/(1-handleHeight)); }
-                            
-                                                    //if start slide bumps up against end slide; move end slide accordingly
-                                                        var start_rightEdge = a + (1-a)*handleHeight;
-                                                        var end_leftEdge = values.end - (values.end)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.end = start_rightEdge/(1-handleHeight);
-                                                        }
-                                                break;
-                                                case 'end':
-                                                    //don't allow end slide to encrouch on start slider's space
-                                                        if( a / (handleHeight/(1-handleHeight)) <= 1 ){ a = handleHeight/(1-handleHeight); }
-                            
-                                                    //if end slide bumps up against start slide; move start slide accordingly
-                                                        var start_rightEdge= values.start + (1-values.start)*handleHeight;
-                                                        var end_leftEdge = a - (a)*handleHeight;
-                                                        if( start_rightEdge >= end_leftEdge ){
-                                                            values.start = (end_leftEdge - handleHeight)/(1-handleHeight);
-                                                        }
-                                                break;
+                                    
+                                    //checkboxes
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
+                                                    x:x*(width/xcount),  y:y*(height/ycount), 
+                                                    width:width/xcount,  height:height/ycount, interactable:interactable,
+                                                    style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
+                                                    onchange:function(){ if(object.onchange){object.onchange(object.get());} },
+                                                });
+                                                object.append(temp);
                                             }
-                            
-                                        //fill in data
-                                            values[handle] = a;
-                            
-                                        //adjust y positions
-                                            handles.start.y( values.start*height*(1-handleHeight) );
-                                            handles.end.y( values.end*height*(1-handleHeight) );
-                            
-                                        //adjust span height (with a little bit of padding so the span is under the handles a little)
-                                            span.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                                            span.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
-                            
-                                        if(update && object.onchange){object.onchange(values);}
-                                    }
-                                    function pan(a){
-                                        var diff = values.end - values.start;
-                            
-                                        var newPositions = [ a, a+diff ];
-                                        if(newPositions[0] <= 0){
-                                            newPositions[1] = newPositions[1] - newPositions[0];
-                                            newPositions[0] = 0;
                                         }
-                                        else if(newPositions[1] >= 1){
-                                            newPositions[0] = newPositions[0] - (newPositions[1]-1);
-                                            newPositions[1] = 1;
-                                        }
-                            
-                                        set( newPositions[0],'start' );
-                                        set( newPositions[1],'end' );
-                                    }
                             
                             
                             
                             
                                 //methods
-                                    object.get = function(){return values;};
-                                    object.set = function(values,update){
-                                        if(grappled){return;}
-                                        if(values.start != undefined){set(values.start,'start',update);}
-                                        if(values.end != undefined){set(values.end,'end',update);}
+                                    object.box = function(x,y){ return object.getChildByName(y+'_'+x); };
+                                    object.get = function(){
+                                        var outputArray = [];
+                                
+                                        for(var y = 0; y < ycount; y++){
+                                            var temp = [];
+                                            for(var x = 0; x < xcount; x++){
+                                                temp.push(this.box(x,y).get());
+                                            }
+                                            outputArray.push(temp);
+                                        }
+                                
+                                        return outputArray;
+                                    };
+                                    object.set = function(value, update=true){
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.box(x,y).set(value[y][x],false);
+                                            }
+                                        }
+                                    };
+                                    object.clear = function(){
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.box(x,y).set(false,false);
+                                            }
+                                        }
+                                    };
+                                    object.light = function(x,y,state){
+                                        object.box(x,y).light(state);
                                     };
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
+                                        for(var y = 0; y < ycount; y++){
+                                            for(var x = 0; x < xcount; x++){
+                                                object.getChildByName(y+'_'+x).interactable(bool);
+                                            }
+                                        }
                                     };
                             
                             
                             
-                                    
-                                //interaction
-                                    function getPositionWithinFromMouse(x,y){
-                                        //calculate the distance the click is from the top of the slider (accounting for angle)
-                                            var offset = backingAndSlot.getOffset();
-                                            var delta = {
-                                                x: x - (backingAndSlot.x()     + offset.x),
-                                                y: y - (backingAndSlot.y()     + offset.y),
-                                                a: 0 - (backingAndSlot.angle() + offset.angle),
-                                            };
                             
-                                        return _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
+                                //callback
+                                    object.onchange = onchange;
+                            
+                                return object;
+                            };
+                            this.needleOverlay = function(
+                                name='needleOverlay',
+                                x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9), selectNeedle=true, selectionArea=true,
+                                needleStyles=[
+                                    {r:0.94,g:0.94,b:0.94,a:1},
+                                    {r:1,g:0.9,b:0.44,a:1},
+                                ],
+                                onchange=function(needle,value){}, 
+                                onrelease=function(needle,value){}, 
+                                selectionAreaToggle=function(bool){},
+                            ){
+                                var needleData = {};
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(backing);
+                                    //control objects
+                                        var controlObjectsGroup = interfacePart.builder('group','controlObjectsGroup');
+                                        object.append(controlObjectsGroup);
+                                            var controlObjectsGroup_back = interfacePart.builder('group','back');
+                                            controlObjectsGroup.append(controlObjectsGroup_back);
+                                            var controlObjectsGroup_front = interfacePart.builder('group','front');
+                                            controlObjectsGroup.append(controlObjectsGroup_front);
+                            
+                                        var invisibleHandleWidth = width*needleWidth + width*0.005;
+                                        var controlObjects = {};
+                                        //lead
+                                            controlObjects.lead = interfacePart.builder('group','lead');
+                                            controlObjects.lead.append( interfacePart.builder('rectangle','handle',{
+                                                width:needleWidth*width,
+                                                height:height,
+                                                colour:needleStyles[0],
+                                            }));
+                                            controlObjects.lead.append( interfacePart.builder('rectangle','invisibleHandle',{
+                                                x:(width*needleWidth - invisibleHandleWidth)/2, 
+                                                width:invisibleHandleWidth,
+                                                height:height,
+                                                colour:{r:1,g:0,b:0,a:0},
+                                            }));
+                                        //selection_A
+                                            controlObjects.selection_A = interfacePart.builder('group','selection_A');
+                                            controlObjects.selection_A.append( interfacePart.builder('rectangle','handle',{
+                                                width:needleWidth*width,
+                                                height:height,
+                                                colour:needleStyles[1],
+                                            }));
+                                            controlObjects.selection_A.append( interfacePart.builder('rectangle','invisibleHandle',{
+                                                x:(width*needleWidth - invisibleHandleWidth)/2, 
+                                                width:invisibleHandleWidth,height:height,
+                                                colour:{r:1,g:0,b:0,a:0},
+                                            }));
+                                        //selection_B
+                                            controlObjects.selection_B = interfacePart.builder('group','selection_B');
+                                            controlObjects.selection_B.append( interfacePart.builder('rectangle','handle',{
+                                                width:needleWidth*width,
+                                                height:height,
+                                                colour:needleStyles[1],
+                                            }));
+                                            controlObjects.selection_B.append( interfacePart.builder('rectangle','invisibleHandle',{
+                                                x:(width*needleWidth - invisibleHandleWidth)/2, 
+                                                width:invisibleHandleWidth,height:height,
+                                                colour:{r:1,g:0,b:0,a:0},
+                                            }));
+                                        //selection_area
+                                            controlObjects.selection_area = interfacePart.builder('rectangle','selection_area',{
+                                                height:height,
+                                                colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5),
+                                            });
+                                        //marks
+                                            controlObjects.markGroup = interfacePart.builder('group','markGroup');
+                                            controlObjectsGroup_back.append(controlObjects.markGroup);
+                            
+                                //internal functions
+                                    object.__calculationAngle = angle;
+                                    var leadNeedle_grappled = false;
+                                    var selectionArea_grappled = false;
+                                    var selectionNeedleA_grappled = false;
+                                    var selectionNeedleB_grappled = false;
+                                    function currentMousePosition_x(event){
+                                        return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
+                                    }
+                                    function getRelativeX(x,y){
+                                        var offset = controlObjectsGroup.getOffset();
+                                        var delta = {
+                                            x: x - (controlObjectsGroup.x()     + offset.x),
+                                            y: y - (controlObjectsGroup.y()     + offset.y),
+                                            a: 0 - (controlObjectsGroup.angle() + offset.angle),
+                                        };
+                                        var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a );
+                            
+                                        return d.x/backing.width();
+                                    }
+                                    function needleJumpTo(needle,location){
+                                        var group = needle == 'lead' ? controlObjectsGroup_front : controlObjectsGroup_back;
+                            
+                                        //if the location is wrong, remove the needle and return
+                                            if(location == undefined || location < 0 || location > 1){
+                                                group.remove(controlObjects[needle]);
+                                                delete needleData[needle];
+                                                return;
+                                            }
+                            
+                                        //if the needle isn't in the scene, add it
+                                            if( !group.contains(controlObjects[needle]) ){
+                                                group.append(controlObjects[needle]);
+                                            }
+                            
+                                        //actually set the location of the needle (adjusting for the size of needle)
+                                            controlObjects[needle].x( location*width - width*needleWidth*location );
+                                        //save this value
+                                            needleData[needle] = location;
+                                    }
+                                    function computeSelectionArea(){
+                                        //if the selection needles' data are missing (or they are the same position) remove the area element (if it exists) and return
+                                            if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
+                                                if(controlObjectsGroup_back.contains(controlObjects.selection_area)){ controlObjectsGroup_back.remove(controlObjects.selection_area); }
+                                                if(object.selectionAreaToggle){object.selectionAreaToggle(false);}
+                                                delete needleData.selection_area;
+                                                return;
+                                            }
+                            
+                                        //if the area isn't in the scene, add it
+                                            if( !controlObjectsGroup_back.contains(controlObjects.selection_area) ){
+                                                controlObjectsGroup_back.append(controlObjects.selection_area);
+                                                if(object.selectionAreaToggle){object.selectionAreaToggle(true);}
+                                            }
+                            
+                                        //compute area position and size
+                                            if(needleData.selection_A < needleData.selection_B){
+                                                var A = needleData.selection_A;
+                                                var B = needleData.selection_B;
+                                            }else{
+                                                var A = needleData.selection_B;
+                                                var B = needleData.selection_A;
+                                            }
+                                            var start = A - needleWidth*A + needleWidth
+                                            var area = B - needleWidth*B - start; 
+                                            if(area < 0){area = 0}
+                            
+                                            controlObjects.selection_area.x(width*start);
+                                            controlObjects.selection_area.width(width*area);
+                                    }
+                                    function mark(position){
+                                        //the name of the mark to be added, is the position it is at
+                            
+                                        //if a child already exists in the mark group, remove it. Otherwise add a new mark.
+                                        //return 'true' if the mark was added, or 'false' if it was removed
+                                            var tmp = controlObjects.markGroup.getChildByName(''+position);
+                                            if( tmp == undefined ){
+                                                controlObjects.markGroup.append( interfacePart.builder('rectangle',''+position,{
+                                                    x:position*width, 
+                                                    width:needleWidth*width, height:height,
+                                                    style:{ fill:needleStyles[0] },
+                                                }));
+                                                return true;
+                                            }else{ 
+                                                controlObjects.markGroup.remove(tmp);
+                                                return false;
+                                            }
+                                    }
+                                    function select(position,update=true){
+                                        if(!selectNeedle){return;}
+                                        //if there's no input, return the value
+                                        //if input is out of bounds, remove the needle
+                                        //otherwise, set the position
+                                        if(position == undefined){ return needleData.lead; }
+                                        else if(position > 1 || position < 0){ needleJumpTo('lead'); }
+                                        else{ needleJumpTo('lead',position); }
+                            
+                                        if(update && object.onchange != undefined){object.onchange('lead',position);}
+                                    }
+                                    function area(positionA,positionB,update=true){
+                                        if(!selectionArea){return;}
+                            
+                                        //if there's no input, return the values
+                                        //if input is out of bounds, remove the needles
+                                        //otherwise, set the position
+                                            if(positionA == undefined || positionB == undefined){
+                                                return {A:needleData.selection_A, B:needleData.selection_B};
+                                            }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
+                                                needleJumpTo('selection_A');
+                                                needleJumpTo('selection_B');
+                                            }else{
+                                                needleJumpTo('selection_A',positionA);
+                                                needleJumpTo('selection_B',positionB);
+                                            }
+                            
+                                        //you always gotta compute the selection area
+                                            computeSelectionArea();
+                            
+                                        if(update && object.onchange != undefined){object.onchange('selection_A',positionA);}
+                                        if(update && object.onchange != undefined){object.onchange('selection_B',positionB);}
                                     }
                             
-                                    //background click
-                                        //to stop clicks passing through the span
-                                            span.onmousedown = function(){};
-                                            span.onclick = function(){};
-                                            
-                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                        backingAndSlotCover.onclick = function(x,y,event){
+                                //interaction
+                                    //generic onmousedown code for interaction
+                                        backing.onmousedown = function(x,y){
                                             if(!interactable){return;}
-                                            if(grappled){return;}
-                            
-                                            //calculate the distance the click is from the top of the slider (accounting for angle)
-                                                var d = getPositionWithinFromMouse(x,y);
-                            
-                                            //use the distance to calculate the correct value to set the slide to
-                                            //taking into account the slide handle's size also
-                                                var value = d + 0.5*handleHeight*((2*d)-1);
-                            
-                                            //whichever handle is closer; move that handle to the mouse's position
-                                                Math.abs(values.start-value) < Math.abs(values.end-value) ? set(value,'start') : set(value,'end');
+                                            if( _canvas_.system.keyboard.pressedKeys.shift ){
+                                                var firstPosition = getRelativeX(x,y);
+                                                _canvas_.system.mouse.mouseInteractionHandler(
+                                                    function(event){ 
+                                                        var x = getRelativeX(event.x,event.y);
+                                                        if(x < 0){x = 0;}else if(x > 1){x = 1;}
+                                                        object.area(firstPosition,x);
+                                                    },    
+                                                );
+                                            }else{
+                                                object.select(getRelativeX(x,y));
+                                            }
                                         };
-                            
-                                    //double-click reset
-                                        cover.ondblclick = function(){
+                                        controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
+                                        controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
                                             if(!interactable){return;}
-                                            if(resetValues.start<0 || resetValues.end<0){return;}
-                                            if(grappled){return;}
                             
-                                            set(resetValues.start,'start');
-                                            set(resetValues.end,'end');
-                                            object.onrelease(values);
-                                        };
+                                            leadNeedle_grappled = true;
                             
-                                    //span panning - expand/shrink
-                                        cover.onwheel = function(){
-                                            if(!interactable){return;}
-                                            if(grappled){return;}
-                            
-                                            var move = event.deltaY/100;
-                                            var globalScale = _canvas_.core.viewport.scale();
-                                            var val = move/(10*globalScale);
-                            
-                                            set(values.start-val,'start');
-                                            set(values.end+val,'end');
-                                        };
-                            
-                                    //span panning - drag
-                                        span.onmousedown = function(x,y,event){
-                                            if(!interactable){return;}
-                                            grappled = true;
-                            
-                                            var initialValue = values.start;
-                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                                            var initialValue = needleData.lead;
+                                            var initialX = currentMousePosition_x(event);
+                                            var mux = (width - width*needleWidth);
                             
                                             _canvas_.system.mouse.mouseInteractionHandler(
                                                 function(event){
-                                                    var livePosition = getPositionWithinFromMouse(event.x,event.y);
-                                                    pan( initialValue+(livePosition-initialPosition) )
-                                                    object.onchange(values);
+                                                    var numerator = initialX - currentMousePosition_x(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    var location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    select(location);
                                                 },
                                                 function(event){
-                                                    object.onrelease(values);
-                                                    grappled = false;
-                                                }
+                                                    var numerator = initialX - currentMousePosition_x(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    var location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    leadNeedle_grappled = false;
+                                                    select(location);
+                                                    if(object.onrelease != undefined){object.onrelease('lead',location);}
+                                                },       
                                             );
                                         };
                             
-                                    //handle movement
-                                        for(var a = 0; a < handleNames.length; a++){
-                                            handles[handleNames[a]].children()[1].onmousedown = (function(a){
-                                                return function(x,y,event){
-                                                    if(!interactable){return;}
-                                                    grappled = true;
-                                        
-                                                    var initialValue = values[handleNames[a]];
-                                                    var initialPosition = getPositionWithinFromMouse(x,y);
-                                                    
-                                                    _canvas_.system.mouse.mouseInteractionHandler(
-                                                        function(event){
-                                                            var livePosition = getPositionWithinFromMouse(event.x,event.y);
-                                                            set( initialValue + (livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
-                                                            object.onchange(values);
-                                                        },
-                                                        function(event){
-                                                            object.onrelease(values);
-                                                            grappled = false;
-                                                        }
-                                                    );
-                                                }
-                                            })(a);
-                                        }
-                              
+                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
+                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
                             
+                                            selectionNeedleA_grappled = true;
                             
+                                            var initialValue = needleData.selection_A;
+                                            var initialX = currentMousePosition_x(event);
+                                            var mux = (width - width*needleWidth);// / 2;
                             
-                                //callbacks
-                                    object.onchange = onchange;
-                                    object.onrelease = onrelease;  
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var numerator = initialX - currentMousePosition_x(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    var location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    area(location,needleData.selection_B);
+                                                },
+                                                function(event){
+                                                    var numerator = initialX - currentMousePosition_x(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    var location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    selectionNeedleA_grappled = false;
+                                                    area(location,needleData.selection_B);
+                                                    if(object.onrelease != undefined){object.onrelease('selection_A',location);}
+                                                },       
+                                            );
+                                        };
                             
-                                //setup
-                                    set(0,'start');
-                                    set(1,'end');
+                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
+                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
                             
-                                return object;
-                            };
-                            this.checkbox_rectangle = function(
-                                name='checkbox_rectangle',
-                                x, y, width=20, height=20, angle=0, interactable=true,
-                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                onchange = function(){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup');
-                                    //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
-                                        subject.append(backing);
-                                    //check
-                                        var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(checkrect);
-                                    //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(subject.cover);
+                                            selectionNeedleB_grappled = true;
                             
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
+                                            var initialValue = needleData.selection_B;
+                                            var initialX = currentMousePosition_x(event);
+                                            var mux = (width - width*needleWidth);// / 2;
                             
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){
-                                        if(state.glowing){
-                                            backing.colour = backingGlowStyle;
-                                            checkrect.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
-                                        }else{
-                                            backing.colour = backingStyle;
-                                            checkrect.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var numerator = initialX - currentMousePosition_x(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    var location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    area(needleData.selection_A,location);
+                                                },
+                                                function(event){
+                                                    var numerator = initialX - currentMousePosition_x(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    var location = initialValue - numerator/(divider*mux);
+                                                    location = location < 0 ? 0 : location;
+                                                    location = location > 1 ? 1 : location;
+                                                    selectionNeedleB_grappled = false;
+                                                    area(needleData.selection_A,location);
+                                                    if(object.onrelease != undefined){object.onrelease('selection_B',location);}
+                                                },       
+                                            );
+                                        };
                             
-                                return object;
-                            };
-                            this.checkbox_image = function(
-                                name='checkbox_image',
-                                x, y, width=20, height=20, angle=0, interactable=true,
-                                uncheckURL, checkURL, checkGlowURL, backingGlowURL,
-                                onchange = function(){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:uncheckURL});
-                                        subject.append(backing);
-                                    //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
-                                        subject.append(subject.cover);
+                                        controlObjects.selection_area.onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('grab');};
+                                        controlObjects.selection_area.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.selection_area.onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
                             
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
+                                            _canvas_.core.viewport.cursor('grabbing');
+                                            selectionArea_grappled = true;
                             
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){ 
-                                        if(state.glowing){
-                                            backing.url = state.checked ? checkGlowURL : uncheckGlowURL;
-                                        }else{
-                                            backing.url = state.checked ? checkURL : uncheckURL;
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
+                                            var areaSize = needleData.selection_B - needleData.selection_A;
+                                            var initialValues = {A:needleData.selection_A, B:needleData.selection_B};
+                                            var initialX = currentMousePosition_x(event);
+                                            var mux = (width - width*needleWidth);// / 2;
                             
-                                return object;
-                            };
-                            this.checkbox_ = function(
-                                name='checkbox_',
-                                x, y, angle=0, interactable=true,
-                            
-                                onchange = function(){},
-                            
-                                subject
-                            ){
-                                if(subject == undefined){console.warn('checkbox_ : No subject provided');}
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //subject
-                                        object.append(subject);
-                            
-                                //state
-                                    var state = {
-                                        checked:false,
-                                        glowing:false,
-                                    };
-                            
-                                //methods
-                                    object.get = function(){ return state.checked; };
-                                    object.set = function(value, update=true){
-                                        state.checked = value;
-                                        
-                                        object.updateGraphics(state);
-                                
-                                        if(update&&this.onchange){ this.onchange(value); }
-                                    };
-                                    object.light = function(state){
-                                        if(state == undefined){ return state.glowing; }
-                            
-                                        state.glowing = state;
-                            
-                                        object.updateGraphics(state);
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                                //interactivity
-                                    subject.cover.onclick = function(event){
-                                        if(!interactable){return;}
-                                        object.set(!object.get());
-                                    };
-                                    subject.cover.onmousedown = function(){};
-                            
-                                //callbacks
-                                    object.onchange = onchange;
-                            
-                                return object;
-                            };
-                            this.checkbox_polygon = function(
-                                name='checkbox_polygon',
-                                x, y, 
-                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
-                                innerPoints=[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
-                                angle=0, interactable=true,
-                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                onchange = function(){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:outterPoints, colour:backingStyle});
-                                        subject.append(backing);
-                                    //check
-                                        var checkpoly = interfacePart.builder('polygon','checkpoly',{pointsAsXYArray:innerPoints, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(checkpoly);
-                                    //cover
-                                        subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:outterPoints, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(subject.cover);
-                            
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){
-                                        if(state.glowing){
-                                            backing.colour = backingGlowStyle;
-                                            checkpoly.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
-                                        }else{
-                                            backing.colour = backingStyle;
-                                            checkpoly.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
-                            
-                                return object;
-                            };
-                            this.checkbox_circle = function(
-                                name='checkbox_circle',
-                                x, y, radius=10, angle=0, interactable=true,
-                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                onchange = function(){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup');
-                                    //backing
-                                        var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backingStyle});
-                                        subject.append(backing);
-                                    //check
-                                        var checkcirc = interfacePart.builder('circle','checkcirc',{radius:radius*0.8, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(checkcirc);
-                                    //cover
-                                        subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(subject.cover);
-                            
-                                //generic checkbox part
-                                    var object = interfacePart.builder(
-                                        'checkbox_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            onchange:onchange,
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.updateGraphics = function(state){
-                                        if(state.glowing){
-                                            backing.colour = backingGlowStyle;
-                                            checkcirc.colour = state.checked ? checkGlowStyle : {r:0,g:0,b:0,a:0};
-                                        }else{
-                                            backing.colour = backingStyle;
-                                            checkcirc.colour = state.checked ? checkStyle : {r:0,g:0,b:0,a:0};
-                                        }
-                                    };
-                                    object.updateGraphics({checked:false,glowing:false});
-                            
-                                return object;
-                            };
-                            this.dial_continuous_image = function(
-                                name='dial_continuous_image',
-                                x, y, radius=15, angle=0, interactable=true,
-                                value=0, resetValue=-1,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleURL, slotURL, needleURL,
-                                
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //default to non-image version if image links are missing
-                                    if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
-                                        return this.dial_continuous(
-                                            name, x, y, radius, angle, interactable, value, resetValue, startAngle, maxAngle,
-                                            undefined, undefined, undefined,
-                                            onchange, onrelease
-                                        );
-                                    }
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //slot
-                                        var slot = interfacePart.builder('image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
-                                        object.append(slot);
-                            
-                                    //handle
-                                        var handle = interfacePart.builder('image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
-                                        object.append(handle);
-                            
-                                    //needle group
-                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
-                                        object.append(needleGroup);
-                            
-                                        //needle
-                                            var needleWidth = radius/5;
-                                            var needleLength = radius;
-                                            var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
-                                                needleGroup.append(needle);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        value = a;
-                                        needleGroup.angle(startAngle + maxAngle*value);
-                                        handle.angle(startAngle + maxAngle*value);
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var turningSpeed = radius*4;
-                                    
-                                    handle.ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue); 
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                                        
-                                        var move = event.deltaY/100;
-                                        var globalScale = _canvas_.core.viewport.scale();
-                                        set( value - move/(10*globalScale) );
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var value = initialValue;
-                                                var numerator = event.y - initialY;
+                                            function calculate(event){
+                                                var numerator = initialX - currentMousePosition_x(event);
                                                 var divider = _canvas_.core.viewport.scale();
-                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
+                            
+                                                var location = {
+                                                    A: initialValues.A - numerator/(divider*mux),
+                                                    B: initialValues.B - numerator/(divider*mux),
+                                                };
+                            
+                                                if( location.A > 1 ){ location.A = 1; location.B = 1 + areaSize; }
+                                                if( location.B > 1 ){ location.B = 1; location.A = 1 - areaSize; }
+                                                if( location.A < 0 ){ location.A = 0; location.B = areaSize; }
+                                                if( location.B < 0 ){ location.B = 0; location.A = -areaSize; }
+                            
+                                                return location;
                                             }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.dial_continuous = function(
-                                name='dial_continuous',
-                                x, y, radius=15, angle=0, interactable=true,
-                                value=0, resetValue=-1,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
-                                slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
-                                needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //slot
-                                        var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, colour:slotStyle});
-                                        object.append(slot);
-                            
-                                    //handle
-                                        var handle = interfacePart.builder('circle','handle',{radius:radius, colour:handleStyle});
-                                        object.append(handle);
-                            
-                                    //needle group
-                                        var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
-                                        object.append(needleGroup);
-                            
-                                        //needle
-                                            var needleWidth = radius/5;
-                                            var needleLength = radius;
-                                            var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, colour:needleStyle});
-                                            needleGroup.append(needle);
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        value = a;
-                                        needleGroup.angle(startAngle + maxAngle*value);
-                                    }
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var turningSpeed = radius*4;
-                                    
-                                    handle.ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue); 
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                                        
-                                        var move = event.deltaY/100;
-                                        var globalScale = _canvas_.core.viewport.scale();
-                                        set( value - move/(10*globalScale) );
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    handle.onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var value = initialValue;
-                                                var numerator = event.y - initialY;
-                                                var divider = _canvas_.core.viewport.scale();
-                                                set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.dial_discrete_image = function(
-                                name='dial_discrete_image',
-                                x, y, radius=15, angle=0, interactable=true,
-                                value=0, resetValue=0, optionCount=5,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleURL, slotURL, needleURL,
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //dial
-                                        var dial = interfacePart.builder('dial_continuous_image',name,{
-                                            x:0, y:0, radius:radius, angle:0, interactable:interactable,
-                                            startAngle:startAngle, maxAngle:maxAngle,
-                                            handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
-                                        });
-                                        //clean out built-in interaction
-                                        dial.getChildByName('handle').ondblclick = undefined;
-                                        dial.getChildByName('handle').onwheel = undefined;
-                                        dial.getChildByName('handle').onmousedown = undefined;
-                            
-                                        object.append(dial);
-                                    
-                            
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){ 
-                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        a = Math.round(a);
-                                        value = a;
-                                        dial.set( value/(optionCount-1) );
-                                    };
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var acc = 0;
-                            
-                                    dial.getChildByName('handle').ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue);
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    dial.getChildByName('handle').onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        var move = event.deltaY/100;
-                            
-                                        acc += move;
-                                        if( Math.abs(acc) >= 1 ){
-                                            set( value -1*Math.sign(acc) );
-                                            acc = 0;
-                                            if(object.onrelease != undefined){object.onrelease(value);}
-                                        }
-                                    };
-                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var diff = Math.round( (event.y - initialY)/25 );
-                                                set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.dial_discrete = function(
-                                name='dial_discrete',
-                                x, y, radius=15, angle=0, interactable=true,
-                                value=0, resetValue=0, optionCount=5,
-                                startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
-                            
-                                handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
-                                slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
-                                needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
-                            
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    
-                                    //dial
-                                        var dial = interfacePart.builder('dial_continuous',name,{
-                                            x:0, y:0, radius:radius, angle:0, interactable:interactable,
-                                            startAngle:startAngle, maxAngle:maxAngle,
-                                            style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
-                                        });
-                                        //clean out built-in interaction
-                                        dial.getChildByName('handle').ondblclick = undefined;
-                                        dial.getChildByName('handle').onwheel = undefined;
-                                        dial.getChildByName('handle').onmousedown = undefined;
-                            
-                                        object.append(dial);
-                                    
-                            
-                            
-                            
-                            
-                            
-                                //graphical adjust
-                                    function set(a,update=true){ 
-                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
-                                        a = (a<0 ? 0 : a);
-                            
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                            
-                                        a = Math.round(a);
-                                        value = a;
-                                        dial.set( value/(optionCount-1) );
-                                    };
-                            
-                            
-                            
-                            
-                                //methods
-                                    var grappled = false;
-                            
-                                    object.set = function(value,update){
-                                        if(grappled){return;}
-                                        set(value,update);
-                                    };
-                                    object.get = function(){return value;};
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                    };
-                            
-                            
-                            
-                            
-                                //interaction
-                                    var acc = 0;
-                            
-                                    dial.getChildByName('handle').ondblclick = function(){
-                                        if(!interactable){return;}
-                                        if(resetValue<0){return;}
-                                        if(grappled){return;}
-                                        
-                                        set(resetValue);
-                            
-                                        if(object.onrelease != undefined){object.onrelease(value);}
-                                    };
-                                    dial.getChildByName('handle').onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        if(grappled){return;}
-                            
-                                        var move = event.deltaY/100;
-                            
-                                        acc += move;
-                                        if( Math.abs(acc) >= 1 ){
-                                            set( value -1*Math.sign(acc) );
-                                            acc = 0;
-                                            if(object.onrelease != undefined){object.onrelease(value);}
-                                        }
-                                    };
-                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var initialValue = value;
-                                        var initialY = event.y;
-                            
-                                        grappled = true;
-                                        _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var diff = Math.round( (event.y - initialY)/25 );
-                                                set( initialValue - diff );
-                                                if(object.onchange != undefined){object.onchange(value);}
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                                if(object.onrelease != undefined){object.onrelease(value);}
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                            
-                                //callbacks
-                                    object.onchange = onchange; 
-                                    object.onrelease = onrelease;
-                            
-                                //setup
-                                    set(value);
-                            
-                                return object;
-                            };
-                            this.button_circle = function(
-                                name='button_circle',
-                                x, y, radius=15,  angle=0, interactable=true,
-                                text_centre='',
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var location = calculate(event);
+                                                    area(location.A,location.B);
+                                                },
+                                                function(event){
+                                                    _canvas_.core.viewport.cursor('grab');
+                            
+                                                    var location = calculate(event);
+                            
+                                                    selectionArea_grappled = false;
+                                                    area(location.A,location.B);
+                                                    if(object.onrelease != undefined){object.onrelease('selection_A',location.A);}
+                                                    if(object.onrelease != undefined){object.onrelease('selection_B',location.B);}
+                                                },
+                                            );
+                            
+                                            
+                                        };
+                            
+                                    //doubleclick to destroy selection area
+                                        controlObjects.selection_A.ondblclick = function(x,y,event,shape){ if(!interactable){return;} area(-1,-1); _canvas_.core.viewport.cursor('default'); };
+                                        controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
+                                        controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
                                 
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
-                            
-                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
-                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__off__lineThickness=                     0,
-                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
-                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__up__lineThickness=                      0,
-                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
-                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__press__lineThickness=                   0,
-                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
-                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__select__lineThickness=                  0.75,
-                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
-                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__select_press__lineThickness=            0.75,
-                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__glow__lineThickness=                    0,
-                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__glow_press__lineThickness=              0,
-                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__glow_select__lineThickness=             0.75,
-                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__glow_select_press__lineThickness=       0.75,
-                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover__lineThickness=                   0,
-                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_press__lineThickness=             0,
-                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_select__lineThickness=            0.75,
-                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_select_press__lineThickness=      0.75,
-                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_glow__lineThickness=              0,
-                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_glow_press__lineThickness=        0,
-                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_glow_select__lineThickness=       0.75,
-                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_glow_select_press__lineThickness= 0.75,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backing__off__colour});
-                                        subject.append(backing);
-                                    //outline
-                                        var outline = interfacePart.builder('path','outline',{ points:[0,radius, radius,0, 0,-radius, -radius,0, 0,radius], thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
-                                        subject.append(outline);
-                                    // //text
-                                    //     var text_centre = interfacePart.builder('text','centre', {
-                                    //         text:text_centre, 
-                                    //         style:{
-                                    //             font:text_font,
-                                    //             testBaseline:text_textBaseline,
-                                    //             fill:text_fill,
-                                    //             stroke:text_stroke,
-                                    //             lineWidth:text_lineWidth,
-                                    //             textAlign:'center',
-                                    //             textBaseline:'middle',
-                                    //         }
-                                    //     });
-                                    //     subject.append(text_centre);
-                                    //cover
-                                        subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(subject.cover);
-                            
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
-                            
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.colour = backing__off__colour;
-                                            outline.colour = backing__off__lineColour;
-                                            outline.thickness( backing__off__lineThickness );
-                                            return;
-                                        }
-                            
-                                        var styles = [
-                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
-                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
-                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
-                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
-                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
-                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
-                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
-                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
-                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
-                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
-                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
-                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
-                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
-                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
-                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
-                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
-                                        ];
-                            
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
-                            
-                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-                                        backing.colour = styles[i].colour;
-                                        outline.colour = styles[i].lineColour;
-                                        outline.thickness( styles[i].lineThickness );
-                                    };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
-                            
-                                return object;
-                            };
-                            this.button_rectangle = function(
-                                name='button_rectangle',
-                                x, y, width=30, height=20, angle=0, interactable=true,
-                                text_centre='', text_left='', text_right='',
-                                textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
-                                
-                                active=true, hoverable=true, selectable=!false, pressable=true,
-                            
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
-                            
-                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
-                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__off__lineThickness=                     0,
-                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
-                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__up__lineThickness=                      0,
-                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
-                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__press__lineThickness=                   0,
-                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
-                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__select__lineThickness=                  0.75,
-                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
-                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__select_press__lineThickness=            0.75,
-                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__glow__lineThickness=                    0,
-                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__glow_press__lineThickness=              0,
-                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__glow_select__lineThickness=             0.75,
-                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__glow_select_press__lineThickness=       0.75,
-                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover__lineThickness=                   0,
-                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_press__lineThickness=             0,
-                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_select__lineThickness=            0.75,
-                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_select_press__lineThickness=      0.75,
-                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_glow__lineThickness=              0,
-                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_glow_press__lineThickness=        0,
-                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_glow_select__lineThickness=       0.75,
-                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_glow_select_press__lineThickness= 0.75,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup');
-                                    //backing
-                                        var backing = interfacePart.builder('rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
-                                        subject.append(backing);
-                                    // //text
-                                    //     var text_centre = interfacePart.builder('text','centre', {
-                                    //         x:width/2, 
-                                    //         y:height*textVerticalOffsetMux, 
-                                    //         text:text_centre, 
-                                    //         style:{
-                                    //             font:text_font,
-                                    //             testBaseline:text_textBaseline,
-                                    //             fill:text_fill,
-                                    //             stroke:text_stroke,
-                                    //             lineWidth:text_lineWidth,
-                                    //             textAlign:'center',
-                                    //             textBaseline:'middle',
-                                    //         }
-                                    //     });
-                                    //     subject.append(text_centre);
-                                    //     var text_left = interfacePart.builder('text','left',     {
-                                    //         x:width*textHorizontalOffsetMux, 
-                                    //         y:height*textVerticalOffsetMux, 
-                                    //         text:text_left, 
-                                    //         style:{
-                                    //             font:text_font,
-                                    //             testBaseline:text_textBaseline,
-                                    //             fill:text_fill,
-                                    //             stroke:text_stroke,
-                                    //             lineWidth:text_lineWidth,
-                                    //             textAlign:'left',
-                                    //             textBaseline:'middle',
-                                    //         }
-                                    //     });
-                                    //     subject.append(text_left);
-                                    //     var text_right = interfacePart.builder('text','right',   {
-                                    //         x:width-(width*textHorizontalOffsetMux), 
-                                    //         y:height*textVerticalOffsetMux, 
-                                    //         text:text_right, 
-                                    //         style:{
-                                    //             font:text_font,
-                                    //             testBaseline:text_textBaseline,
-                                    //             fill:text_fill,
-                                    //             stroke:text_stroke,
-                                    //             lineWidth:text_lineWidth,
-                                    //             textAlign:'right',
-                                    //             textBaseline:'middle',
-                                    //         }
-                                    //     });
-                                    //     subject.append(text_right);
-                                    //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0} });
-                                        subject.append(subject.cover);
-                            
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
-                            
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.colour = backing__off__colour;
-                                            backing.lineColour = backing__off__lineColour;
-                                            backing.thickness( backing__off__lineThickness );
-                                            return;
-                                        }
-                            
-                                        var styles = [
-                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
-                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
-                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
-                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
-                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
-                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
-                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
-                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
-                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
-                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
-                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
-                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
-                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
-                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
-                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
-                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
-                                        ];
-                            
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
-                            
-                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-                                        backing.colour = styles[i].colour;
-                                        backing.lineColour = styles[i].lineColour;
-                                        backing.thickness( styles[i].lineThickness );
-                                    };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
-                            
-                                return object;
-                            };
-                            this.button_ = function(
-                                name='',
-                                x, y, angle=0, interactable=true,
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            
-                                subject
-                            ){
-                                if(subject == undefined){console.warn('button_ : No subject provided');}
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //subject
-                                        object.append(subject);
-                            
-                                //state
-                                    object.state = {
-                                        hovering:false,
-                                        glowing:false,
-                                        selected:false,
-                                        pressed:false,
-                                    };
-                            
                                 //control
-                                    object.press = function(event){
-                                        if(!active){return;}
+                                    object.mark = function(position){ return mark(position); };
+                                    object.removeAllMarks = function(){ controlObjects.markGroup.clear(); };
+                                    object.select = function(position,update=true){
+                                        if(position == undefined){return select();}
                             
-                                        if( pressable ){
-                                            if(this.state.pressed){return;}
-                                            this.state.pressed = true;
-                                            if(this.onpress){this.onpress(this, event);}
-                                        }
-                                        
-                                        this.select( !this.select(), event );
-                            
-                                        object.activateGraphicalState(object.state);
+                                        if(leadNeedle_grappled){return;}
+                                        select(position,update);
                                     };
-                                    object.release = function(event){
-                                        if(!active || !pressable){return;}
-                            
-                                        if(!this.state.pressed){return;}
-                                        this.state.pressed = false;
-                                        object.activateGraphicalState(object.state);
-                                        if(this.onrelease){this.onrelease(this, event);}
-                                    };
-                                    object.active = function(bool){ if(bool == undefined){return active;} active = bool; object.activateGraphicalState(object.state); };
-                                    object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  object.activateGraphicalState(object.state); };
-                                    object.select = function(bool,event,callback=true){ 
-                                        if(!active){return;}
-                            
-                                        if(bool == undefined){return this.state.selected;}
-                                        if(!selectable){return;}
-                                        if(this.state.selected == bool){return;}
-                                        this.state.selected = bool; object.activateGraphicalState(object.state);
-                                        if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+                                    object.area = function(positionA,positionB,update=true){
+                                        if(positionA == undefined && positionB == undefined){ return area(); }
+                                        if(selectionArea_grappled){return;}
+                                        if(positionA != undefined && selectionNeedleA_grappled){return;}
+                                        if(positionB != undefined && selectionNeedleB_grappled){return;}
+                                        area(positionA,positionB,update);
                                     };
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
                                     };
-                                    object.forceMouseLeave = function(){
-                                        object.state.hovering = false; 
-                                        object.release('forced'); 
-                                        object.activateGraphicalState(object.state); 
-                                        if(object.onleave){object.onleave('forced');}
-                                    };
                             
-                            
-                            
-                            
-                                //interactivity
-                                    subject.cover.onmouseenter = function(x,y,event){
-                                        object.state.hovering = true;  
-                                        object.activateGraphicalState(object.state);
-                                        if(object.onenter){object.onenter(event);}
-                                        if(event.buttons == 1){subject.cover.onmousedown(event);} 
-                                    };
-                                    subject.cover.onmouseleave = function(x,y,event){ 
-                                        object.state.hovering = false; 
-                                        object.release(event); 
-                                        object.activateGraphicalState(object.state); 
-                                        if(object.onleave){object.onleave(event);}
-                                    };
-                                    subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
-                                    subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
-                                    subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
+                                //callback
+                                    object.onchange = onchange;
+                                    object.onrelease = onrelease;
+                                    object.selectionAreaToggle = selectionAreaToggle;
                                     
+                                return object;
+                            };
+                            this.grapher_waveWorkspace = function(
+                                name='grapher_waveWorkspace',
+                                x, y, width=120, height=60, angle=0, interactable=true, selectNeedle=true, selectionArea=true,
                             
+                                foregroundStyles=[
+                                    {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
+                                ],
+                                foregroundTextStyles=[
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                ],
                             
+                                backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
+                                backgroundTextStyle_size='7.5pt',
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            
+                                onchange=function(needle,value){}, 
+                                onrelease=function(needle,value){}, 
+                                selectionAreaToggle=function(bool){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //main graph
+                                        var graph = interfacePart.builder('grapher_static', 'graph', {
+                                            width:width, height:height,
+                                            style:{
+                                                foregrounds:foregroundStyles,   
+                                                foregroundText:foregroundTextStyles,
+                                                background_stroke:backgroundStyle_stroke,
+                                                background_thickness:backgroundStyle_thickness,
+                                                backgroundText_colour:backgroundTextStyle_colour,
+                                                backgroundText_size:backgroundTextStyle_size,
+                                                backgroundText_font:backgroundTextStyle_font,
+                                                backing:backingStyle,
+                                            }
+                                        });
+                                        graph.resolution(10);
+                                        object.append(graph);
+                                    //needle overlay
+                                        var overlay = interfacePart.builder('needleOverlay', 'overlay', {
+                                            width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
+                                            needleStyles:foregroundStyles.map(a => a.stroke),
+                                        });
+                                        object.append(overlay);
+                            
+                                //controls
+                                    //grapher
+                                        object.horizontalMarkings = graph.horizontalMarkings;
+                                        object.verticalMarkings = graph.verticalMarkings;
+                                        object.drawBackground = graph.drawBackground;
+                                        object.drawForeground = graph.drawForeground;
+                                        object.draw = graph.draw;
+                                    //needle overlay
+                                        object.mark = overlay.mark;
+                                        object.removeAllMarks = overlay.removeAllMarks;
+                                        object.select = overlay.select;
+                                        object.area = overlay.area;
+                                        object.interactable = overlay.interactable;
                             
                                 //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
+                                    object.onchange = onchange;
                                     object.onrelease = onrelease;
-                                    object.onselect = onselect;
-                                    object.ondeselect = ondeselect;
+                                    object.selectionAreaToggle = selectionAreaToggle;
+                                    overlay.onchange = function(needle,value){ if(object.onchange){object.onchange(needle,value);} };
+                                    overlay.onrelease = function(needle,value){ if(object.onrelease){object.onrelease(needle,value);} };
+                                    overlay.selectionAreaToggle = function(toggle){ if(object.selectionAreaToggle){object.selectionAreaToggle(toggle);} };
+                            
+                                //setup
+                                    graph.viewbox({left:0});
+                                    graph.drawBackground();
+                                    overlay.select(0);
                             
                                 return object;
                             };
-                            this.button_polygon = function(
-                                name='button_polygon',
-                                x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, interactable=true,
-                                text_centre='',
+                            this.sequencer = function(
+                                name='sequencer',
+                                x, y, width=300, height=100, angle=0, interactable=true,
                                 
-                                active=true, hoverable=true, selectable=false, pressable=true,
+                                xCount=64, yCount=16,
+                                zoomLevel_x=1/1, zoomLevel_y=1/1,
                             
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+                                backingStyle={r:20/255,g:20/255,b:20/255,a:1},
+                                selectionAreaStyle={r:209/255,g:189/255,b:222/255,a:0.5},
                             
-                                backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
-                                backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__off__lineThickness=                     0,
-                                backing__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
-                                backing__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__up__lineThickness=                      0,
-                                backing__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
-                                backing__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__press__lineThickness=                   0,
-                                backing__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
-                                backing__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__select__lineThickness=                  0.75,
-                                backing__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
-                                backing__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__select_press__lineThickness=            0.75,
-                                backing__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__glow__lineThickness=                    0,
-                                backing__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__glow_press__lineThickness=              0,
-                                backing__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__glow_select__lineThickness=             0.75,
-                                backing__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__glow_select_press__lineThickness=       0.75,
-                                backing__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover__lineThickness=                   0,
-                                backing__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_press__lineThickness=             0,
-                                backing__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
-                                backing__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_select__lineThickness=            0.75,
-                                backing__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_select_press__lineThickness=      0.75,
-                                backing__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_glow__lineThickness=              0,
-                                backing__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
-                                backing__hover_glow_press__lineThickness=        0,
-                                backing__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
-                                backing__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_glow_select__lineThickness=       0.75,
-                                backing__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
-                                backing__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
-                                backing__hover_glow_select_press__lineThickness= 0.75,
+                                signalStyle_body=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.6}, lineColour:{r:175,g:175/255,b:175/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.6}, lineColour:{r:130,g:199/255,b:208/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.6}, lineColour:{r:129,g:209/255,b:173/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.6}, lineColour:{r:234,g:238/255,b:110/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.6}, lineColour:{r:249,g:178/255,b:103/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.6}, lineColour:{r:255,g: 69/255,b: 69/255,a:0.95}, lineThickness:0.5},
+                                ],
+                                signalStyle_bodyGlow=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.8}, lineColour:{r:175/255,g:175/255,b:175/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.8}, lineColour:{r:130/255,g:199/255,b:208/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.8}, lineColour:{r:129/255,g:209/255,b:173/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.8}, lineColour:{r:234/255,g:238/255,b:110/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.8}, lineColour:{r:249/255,g:178/255,b:103/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.8}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:1}, lineThickness:0.5},
+                                ],    
+                                signalStyle_handle={r:200/255,g:0/255,b:0/255,a:0},
+                                signalStyle_handleWidth=3,
                             
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
+                                horizontalStripStyle_pattern=[0,1],
+                                horizontalStripStyle_glow={colour:{r:120/255,g:120/255,b:120/255,a:0.8}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                horizontalStripStyle_styles=[
+                                    {colour:{r:120/255,g:120/255,b:120/255,a:0.5}, stroke:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:100/255,g:100/255,b:100/255,a:  0}, stroke:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                ],
+                                verticalStripStyle_pattern=[0],
+                                verticalStripStyle_glow={colour:{r:229/255,g: 221/255,b: 112/255,a:0.25}, lineColour:{r:252/255,g:244/255,b:128/255,a:0.5}, lineThickness:0.5},
+                                verticalStripStyle_styles=[
+                                    {colour:{r:30/255,g:30/255,b:30/255,a:0.5}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                ],
+                            
+                                playheadStyle={r:240/255,g: 240/255,b: 240/255, a:1},
+                            
+                                onpan=function(data){},
+                                onchangeviewarea=function(data){},
+                                event=function(events){},
                             ){
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup');
-                                    //backing
-                                        var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:points, colour:backing__off__colour});
-                                        subject.append(backing);
-                                    //outline
-                                        var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
-                                        subject.append(outline);
-                                    // //text
-                                    //      var avgPoint = workspace.library.math.averagePoint(points);
-                                    //      var text_centre = interfacePart.builder('text','centre', {
-                                    //         x:avgPoint.x, y:avgPoint.y,
-                                    //         text:text_centre, 
-                                    //         style:{
-                                    //             font:text_font,
-                                    //             testBaseline:text_textBaseline,
-                                    //             fill:text_fill,
-                                    //             stroke:text_stroke,
-                                    //             lineWidth:text_lineWidth,
-                                    //             textAlign:'center',
-                                    //             textBaseline:'middle',
-                                    //         }
-                                    //     });
-                                    //     subject.append(text_centre);
-                                    //cover
-                                        subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:points, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(subject.cover);
+                                var _t = this;
                             
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
-                            
-                                            subject:subject,
+                                //settings
+                                    const viewport = {
+                                        totalSize:{
+                                            width:  width/zoomLevel_x,
+                                            height: height/zoomLevel_y,
+                                        },
+                                        viewposition: {x:0,y:0},
+                                        viewArea:{
+                                            topLeft:     {x:0, y:0},
+                                            bottomRight: {x:zoomLevel_x, y:zoomLevel_y},
                                         }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.colour = backing__off__colour;
-                                            outline.colour = backing__off__lineColour;
-                                            outline.thickness( backing__off__lineThickness );
-                                            return;
-                                        }
-                            
-                                        var styles = [
-                                            { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
-                                            { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
-                                            { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
-                                            { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
-                                            { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
-                                            { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
-                                            { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
-                                            { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
-                                            { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
-                                            { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
-                                            { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
-                                            { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
-                                            { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
-                                            { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
-                                            { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
-                                            { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
-                                        ];
-                            
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
-                            
-                                        var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
-                                        backing.colour = styles[i].colour;
-                                        outline.colour = styles[i].lineColour;
-                                        outline.thickness( styles[i].lineThickness );
                                     };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
-                            
-                                return object;
-                            };
-                            this.button_image = function(
-                                name='button_image',
-                                x, y, width=30, height=20, angle=0, interactable=true,
-                                
-                                active=true, hoverable=true, selectable=false, pressable=true,
-                            
-                                backingURL__off,
-                                backingURL__up,
-                                backingURL__press,
-                                backingURL__select,
-                                backingURL__select_press,
-                                backingURL__glow,
-                                backingURL__glow_press,
-                                backingURL__glow_select,
-                                backingURL__glow_select_press,
-                                backingURL__hover,
-                                backingURL__hover_press,
-                                backingURL__hover_select,
-                                backingURL__hover_select_press,
-                                backingURL__hover_glow,
-                                backingURL__hover_glow_press,
-                                backingURL__hover_glow_select,
-                                backingURL__hover_glow_select_press,
-                            
-                                onenter = function(event){},
-                                onleave = function(event){},
-                                onpress = function(event){},
-                                ondblpress = function(event){},
-                                onrelease = function(event){},
-                                onselect = function(event){},
-                                ondeselect = function(event){},
-                            ){
-                                //default to non-image version if image links are missing
-                                    if(
-                                        backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
-                                        backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
-                                        backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
-                                        backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
-                                        backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
-                                        backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
-                                    ){
-                                        return this.button_rectangle(
-                                            name, x, y, width, height, angle, interactable,
-                                            undefined, undefined, undefined, undefined, undefined,
-                                            active, hoverable, selectable, pressable,
-                                            undefined, undefined, undefined, undefined, undefined,
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined,
-                                            onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
-                                        );
-                                    }
-                            
-                            
-                                //adding on the specific shapes
-                                    //main
-                                        var subject = interfacePart.builder('group',name+'subGroup',{});
-                                    //backing
-                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
-                                        subject.append(backing);
-                                    //cover
-                                        subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                        subject.append(subject.cover);
-                            
-                                //generic button part
-                                    var object = interfacePart.builder(
-                                        'button_', name, {
-                                            x:x, y:y, angle:angle, interactable:interactable,
-                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                            onenter:onenter,
-                                            onleave:onleave,
-                                            onpress:onpress,
-                                            ondblpress:ondblpress,
-                                            onrelease:onrelease,
-                                            onselect:onselect,
-                                            ondeselect:ondeselect,
-                            
-                                            subject:subject,
-                                        }
-                                    );
-                            
-                                //graphical state adjust
-                                    object.activateGraphicalState = function(state){
-                                        if(!active){ 
-                                            backing.imageURL(backingURL__off);
-                                            return;
-                                        }
-                            
-                                        if(!hoverable && state.hovering ){ state.hovering = false; }
-                                        if(!selectable && state.selected ){ state.selected = false; }
-                            
-                                        backing.imageURL([
-                                            backingURL__up,                     
-                                            backingURL__press,                  
-                                            backingURL__select,                 
-                                            backingURL__select_press,           
-                                            backingURL__glow,                   
-                                            backingURL__glow_press,             
-                                            backingURL__glow_select,            
-                                            backingURL__glow_select_press,      
-                                            backingURL__hover,                  
-                                            backingURL__hover_press,            
-                                            backingURL__hover_select,           
-                                            backingURL__hover_select_press,     
-                                            backingURL__hover_glow,             
-                                            backingURL__hover_glow_press,       
-                                            backingURL__hover_glow_select,      
-                                            backingURL__hover_glow_select_press,
-                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]);
+                                    const signals = {
+                                        step:1/1,
+                                        snapping: true,
+                                        defaultStrength: 0.5,
+                                        selectedSignals: [],
+                                        activeSignals: [],
+                                        signalRegistry: new _canvas_.library.structure.signalRegistry(xCount,yCount),
                                     };
-                                    object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
-                            
-                                return object;
-                            };
-                            this.list_image = function(
-                                name='list_image', 
-                                x, y, width=50, height=100, angle=0, interactable=true,
-                                list=[],
-                            
-                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
-                            
-                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                spacingHeightMux=0.005,
-                                backingURL, breakURL,
-                            
-                                itemURL__off,
-                                itemURL__up,
-                                itemURL__press,
-                                itemURL__select,
-                                itemURL__select_press,
-                                itemURL__glow,
-                                itemURL__glow_press,
-                                itemURL__glow_select,
-                                itemURL__glow_select_press,
-                                itemURL__hover,
-                                itemURL__hover_press,
-                                itemURL__hover_select,
-                                itemURL__hover_select_press,
-                                itemURL__hover_glow,
-                                itemURL__hover_glow_press,
-                                itemURL__hover_glow_select,
-                                itemURL__hover_glow_select_press,
-                            
-                                onenter=function(){},
-                                onleave=function(){},
-                                onpress=function(){},
-                                ondblpress=function(){},
-                                onrelease=function(){},
-                                onselection=function(){},
-                                onpositionchange=function(){},
-                            ){
-                                //state
-                                    var itemArray = [];
-                                    var selectedItems = [];
-                                    var lastNonShiftClicked = 0;
-                                    var position = 0;
-                                    var calculatedListHeight;
+                                    const loop = {
+                                        active:false, 
+                                        period:{
+                                            start:0, 
+                                            end:xCount
+                                        },
+                                    };
+                                    const playhead = {
+                                        present:false,
+                                        width:0.75,
+                                        invisibleHandleMux:4,
+                                        position:-1,
+                                        held:false,
+                                        automoveViewposition:false,
+                                    };
                             
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                    //static backing
+                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
                                         object.append(backing);
-                                    //item collection
-                                        var itemCollection = interfacePart.builder('group','itemCollection');
-                                        object.append(itemCollection);
-                                        function refreshList(){
-                                            //clean out all values
-                                                itemArray = [];
-                                                itemCollection.clear();
-                                                selectedItems = [];
-                                                position = 0;
-                                                lastNonShiftClicked = 0;
-                            
-                                            //populate list
-                                                var accumulativeHeight = 0;
-                                                for(var a = 0; a < list.length; a++){
-                                                    if( list[a] == 'space' ){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:0, y:accumulativeHeight,
-                                                            width:width, height:height*spacingHeightMux,
-                                                            colour:{r:0,g:0,b:0,a:0}
-                                                        });
-                            
-                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else if( list[a] == 'break'){
-                                                        var temp = interfacePart.builder('image',''+a,{
-                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*breakWidthMux, height:height*breakHeightMux,
-                                                            url:breakURL
-                                                        });
-                            
-                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else{
-                                                        var temp = interfacePart.builder( 'button_image', ''+a, {
-                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
-                            
-                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                                            backingURL__off:                     itemURL__off,
-                                                            backingURL__up:                      itemURL__up,
-                                                            backingURL__press:                   itemURL__press,
-                                                            backingURL__select:                  itemURL__select,
-                                                            backingURL__select_press:            itemURL__select_press,
-                                                            backingURL__glow:                    itemURL__glow,
-                                                            backingURL__glow_press:              itemURL__glow_press,
-                                                            backingURL__glow_select:             itemURL__glow_select,
-                                                            backingURL__glow_select_press:       itemURL__glow_select_press,
-                                                            backingURL__hover:                   itemURL__hover,
-                                                            backingURL__hover_press:             itemURL__hover_press,
-                                                            backingURL__hover_select:            itemURL__hover_select,
-                                                            backingURL__hover_select_press:      itemURL__hover_select_press,
-                                                            backingURL__hover_glow:              itemURL__hover_glow,
-                                                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
-                                                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
-                                                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
-                                                        });
-                            
-                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                        temp.onrelease = function(a){
-                                                            return function(){
-                                                                if( list[a].function ){ list[a].function(); }
-                                                                object.onrelease(a);
-                                                            }
-                                                        }(a);
-                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                            
-                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                        itemArray.push( temp );
-                                                    }
-                                                }
-                            
-                                            return accumulativeHeight - height*itemSpacingMux;
-                                        }
-                                        calculatedListHeight = refreshList();
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                        object.append(cover);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                    //viewport stencil
+                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
                                         object.stencil(stencil);
                                         object.clipActive(true);
                             
+                                    //workarea
+                                        var workarea = interfacePart.builder('group','workarea');
+                                        object.append(workarea);
+                                        //moveable background
+                                            var backgroundDrawArea = interfacePart.builder('group','backgroundDrawArea');
+                                            workarea.append(backgroundDrawArea);
+                                            var backgroundDrawArea_horizontal = interfacePart.builder('group','backgroundDrawArea_horizontal');
+                                            backgroundDrawArea.append(backgroundDrawArea_horizontal);
+                                            var backgroundDrawArea_vertical = interfacePart.builder('group','backgroundDrawArea_vertical');
+                                            backgroundDrawArea.append(backgroundDrawArea_vertical);
+                                        //interaction pane back
+                                            var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
+                                            workarea.append(interactionPlane_back);
+                                            interactionPlane_back.onwheel = function(x,y,event){};
+                                        //signal block area
+                                            var signalPane = interfacePart.builder('group','signalPane');
+                                            workarea.append(signalPane);
+                                        //interaction pane front
+                                            var interactionPlane_front = interfacePart.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
+                                            workarea.append(interactionPlane_front);
+                                            interactionPlane_front.onwheel = function(x,y,event){};
+                                //internal
+                                    object.__calculationAngle = angle;
+                                    function currentMousePosition(event){
+                                        var offset = object.getOffset();
+                                        var delta = {
+                                            x: event.x - (backing.x()     + offset.x),
+                                            y: event.y - (backing.y()     + offset.y),
+                                            a: 0 - (backing.angle() + offset.angle),
+                                        };
+                                        var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a );
                             
-                                //interaction
-                                    cover.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var move = event.deltaY/100;
-                                        object.position( object.position() + move/10 );
-                                        for(var a = 0; a < itemArray.length; a++){
-                                            itemArray[a].forceMouseLeave();
-                                        }
-                                    };
-                                
-                                //controls
-                                    object.position = function(a,update=true){
-                                        if(a == undefined){return position;}
-                                        a = a < 0 ? 0 : a;
-                                        a = a > 1 ? 1 : a;
-                                        position = a;
-                            
-                                        if( calculatedListHeight < height ){return;}
-                                        var movementSpace = calculatedListHeight - height;
-                                        itemCollection.y( -a*movementSpace );
-                                        
-                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
-                                    };
-                                    object.select = function(a,state,event,update=true){
-                                        if(!selectable){return;}
-                            
-                                        //where multi selection is not allowed
-                                            if(!multiSelect){
-                                                //where we want to select an item, which is not already selected
-                                                    if(state && !selectedItems.includes(a) ){
-                                                        //deselect all other items
-                                                            while( selectedItems.length > 0 ){
-                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                                selectedItems.shift();
-                                                            }
-                            
-                                                        //select current item
-                                                            selectedItems.push(a);
-                            
-                                                //where we want to deselect an item that is selected
-                                                    }else if(!state && selectedItems.includes(a)){
-                                                        selectedItems = [];
-                                                    }
-                            
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
-                            
-                                        //where multi selection is allowed
-                                            }else{
-                                                //wherer range-selection is to be done
-                                                    if( event != undefined && event.shiftKey ){
-                                                        //gather top and bottom item
-                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                            var min = Math.min(lastNonShiftClicked, a);
-                                                            var max = Math.max(lastNonShiftClicked, a);
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( itemArray[b].name == ''+min ){min = b;}
-                                                                if( itemArray[b].name == ''+max ){max = b;}
-                                                            }
-                            
-                                                        //deselect all outside the range
-                                                            selectedItems = [];
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( b > max || b < min ){
-                                                                    if( itemArray[b].select() ){
-                                                                        itemArray[b].select(false,undefined,false);
-                                                                    }
-                                                                }
-                                                            }
-                            
-                                                        //select those within the range (that aren't already selected)
-                                                            for(var b = min; b <= max; b++){
-                                                                if( !itemArray[b].select() ){
-                                                                    itemArray[b].select(true,undefined,false);
-                                                                    selectedItems.push(b);
-                                                                }
-                                                            }
-                                                //where range-selection is not to be done
-                                                    }else{
-                                                        if(update){ itemArray[a].select(state); }
-                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                        lastNonShiftClicked = a;
-                                                    }
+                                        return { x:d.x/backing.width(), y:d.y/backing.height() };
+                                    }
+                                    function viewportPosition2internalPosition(xy){
+                                        return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y};
+                                    }
+                                    function visible2coordinates(xy){
+                                        return {
+                                            x: zoomLevel_x*(xy.x - viewport.viewposition.x) + viewport.viewposition.x,
+                                            y: zoomLevel_y*(xy.y - viewport.viewposition.y) + viewport.viewposition.y,
+                                        };
+                                    }
+                                    function coordinates2lineposition(xy){
+                                        xy.y = Math.floor(xy.y*yCount);
+                                        if(xy.y >= yCount){xy.y = yCount-1;}
+                                    
+                                        xy.x = signals.snapping ? Math.round((xy.x*xCount)/signals.step)*signals.step : xy.x*xCount;
+                                        if(xy.x < 0){xy.x =0;}
+                                    
+                                        return {line:xy.y, position:xy.x};
+                                    }
+                                    function drawBackground(){
+                                        //horizontal strips
+                                            backgroundDrawArea_horizontal.clear();
+                                            for(var a = 0; a < yCount; a++){
+                                                var style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
+                                                backgroundDrawArea_horizontal.append(
+                                                    interfacePart.builder( 'rectangleWithOutline', 'strip_horizontal_'+a,
+                                                        {
+                                                            x:0, y:a*(height/(yCount*zoomLevel_y)),
+                                                            width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
+                                                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                                                        }
+                                                    )
+                                                );
                                             }
                             
-                                        object.onselection(selectedItems);
-                                    };
-                                    object.add = function(item){
-                                        list.push(item);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.remove = function(a){
-                                        list.splice(a,1);
-                                        calculatedListHeight = refreshList();
+                                        //vertical strips
+                                            backgroundDrawArea_vertical.clear();
+                                            for(var a = 0; a < xCount; a++){
+                                                var style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
+                                                backgroundDrawArea_vertical.append(
+                                                    interfacePart.builder( 'rectangleWithOutline', 'strip_vertical_'+a,
+                                                        {
+                                                            x:a*(width/(xCount*zoomLevel_x)), y:0,
+                                                            width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
+                                                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                                                        }
+                                                    )
+                                                );
+                                            }
+                                    }
+                                    function setViewposition(x,y,update=true){
+                                        if(x == undefined && y == undefined){return viewport.viewposition;}
+                                        if(x == undefined || isNaN(x)){ x = viewport.viewposition.x; }
+                                        if(y == undefined || isNaN(y)){ y = viewport.viewposition.y; }
+                            
+                                        //make sure things are between 0 and 1
+                                            x = x<0?0:x; x = x>1?1:x;
+                                            y = y<0?0:y; y = y>1?1:y;
+                            
+                                        //perform transform
+                                            viewport.viewposition.x = x;
+                                            viewport.viewposition.y = y;
+                                            workarea.x( -viewport.viewposition.x*(viewport.totalSize.width - width) );
+                                            workarea.y( -viewport.viewposition.y*(viewport.totalSize.height - height) );
+                            
+                                        //update viewport.viewArea
+                                            viewport.viewArea = {
+                                                topLeft:     { x:x - zoomLevel_x*x,     y:y - zoomLevel_y*y     },
+                                                bottomRight: { x:x + zoomLevel_x*(1-x), y:y + zoomLevel_y*(1-y) },
+                                            };
+                                    }
+                                    function adjustZoom(x,y){
+                                        if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
+                                        var maxZoom = 0.01;
+                            
+                                        //(in a bid for speed, I've written the following code in an odd way, so that if both x and y scales are being changed, then
+                                        //all the elements will be adjusted together (instead of having to repeat resizings of shapes))
+                                        if(x != undefined && x != zoomLevel_x && y != undefined && y != zoomLevel_y ){
+                                            //make sure things are between 0.01 and 1
+                                                x = x<maxZoom?maxZoom:x; x = x>1?1:x;
+                                                y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+                            
+                                            //update state
+                                                zoomLevel_x = x;
+                                                zoomLevel_y = y;
+                                                viewport.totalSize.width = width/zoomLevel_x;
+                                                viewport.totalSize.height = height/zoomLevel_y;
+                            
+                                            //update interactionPlane_back
+                                                interactionPlane_back.width( viewport.totalSize.width );
+                                                interactionPlane_back.height( viewport.totalSize.width );
+                            
+                                            //update interactionPlane_front
+                                                interactionPlane_front.width( viewport.totalSize.width );
+                                                interactionPlane_front.height( viewport.totalSize.width );
+                            
+                                            //update background strips
+                                                for(var a = 0; a < xCount; a++){
+                                                    backgroundDrawArea_vertical.children[a].x( a*(width/(xCount*zoomLevel_x)) );
+                                                    backgroundDrawArea_vertical.children[a].width( width/(xCount*zoomLevel_x) );
+                                                    backgroundDrawArea_vertical.children[a].height( viewport.totalSize.height );
+                                                }
+                                                for(var a = 0; a < yCount; a++){
+                                                    backgroundDrawArea_horizontal.children[a].y( a*(height/(yCount*zoomLevel_y)) );
+                                                    backgroundDrawArea_horizontal.children[a].height( height/(yCount*zoomLevel_y) );
+                                                    backgroundDrawArea_horizontal.children[a].width( viewport.totalSize.width );
+                                                }
+                            
+                                            //update signals
+                                                for(var a = 0; a < signalPane.children.length; a++){
+                                                    signalPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
+                                                }
+                            
+                                            //update playhead (if there is one)
+                                                if(playhead.present){
+                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].height(viewport.totalSize.height);
+                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].height(viewport.totalSize.height);
+                                                    workarea.getElementsWithName('playhead')[0].x( playhead.position*(viewport.totalSize.width/xCount) );
+                                            }
+                                        }else if( x != undefined && x != zoomLevel_x ){
+                                            //make sure things are between maxZoom and 1
+                                                x = x<maxZoom?maxZoom:x; x = x>1?1:x;
+                            
+                                            //update state
+                                                zoomLevel_x = x;
+                                                viewport.totalSize.width = width/zoomLevel_x;
+                            
+                                            //update interactionPlane_back
+                                                interactionPlane_back.width( viewport.totalSize.width );
+                                            //update interactionPlane_front
+                                                interactionPlane_front.width( viewport.totalSize.width );
+                            
+                                            //update background strips
+                                                for(var a = 0; a < xCount; a++){
+                                                    backgroundDrawArea_vertical.children[a].x( a*(width/(xCount*zoomLevel_x)) );
+                                                    backgroundDrawArea_vertical.children[a].width( width/(xCount*zoomLevel_x) );
+                                                }
+                                                for(var a = 0; a < yCount; a++){
+                                                    backgroundDrawArea_horizontal.children[a].width( viewport.totalSize.width );
+                                                }
+                            
+                                            //update signals
+                                                for(var a = 0; a < signalPane.children.length; a++){
+                                                    signalPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
+                                                }
+                            
+                                            //update playhead (if there is one)
+                                                if(playhead.present){
+                                                    workarea.getElementsWithName('playhead')[0].x( playhead.position*(viewport.totalSize.width/xCount) );
+                                                }
+                                        }else if( y != undefined && y != zoomLevel_y ){
+                                            //make sure things are between maxZoom and 1
+                                                y = y<maxZoom?maxZoom:y; y = y>1?1:y;
+                            
+                                            //update state
+                                                zoomLevel_y = y;
+                                                viewport.totalSize.height = height/zoomLevel_y;
+                            
+                                            //update interactionPlane_back
+                                                interactionPlane_back.height( viewport.totalSize.width );
+                                            //update interactionPlane_front
+                                                interactionPlane_front.height( viewport.totalSize.width );
+                            
+                                            //update background strips
+                                                for(var a = 0; a < xCount; a++){
+                                                    backgroundDrawArea_vertical.children[a].height( viewport.totalSize.height );
+                                                }
+                                                for(var a = 0; a < yCount; a++){
+                                                    backgroundDrawArea_horizontal.children[a].y( a*(height/(yCount*zoomLevel_y)) );
+                                                    backgroundDrawArea_horizontal.children[a].height( height/(yCount*zoomLevel_y) );
+                                                }
+                            
+                                            //update signals
+                                                for(var a = 0; a < signalPane.children.length; a++){
+                                                    signalPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
+                                                }
+                            
+                                            //update playhead (if there is one)
+                                                if(playhead.present){
+                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].height(viewport.totalSize.height);
+                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].height(viewport.totalSize.height);
+                                                }
+                                        }
+                                    }
+                                    function setViewArea(d,update=true){
+                                        //clean off input
+                                            if(d == undefined || (d.topLeft == undefined && d.bottomRight == undefined)){return viewport.viewArea;}
+                                            else{
+                                                if(d.topLeft == undefined){ d.topLeft = {x: viewport.viewArea.topLeft.x, y: viewport.viewArea.topLeft.y}; }
+                                                else{
+                                                    if(d.topLeft.x == undefined){ d.topLeft.x = viewport.viewArea.topLeft.x; }
+                                                    if(d.topLeft.y == undefined){ d.topLeft.y = viewport.viewArea.topLeft.y; }
+                                                }
+                                                if(d.bottomRight == undefined){ d.bottomRight = {x: viewport.bottomRight.topLeft.x, y: viewport.bottomRight.topLeft.ys}; }
+                                                else{
+                                                    if(d.bottomRight.x == undefined){ d.bottomRight.x = viewport.viewArea.bottomRight.x; }
+                                                    if(d.bottomRight.y == undefined){ d.bottomRight.y = viewport.viewArea.bottomRight.y; }
+                                                }
+                                            }
+                            
+                                        //first adjust the zoom, if the distance between the areas changed
+                                            var x = (viewport.viewArea.bottomRight.x-viewport.viewArea.topLeft.x) != (d.bottomRight.x-d.topLeft.x);
+                                            var y = (d.bottomRight.y-d.topLeft.y)!=(viewport.viewArea.bottomRight.y-viewport.viewArea.topLeft.y);
+                                            
+                                            if(x && y){ adjustZoom( (d.bottomRight.x-d.topLeft.x),(d.bottomRight.y-d.topLeft.y) ); }
+                                            else if(x){ adjustZoom( (d.bottomRight.x-d.topLeft.x),undefined ); }
+                                            else if(y){ adjustZoom( undefined,(d.bottomRight.y-d.topLeft.y) ); }
+                            
+                                        //update pan
+                                            var newX = 0; var newY = 0;
+                                            if( (1-(d.bottomRight.x-d.topLeft.x)) != 0 ){ newX = d.topLeft.x + d.topLeft.x*((d.bottomRight.x-d.topLeft.x)/(1-(d.bottomRight.x-d.topLeft.x))); }
+                                            if( (1-(d.bottomRight.y-d.topLeft.y)) != 0 ){ newY = d.topLeft.y + d.topLeft.y*((d.bottomRight.y-d.topLeft.y)/(1-(d.bottomRight.y-d.topLeft.y))); }
+                                            setViewposition(newX,newY,update);
+                            
+                                        //update state
+                                            viewport.viewArea = Object.assign(d,{});
+                                    }
+                                    function makeSignal(line, position, length, strength=signals.defaultStrength){
+                                        //register signal and get new id. From the registry, get the approved signal values
+                                            var newID = signals.signalRegistry.add({ line:line, position:position, length:length, strength:strength });
+                                            var approvedData = signals.signalRegistry.getSignal(newID);
+                            
+                                        //create graphical signal with approved values and append it to the pane
+                                            var newSignalBlock = _t.sequencer.signalBlock(
+                                                newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
+                                                approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
+                                                false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
+                                            );
+                                            signalPane.append(newSignalBlock);
+                            
+                                        //add signal controls to graphical signal block
+                                            newSignalBlock.select = function(remainSelected=false){
+                                                if(signals.selectedSignals.indexOf(this) != -1){ if(!remainSelected){this.deselect();} return; }
+                                                this.selected(true);
+                                                signals.selectedSignals.push(this);
+                                                this.glow(true);
+                                            };
+                                            newSignalBlock.deselect = function(){
+                                                signals.selectedSignals.splice(signals.selectedSignals.indexOf(this),1);
+                                                this.selected(false);
+                                                this.glow(false);
+                                            };
+                                            newSignalBlock.delete = function(){
+                                                this.deselect();
+                                                signals.signalRegistry.remove(parseInt(this.name));
+                                                this.parent.remove(this);
+                                            };
+                            
+                                        //add interactions to graphical signal block
+                                            newSignalBlock.ondblclick = function(x,y,event){
+                                                if(!_canvas_.system.keyboard.pressedKeys.control && !_canvas_.system.keyboard.pressedKeys.command){return;}
+                                                for(var a = 0; a < signals.selectedSignals.length; a++){
+                                                    signals.selectedSignals[a].strength(signals.defaultStrength);
+                                                    signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
+                                                }
+                                            };
+                                            newSignalBlock.body.onmousedown = function(x,y,event){
+                                                if(!interactable){return;}
+                            
+                                                //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                                    if(_canvas_.system.keyboard.pressedKeys.Space){
+                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                    }
+                            
+                                                //if the shift key is not pressed and this signal is not already selected; deselect everything
+                                                    if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                                    }
+                            
+                                                //select this block
+                                                    newSignalBlock.select(true);
+                            
+                                                //gather data for all the blocks that we're about to affect
+                                                    var activeBlocks = [];
+                                                    for(var a = 0; a < signals.selectedSignals.length; a++){
+                                                        activeBlocks.push({
+                                                            name: parseInt(signals.selectedSignals[a].name),
+                                                            block: signals.selectedSignals[a],
+                                                            starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                                                        });
+                                                    }
+                            
+                                                //if control/command key is pressed; this is a strength-change operation
+                                                    if(_canvas_.system.keyboard.pressedKeys.control || _canvas_.system.keyboard.pressedKeys.command){
+                                                        var mux = 4;
+                                                        var initialStrengths = activeBlocks.map(a => a.block.strength());
+                                                        var initial = event.offsetY;
+                                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                                            function(event){
+                                                                //check if ctrl/command is still pressed
+                                                                    if( !_canvas_.system.keyboard.pressedKeys.ControlLeft && !_canvas_.system.keyboard.pressedKeys.ControlRight && !_canvas_.system.keyboard.pressedKeys.command ){ 
+                                                                        _canvas_.system.mouse.forceMouseUp();
+                                                                    }
+                            
+                                                                var diff = (initial - event.offsetY)/(_canvas_.core.viewport.scale()*height*mux);
+                                                                for(var a = 0; a < activeBlocks.length; a++){
+                                                                    activeBlocks[a].block.strength(initialStrengths[a] + diff);
+                                                                    signals.signalRegistry.update(activeBlocks[a].name, { strength: initialStrengths[a] + diff });
+                                                                }
+                                                            }
+                                                        );
+                                                        return;
+                                                    }
+                            
+                                                //if the alt key is pressed, clone the block
+                                                //(but don't select it, this is the 'alt-click-and-drag to clone' trick)
+                                                //this function isn't run until the first sign of movement
+                                                    var cloned = false;
+                                                    function cloneFunc(){
+                                                        if(cloned){return;} cloned = true;
+                                                        if(_canvas_.system.keyboard.pressedKeys.alt){
+                                                            for(var a = 0; a < signals.selectedSignals.length; a++){
+                                                                var temp = signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name));
+                                                                makeSignal(temp.line, temp.position, temp.length, temp.strength);
+                                                            }
+                                                        }
+                                                    }
+                            
+                                                //block movement
+                                                    var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            //clone that block (maybe)
+                                                                cloneFunc();
+                            
+                                                            var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                            var diff = {
+                                                                line: livePosition.line - initialPosition.line,
+                                                                position: livePosition.position - initialPosition.position,
+                                                            };
+                                    
+                                                            for(var a = 0; a < activeBlocks.length; a++){
+                                                                signals.signalRegistry.update(activeBlocks[a].name, {
+                                                                    line:activeBlocks[a].starting.line+diff.line,
+                                                                    position:activeBlocks[a].starting.position+diff.position,
+                                                                });
+                                    
+                                                                var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                    
+                                                                activeBlocks[a].block.line( temp.line );
+                                                                activeBlocks[a].block.position( temp.position );
+                                                            }
+                                                        }
+                                                    );
+                                            };
+                                            newSignalBlock.body.onmousemove = function(x,y,event){
+                                                var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                                var cursor = 'default';
+                                                if( pressedKeys.alt ){ cursor = 'copy'; }
+                                                else if( pressedKeys.Space ){ cursor = 'grab'; }
+                            
+                                                _canvas_.core.viewport.cursor( cursor );
+                                            };
+                                            newSignalBlock.body.onkeydown = function(x,y,event){
+                                                if(!interactable){return;}
+                            
+                                                var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                                if(pressedKeys.alt){ _canvas_.core.viewport.cursor('copy'); }
+                                            };
+                                            newSignalBlock.body.onkeyup = function(x,y,event){
+                                                if(!interactable){return;}
+                            
+                                                var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                                if(!(pressedKeys.alt)){ _canvas_.core.viewport.cursor('default'); }
+                                            };
+                                            newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                                                if(!interactable){return;}
+                            
+                                                //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                                    if(_canvas_.system.keyboard.pressedKeys.Space){
+                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                    }
+                                                    
+                                                //cloning situation
+                                                    if(_canvas_.system.keyboard.pressedKeys.alt){
+                                                        newSignalBlock.body.onmousedown(x,y,event);
+                                                        return;
+                                                    }
+                            
+                                                //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                                                    if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                                    }
+                                            
+                                                //select this block
+                                                    newSignalBlock.select(true);
+                            
+                                                //gather data for all the blocks that we're about to affect
+                                                    var activeBlocks = [];
+                                                    for(var a = 0; a < signals.selectedSignals.length; a++){
+                                                        activeBlocks.push({
+                                                            name: parseInt(signals.selectedSignals[a].name),
+                                                            block: signals.selectedSignals[a],
+                                                            starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                                                        });
+                                                    }
+                                                
+                                                //perform block length adjustment 
+                                                    var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                            var diff = {position: initialPosition.position-livePosition.position};
+                                    
+                                                            for(var a = 0; a < activeBlocks.length; a++){
+                                                                if( activeBlocks[a].starting.position-diff.position < 0 ){ continue; } //this stops a block from getting longer, when it is unable to move any further to the left
+                                                                
+                                                                signals.signalRegistry.update(activeBlocks[a].name, {
+                                                                    length: activeBlocks[a].starting.length+diff.position,
+                                                                    position: activeBlocks[a].starting.position-diff.position,
+                                                                });
+                                                                var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                                                activeBlocks[a].block.position( temp.position );
+                                                                activeBlocks[a].block.length( temp.length );
+                                                            }
+                                                        }
+                                                    );
+                                            };
+                                            newSignalBlock.leftHandle.onmousemove = function(x,y,event){
+                                                var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                                var cursor = 'col-resize';
+                                                if( pressedKeys.alt ){ cursor = 'copy'; }
+                                                else if( pressedKeys.Space ){ cursor = 'grab'; }
+                            
+                                                _canvas_.core.viewport.cursor( cursor );
+                                            };
+                                            newSignalBlock.leftHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                                            newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
+                                                if(!interactable){return;}
+                            
+                                                //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
+                                                    if(_canvas_.system.keyboard.pressedKeys.Space){
+                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                    }
+                            
+                                                //cloning situation
+                                                    if(!ignoreCloning && _canvas_.system.keyboard.pressedKeys.alt){
+                                                        newSignalBlock.body.onmousedown(x,y,event);
+                                                        return;
+                                                    }
+                            
+                                                //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
+                                                    if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                                    }
+                                                
+                                                //select this block
+                                                    newSignalBlock.select(true);
+                            
+                                                //gather data for all the blocks that we're about to affect
+                                                    var activeBlocks = [];
+                                                    for(var a = 0; a < signals.selectedSignals.length; a++){
+                                                        activeBlocks.push({
+                                                            name: parseInt(signals.selectedSignals[a].name),
+                                                            block: signals.selectedSignals[a],
+                                                            starting: signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name)),
+                                                        });
+                                                    }
+                            
+                                                //perform block length adjustment 
+                                                    var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                    _canvas_.system.mouse.mouseInteractionHandler(
+                                                        function(event){
+                                                            var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                            var diff = {position: livePosition.position - initialPosition.position};
+                                    
+                                                            for(var a = 0; a < activeBlocks.length; a++){
+                                                                signals.signalRegistry.update(activeBlocks[a].name, {length: activeBlocks[a].starting.length+diff.position});
+                                                                var temp = signals.signalRegistry.getSignal(activeBlocks[a].name);
+                                                                activeBlocks[a].block.position( temp.position );
+                                                                activeBlocks[a].block.length( temp.length );
+                                                            }
+                                                        }
+                                                    );
+                                            };
+                                            newSignalBlock.rightHandle.onmousemove = function(x,y,event){
+                                                var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                                var cursor = 'col-resize';
+                                                if( pressedKeys.alt ){ cursor = 'copy'; }
+                                                else if( pressedKeys.Space ){ cursor = 'grab'; }
+                            
+                                                _canvas_.core.viewport.cursor( cursor );
+                                            };
+                                            newSignalBlock.rightHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                            
+                                        return {id:newID, signalBlock:newSignalBlock};
+                                    }
+                                    function deleteSelectedSignals(){
+                                        while(signals.selectedSignals.length > 0){
+                                            signals.selectedSignals[0].delete();
+                                        }
+                                    }
+                                    function makePlayhead(){
+                                        var newPlayhead = interfacePart.builder('group','playhead');
+                                        workarea.append(newPlayhead);
+                            
+                                        newPlayhead.main = interfacePart.builder('rectangle','main',{
+                                            x: -playhead.width/2,
+                                            width:playhead.width,
+                                            height:viewport.totalSize.height,
+                                            colour:playheadStyle
+                                        });
+                                        newPlayhead.append(newPlayhead.main);
+                            
+                                        newPlayhead.invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{
+                                            x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
+                                            width: playhead.width*playhead.invisibleHandleMux,
+                                            height:viewport.totalSize.height,
+                                            colour:{r:1,g:0,b:0,a:0}
+                                        })
+                                        newPlayhead.append(newPlayhead.invisibleHandle);
+                            
+                                        newPlayhead.invisibleHandle.onmousedown = function(){
+                                            if(!interactable){return;}
+                            
+                                            playhead.held = true;
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){ object.playheadPosition(coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event))).position); },
+                                                function(){playhead.held = false;}
+                                            );
+                                        };
+                            
+                                        newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
+                                        newPlayhead.invisibleHandle.onmousemove = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
+                                        newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                            
+                                        playhead.present = true;
+                            
+                                        return newPlayhead;
+                                    }
+                            
+                                //controls
+                                    object.viewposition = setViewposition;
+                                    object.viewarea = setViewArea;
+                                    object.step = function(a){
+                                        if(a == undefined){return signals.step;}
+                                        signals.step = a;
                                     };
                                     object.interactable = function(bool){
                                         if(bool==undefined){return interactable;}
                                         interactable = bool;
-                                        refreshList();
+                                    };
+                            
+                                    //background
+                                        object.glowHorizontal = function(state,start,end){
+                                            if(end == undefined){end = start+1;}
+                            
+                                            for(var a = start; a <= end; a++){
+                                                var tmp = state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
+                                                backgroundDrawArea_horizontal.children[a].colour = tmp.colour;
+                                                backgroundDrawArea_horizontal.children[a].lineColour = tmp.lineColour;
+                                                backgroundDrawArea_horizontal.children[a].thickness = tmp.thickness;
+                                            }
+                                        };
+                                        object.glowVertical = function(state,start,end){
+                                            if(end == undefined){end = start+1;}
+                            
+                                            for(var a = start; a < end; a++){
+                                                var tmp = state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
+                                                backgroundDrawArea_vertical.children[a].colour = tmp.colour;
+                                                backgroundDrawArea_vertical.children[a].lineColour = tmp.lineColour;
+                                                backgroundDrawArea_vertical.children[a].thickness = tmp.thickness;
+                                            }
+                                        };
+                                    
+                                    //looping
+                                        object.loopActive = function(bool){
+                                            if(bool == undefined){return loop.active;}
+                                            loop.active = bool;
+                            
+                                            object.glowVertical(false,0,xCount);
+                                            if( loop.active ){
+                                                object.glowVertical(true, 
+                                                    loop.period.start < 0 ? 0 : loop.period.start, 
+                                                    loop.period.end > xCount ? xCount : loop.period.end,
+                                                );
+                                            }
+                                        };
+                                        object.loopPeriod = function(start,end){
+                                            if(start == undefined || end == undefined){return loop.period;}
+                                            if(start > end || start < 0 || end < 0){return;}
+                            
+                                            loop.period = {start:start, end:end};
+                            
+                                            if( loop.active ){
+                                                object.glowVertical(false,0,xCount);
+                                                object.glowVertical(true,
+                                                    start < 0 ? 0 : start, 
+                                                    end > xCount ? xCount : end,
+                                                );
+                                            }
+                                        };
+                            
+                                    //signals
+                                        object.export = function(){return signals.signalRegistry.export();};
+                                        object.import = function(data){signals.signalRegistry.import(data);};
+                                        object.getAllSignals = function(){return signals.signalRegistry.getAllSignals(); };
+                                        object.addSignal = function(line, position, length, strength=1){ makeSignal(line, position, length, strength); };
+                                        object.addSignals = function(data){ 
+                                            for(var a = 0; a < data.length; a++){
+                                                if( data[a] == undefined || data[a] == null ){continue;}
+                                                this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength);
+                                            }
+                                        };
+                                        object.eventsBetween = function(start,end){ return signals.signalRegistry.eventsBetween(start,end); };
+                                        
+                                    //playhead
+                                        object.automove = function(a){
+                                            if(a == undefined){return playhead.automoveViewposition;}
+                                            playhead.automoveViewposition = a;
+                                        };
+                                        object.playheadPosition = function(val,stopActive=true){
+                                            if(val == undefined){return playhead.position;}
+                                
+                                            playhead.position = val;
+                                
+                                            //send stop events for all active signals
+                                                if(stopActive){
+                                                    var events = [];
+                                                    for(var a = 0; a < signals.activeSignals.length; a++){
+                                                        var tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
+                                                        events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                                                    }
+                                                    signals.activeSignals = [];
+                                                    if(object.event && events.length > 0){object.event(events);}
+                                                }
+                                
+                                            //reposition graphical playhead
+                                                var playheadObject = workarea.getElementsWithName('playhead')[0];
+                                                if(playhead.position < 0 || playhead.position > xCount){
+                                                    //outside viable bounds, so remove
+                                                        if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
+                                                }else{ 
+                                                    //within viable bounds, so either create or adjust
+                                                        if( playheadObject == undefined ){ playheadObject = makePlayhead(); }
+                                                        playheadObject.x( playhead.position*(viewport.totalSize.width/xCount) );
+                                                    //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
+                                                    //(assuming automoveViewposition is set)
+                                                        if(playhead.automoveViewposition){
+                                                            var remainderSpace = xCount-(xCount*zoomLevel_x);
+                                                            if( playhead.position < Math.floor(viewport.viewposition.x*remainderSpace) || 
+                                                                playhead.position > Math.floor(viewport.viewposition.x*remainderSpace) + (xCount*zoomLevel_x)  
+                                                            ){ object.viewposition( (playhead.position > remainderSpace ? remainderSpace : playhead.position)/remainderSpace ); }
+                                                        }
+                                                }
+                                        };
+                                        object.progress = function(){
+                                            //if the playhead is being held, just bail completely
+                                                if(playhead.held){return;}
+                                                
+                                            //gather together all the current events
+                                                var events = object.eventsBetween(playhead.position, playhead.position+signals.step);
+                            
+                                            //upon loop; any signals that are still active are to be ended
+                                            //(so create end events for them, and push those into the current events list)
+                                                if(loop.active && playhead.position == loop.period.start){
+                                                    for(var a = 0; a < signals.activeSignals.length; a++){
+                                                        var tmp = signals.signalRegistry.getSignal(signals.activeSignals[a]); if(tmp == null){continue;}
+                                                        events.unshift( {signalID:signals.activeSignals[a], line:tmp.line, position:loop.period.start, strength:0} );
+                                                    }
+                                                    signals.activeSignals = [];
+                                                }
+                            
+                                            //add newly started signals to - and remove newly finished signals from - 'signals.activeSignals'
+                                                for(var a = 0; a < events.length; a++){
+                                                    var index = signals.activeSignals.indexOf(events[a].signalID);
+                                                    if(index != -1 && events[a].strength == 0){
+                                                        signals.activeSignals.splice(index);
+                                                    }else{
+                                                        if( events[a].strength > 0 ){
+                                                            signals.activeSignals.push(events[a].signalID);
+                                                        }
+                                                    }
+                                                }
+                            
+                                            //progress position
+                                                if( loop.active && (playhead.position+signals.step == loop.period.end) ){
+                                                    playhead.position = loop.period.start;
+                                                }else{
+                                                    playhead.position = playhead.position+signals.step;
+                                                }
+                            
+                                            //update graphical playhead
+                                                object.playheadPosition(playhead.position,false);
+                            
+                                            //perform event callback
+                                                if(object.event && events.length > 0){object.event(events);}
+                                        };
+                            
+                                //interaction
+                                    interactionPlane_back.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        
+                                        var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                            
+                                        if( pressedKeys.alt && pressedKeys.Space ){return;}
+                            
+                                        if(pressedKeys.shift){//group select 
+                                            var initialPositionData = currentMousePosition(event);
+                                            var livePositionData =    currentMousePosition(event);
+                                
+                                            var selectionArea = interfacePart.builder('rectangle','selectionArea',{
+                                                x:initialPositionData.x*width, y:initialPositionData.y*height,
+                                                width:0, height:0,
+                                                colour:selectionAreaStyle,
+                                            });
+                                            object.append(selectionArea);
+                                
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    //get live position, and correct it so it's definitely within in the relevant area
+                                                        livePositionData = currentMousePosition(event);
+                                                        livePositionData.x = livePositionData.x < 0 ? 0 : livePositionData.x;
+                                                        livePositionData.y = livePositionData.y < 0 ? 0 : livePositionData.y;
+                                                        livePositionData.x = livePositionData.x > 1 ? 1 : livePositionData.x;
+                                                        livePositionData.y = livePositionData.y > 1 ? 1 : livePositionData.y;
+                                                        
+                                                    //gather difference between this point and the initial
+                                                        var diff = {
+                                                            x:livePositionData.x - initialPositionData.x, 
+                                                            y:livePositionData.y - initialPositionData.y
+                                                        };
+                                
+                                                    //account for an inverse rectangle
+                                                        var transform = {
+                                                            x: initialPositionData.x, y: initialPositionData.y, 
+                                                            width: 1, height: 1,
+                                                        };
+                                                        
+                                                        if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
+                                                        if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
+                                
+                                                    //update rectangle 
+                                                        selectionArea.x(transform.x*width);
+                                                        selectionArea.y(transform.y*height);
+                                                        selectionArea.width(  transform.width  * diff.x*width  );
+                                                        selectionArea.height( transform.height * diff.y*height );
+                                                },
+                                                function(event){
+                                                    //remove selection box
+                                                        selectionArea.parent.remove(selectionArea);
+                                
+                                                    //gather the corner points
+                                                        var finishingPositionData = {
+                                                            a: visible2coordinates(initialPositionData),
+                                                            b: visible2coordinates(livePositionData),
+                                                        };
+                                                        finishingPositionData.a.x *= viewport.totalSize.width; finishingPositionData.b.y *= viewport.totalSize.height;
+                                                        finishingPositionData.b.x *= viewport.totalSize.width; finishingPositionData.a.y *= viewport.totalSize.height;
+                                
+                                                        var selectionBox = { topLeft:{ x:0, y:0 }, bottomRight:{ x:0, y:0 } };
+                                                        if( finishingPositionData.a.x < finishingPositionData.b.x ){
+                                                            selectionBox.topLeft.x =     finishingPositionData.a.x;
+                                                            selectionBox.bottomRight.x = finishingPositionData.b.x;
+                                                        }else{
+                                                            selectionBox.topLeft.x =     finishingPositionData.b.x;
+                                                            selectionBox.bottomRight.x = finishingPositionData.a.x;
+                                                        }
+                                                        if( finishingPositionData.a.y < finishingPositionData.b.y ){
+                                                            selectionBox.topLeft.y =     finishingPositionData.a.y;
+                                                            selectionBox.bottomRight.y = finishingPositionData.b.y;
+                                                        }else{
+                                                            selectionBox.topLeft.y =     finishingPositionData.b.y;
+                                                            selectionBox.bottomRight.y = finishingPositionData.a.y;
+                                                        }
+                                
+                                                    //deselect everything
+                                                        while(signals.selectedSignals.length > 0){
+                                                            signals.selectedSignals[0].deselect();
+                                                        }
+                                
+                                                    //select the signals that overlap with the selection area
+                                                        var children = signalPane.children();
+                                                        for(var a = 0; a < children.length; a++){
+                                                            var temp = signals.signalRegistry.getSignal(parseInt(children[a].name));
+                                                            var block = { 
+                                                                    topLeft:{
+                                                                        x:temp.position * (viewport.totalSize.width/xCount), 
+                                                                        y:temp.line *     (viewport.totalSize.height/yCount)},
+                                                                    bottomRight:{
+                                                                        x:(temp.position+temp.length) * (viewport.totalSize.width/xCount), 
+                                                                        y:(temp.line+1)*                (viewport.totalSize.height/yCount)
+                                                                    },
+                                                            };
+                                
+                                                            if( _canvas_.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){children[a].select(true);}
+                                                        }
+                                                },
+                                            );
+                                        }else if(pressedKeys.alt){//draw signal
+                                            //deselect everything
+                                                while(signals.selectedSignals.length > 0){
+                                                    signals.selectedSignals[0].deselect();
+                                                }
+                                                
+                                            //get the current location and make a new signal there (with length 0)
+                                                var position = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
+                                                var temp = makeSignal(position.line,position.position,0);
+                            
+                                            //select this new block, and direct the mouse-down to the right handle (for user lengthening)
+                                                temp.signalBlock.select();
+                                                temp.signalBlock.rightHandle.onmousedown(undefined,undefined,event,true);
+                                        }else if(pressedKeys.Space){//pan
+                                            _canvas_.core.viewport.cursor('grabbing');
+                            
+                                            var initialPosition = currentMousePosition(event);
+                                            var old_viewport = {x:viewport.viewposition.x, y:viewport.viewposition.y};
+                            
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var livePosition = currentMousePosition(event);
+                                                    var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
+                                                    setViewposition(
+                                                        old_viewport.x - (diffPosition.x*zoomLevel_x)/(zoomLevel_x-1),
+                                                        old_viewport.y - (diffPosition.y*zoomLevel_y)/(zoomLevel_y-1),
+                                                    );
+                                                },
+                                                function(event){
+                                                    if( 
+                                                        _canvas_.library.math.detectOverlap.pointWithinBoundingBox( 
+                                                            viewportPosition2internalPosition(currentMousePosition(event)), 
+                                                            viewport.viewArea 
+                                                        ) && _canvas_.system.keyboard.pressedKeys.Space
+                                                    ){
+                                                        _canvas_.core.viewport.cursor('grab');
+                                                    }else{
+                                                        _canvas_.core.viewport.cursor('default');
+                                                    }
+                                                },
+                                            );
+                                        }else{//elsewhere click
+                                            //deselect everything
+                                                while(signals.selectedSignals.length > 0){
+                                                    signals.selectedSignals[0].deselect();
+                                                }
+                                        }
+                                    };
+                                    interactionPlane_back.onmousemove = function(x,y,event){
+                                        if(!interactable){return;}
+                            
+                                        var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                        if( pressedKeys.alt ){ _canvas_.core.viewport.cursor('crosshair'); }
+                                        else if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
+                                        else{ _canvas_.core.viewport.cursor('default'); }
+                                    };
+                                    interactionPlane_front.onkeydown = function(x,y,event){
+                                        if(!interactable){return;}
+                            
+                                        var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                                        if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
+                                        if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
+                                        if( pressedKeys.alt ){
+                                            if( signalPane.getElementsUnderPoint(x,y)[0] != undefined ){
+                                                _canvas_.core.viewport.cursor('copy');
+                                            }else{
+                                                _canvas_.core.viewport.cursor('crosshair');
+                                            }
+                                        }
+                                    };
+                                    interactionPlane_front.onkeyup = function(x,y,event){
+                                        if(!interactable){return;}
+                            
+                                        _canvas_.core.viewport.cursor('default');
                                     };
                             
                                 //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselection = onselection;
-                                    object.onpositionchange = onpositionchange;
-                                    
+                                    object.onpan = onpan;
+                                    object.onchangeviewarea = onchangeviewarea;
+                                    object.event = event;
+                            
+                                //setup
+                                    drawBackground();
+                            
                                 return object;
                             };
-                            this.list = function(
-                                name='list', 
-                                x, y, width=50, height=100, angle=0, interactable=true,
-                                list=[],
                             
-                                itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
-                                active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
                             
-                                itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                spacingHeightMux=0.005,
-                                backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
                             
-                                text_font = '5pt Arial',
-                                text_textBaseline = 'alphabetic',
-                                text_colour = {r:0/255,g:0/255,b:0/255,a:1},
                             
-                                item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
-                                item__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
-                                item__off__lineThickness=                     0,
-                                item__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
-                                item__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
-                                item__up__lineThickness=                      0,
-                                item__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
-                                item__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                item__press__lineThickness=                   0,
-                                item__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
-                                item__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
-                                item__select__lineThickness=                  0.75,
-                                item__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
-                                item__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                item__select_press__lineThickness=            0.75,
-                                item__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
-                                item__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
-                                item__glow__lineThickness=                    0,
-                                item__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
-                                item__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                item__glow_press__lineThickness=              0,
-                                item__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
-                                item__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
-                                item__glow_select__lineThickness=             0.75,
-                                item__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
-                                item__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                item__glow_select_press__lineThickness=       0.75,
-                                item__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
-                                item__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
-                                item__hover__lineThickness=                   0,
-                                item__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
-                                item__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
-                                item__hover_press__lineThickness=             0,
-                                item__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
-                                item__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
-                                item__hover_select__lineThickness=            0.75,
-                                item__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
-                                item__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
-                                item__hover_select_press__lineThickness=      0.75,
-                                item__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
-                                item__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
-                                item__hover_glow__lineThickness=              0,
-                                item__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
-                                item__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
-                                item__hover_glow_press__lineThickness=        0,
-                                item__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
-                                item__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
-                                item__hover_glow_select__lineThickness=       0.75,
-                                item__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
-                                item__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
-                                item__hover_glow_select_press__lineThickness= 0.75,
                             
-                                onenter=function(){},
-                                onleave=function(){},
-                                onpress=function(){},
-                                ondblpress=function(){},
-                                onrelease=function(){},
-                                onselection=function(){},
-                                onpositionchange=function(){},
+                            
+                            
+                            
+                            this.sequencer.signalBlock = function(
+                                name, unit_x, unit_y,
+                                line, position, length, strength=1, glow=false, 
+                                bodyStyle=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.6}, lineColour:{r:175,g:175/255,b:175/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.6}, lineColour:{r:130,g:199/255,b:208/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.6}, lineColour:{r:129,g:209/255,b:173/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.6}, lineColour:{r:234,g:238/255,b:110/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.6}, lineColour:{r:249,g:178/255,b:103/255,a:0.95}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.6}, lineColour:{r:255,g: 69/255,b: 69/255,a:0.95}, lineThickness:0.5},
+                                ],
+                                bodyGlowStyle=[
+                                    {colour:{r:138/255,g:138/255,b:138/255,a:0.8}, lineColour:{r:175/255,g:175/255,b:175/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:130/255,g:199/255,b:208/255,a:0.8}, lineColour:{r:130/255,g:199/255,b:208/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:129/255,g:209/255,b:173/255,a:0.8}, lineColour:{r:129/255,g:209/255,b:173/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:234/255,g:238/255,b:110/255,a:0.8}, lineColour:{r:234/255,g:238/255,b:110/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:249/255,g:178/255,b:103/255,a:0.8}, lineColour:{r:249/255,g:178/255,b:103/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:255/255,g: 69/255,b: 69/255,a:0.8}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:1}, lineThickness:0.5},
+                                ],
+                                handleStyle={r:1,g:1,b:0,a:1},
+                                handleWidth=5,
                             ){
-                                //state
-                                    var itemArray = [];
-                                    var selectedItems = [];
-                                    var lastNonShiftClicked = 0;
-                                    var position = 0;
-                                    var calculatedListHeight;
+                                var selected = false;
+                                var minLength = handleWidth/4;
+                                var currentStyles = {
+                                    body:getBlendedColour(bodyStyle,strength),
+                                    glow:getBlendedColour(bodyGlowStyle,strength),
+                                };
+                                
+                                //elements
+                                    var object = interfacePart.builder('group',String(name),{x:position*unit_x, y:line*unit_y});
+                                    object.body = interfacePart.builder('rectangleWithOutline','body',{width:length*unit_x, height:unit_y, colour:currentStyles.body.colour, lineColour:currentStyles.body.lineColour, lineThickness:currentStyles.body.lineThickness});
+                                    object.leftHandle = interfacePart.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
+                                    object.rightHandle = interfacePart.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
+                                    object.append(object.body);
+                                    object.append(object.leftHandle);
+                                    object.append(object.rightHandle);
+                            
+                                //internal functions
+                                    function updateHeight(){
+                                        object.body.height(unit_y);
+                                        object.leftHandle.height(unit_y);
+                                        object.rightHandle.height(unit_y);
+                                    }
+                                    function updateLength(){
+                                        object.body.width(length*unit_x);
+                                        object.rightHandle.x(length*unit_x-handleWidth/2);
+                                    }
+                                    function updateLineAndPosition(){ updateLine(); updatePosition(); }
+                                    function updateLengthAndHeight(){ updateLength(); updateHeight(); }
+                                    function updateLine(){ object.y(line*unit_y); }
+                                    function updatePosition(){ object.x(position*unit_x); }
+                                    function getBlendedColour(swatch,ratio){
+                                        var outputStyle = Object.assign({},swatch[0]);
+                            
+                                        //if there's a colour attribute; blend it and add it to the output 
+                                            if( swatch[0].hasOwnProperty('colour') ){
+                                                outputStyle.colour = _canvas_.library.math.multiBlendColours(swatch.map(a => a.colour),ratio);
+                                            }
+                            
+                                        //if there's a lineColour attribute; blend it and add it to the output
+                                            if( swatch[0].hasOwnProperty('lineColour') ){
+                                                outputStyle.lineColour = _canvas_.library.math.multiBlendColours(swatch.map(a => a.lineColour),ratio);
+                                            }
+                            
+                                        return outputStyle;
+                                    }
+                            
+                                //controls
+                                    object.unit = function(x,y){
+                                        if(x == undefined && y == undefined){return {x:unit_x,y:unit_y};}
+                                        //(awkward bid for speed)
+                                        else if( x == undefined ){
+                                            unit_y = y;
+                                            updateHeight();
+                                            updateLine();
+                                        }else if( y == undefined ){
+                                            unit_x = x;
+                                            updateLength();
+                                            updatePosition();
+                                        }else{
+                                            unit_x = x;
+                                            unit_y = y;
+                                            updateLengthAndHeight();
+                                            updateLineAndPosition();
+                                        }
+                                    };
+                                    object.line = function(a){
+                                        if(a == undefined){return line;}
+                                        line = a;
+                                        updateLine();
+                                    };
+                                    object.position = function(a){
+                                        if(a == undefined){return position;}
+                                        position = a;
+                                        updatePosition();
+                                    };
+                                    object.length = function(a){
+                                        if(a == undefined){return length;}
+                                        length = a < (minLength/unit_x) ? (minLength/unit_x) : a;
+                                        updateLength();
+                                    };
+                                    object.strength = function(a){
+                                        if(a == undefined){return strength;}
+                                        a = a > 1 ? 1 : a; a = a < 0 ? 0 : a;
+                                        strength = a;
+                                        currentStyles = {
+                                            body:getBlendedColour(bodyStyle,strength),
+                                            glow:getBlendedColour(bodyGlowStyle,strength),
+                                        };
+                                        object.glow(glow);
+                                    };
+                                    object.glow = function(a){
+                                        if(a == undefined){return glow;}
+                                        glow = a;
+                                        if(glow){ 
+                                            object.body.colour = currentStyles.glow.colour;
+                                            object.body.lineColour = currentStyles.glow.lineColour;
+                                            object.body.thickness = currentStyles.glow.thickness;
+                                        }else{    
+                                            object.body.colour = currentStyles.body.colour;
+                                            object.body.lineColour = currentStyles.body.lineColour;
+                                            object.body.thickness = currentStyles.body.thickness;
+                                        }            
+                                    };
+                                    object.selected = function(a){
+                                        if(a == undefined){return selected;}
+                                        selected = a;
+                                    };
+                            
+                                return object;
+                            };
+                        };
+                        this.display = new function(){
+                            this.audio_meter_level = function(
+                                name='audio_meter_level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                            
+                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
+                                markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
+                                markingStyle_font='1pt Courier New',
+                            ){
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //meter
+                                        var meter = interfacePart.builder('meter_level','meter',{
+                                            width:width, height:height, markings:markings,
+                                            style:{
+                                                backing:backingStyle,
+                                                levels:levelStyles,
+                                                markingStyle_fill:markingStyle_fill,
+                                                markingStyle_font:markingStyle_font,
+                                            },
+                                        });
+                                        object.append(meter);
+                            
+                                //circuitry
+                                    var converter = interface.circuit.audio2percentage()
+                                    converter.newValue = function(val){meter.set( val );};
+                            
+                                //audio connections
+                                    object.audioIn = function(){ return converter.audioIn(); }
+                            
+                                //methods
+                                    object.start = function(){ converter.start(); };
+                                    object.stop = function(){ converter.stop(); };
+                            
+                                return object;
+                            };
+                            this.glowbox_rect = function(
+                                name='glowbox_rect',
+                                x, y, width=30, height=30, angle=0,
+                                glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                            ){
+                                //elements 
+                                    var object = interfacePart.builder('group',name,{x:x, y:y});
+                                    var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
+                                        object.append(rect);
+                            
+                                //methods
+                                    object.on = function(){
+                                        rect.colour = glowStyle;
+                                    };
+                                    object.off = function(){
+                                        rect.colour = dimStyle;
+                                    };
+                            
+                                return object;
+                            };
+                            this.grapher = function(
+                                name='grapher',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyles=[
+                                    {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
+                                ],
+                                foregroundTextStyles=[
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_colour={r:0,g:0.59,b:0,a:1},
+                                backgroundTextStyle_size=0.75,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
+                            ){
+                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
+                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var foregroundElementsGroup = [];
                             
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     //backing
-                                        var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backing_style});
-                                        object.append(backing);
-                                    //item collection
-                                        var itemCollection = interfacePart.builder('group','itemCollection');
-                                        object.append(itemCollection);
-                                        function refreshList(){
-                                            //clean out all values
-                                                itemArray = [];
-                                                itemCollection.clear();
-                                                selectedItems = [];
-                                                position = 0;
-                                                lastNonShiftClicked = 0;
-                            
-                                            //populate list
-                                                var accumulativeHeight = 0;
-                                                for(var a = 0; a < list.length; a++){
-                                                    if( list[a] == 'space' ){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:0, y:accumulativeHeight,
-                                                            width:width, height:height*spacingHeightMux,
-                                                            colour:{r:1,g:0,b:0,a:0},
-                                                        });
-                            
-                                                        accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else if( list[a] == 'break'){
-                                                        var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                            x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*breakWidthMux, height:height*breakHeightMux,
-                                                            colour:break_style
-                                                        });
-                            
-                                                        accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                    }else{
-                                                        var temp = interfacePart.builder( 'button_rectangle', ''+a, {
-                                                            x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                            width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
-                                                            text_left: list[a].text_left,
-                                                            text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                            text_right: list[a].text_right,
-                            
-                                                            textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                            
-                                                            style:{
-                                                                text_font:text_font,
-                                                                text_textBaseline:text_textBaseline,
-                                                                text_colour:text_colour,
-                            
-                                                                background__off__colour:                            item__off__colour,
-                                                                background__off__lineColour:                        item__off__lineColour,
-                                                                background__off__lineThickness:                     item__off__lineThickness,
-                                                                background__up__colour:                             item__up__colour,
-                                                                background__up__lineColour:                         item__up__lineColour,
-                                                                background__up__lineThickness:                      item__up__lineThickness,
-                                                                background__press__colour:                          item__press__colour,
-                                                                background__press__lineColour:                      item__press__lineColour,
-                                                                background__press__lineThickness:                   item__press__lineThickness,
-                                                                background__select__colour:                         item__select__colour,
-                                                                background__select__lineColour:                     item__select__lineColour,
-                                                                background__select__lineThickness:                  item__select__lineThickness,
-                                                                background__select_press__colour:                   item__select_press__colour,
-                                                                background__select_press__lineColour:               item__select_press__lineColour,
-                                                                background__select_press__lineThickness:            item__select_press__lineThickness,
-                                                                background__glow__colour:                           item__glow__colour,
-                                                                background__glow__lineColour:                       item__glow__lineColour,
-                                                                background__glow__lineThickness:                    item__glow__lineThickness,
-                                                                background__glow_press__colour:                     item__glow_press__colour,
-                                                                background__glow_press__lineColour:                 item__glow_press__lineColour,
-                                                                background__glow_press__lineThickness:              item__glow_press__lineThickness,
-                                                                background__glow_select__colour:                    item__glow_select__colour,
-                                                                background__glow_select__lineColour:                item__glow_select__lineColour,
-                                                                background__glow_select__lineThickness:             item__glow_select__lineThickness,
-                                                                background__glow_select_press__colour:              item__glow_select_press__colour,
-                                                                background__glow_select_press__lineColour:          item__glow_select_press__lineColour,
-                                                                background__glow_select_press__lineThickness:       item__glow_select_press__lineThickness,
-                                                                background__hover__colour:                          item__hover__colour,
-                                                                background__hover__lineColour:                      item__hover__lineColour,
-                                                                background__hover__lineThickness:                   item__hover__lineThickness,
-                                                                background__hover_press__colour:                    item__hover_press__colour,
-                                                                background__hover_press__lineColour:                item__hover_press__lineColour,
-                                                                background__hover_press__lineThickness:             item__hover_press__lineThickness,
-                                                                background__hover_select__colour:                   item__hover_select__colour,
-                                                                background__hover_select__lineColour:               item__hover_select__lineColour,
-                                                                background__hover_select__lineThickness:            item__hover_select__lineThickness,
-                                                                background__hover_select_press__colour:             item__hover_select_press__colour,
-                                                                background__hover_select_press__lineColour:         item__hover_select_press__lineColour,
-                                                                background__hover_select_press__lineThickness:      item__hover_select_press__lineThickness,
-                                                                background__hover_glow__colour:                     item__hover_glow__colour,
-                                                                background__hover_glow__lineColour:                 item__hover_glow__lineColour,
-                                                                background__hover_glow__lineThickness:              item__hover_glow__lineThickness,
-                                                                background__hover_glow_press__colour:               item__hover_glow_press__colour,
-                                                                background__hover_glow_press__lineColour:           item__hover_glow_press__lineColour,
-                                                                background__hover_glow_press__lineThickness:        item__hover_glow_press__lineThickness,
-                                                                background__hover_glow_select__colour:              item__hover_glow_select__colour,
-                                                                background__hover_glow_select__lineColour:          item__hover_glow_select__lineColour,
-                                                                background__hover_glow_select__lineThickness:       item__hover_glow_select__lineThickness,
-                                                                background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
-                                                                background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
-                                                                background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
-                                                            }
-                                                        });
-                            
-                                                        temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                        temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                        temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                        temp.onrelease = function(a){
-                                                            return function(){
-                                                                if( list[a].function ){ list[a].function(); }
-                                                                object.onrelease(a);
-                                                            }
-                                                        }(a);
-                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                            
-                                                        accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                        itemCollection.append( temp );
-                                                        itemArray.push( temp );
-                                                    }
-                                                }
-                            
-                                            return accumulativeHeight - height*itemSpacingMux;
-                                        }
-                                        calculatedListHeight = refreshList();
-                                    //cover
-                                        var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                        object.append(cover);
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
+                                        object.append(rect);
+                                    //background group
+                                        var backgroundGroup = interfacePart.builder( 'group', 'background' );
+                                        object.append(backgroundGroup);
+                                    //foreground group
+                                        var foregroundGroup = interfacePart.builder( 'group', 'foreground' );
+                                        object.append(foregroundGroup);
                                     //stencil
                                         var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
                                         object.stencil(stencil);
                                         object.clipActive(true);
                             
+                                //graphics
+                                    function drawBackground(){
+                                        backgroundGroup.clear();
                             
-                                //interaction
-                                    cover.onwheel = function(x,y,event){
-                                        if(!interactable){return;}
-                                        var move = event.deltaY/100;
-                                        object.position( object.position() + move/10 );
-                                        for(var a = 0; a < itemArray.length; a++){
-                                            itemArray[a].forceMouseLeave();
-                                        }
-                                    };
-                                
-                                //controls
-                                    object.position = function(a,update=true){
-                                        if(a == undefined){return position;}
-                                        a = a < 0 ? 0 : a;
-                                        a = a > 1 ? 1 : a;
-                                        position = a;
+                                        //horizontal lines
+                                            //calculate the x value for all parts of this section
+                                                var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
                             
-                                        if( calculatedListHeight < height ){return;}
-                                        var movementSpace = calculatedListHeight - height;
-                                        itemCollection.y( -a*movementSpace );
-                                        
-                                        if(update&&this.onpositionchange){this.onpositionchange(a);}
-                                    };
-                                    object.select = function(a,state,event,update=true){
-                                        if(!selectable){return;}
+                                            //add all horizontal markings
+                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
+                                    
+                                                    //calculate the y value for this section
+                                                        var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
                             
-                                        //where multi selection is not allowed
-                                            if(!multiSelect){
-                                                //where we want to select an item, which is not already selected
-                                                    if(state && !selectedItems.includes(a) ){
-                                                        //deselect all other items
-                                                            while( selectedItems.length > 0 ){
-                                                                itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
-                                                                selectedItems.shift();
-                                                            }
+                                                    //add line and text to group
+                                                        //lines
+                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_thickness,colour:backgroundStyle_colour} );
+                                                            backgroundGroup.append(path);
+                                                        // //text
+                                                        //     if( horizontalMarkings.printText ){
+                                                        //         var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
+                                                        //             x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
+                                                        //             text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                        //             style:{
+                                                        //                 fill:backgroundTextStyle_fill,
+                                                        //                 font:backgroundTextStyle_font
+                                                        //             }
+                                                        //         } );
+                                                        //         backgroundGroup.append(text);
+                                                        //     }
+                                                }
                             
-                                                        //select current item
-                                                            selectedItems.push(a);
+                                        //vertical lines
+                                            //calculate the y value for all parts of this section
+                                                var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
                             
-                                                //where we want to deselect an item that is selected
-                                                    }else if(!state && selectedItems.includes(a)){
-                                                        selectedItems = [];
-                                                    }
+                                            //add all vertical markings
+                                                for(var a = 0; a < verticalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
                             
-                                            //do not update the item itself, in the case that it was the item that sent this command
-                                            //(which would cause a little loop)
-                                                if(update){ itemCollection.children[a].select(true,undefined,false); }
+                                                    //calculate the x value for this section
+                                                        var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
                             
-                                        //where multi selection is allowed
-                                            }else{
-                                                //wherer range-selection is to be done
-                                                    if( event != undefined && event.shiftKey ){
-                                                        //gather top and bottom item
-                                                        //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
-                                                            var min = Math.min(lastNonShiftClicked, a);
-                                                            var max = Math.max(lastNonShiftClicked, a);
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( itemArray[b].name == ''+min ){min = b;}
-                                                                if( itemArray[b].name == ''+max ){max = b;}
-                                                            }
+                                                    //add line and text to group
+                                                        //lines
+                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_thickness,height:height,colour:backgroundStyle_colour} );
+                                                            backgroundGroup.append(path);
+                                                    
+                                                        // //text
+                                                        //     if( verticalMarkings.printText ){
+                                                        //         var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
+                                                        //             x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
+                                                        //             text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                        //             style:{
+                                                        //                 fill:backgroundTextStyle_fill,
+                                                        //                 font:backgroundTextStyle_font
+                                                        //             }
+                                                        //         } );
+                                                        //         backgroundGroup.append(text);
+                                                        //     }
+                                                }
+                                    }
+                                    function drawForeground(y,x,layer=0){
+                                        foregroundGroup.clear();
                             
-                                                        //deselect all outside the range
-                                                            selectedItems = [];
-                                                            for(var b = 0; b < itemArray.length; b++){
-                                                                if( b > max || b < min ){
-                                                                    if( itemArray[b].select() ){
-                                                                        itemArray[b].select(false,undefined,false);
-                                                                    }
-                                                                }
-                                                            }
+                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
+                                        //otherwise, just update the layer's data sets
+                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
+                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
                             
-                                                        //select those within the range (that aren't already selected)
-                                                            for(var b = min; b <= max; b++){
-                                                                if( !itemArray[b].select() ){
-                                                                    itemArray[b].select(true,undefined,false);
-                                                                    selectedItems.push(b);
-                                                                }
-                                                            }
-                                                //where range-selection is not to be done
-                                                    }else{
-                                                        if(update){ itemArray[a].select(state); }
-                                                        if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
-                                                        else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                        lastNonShiftClicked = a;
-                                                    }
+                                        //input check
+                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
+                                                console.warn('grapher error',name,'attempting to add line with no y component');
+                                                console.warn('x:',foregroundElementsGroup[layer].x);
+                                                console.warn('y:',foregroundElementsGroup[layer].y);
+                                                return;
                                             }
                             
-                                        object.onselection(selectedItems);
-                                    };
-                                    object.add = function(item){
-                                        list.push(item);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.remove = function(a){
-                                        list.splice(a,1);
-                                        calculatedListHeight = refreshList();
-                                    };
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                                        refreshList();
-                                    };
+                                        //draw layers
+                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
+                                                if(foregroundElementsGroup[L] == undefined){continue;}
                             
-                                //callbacks
-                                    object.onenter = onenter;
-                                    object.onleave = onleave;
-                                    object.onpress = onpress;
-                                    object.ondblpress = ondblpress;
-                                    object.onrelease = onrelease;
-                                    object.onselection = onselection;
-                                    object.onpositionchange = onpositionchange;
-                                    
+                                                var layer = foregroundElementsGroup[L];
+                                                var points = [];
+                            
+                                                //generate path points
+                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            points.push( {
+                                                                x: a*(width/(layer.y.length-1)), 
+                                                                y: height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                            } );
+                                                        }
+                                                    }else if( layer.y.length == layer.x.length ){ //straight print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            points.push( {
+                                                                x:          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
+                                                                y: height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                                            } );
+                                                        }
+                                                    }else{console.error('grapher::'+name,':layers are of different length:',layer.y,layer.x);}
+                            
+                                                //create path shape and add it to the group
+                                                    foregroundGroup.append(
+                                                        interfacePart.builder( 'path', 'layer_'+L, { 
+                                                            pointsAsXYArray:points, 
+                                                            colour:foregroundStyles[L].colour,
+                                                            thickness:foregroundStyles[L].thickness,
+                                                        })
+                                                    );
+                                            }
+                                    }
+                            
+                                //controls
+                                    object.viewbox = function(a){
+                                        if(a==null){return viewbox;}
+                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                                        if( a.top != undefined ){viewbox.top = a.top;}
+                                        if( a.left != undefined ){viewbox.left = a.left;}
+                                        if( a.right != undefined ){viewbox.right = a.right;}
+                                    };
+                                    object.horizontalMarkings = function(a){
+                                        if(a==null){return horizontalMarkings;}
+                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                                    };
+                                    object.verticalMarkings = function(a){
+                                        if(a==null){return verticalMarkings;}
+                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                                    };
+                                    object.drawBackground = function(){ drawBackground(); };
+                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                                    object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
+                            
                                 return object;
                             };
-                        };
-                        this.display = new function(){
                             this.grapher_audioScope = function(
                                 name='grapher_audioScope',
                                 x, y, width=120, height=60, angle=0,
@@ -8532,6 +10750,801 @@
                             
                                 //setup
                                     setBackground();
+                            
+                                return object;
+                            };
+                            this.grapher_audioScope_static = function(
+                                name='grapher_audioScope_static',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_colour='rgba(0,100,0,1)',
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                //attributes
+                                    var attributes = {
+                                        analyser:{
+                                            analyserNode: _canvas_.library.audio.context.createAnalyser(),
+                                            timeDomainDataArray: null,
+                                            frequencyData: null,
+                                            refreshRate: 10,
+                                            scopeRefreshInterval: null,
+                                            returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                        },
+                                        graph:{
+                                            resolution: 256
+                                        }
+                                    };
+                                    attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+                                    attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                                    attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher_static',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_colour:backgroundStyle_colour, 
+                                            backgroundStyle_thickness:backgroundStyle_thickness,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //utility functions
+                                    function render(){
+                                        var numbers = [];
+                                        attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
+                                        for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
+                                            numbers.push(
+                                                attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
+                                            );
+                                        }
+                                        grapher.draw(numbers);
+                                    }
+                                    function setBackground(){
+                                        grapher.viewbox( {'l':-1.1,'h':1.1} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                                        grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
+                                        grapher.drawBackground();
+                                    };
+                            
+                                //controls
+                                    object.start = function(){
+                                        if(attributes.analyser.scopeRefreshInterval == null){
+                                            attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
+                                        }
+                                    };
+                                    object.stop = function(){
+                                        clearInterval(attributes.analyser.scopeRefreshInterval);
+                                        attributes.analyser.scopeRefreshInterval = null;
+                                    };
+                                    object.getNode = function(){return attributes.analyser.analyserNode;};
+                                    object.resolution = function(res=null){
+                                        if(res==null){return attributes.graph.resolution;}
+                                        attributes.graph.resolution = res;
+                                        this.stop();
+                                        this.start();
+                                    };
+                                    object.refreshRate = function(a){
+                                        if(a==null){return attributes.analyser.refreshRate;}
+                                        attributes.analyser.refreshRate = a;
+                                        this.stop();
+                                        this.start();
+                                    };
+                            
+                                //setup
+                                    setBackground();
+                            
+                                return object;
+                            };
+                            this.grapher_periodicWave = function(
+                                name='grapher_periodicWave',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
+                                foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
+                            ){
+                                var wave = {'sin':[],'cos':[]};
+                                var resolution = 100;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_colour:backgroundStyle_colour, 
+                                            backgroundStyle_thickness:backgroundStyle_thickness,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //controls
+                                    object.wave = function(a=null,type=null){
+                                        if(a==null){
+                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
+                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
+                                            for(var a = 0; a < wave['sin'].length; a++){
+                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
+                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
+                                            }
+                                            return wave;
+                                        }
+                            
+                                        if(type==null){
+                                            wave = a;
+                                        }
+                                        switch(type){
+                                            case 'sin': wave.sin = a; break;
+                                            case 'cos': wave.cos = a; break;
+                                            default: break;
+                                        }
+                                    };
+                                    object.waveElement = function(type, mux, a){
+                                        if(a==null){return wave[type][mux];}
+                                        wave[type][mux] = a;
+                                    };
+                                    object.resolution = function(a=null){
+                                        if(a==null){return resolution;}
+                                        resolution = a;
+                                    };
+                                    object.updateBackground = function(){
+                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                                        grapher.drawBackground();
+                                    };
+                                    object.draw = function(){
+                                        var data = [];
+                                        var temp = 0;
+                                        for(var a = 0; a <= resolution; a++){
+                                            temp = 0;
+                                            for(var b = 0; b < wave['sin'].length; b++){
+                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
+                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
+                                            }
+                                            for(var b = 0; b < wave['cos'].length; b++){
+                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
+                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
+                                            }
+                                            data.push(temp);
+                                        }
+                                
+                                        grapher.draw( data );
+                                    };
+                                    object.reset = function(){
+                                        this.wave({'sin':[],'cos':[]});
+                                        this.resolution(100);
+                                        this.updateBackground();
+                                    };
+                                    
+                                return object;
+                            };
+                            this.grapher_periodicWave_static = function(
+                                name='grapher_periodicWave_static',
+                                x, y, width=120, height=60, angle=0,
+                            
+                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
+                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                            
+                                backgroundStyle_colour='rgba(0,100,0,1)',
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundTextStyle_size=0.1,
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var wave = {'sin':[],'cos':[]};
+                                var resolution = 100;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //grapher
+                                        var grapher = interfacePart.builder('grapher_static',name,{
+                                            x:0, y:0, width:width, height:height,
+                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
+                                            backgroundStyle_colour:backgroundStyle_colour, 
+                                            backgroundStyle_thickness:backgroundStyle_thickness,
+                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
+                                            backgroundTextStyle_size:backgroundTextStyle_size,
+                                            backgroundTextStyle_font:backgroundTextStyle_font,
+                                            backingStyle:backingStyle,
+                                        });
+                                        object.append(grapher);
+                            
+                                //controls
+                                    object.wave = function(a=null,type=null){
+                                        if(a==null){
+                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
+                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
+                                            for(var a = 0; a < wave['sin'].length; a++){
+                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
+                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
+                                            }
+                                            return wave;
+                                        }
+                            
+                                        if(type==null){
+                                            wave = a;
+                                        }
+                                        switch(type){
+                                            case 'sin': wave.sin = a; break;
+                                            case 'cos': wave.cos = a; break;
+                                            default: break;
+                                        }
+                                    };
+                                    object.waveElement = function(type, mux, a){
+                                        if(a==null){return wave[type][mux];}
+                                        wave[type][mux] = a;
+                                    };
+                                    object.resolution = function(a=null){
+                                        if(a==null){return resolution;}
+                                        resolution = a;
+                                    };
+                                    object.updateBackground = function(){
+                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
+                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
+                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
+                                        grapher.drawBackground();
+                                    };
+                                    object.draw = function(){
+                                        var data = [];
+                                        var temp = 0;
+                                        for(var a = 0; a <= resolution; a++){
+                                            temp = 0;
+                                            for(var b = 0; b < wave['sin'].length; b++){
+                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
+                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
+                                            }
+                                            for(var b = 0; b < wave['cos'].length; b++){
+                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
+                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
+                                            }
+                                            data.push(temp);
+                                        }
+                                
+                                        grapher.draw( data );
+                                    };
+                                    object.reset = function(){
+                                        this.wave({'sin':[],'cos':[]});
+                                        this.resolution(100);
+                                        this.updateBackground();
+                                    };
+                                    
+                                return object;
+                            };
+                            this.grapher_static = function(
+                                name='grapher_static',
+                                x, y, width=120, height=60, angle=0, resolution=5,
+                            
+                                foregroundStyles=[
+                                    {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
+                                    {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
+                                ],
+                                foregroundTextStyles=[
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
+                                ],
+                            
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_thickness=0.25,
+                                backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
+                                backgroundTextStyle_size='7.5pt',
+                                backgroundTextStyle_font='Helvetica',
+                            
+                                backingStyle='rgba(50,50,50,1)',
+                            ){
+                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
+                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                var foregroundElementsGroup = [];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //canvas
+                                        var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
+                                        object.append(canvas);
+                            
+                                //graphics
+                                    function clear(){
+                                        canvas._.fillStyle = backingStyle;
+                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                    };
+                                    function drawBackground(){
+                                        //horizontal lines
+                                            //calculate the x value for all parts of this section
+                                                var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
+                            
+                                            //add all horizontal markings
+                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
+                                    
+                                                    //calculate the y value for this section
+                                                        var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            canvas._.fillStyle = 'rgba('+backgroundStyle_colour.r*255+','+backgroundStyle_colour.g*255+','+backgroundStyle_colour.b*255+','+backgroundStyle_colour.a+')';
+                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_thickness));
+                            
+                                                        //text
+                                                            if( horizontalMarkings.printText ){
+                                                                canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
+                                                                canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
+                                                                canvas._.fillText(
+                                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                                                    canvas.$(x+horizontalMarkings.textPositionOffset.x),
+                                                                    canvas.$(y+horizontalMarkings.textPositionOffset.y),
+                                                                );
+                                                            }
+                                                }
+                            
+                                        //vertical lines
+                                            //calculate the y value for all parts of this section
+                                                var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                            
+                                            //add all vertical markings
+                                                for(var a = 0; a < verticalMarkings.points.length; a++){
+                                                    //check if we should draw this line at all
+                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
+                            
+                                                    //calculate the x value for this section
+                                                        var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                            
+                                                    //add line and text to group
+                                                        //lines
+                                                            canvas._.fillStyle = 'rgba('+backgroundStyle_colour.r*255+','+backgroundStyle_colour.g*255+','+backgroundStyle_colour.b*255+','+backgroundStyle_colour.a+')';
+                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_thickness),canvas.$(height));
+                                                    
+                                                        //text
+                                                            if( verticalMarkings.printText ){
+                                                                canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
+                                                                canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
+                                                                canvas._.fillText(
+                                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                                                    canvas.$(x+verticalMarkings.textPositionOffset.x),
+                                                                    canvas.$(y+verticalMarkings.textPositionOffset.y),
+                                                                );
+                                                            }
+                                                }
+                            
+                                        canvas.requestUpdate();
+                                    }
+                                    function drawForeground(y,x,layer=0){
+                            
+                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
+                                        //otherwise, just update the layer's data sets
+                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
+                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
+                            
+                                        //input check
+                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
+                                                console.warn('grapher_static error',name,'attempting to add line with no y component');
+                                                console.warn('x:',foregroundElementsGroup[layer].x);
+                                                console.warn('y:',foregroundElementsGroup[layer].y);
+                                                return;
+                                            }
+                            
+                                        //draw layers
+                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
+                                                if(foregroundElementsGroup[L] == undefined){continue;}
+                            
+                                                var layer = foregroundElementsGroup[L];
+                            
+                                                //draw path
+                                                    canvas._.strokeStyle = 'rgba('+foregroundStyles[L].colour.r*255+','+foregroundStyles[L].colour.g*255+','+foregroundStyles[L].colour.b*255+','+foregroundStyles[L].colour.a+')';
+                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].thickness);
+                                                    canvas._.lineJoin = foregroundStyles[L].lineJoin;
+                                                    canvas._.lineCap = foregroundStyles[L].lineJoin;
+                                                    canvas._.beginPath();
+                            
+                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
+                                                        canvas._.moveTo( 0, canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
+                                                        for(var a = 1; a < layer.y.length; a++){ 
+                                                            canvas._.lineTo(
+                                                                canvas.$(a*(width/(layer.y.length-1))),
+                                                                canvas.$(height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
+                                                            );
+                                                        }
+                                                    }else if( layer.y.length == layer.x.length ){ //straight print
+                                                        for(var a = 0; a < layer.y.length; a++){ 
+                                                            canvas._.moveTo( 
+                                                                canvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
+                                                                canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                                            );
+                                                            for(var a = 1; a < layer.y.length; a++){ 
+                                                                canvas._.lineTo(
+                                                                    canvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
+                                                                    canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
+                                                                );
+                                                            }
+                                                        }
+                                                    }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
+                            
+                                                    canvas._.stroke();
+                                            }
+                                                
+                                        canvas.requestUpdate();
+                                    }
+                            
+                                //controls
+                                    object.resolution = function(a){return canvas.resolution(a);};
+                                    object.viewbox = function(a){
+                                        if(a==null){return viewbox;}
+                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
+                                        if( a.top != undefined ){viewbox.top = a.top;}
+                                        if( a.left != undefined ){viewbox.left = a.left;}
+                                        if( a.right != undefined ){viewbox.right = a.right;}
+                                    };
+                                    object.horizontalMarkings = function(a){
+                                        if(a==null){return horizontalMarkings;}
+                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
+                                    };
+                                    object.verticalMarkings = function(a){
+                                        if(a==null){return verticalMarkings;}
+                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
+                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
+                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
+                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
+                                    };
+                                    object.drawBackground = function(){ clear(); drawBackground(); };
+                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
+                                    object.draw = function(y,x,layer=0){ clear(); drawBackground(); drawForeground(y,x,layer); };
+                            
+                                return object;
+                            };
+                            this.level = function(
+                                name='level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.78,g:0.78,b:0.78,a:1}]
+                            ){
+                                var values = [];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
+                                            object.append(rect);
+                                    //levels
+                                        var levels = interfacePart.builder('group','levels');
+                                            object.append(levels);
+                            
+                                        var level = [];
+                                        for(var a = 0; a < levelStyles.length; a++){
+                                            values.push(0);
+                                            level.push( interfacePart.builder('rectangle','movingRect_'+a,{
+                                                y:height,
+                                                width:width, height:0,
+                                                colour:levelStyles[a],
+                                            }) );
+                                            levels.prepend(level[a]);
+                                        }
+                            
+                            
+                                    
+                            
+                                    //methods
+                                        object.layer = function(value,layer=0){
+                                            if(layer == undefined){return values;}
+                                            if(value==null){return values[layer];}
+                            
+                                            value = (value>1 ? 1 : value);
+                                            value = (value<0 ? 0 : value);
+                            
+                                            values[layer] = value;
+                            
+                                            level[layer].height( height*value );
+                                            level[layer].y( height - height*value );
+                                        };
+                            
+                                return object;
+                            };
+                            this.meter_level = function(
+                                name='meter_level',
+                                x, y, angle=0,
+                                width=20, height=60,
+                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
+                            
+                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
+                                markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
+                                markingStyle_font='1pt Courier New',
+                            ){
+                            
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //level
+                                        var level = interfacePart.builder('level','level',{
+                                            width:width, height:height,
+                                            style:{
+                                                backing:backingStyle,
+                                                levels:levelStyles,
+                                            },
+                                        });
+                                        object.append(level);
+                            
+                                    //markings
+                                        var marks = interfacePart.builder('group','markings');
+                                            object.append(marks);
+                            
+                                        function makeMark(y){
+                                            var markThickness = 0.2;
+                                            var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
+                                            return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
+                                        }
+                                        // function insertText(y,text){
+                                        //     // return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
+                                        // }
+                            
+                                        for(var a = 0; a < markings.length; a++){
+                                            marks.append( makeMark(height*(1-markings[a])) );
+                                            // marks.append( insertText(height*(1-markings[a]),markings[a]) );
+                                        }
+                            
+                            
+                            
+                            
+                                //update intervals
+                                    var framesPerSecond = 15;
+                                    var coolDownSpeed = ( 3/4 )/10;
+                            
+                                    var coolDownSub = coolDownSpeed/framesPerSecond;
+                            
+                                    var coolDown = 0;
+                                    var mostRecentSetting = 0;
+                                    setInterval(function(){        
+                                        level.layer(mostRecentSetting,0);
+                            
+                                        if(coolDown>0){coolDown-=coolDownSub;}
+                                        level.layer(coolDown,1);
+                            
+                                        if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                                    },1000/framesPerSecond);
+                            
+                            
+                            
+                            
+                                //method
+                                    object.set = function(a){
+                                        mostRecentSetting = a;
+                                    };
+                            
+                                return object;
+                            };
+                            this.rastorDisplay = function(
+                                name='rastorDisplay',
+                                x, y, angle=0, width=60, height=60,
+                                xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
+                                backing={r:0.2,g:0.2,b:0.2,a:1}, defaultPixelValue={r:0,g:0,b:0,a:1},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backing });
+                                        object.append(rect);
+                                    //pixels
+                                        var pixelGroup = interfacePart.builder('group','pixels');
+                                        object.append(pixelGroup);
+                            
+                                        var pixels = [];
+                                        var pixelValues = [];
+                                        var pixWidth = width/xCount;
+                                        var pixHeight = height/yCount;
+                            
+                                        for(var x = 0; x < xCount; x++){
+                                            var temp_pixels = [];
+                                            var temp_pixelValues = [];
+                                            for(var y = 0; y < yCount; y++){
+                                                var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
+                                                    x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
+                                                    width:pixWidth-xGappage,    height:pixHeight-yGappage,
+                                                    colour:defaultPixelValue,
+                                                });
+                                                    
+                                                temp_pixels.push(rect);
+                                                temp_pixelValues.push([0,0,0]);
+                                                pixelGroup.append(rect);
+                                            }
+                                            pixels.push(temp_pixels);
+                                            pixelValues.push(temp_pixelValues);
+                                        }
+                            
+                                //graphical update
+                                    function render(){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                pixels[x][y].colour = {r:pixelValues[x][y][0],g:pixelValues[x][y][1],b:pixelValues[x][y][2],a:1};
+                                            }
+                                        }
+                                    }
+                            
+                                //control
+                                    object.get = function(x,y){ return pixelValues[x][y]; };
+                                    object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
+                                    object.import = function(data){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                this.set(x,y,data[x][y]);
+                                            }
+                                        }
+                                        render();
+                                    };
+                                    object.export = function(){ return pixelValues; }
+                                    object.setAll = function(value){
+                                        for(var x = 0; x < xCount; x++){
+                                            for(var y = 0; y < yCount; y++){
+                                                this.set(x,y,value);
+                                            }
+                                        }
+                                    }
+                                    object.test = function(){
+                                        this.setAll([1,1,1]);
+                                        this.set(1,1,[1,0.5,0.5]);
+                                        this.set(2,2,[0.5,1,0.5]);
+                                        this.set(3,3,[0.5,0.5,1]);
+                                        this.set(4,4,[1,0.5,1]);
+                                        render();
+                                    };
+                            
+                                return object;
+                            };
+                            this.readout_sixteenSegmentDisplay = function(
+                                name='readout_sixteenSegmentDisplay',
+                                x, y, width=100, height=30, count=5, angle=0,
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
+                            ){
+                                //values
+                                    var text = '';
+                                    var displayInterval = null;
+                                    var displayIntervalTime = 150;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                            
+                                    //display units
+                                        var units = [];
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder('sixteenSegmentDisplay', ''+a, {
+                                                x:(width/count)*a, width:width/count, height:height, 
+                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                            });
+                                            object.append( temp );
+                                            units.push(temp);
+                                        }
+                            
+                                //methods
+                                    object.text = function(a){
+                                        if(a==null){return text;}
+                                        text = a;
+                                    };
+                            
+                                    object.print = function(style){
+                                        clearInterval(displayInterval);
+                                        switch(style){
+                                            case 'smart':
+                                                if(text.length > units.length){this.print('r2lSweep');}
+                                                else{this.print('regular')}
+                                            break;
+                                            case 'r2lSweep':
+                                                var displayStage = 0;
+                            
+                                                displayInterval = setInterval(function(){
+                                                    for(var a = units.length-1; a >= 0; a--){
+                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                                    }
+                            
+                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                                },displayIntervalTime);
+                                            break;
+                                            case 'regular': default:
+                                                for(var a = 0; a < units.length; a++){
+                                                    units[a].enterCharacter(text[a]);
+                                                }
+                                            break;
+                                        }
+                                    };
+                            
+                                return object;
+                            };
+                            this.readout_sixteenSegmentDisplay_static = function(
+                                name='readout_sixteenSegmentDisplay_static',
+                                x, y, width=100, height=30, count=5, angle=0, resolution=5, 
+                                backgroundStyle='rgb(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)'
+                            ){
+                                //values
+                                    var text = '';
+                                    var displayInterval = null;
+                                    var displayIntervalTime = 150;
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                            
+                                    //display units
+                                        var units = [];
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder('sixteenSegmentDisplay_static', ''+a, {
+                                                x:(width/count)*a, width:width/count, height:height, resolution:resolution,
+                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                            });
+                                            object.append( temp );
+                                            units.push(temp);
+                                        }
+                            
+                                //methods
+                                    object.text = function(a){
+                                        if(a==null){return text;}
+                                        text = a;
+                                    };
+                            
+                                    object.print = function(style){
+                                        clearInterval(displayInterval);
+                                        switch(style){
+                                            case 'smart':
+                                                if(text.length > units.length){this.print('r2lSweep');}
+                                                else{this.print('regular')}
+                                            break;
+                                            case 'r2lSweep':
+                                                var displayStage = 0;
+                            
+                                                displayInterval = setInterval(function(){
+                                                    for(var a = units.length-1; a >= 0; a--){
+                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
+                                                    }
+                            
+                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
+                                                },displayIntervalTime);
+                                            break;
+                                            case 'regular': default:
+                                                for(var a = 0; a < units.length; a++){
+                                                    units[a].enterCharacter(text[a]);
+                                                }
+                                            break;
+                                        }
+                                    };
                             
                                 return object;
                             };
@@ -8705,6 +11718,191 @@
                                             this.set(a, stamp[a]==1);
                                         }
                                     };
+                            
+                                return object;
+                            };
+                            this.sevenSegmentDisplay_static = function(
+                                name='sevenSegmentDisplay_static',
+                                x, y, width=20, height=30, angle=0, resolution=5, 
+                                backgroundStyle='rgba(0,0,0)',
+                                glowStyle='rgb(200,200,200)',
+                                dimStyle='rgb(20,20,20)',
+                            ){
+                                var margin = width/8;
+                                var division = width/8;
+                                var shapes = {
+                                    segments:{
+                                        points: {
+                                            top:{
+                                                left:[
+                                                    {x:division*1.0+margin,         y:division*1.0+margin},
+                                                    {x:division*0.5+margin,         y:division*0.5+margin},
+                                                    {x:division*1.0+margin,         y:division*0.0+margin},
+                                                    {x:division*0.0+margin,         y:division*1.0+margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},
+                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},
+                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},
+                                                    {x:width-division*0.0-margin,   y:division*1.0+margin}
+                                                ]
+                                            },
+                                            middle: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                                                ]
+                                            },
+                                            bottom: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height-division*1.0-margin},
+                                                    {x:division*0.5+margin,         y:height-division*0.5-margin},
+                                                    {x:division*1.0+margin,         y:height-division*0.0-margin},
+                                                    {x:division*0.0+margin,         y:height-division*1.0-margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin},
+                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin},
+                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin},
+                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}
+                                                ]
+                                            }
+                                        }
+                                    }
+                                };
+                                var points = [
+                                    [
+                                        shapes.segments.points.top.left[0],
+                                        shapes.segments.points.top.right[2],
+                                        shapes.segments.points.top.right[1],
+                                        shapes.segments.points.top.right[0],
+                                        shapes.segments.points.top.left[2],
+                                        shapes.segments.points.top.left[1],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.left[1],
+                                        shapes.segments.points.top.left[3],
+                                        shapes.segments.points.middle.left[3],
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[0],
+                                        shapes.segments.points.top.left[0],  
+                                    ],
+                                    [
+                                        shapes.segments.points.top.right[1],  
+                                        shapes.segments.points.top.right[3],  
+                                        shapes.segments.points.middle.right[3],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.top.right[2],  
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[0], 
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[0],
+                                        shapes.segments.points.middle.left[2], 
+                                        shapes.segments.points.middle.left[1], 
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[4],
+                                        shapes.segments.points.bottom.left[3],
+                                        shapes.segments.points.bottom.left[1],
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.middle.left[2],
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[4],
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.middle.right[0],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[0],
+                                        shapes.segments.points.bottom.left[2],
+                                        shapes.segments.points.bottom.left[1],
+                                    ]
+                                ];
+                                var stamp = [0,0,0,0,0,0,0];
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                    //canvas
+                                        var canvas = interfacePart.builder('canvas','subcanvas',{ width:width, height:height, resolution:resolution });
+                                        object.append(canvas);
+                            
+                                //graphics
+                                    function clear(){
+                                        canvas._.fillStyle = backgroundStyle;
+                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                        canvas.requestUpdate();
+                                    };
+                                    function drawChar(){
+                                        //draw segments in 
+                                            for(var a = 0; a < points.length; a++){
+                                                canvas._.beginPath(); 
+                                                canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
+                                                for(var b = 1; b < points[a].length; b++){
+                                                    canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
+                                                }
+                                                canvas._.closePath(); 
+                                                canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
+                                                canvas._.fill(); 
+                                            }
+                                            canvas.requestUpdate();
+                                    }
+                            
+                                //methods
+                                    object.set = function(segment,state){
+                                        stamp[segment].state = state;
+                                        drawChar();
+                                    };
+                                    object.get = function(segment){ return stamp[segment].state; };
+                                    object.clear = function(){
+                                        for(var a = 0; a < stamp.length; a++){
+                                            this.set(a,false);
+                                        }
+                                    };
+                            
+                                    object.enterCharacter = function(char){
+                                        //generate stamp
+                                            switch(char){
+                                                case 0: case '0': stamp = [1,1,1,0,1,1,1]; break;
+                                                case 1: case '1': stamp = [0,0,1,0,0,1,0]; break;
+                                                case 2: case '2': stamp = [1,0,1,1,1,0,1]; break;
+                                                case 3: case '3': stamp = [1,0,1,1,0,1,1]; break;
+                                                case 4: case '4': stamp = [0,1,1,1,0,1,0]; break;
+                                                case 5: case '5': stamp = [1,1,0,1,0,1,1]; break;
+                                                case 6: case '6': stamp = [1,1,0,1,1,1,1]; break;
+                                                case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
+                                                case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
+                                                case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
+                                                default: stamp = [0,0,0,0,0,0,0]; break;
+                                            }
+                            
+                                        clear();
+                                        drawChar();
+                                    };
+                            
+                                //setup
+                                    clear();
+                                    drawChar();
                             
                                 return object;
                             };
@@ -9511,968 +12709,6 @@
                             
                             
                                 return object;      
-                            };
-                            this.rastorDisplay = function(
-                                name='rastorDisplay',
-                                x, y, angle=0, width=60, height=60,
-                                xCount=8, yCount=8, xGappage=0.1, yGappage=0.1,
-                                backing={r:0.2,g:0.2,b:0.2,a:1}, defaultPixelValue={r:0,g:0,b:0,a:1},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backing });
-                                        object.append(rect);
-                                    //pixels
-                                        var pixelGroup = interfacePart.builder('group','pixels');
-                                        object.append(pixelGroup);
-                            
-                                        var pixels = [];
-                                        var pixelValues = [];
-                                        var pixWidth = width/xCount;
-                                        var pixHeight = height/yCount;
-                            
-                                        for(var x = 0; x < xCount; x++){
-                                            var temp_pixels = [];
-                                            var temp_pixelValues = [];
-                                            for(var y = 0; y < yCount; y++){
-                                                var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
-                                                    x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
-                                                    width:pixWidth-xGappage,    height:pixHeight-yGappage,
-                                                    colour:defaultPixelValue,
-                                                });
-                                                    
-                                                temp_pixels.push(rect);
-                                                temp_pixelValues.push([0,0,0]);
-                                                pixelGroup.append(rect);
-                                            }
-                                            pixels.push(temp_pixels);
-                                            pixelValues.push(temp_pixelValues);
-                                        }
-                            
-                                //graphical update
-                                    function render(){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                pixels[x][y].colour = {r:pixelValues[x][y][0],g:pixelValues[x][y][1],b:pixelValues[x][y][2],a:1};
-                                            }
-                                        }
-                                    }
-                            
-                                //control
-                                    object.get = function(x,y){ return pixelValues[x][y]; };
-                                    object.set = function(x,y,state){ pixelValues[x][y] = state; render(); };
-                                    object.import = function(data){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                this.set(x,y,data[x][y]);
-                                            }
-                                        }
-                                        render();
-                                    };
-                                    object.export = function(){ return pixelValues; }
-                                    object.setAll = function(value){
-                                        for(var x = 0; x < xCount; x++){
-                                            for(var y = 0; y < yCount; y++){
-                                                this.set(x,y,value);
-                                            }
-                                        }
-                                    }
-                                    object.test = function(){
-                                        this.setAll([1,1,1]);
-                                        this.set(1,1,[1,0.5,0.5]);
-                                        this.set(2,2,[0.5,1,0.5]);
-                                        this.set(3,3,[0.5,0.5,1]);
-                                        this.set(4,4,[1,0.5,1]);
-                                        render();
-                                    };
-                            
-                                return object;
-                            };
-                            this.glowbox_rect = function(
-                                name='glowbox_rect',
-                                x, y, width=30, height=30, angle=0,
-                                glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
-                                dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
-                            ){
-                                //elements 
-                                    var object = interfacePart.builder('group',name,{x:x, y:y});
-                                    var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
-                                        object.append(rect);
-                            
-                                //methods
-                                    object.on = function(){
-                                        rect.colour = glowStyle;
-                                    };
-                                    object.off = function(){
-                                        rect.colour = dimStyle;
-                                    };
-                            
-                                return object;
-                            };
-                            this.audio_meter_level = function(
-                                name='audio_meter_level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                            
-                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
-                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
-                                markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
-                                markingStyle_font='1pt Courier New',
-                            ){
-                                //elements
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //meter
-                                        var meter = interfacePart.builder('meter_level','meter',{
-                                            width:width, height:height, markings:markings,
-                                            style:{
-                                                backing:backingStyle,
-                                                levels:levelStyles,
-                                                markingStyle_fill:markingStyle_fill,
-                                                markingStyle_font:markingStyle_font,
-                                            },
-                                        });
-                                        object.append(meter);
-                            
-                                //circuitry
-                                    var converter = interface.circuit.audio2percentage()
-                                    converter.newValue = function(val){meter.set( val );};
-                            
-                                //audio connections
-                                    object.audioIn = function(){ return converter.audioIn(); }
-                            
-                                //methods
-                                    object.start = function(){ converter.start(); };
-                                    object.stop = function(){ converter.stop(); };
-                            
-                                return object;
-                            };
-                            this.grapher_static = function(
-                                name='grapher_static',
-                                x, y, width=120, height=60, angle=0, resolution=5,
-                            
-                                foregroundStyles=[
-                                    {colour:'rgba(0,255,0,1)', thickness:0.5},
-                                    {colour:'rgba(255,255,0,1)', thickness:0.5},
-                                    {colour:'rgba(0,255,255,1)', thickness:0.5,},
-                                ],
-                                foregroundTextStyles=[
-                                    {colour:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {colour:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-                                    {colour:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
-                                ],
-                            
-                                backgroundStyle_colour='rgba(0,100,0,1)',
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_colour='rgba(0,150,0,1)',
-                                backgroundTextStyle_size='7.5pt',
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var foregroundElementsGroup = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //canvas
-                                        var canvas = interfacePart.builder('canvas','backing',{ width:width, height:height, resolution:resolution });
-                                        object.append(canvas);
-                            
-                                //graphics
-                                    function clear(){
-                                        canvas._.fillStyle = backingStyle;
-                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
-                                    };
-                                    function drawBackground(){
-                                        //horizontal lines
-                                            //calculate the x value for all parts of this section
-                                                var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
-                            
-                                            //add all horizontal markings
-                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
-                                    
-                                                    //calculate the y value for this section
-                                                        var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            canvas._.fillStyle = backgroundStyle_colour;
-                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_thickness));
-                            
-                                                        //text
-                                                            if( horizontalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_colour;
-                                                                canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
-                                                                canvas._.fillText(
-                                                                    (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                                    canvas.$(x+horizontalMarkings.textPositionOffset.x),
-                                                                    canvas.$(y+horizontalMarkings.textPositionOffset.y),
-                                                                );
-                                                            }
-                                                }
-                            
-                                        //vertical lines
-                                            //calculate the y value for all parts of this section
-                                                var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
-                            
-                                            //add all vertical markings
-                                                for(var a = 0; a < verticalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
-                            
-                                                    //calculate the x value for this section
-                                                        var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            canvas._.fillStyle = backgroundStyle_colour;
-                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_thickness),canvas.$(height));
-                                                    
-                                                        //text
-                                                            if( verticalMarkings.printText ){
-                                                                canvas._.fillStyle = backgroundTextStyle_colour;
-                                                                canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
-                                                                canvas._.fillText(
-                                                                    (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                                    canvas.$(x+verticalMarkings.textPositionOffset.x),
-                                                                    canvas.$(y+verticalMarkings.textPositionOffset.y),
-                                                                );
-                                                            }
-                                                }
-                            
-                                        canvas.requestUpdate();
-                                    }
-                                    function drawForeground(y,x,layer=0){
-                            
-                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
-                                        //otherwise, just update the layer's data sets
-                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
-                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
-                            
-                                        //input check
-                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                                console.warn('grapher_static error',name,'attempting to add line with no y component');
-                                                console.warn('x:',foregroundElementsGroup[layer].x);
-                                                console.warn('y:',foregroundElementsGroup[layer].y);
-                                                return;
-                                            }
-                            
-                                        //draw layers
-                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
-                                                if(foregroundElementsGroup[L] == undefined){continue;}
-                            
-                                                var layer = foregroundElementsGroup[L];
-                            
-                                                //draw path
-                                                    canvas._.strokeStyle = foregroundStyles[L].colour;
-                                                    canvas._.lineWidth = canvas.$(foregroundStyles[L].thickness);
-                                                    canvas._.lineJoin = foregroundStyles[L].lineJoin;
-                                                    canvas._.lineCap = foregroundStyles[L].lineJoin;
-                                                    canvas._.beginPath();
-                            
-                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                                                        canvas._.moveTo( 0, canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
-                                                        for(var a = 1; a < layer.y.length; a++){ 
-                                                            canvas._.lineTo(
-                                                                canvas.$(a*(width/(layer.y.length-1))),
-                                                                canvas.$(height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
-                                                            );
-                                                        }
-                                                    }else if( layer.y.length == layer.x.length ){ //straight print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            canvas._.moveTo( 
-                                                                canvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
-                                                                canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
-                                                            );
-                                                            for(var a = 1; a < layer.y.length; a++){ 
-                                                                canvas._.lineTo(
-                                                                    canvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
-                                                                    canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
-                                                                );
-                                                            }
-                                                        }
-                                                    }else{console.error('grapher_static::'+name,':layers are of different length:',layer.y,layer.x);}
-                            
-                                                    canvas._.stroke();
-                                            }
-                                                
-                                        canvas.requestUpdate();
-                                    }
-                            
-                                //controls
-                                    object.resolution = function(a){return canvas.resolution(a);};
-                                    object.viewbox = function(a){
-                                        if(a==null){return viewbox;}
-                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                                        if( a.top != undefined ){viewbox.top = a.top;}
-                                        if( a.left != undefined ){viewbox.left = a.left;}
-                                        if( a.right != undefined ){viewbox.right = a.right;}
-                                    };
-                                    object.horizontalMarkings = function(a){
-                                        if(a==null){return horizontalMarkings;}
-                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
-                                    };
-                                    object.verticalMarkings = function(a){
-                                        if(a==null){return verticalMarkings;}
-                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                                    };
-                                    object.drawBackground = function(){ clear(); drawBackground(); };
-                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
-                                    object.draw = function(y,x,layer=0){ clear(); drawBackground(); drawForeground(y,x,layer); };
-                            
-                                return object;
-                            };
-                            this.grapher_periodicWave_static = function(
-                                name='grapher_periodicWave_static',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_colour='rgba(0,100,0,1)',
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                var wave = {'sin':[],'cos':[]};
-                                var resolution = 100;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher_static',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_thickness:backgroundStyle_thickness,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //controls
-                                    object.wave = function(a=null,type=null){
-                                        if(a==null){
-                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
-                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
-                                            for(var a = 0; a < wave['sin'].length; a++){
-                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
-                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
-                                            }
-                                            return wave;
-                                        }
-                            
-                                        if(type==null){
-                                            wave = a;
-                                        }
-                                        switch(type){
-                                            case 'sin': wave.sin = a; break;
-                                            case 'cos': wave.cos = a; break;
-                                            default: break;
-                                        }
-                                    };
-                                    object.waveElement = function(type, mux, a){
-                                        if(a==null){return wave[type][mux];}
-                                        wave[type][mux] = a;
-                                    };
-                                    object.resolution = function(a=null){
-                                        if(a==null){return resolution;}
-                                        resolution = a;
-                                    };
-                                    object.updateBackground = function(){
-                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                                        grapher.drawBackground();
-                                    };
-                                    object.draw = function(){
-                                        var data = [];
-                                        var temp = 0;
-                                        for(var a = 0; a <= resolution; a++){
-                                            temp = 0;
-                                            for(var b = 0; b < wave['sin'].length; b++){
-                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
-                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
-                                            }
-                                            for(var b = 0; b < wave['cos'].length; b++){
-                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
-                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
-                                            }
-                                            data.push(temp);
-                                        }
-                                
-                                        grapher.draw( data );
-                                    };
-                                    object.reset = function(){
-                                        this.wave({'sin':[],'cos':[]});
-                                        this.resolution(100);
-                                        this.updateBackground();
-                                    };
-                                    
-                                return object;
-                            };
-                            this.grapher = function(
-                                name='grapher',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyles=[
-                                    {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
-                                    {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
-                                    {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
-                                ],
-                                foregroundTextStyles=[
-                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {colour:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
-                                ],
-                            
-                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_colour={r:0,g:0.59,b:0,a:1},
-                                backgroundTextStyle_size=0.75,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
-                            ){
-                                var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                                var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                var foregroundElementsGroup = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
-                                        object.append(rect);
-                                    //background group
-                                        var backgroundGroup = interfacePart.builder( 'group', 'background' );
-                                        object.append(backgroundGroup);
-                                    //foreground group
-                                        var foregroundGroup = interfacePart.builder( 'group', 'foreground' );
-                                        object.append(foregroundGroup);
-                                    //stencil
-                                        var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
-                                        object.stencil(stencil);
-                                        object.clipActive(true);
-                            
-                                //graphics
-                                    function drawBackground(){
-                                        backgroundGroup.clear();
-                            
-                                        //horizontal lines
-                                            //calculate the x value for all parts of this section
-                                                var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
-                            
-                                            //add all horizontal markings
-                                                for(var a = 0; a < horizontalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
-                                    
-                                                    //calculate the y value for this section
-                                                        var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_thickness,colour:backgroundStyle_colour} );
-                                                            backgroundGroup.append(path);
-                                                        // //text
-                                                        //     if( horizontalMarkings.printText ){
-                                                        //         var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
-                                                        //             x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
-                                                        //             text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                        //             style:{
-                                                        //                 fill:backgroundTextStyle_fill,
-                                                        //                 font:backgroundTextStyle_font
-                                                        //             }
-                                                        //         } );
-                                                        //         backgroundGroup.append(text);
-                                                        //     }
-                                                }
-                            
-                                        //vertical lines
-                                            //calculate the y value for all parts of this section
-                                                var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
-                            
-                                            //add all vertical markings
-                                                for(var a = 0; a < verticalMarkings.points.length; a++){
-                                                    //check if we should draw this line at all
-                                                        if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
-                            
-                                                    //calculate the x value for this section
-                                                        var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
-                            
-                                                    //add line and text to group
-                                                        //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_thickness,height:height,colour:backgroundStyle_colour} );
-                                                            backgroundGroup.append(path);
-                                                    
-                                                        // //text
-                                                        //     if( verticalMarkings.printText ){
-                                                        //         var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
-                                                        //             x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
-                                                        //             text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                        //             style:{
-                                                        //                 fill:backgroundTextStyle_fill,
-                                                        //                 font:backgroundTextStyle_font
-                                                        //             }
-                                                        //         } );
-                                                        //         backgroundGroup.append(text);
-                                                        //     }
-                                                }
-                                    }
-                                    function drawForeground(y,x,layer=0){
-                                        foregroundGroup.clear();
-                            
-                                        //if both data sets of a layer are being set to undefined; set the whole layer to undefined
-                                        //otherwise, just update the layer's data sets
-                                            if(y == undefined && x == undefined){ foregroundElementsGroup[layer] = undefined; }
-                                            else{ foregroundElementsGroup[layer] = {x:x, y:y}; }
-                            
-                                        //input check
-                                            if( foregroundElementsGroup[layer] != undefined && foregroundElementsGroup[layer].y == undefined ){
-                                                console.warn('grapher error',name,'attempting to add line with no y component');
-                                                console.warn('x:',foregroundElementsGroup[layer].x);
-                                                console.warn('y:',foregroundElementsGroup[layer].y);
-                                                return;
-                                            }
-                            
-                                        //draw layers
-                                            for(var L = 0; L < foregroundElementsGroup.length; L++){
-                                                if(foregroundElementsGroup[L] == undefined){continue;}
-                            
-                                                var layer = foregroundElementsGroup[L];
-                                                var points = [];
-                            
-                                                //generate path points
-                                                    if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            points.push( {
-                                                                x: a*(width/(layer.y.length-1)), 
-                                                                y: height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                            } );
-                                                        }
-                                                    }else if( layer.y.length == layer.x.length ){ //straight print
-                                                        for(var a = 0; a < layer.y.length; a++){ 
-                                                            points.push( {
-                                                                x:          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
-                                                                y: height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
-                                                            } );
-                                                        }
-                                                    }else{console.error('grapher::'+name,':layers are of different length:',layer.y,layer.x);}
-                            
-                                                //create path shape and add it to the group
-                                                    foregroundGroup.append(
-                                                        interfacePart.builder( 'path', 'layer_'+L, { 
-                                                            pointsAsXYArray:points, 
-                                                            colour:foregroundStyles[L].colour,
-                                                            thickness:foregroundStyles[L].thickness,
-                                                        })
-                                                    );
-                                            }
-                                    }
-                            
-                                //controls
-                                    object.viewbox = function(a){
-                                        if(a==null){return viewbox;}
-                                        if( a.bottom != undefined ){viewbox.bottom = a.bottom;}
-                                        if( a.top != undefined ){viewbox.top = a.top;}
-                                        if( a.left != undefined ){viewbox.left = a.left;}
-                                        if( a.right != undefined ){viewbox.right = a.right;}
-                                    };
-                                    object.horizontalMarkings = function(a){
-                                        if(a==null){return horizontalMarkings;}
-                                        if( a.points != undefined ){horizontalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){horizontalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){horizontalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){horizontalMarkings.printText = a.printText;}
-                                    };
-                                    object.verticalMarkings = function(a){
-                                        if(a==null){return verticalMarkings;}
-                                        if( a.points != undefined ){verticalMarkings.points = a.points;}
-                                        if( a.printingValues != undefined ){verticalMarkings.printingValues = a.printingValues;}
-                                        if( a.textPositionOffset != undefined ){verticalMarkings.textPositionOffset = a.textPositionOffset;}
-                                        if( a.printText != undefined ){verticalMarkings.printText = a.printText;}
-                                    };
-                                    object.drawBackground = function(){ drawBackground(); };
-                                    object.drawForeground = function(y,x,layer=0){ drawForeground(y,x,layer); };
-                                    object.draw = function(y,x,layer=0){ drawBackground(); drawForeground(y,x,layer); };
-                            
-                                return object;
-                            };
-                            this.meter_level = function(
-                                name='meter_level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
-                            
-                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
-                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
-                                markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
-                                markingStyle_font='1pt Courier New',
-                            ){
-                            
-                                //elements
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //level
-                                        var level = interfacePart.builder('level','level',{
-                                            width:width, height:height,
-                                            style:{
-                                                backing:backingStyle,
-                                                levels:levelStyles,
-                                            },
-                                        });
-                                        object.append(level);
-                            
-                                    //markings
-                                        var marks = interfacePart.builder('group','markings');
-                                            object.append(marks);
-                            
-                                        function makeMark(y){
-                                            var markThickness = 0.2;
-                                            var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                                            return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
-                                        }
-                                        // function insertText(y,text){
-                                        //     // return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
-                                        // }
-                            
-                                        for(var a = 0; a < markings.length; a++){
-                                            marks.append( makeMark(height*(1-markings[a])) );
-                                            // marks.append( insertText(height*(1-markings[a]),markings[a]) );
-                                        }
-                            
-                            
-                            
-                            
-                                //update intervals
-                                    var framesPerSecond = 15;
-                                    var coolDownSpeed = ( 3/4 )/10;
-                            
-                                    var coolDownSub = coolDownSpeed/framesPerSecond;
-                            
-                                    var coolDown = 0;
-                                    var mostRecentSetting = 0;
-                                    setInterval(function(){        
-                                        level.layer(mostRecentSetting,0);
-                            
-                                        if(coolDown>0){coolDown-=coolDownSub;}
-                                        level.layer(coolDown,1);
-                            
-                                        if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
-                                    },1000/framesPerSecond);
-                            
-                            
-                            
-                            
-                                //method
-                                    object.set = function(a){
-                                        mostRecentSetting = a;
-                                    };
-                            
-                                return object;
-                            };
-                            this.sevenSegmentDisplay_static = function(
-                                name='sevenSegmentDisplay_static',
-                                x, y, width=20, height=30, angle=0, resolution=5, 
-                                backgroundStyle='rgba(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)',
-                            ){
-                                var margin = width/8;
-                                var division = width/8;
-                                var shapes = {
-                                    segments:{
-                                        points: {
-                                            top:{
-                                                left:[
-                                                    {x:division*1.0+margin,         y:division*1.0+margin},
-                                                    {x:division*0.5+margin,         y:division*0.5+margin},
-                                                    {x:division*1.0+margin,         y:division*0.0+margin},
-                                                    {x:division*0.0+margin,         y:division*1.0+margin},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},
-                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},
-                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},
-                                                    {x:width-division*0.0-margin,   y:division*1.0+margin}
-                                                ]
-                                            },
-                                            middle: {
-                                                left:[
-                                                    {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
-                                                    {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                                    {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
-                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
-                                                    {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
-                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
-                                                ]
-                                            },
-                                            bottom: {
-                                                left:[
-                                                    {x:division*1.0+margin,         y:height-division*1.0-margin},
-                                                    {x:division*0.5+margin,         y:height-division*0.5-margin},
-                                                    {x:division*1.0+margin,         y:height-division*0.0-margin},
-                                                    {x:division*0.0+margin,         y:height-division*1.0-margin},
-                                                ],
-                                                right:[
-                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin},
-                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin},
-                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin},
-                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}
-                                                ]
-                                            }
-                                        }
-                                    }
-                                };
-                                var points = [
-                                    [
-                                        shapes.segments.points.top.left[0],
-                                        shapes.segments.points.top.right[2],
-                                        shapes.segments.points.top.right[1],
-                                        shapes.segments.points.top.right[0],
-                                        shapes.segments.points.top.left[2],
-                                        shapes.segments.points.top.left[1],
-                                    ],
-                                    [
-                                        shapes.segments.points.top.left[1],
-                                        shapes.segments.points.top.left[3],
-                                        shapes.segments.points.middle.left[3],
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[0],
-                                        shapes.segments.points.top.left[0],  
-                                    ],
-                                    [
-                                        shapes.segments.points.top.right[1],  
-                                        shapes.segments.points.top.right[3],  
-                                        shapes.segments.points.middle.right[3],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.top.right[2],  
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[0], 
-                                        shapes.segments.points.middle.right[2],
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[0],
-                                        shapes.segments.points.middle.left[2], 
-                                        shapes.segments.points.middle.left[1], 
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.left[1],
-                                        shapes.segments.points.middle.left[4],
-                                        shapes.segments.points.bottom.left[3],
-                                        shapes.segments.points.bottom.left[1],
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.middle.left[2],
-                                    ],
-                                    [
-                                        shapes.segments.points.middle.right[1],
-                                        shapes.segments.points.middle.right[4],
-                                        shapes.segments.points.bottom.right[3],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.middle.right[0],
-                                    ],
-                                    [
-                                        shapes.segments.points.bottom.left[0],
-                                        shapes.segments.points.bottom.right[2],
-                                        shapes.segments.points.bottom.right[1],
-                                        shapes.segments.points.bottom.right[0],
-                                        shapes.segments.points.bottom.left[2],
-                                        shapes.segments.points.bottom.left[1],
-                                    ]
-                                ];
-                                var stamp = [0,0,0,0,0,0,0];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //canvas
-                                        var canvas = interfacePart.builder('canvas','subcanvas',{ width:width, height:height, resolution:resolution });
-                                        object.append(canvas);
-                            
-                                //graphics
-                                    function clear(){
-                                        canvas._.fillStyle = backgroundStyle;
-                                        canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
-                                        canvas.requestUpdate();
-                                    };
-                                    function drawChar(){
-                                        //draw segments in 
-                                            for(var a = 0; a < points.length; a++){
-                                                canvas._.beginPath(); 
-                                                canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
-                                                for(var b = 1; b < points[a].length; b++){
-                                                    canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
-                                                }
-                                                canvas._.closePath(); 
-                                                canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
-                                                canvas._.fill(); 
-                                            }
-                                            canvas.requestUpdate();
-                                    }
-                            
-                                //methods
-                                    object.set = function(segment,state){
-                                        stamp[segment].state = state;
-                                        drawChar();
-                                    };
-                                    object.get = function(segment){ return stamp[segment].state; };
-                                    object.clear = function(){
-                                        for(var a = 0; a < stamp.length; a++){
-                                            this.set(a,false);
-                                        }
-                                    };
-                            
-                                    object.enterCharacter = function(char){
-                                        //generate stamp
-                                            switch(char){
-                                                case 0: case '0': stamp = [1,1,1,0,1,1,1]; break;
-                                                case 1: case '1': stamp = [0,0,1,0,0,1,0]; break;
-                                                case 2: case '2': stamp = [1,0,1,1,1,0,1]; break;
-                                                case 3: case '3': stamp = [1,0,1,1,0,1,1]; break;
-                                                case 4: case '4': stamp = [0,1,1,1,0,1,0]; break;
-                                                case 5: case '5': stamp = [1,1,0,1,0,1,1]; break;
-                                                case 6: case '6': stamp = [1,1,0,1,1,1,1]; break;
-                                                case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
-                                                case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
-                                                case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
-                                                default: stamp = [0,0,0,0,0,0,0]; break;
-                                            }
-                            
-                                        clear();
-                                        drawChar();
-                                    };
-                            
-                                //setup
-                                    clear();
-                                    drawChar();
-                            
-                                return object;
-                            };
-                            this.grapher_periodicWave = function(
-                                name='grapher_periodicWave',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
-                                foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
-                            ){
-                                var wave = {'sin':[],'cos':[]};
-                                var resolution = 100;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_thickness:backgroundStyle_thickness,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //controls
-                                    object.wave = function(a=null,type=null){
-                                        if(a==null){
-                                            while(wave.sin.length < wave.cos.length){ wave.sin.push(0); }
-                                            while(wave.sin.length > wave.cos.length){ wave.cos.push(0); }
-                                            for(var a = 0; a < wave['sin'].length; a++){
-                                                if( !wave['sin'][a] ){ wave['sin'][a] = 0; }
-                                                if( !wave['cos'][a] ){ wave['cos'][a] = 0; }
-                                            }
-                                            return wave;
-                                        }
-                            
-                                        if(type==null){
-                                            wave = a;
-                                        }
-                                        switch(type){
-                                            case 'sin': wave.sin = a; break;
-                                            case 'cos': wave.cos = a; break;
-                                            default: break;
-                                        }
-                                    };
-                                    object.waveElement = function(type, mux, a){
-                                        if(a==null){return wave[type][mux];}
-                                        wave[type][mux] = a;
-                                    };
-                                    object.resolution = function(a=null){
-                                        if(a==null){return resolution;}
-                                        resolution = a;
-                                    };
-                                    object.updateBackground = function(){
-                                        grapher.viewbox( {bottom:-1.1,top:1.1, left:0} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:true});
-                                        grapher.verticalMarkings({points:[0,1/4,1/2,3/4],printText:true});
-                                        grapher.drawBackground();
-                                    };
-                                    object.draw = function(){
-                                        var data = [];
-                                        var temp = 0;
-                                        for(var a = 0; a <= resolution; a++){
-                                            temp = 0;
-                                            for(var b = 0; b < wave['sin'].length; b++){
-                                                if(!wave['sin'][b]){wave['sin'][b]=0;} // cover missing elements
-                                                temp += Math.sin(b*(2*Math.PI*(a/resolution)))*wave['sin'][b]; 
-                                            }
-                                            for(var b = 0; b < wave['cos'].length; b++){
-                                                if(!wave['cos'][b]){wave['cos'][b]=0;} // cover missing elements
-                                                temp += Math.cos(b*(2*Math.PI*(a/resolution)) )*wave['cos'][b]; 
-                                            }
-                                            data.push(temp);
-                                        }
-                                
-                                        grapher.draw( data );
-                                    };
-                                    object.reset = function(){
-                                        this.wave({'sin':[],'cos':[]});
-                                        this.resolution(100);
-                                        this.updateBackground();
-                                    };
-                                    
-                                return object;
                             };
                             this.sixteenSegmentDisplay_static = function(
                                 name='sixteenSegmentDisplay_static',
@@ -11287,323 +13523,8 @@
                             
                                 return object;      
                             };
-                            this.readout_sixteenSegmentDisplay_static = function(
-                                name='readout_sixteenSegmentDisplay_static',
-                                x, y, width=100, height=30, count=5, angle=0, resolution=5, 
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
-                            ){
-                                //values
-                                    var text = '';
-                                    var displayInterval = null;
-                                    var displayIntervalTime = 150;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                            
-                                    //display units
-                                        var units = [];
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder('sixteenSegmentDisplay_static', ''+a, {
-                                                x:(width/count)*a, width:width/count, height:height, resolution:resolution,
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                            object.append( temp );
-                                            units.push(temp);
-                                        }
-                            
-                                //methods
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        text = a;
-                                    };
-                            
-                                    object.print = function(style){
-                                        clearInterval(displayInterval);
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.length > units.length){this.print('r2lSweep');}
-                                                else{this.print('regular')}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = 0;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    for(var a = units.length-1; a >= 0; a--){
-                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                                    }
-                            
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                for(var a = 0; a < units.length; a++){
-                                                    units[a].enterCharacter(text[a]);
-                                                }
-                                            break;
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.readout_sixteenSegmentDisplay = function(
-                                name='readout_sixteenSegmentDisplay',
-                                x, y, width=100, height=30, count=5, angle=0,
-                                backgroundStyle={r:0,g:0,b:0,a:1},
-                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
-                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
-                            ){
-                                //values
-                                    var text = '';
-                                    var displayInterval = null;
-                                    var displayIntervalTime = 150;
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                            
-                                    //display units
-                                        var units = [];
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder('sixteenSegmentDisplay', ''+a, {
-                                                x:(width/count)*a, width:width/count, height:height, 
-                                                style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
-                                            });
-                                            object.append( temp );
-                                            units.push(temp);
-                                        }
-                            
-                                //methods
-                                    object.text = function(a){
-                                        if(a==null){return text;}
-                                        text = a;
-                                    };
-                            
-                                    object.print = function(style){
-                                        clearInterval(displayInterval);
-                                        switch(style){
-                                            case 'smart':
-                                                if(text.length > units.length){this.print('r2lSweep');}
-                                                else{this.print('regular')}
-                                            break;
-                                            case 'r2lSweep':
-                                                var displayStage = 0;
-                            
-                                                displayInterval = setInterval(function(){
-                                                    for(var a = units.length-1; a >= 0; a--){
-                                                        units[a].enterCharacter(text[displayStage-((units.length-1)-a)]);
-                                                    }
-                            
-                                                    displayStage++;if(displayStage > units.length+text.length-1){displayStage=0;}
-                                                },displayIntervalTime);
-                                            break;
-                                            case 'regular': default:
-                                                for(var a = 0; a < units.length; a++){
-                                                    units[a].enterCharacter(text[a]);
-                                                }
-                                            break;
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.grapher_audioScope_static = function(
-                                name='grapher_audioScope_static',
-                                x, y, width=120, height=60, angle=0,
-                            
-                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-                            
-                                backgroundStyle_colour='rgba(0,100,0,1)',
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
-                                backgroundTextStyle_size=0.1,
-                                backgroundTextStyle_font='Helvetica',
-                            
-                                backingStyle='rgba(50,50,50,1)',
-                            ){
-                                //attributes
-                                    var attributes = {
-                                        analyser:{
-                                            analyserNode: _canvas_.library.audio.context.createAnalyser(),
-                                            timeDomainDataArray: null,
-                                            frequencyData: null,
-                                            refreshRate: 10,
-                                            scopeRefreshInterval: null,
-                                            returnedValueLimits: {min:0, max: 256, halfdiff:128},
-                                        },
-                                        graph:{
-                                            resolution: 256
-                                        }
-                                    };
-                                    attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
-                                    attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                                    attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //grapher
-                                        var grapher = interfacePart.builder('grapher_static',name,{
-                                            x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_thickness:backgroundStyle_thickness,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
-                                        });
-                                        object.append(grapher);
-                            
-                                //utility functions
-                                    function render(){
-                                        var numbers = [];
-                                        attributes.analyser.analyserNode.getByteTimeDomainData(attributes.analyser.timeDomainDataArray);
-                                        for(var a = 0; a < attributes.analyser.timeDomainDataArray.length; a++){
-                                            numbers.push(
-                                                attributes.analyser.timeDomainDataArray[a]/attributes.analyser.returnedValueLimits.halfdiff - 1
-                                            );
-                                        }
-                                        grapher.draw(numbers);
-                                    }
-                                    function setBackground(){
-                                        grapher.viewbox( {'l':-1.1,'h':1.1} );
-                                        grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
-                                        grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
-                                        grapher.drawBackground();
-                                    };
-                            
-                                //controls
-                                    object.start = function(){
-                                        if(attributes.analyser.scopeRefreshInterval == null){
-                                            attributes.analyser.scopeRefreshInterval = setInterval(function(){render();},1000/attributes.analyser.refreshRate);
-                                        }
-                                    };
-                                    object.stop = function(){
-                                        clearInterval(attributes.analyser.scopeRefreshInterval);
-                                        attributes.analyser.scopeRefreshInterval = null;
-                                    };
-                                    object.getNode = function(){return attributes.analyser.analyserNode;};
-                                    object.resolution = function(res=null){
-                                        if(res==null){return attributes.graph.resolution;}
-                                        attributes.graph.resolution = res;
-                                        this.stop();
-                                        this.start();
-                                    };
-                                    object.refreshRate = function(a){
-                                        if(a==null){return attributes.analyser.refreshRate;}
-                                        attributes.analyser.refreshRate = a;
-                                        this.stop();
-                                        this.start();
-                                    };
-                            
-                                //setup
-                                    setBackground();
-                            
-                                return object;
-                            };
-                            this.level = function(
-                                name='level',
-                                x, y, angle=0,
-                                width=20, height=60,
-                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
-                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.78,g:0.78,b:0.78,a:1}]
-                            ){
-                                var values = [];
-                            
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                    //backing
-                                        var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
-                                            object.append(rect);
-                                    //levels
-                                        var levels = interfacePart.builder('group','levels');
-                                            object.append(levels);
-                            
-                                        var level = [];
-                                        for(var a = 0; a < levelStyles.length; a++){
-                                            values.push(0);
-                                            level.push( interfacePart.builder('rectangle','movingRect_'+a,{
-                                                y:height,
-                                                width:width, height:0,
-                                                colour:levelStyles[a],
-                                            }) );
-                                            levels.prepend(level[a]);
-                                        }
-                            
-                            
-                                    
-                            
-                                    //methods
-                                        object.layer = function(value,layer=0){
-                                            if(layer == undefined){return values;}
-                                            if(value==null){return values[layer];}
-                            
-                                            value = (value>1 ? 1 : value);
-                                            value = (value<0 ? 0 : value);
-                            
-                                            values[layer] = value;
-                            
-                                            level[layer].height( height*value );
-                                            level[layer].y( height - height*value );
-                                        };
-                            
-                                return object;
-                            };
                         };
                         this.dynamic = new function(){
-                            this.connectionNode_voltage = function(
-                                name='connectionNode_voltage',
-                                x, y, angle=0, width=20, height=20,
-                                allowConnections=true, allowDisconnections=true,
-                                dimStyle={r:0.86,g:1,b:0.86,a:1},
-                                glowStyle={r:0.94,g:0.98,b:0.93,a:1},
-                                cable_dimStyle={r:0.32,g:0.96,b:0.43,a:1},
-                                cable_glowStyle={r:0.62,g:0.98,b:0.68,a:1},
-                                onchange=function(value){},
-                                onconnect=function(instigator){},
-                                ondisconnect=function(instigator){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                    });
-                            
-                                //circuitry
-                                    var localValue = 0;
-                            
-                                    object._getLocalValue = function(){ return localValue; };
-                                    object._update = function(a){
-                                        if(a>0){ object.activate(); }
-                                        else{ object.deactivate(); }
-                                        onchange(a);
-                                    }
-                            
-                                    object.set = function(a){
-                                        localValue = a;
-                            
-                                        var val = object.read();
-                                        object._update(val);
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
-                                    };
-                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
-                            
-                                    object.onconnect = function(instigator){
-                                        if(onconnect){onconnect(instigator);}
-                                        object._update(object.read());
-                                    };
-                                    object.ondisconnect = function(instigator){
-                                        if(ondisconnect){ondisconnect(instigator);}
-                                        object._update(localValue);
-                                    };
-                            
-                                return object;
-                            };
                             this.cable = function(
                                 name='path', 
                                 x1=0, y1=0, x2=0, y2=0,
@@ -11630,88 +13551,6 @@
                             
                                 //identifier
                                     object._isCable = true;
-                            
-                                return object;
-                            };
-                            this.connectionNode_audio = function(
-                                name='connectionNode_audio',
-                                x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
-                                isAudioOutput=false, audioContext,
-                                dimStyle={r:255/255, g:244/255, b:220/255, a:1},
-                                glowStyle={r:255/255, g:244/255, b:244/255, a:1},
-                                cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
-                                cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
-                                onconnect=function(){},
-                                ondisconnect=function(){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                    });
-                                    object._direction = isAudioOutput ? 'out' : 'in';
-                            
-                                //circuitry
-                                    object.audioNode = audioContext.createAnalyser();
-                            
-                                    //audio connections
-                                        object.out = function(){return object.audioNode;};
-                                        object.in = function(){return object.audioNode;};
-                            
-                                    object.onconnect = function(instigator){
-                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                                        if(onconnect){onconnect(instigator);}
-                                    };
-                                    object.ondisconnect = function(instigator){
-                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                                        if(ondisconnect){ondisconnect(instigator);}
-                                    };
-                                
-                                return object;
-                            };
-                            this.connectionNode_data = function(
-                                name='connectionNode_data',
-                                x, y, angle=0, width=20, height=20, 
-                                allowConnections=true, allowDisconnections=true,
-                                dimStyle={r:220/255, g:244/255, b:255/255, a:1},
-                                glowStyle={r:244/255, g:244/255, b:255/255, a:1},
-                                cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
-                                cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
-                                onreceivedata=function(address, data){},
-                                ongivedata=function(address){},
-                                onconnect=function(){},
-                                ondisconnect=function(){},
-                            ){
-                                //elements
-                                    var object = interfacePart.builder('connectionNode',name,{
-                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
-                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
-                                        onconnect, ondisconnect
-                                    });
-                            
-                                //circuitry
-                                    function flash(obj){
-                                        obj.activate();
-                                        setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
-                                        if(obj.getForeignNode()!=undefined){
-                                            obj.getForeignNode().activate();
-                                            setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
-                                        }
-                                    }
-                            
-                                    object.send = function(address,data){
-                                        flash(object);
-                            
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
-                                    };
-                                    object.request = function(address){
-                                        flash(object);
-                            
-                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
-                                    };
-                            
-                                    object.onreceivedata = onreceivedata;
-                                    object.ongivedata = ongivedata;
                             
                                 return object;
                             };
@@ -11855,6 +13694,88 @@
                             
                                 return object;
                             };
+                            this.connectionNode_audio = function(
+                                name='connectionNode_audio',
+                                x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
+                                isAudioOutput=false, audioContext,
+                                dimStyle={r:255/255, g:244/255, b:220/255, a:1},
+                                glowStyle={r:255/255, g:244/255, b:244/255, a:1},
+                                cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
+                                cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                                    object._direction = isAudioOutput ? 'out' : 'in';
+                            
+                                //circuitry
+                                    object.audioNode = audioContext.createAnalyser();
+                            
+                                    //audio connections
+                                        object.out = function(){return object.audioNode;};
+                                        object.in = function(){return object.audioNode;};
+                            
+                                    object.onconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
+                                        if(onconnect){onconnect(instigator);}
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                    };
+                                
+                                return object;
+                            };
+                            this.connectionNode_data = function(
+                                name='connectionNode_data',
+                                x, y, angle=0, width=20, height=20, 
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:220/255, g:244/255, b:255/255, a:1},
+                                glowStyle={r:244/255, g:244/255, b:255/255, a:1},
+                                cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
+                                cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
+                                onreceivedata=function(address, data){},
+                                ongivedata=function(address){},
+                                onconnect=function(){},
+                                ondisconnect=function(){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                        onconnect, ondisconnect
+                                    });
+                            
+                                //circuitry
+                                    function flash(obj){
+                                        obj.activate();
+                                        setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
+                                        if(obj.getForeignNode()!=undefined){
+                                            obj.getForeignNode().activate();
+                                            setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
+                                        }
+                                    }
+                            
+                                    object.send = function(address,data){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                                    };
+                                    object.request = function(address){
+                                        flash(object);
+                            
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                                    };
+                            
+                                    object.onreceivedata = onreceivedata;
+                                    object.ongivedata = ongivedata;
+                            
+                                return object;
+                            };
                             this.connectionNode_signal = function(
                                 name='connectionNode_signal',
                                 x, y, angle=0, width=20, height=20,
@@ -11899,6 +13820,54 @@
                                     object.ondisconnect = function(instigator){
                                         if(ondisconnect){ondisconnect(instigator);}
                                         object._update();
+                                    };
+                            
+                                return object;
+                            };
+                            this.connectionNode_voltage = function(
+                                name='connectionNode_voltage',
+                                x, y, angle=0, width=20, height=20,
+                                allowConnections=true, allowDisconnections=true,
+                                dimStyle={r:0.86,g:1,b:0.86,a:1},
+                                glowStyle={r:0.94,g:0.98,b:0.93,a:1},
+                                cable_dimStyle={r:0.32,g:0.96,b:0.43,a:1},
+                                cable_glowStyle={r:0.62,g:0.98,b:0.68,a:1},
+                                onchange=function(value){},
+                                onconnect=function(instigator){},
+                                ondisconnect=function(instigator){},
+                            ){
+                                //elements
+                                    var object = interfacePart.builder('connectionNode',name,{
+                                        x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
+                                        style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                    });
+                            
+                                //circuitry
+                                    var localValue = 0;
+                            
+                                    object._getLocalValue = function(){ return localValue; };
+                                    object._update = function(a){
+                                        if(a>0){ object.activate(); }
+                                        else{ object.deactivate(); }
+                                        onchange(a);
+                                    }
+                            
+                                    object.set = function(a){
+                                        localValue = a;
+                            
+                                        var val = object.read();
+                                        object._update(val);
+                                        if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
+                                    };
+                                    object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                            
+                                    object.onconnect = function(instigator){
+                                        if(onconnect){onconnect(instigator);}
+                                        object._update(object.read());
+                                    };
+                                    object.ondisconnect = function(instigator){
+                                        if(ondisconnect){ondisconnect(instigator);}
+                                        object._update(localValue);
                                     };
                             
                                 return object;
@@ -12290,11 +14259,11 @@
                                         data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
                                         data.onchange,
                                     );
-                            //         case 'checkbox_image': return this.collection.control.checkbox_image(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                            //             data.uncheckURL, data.checkURL,
-                            //             data.onchange,
-                            //         );
+                                    case 'checkbox_image': return this.collection.control.checkbox_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                        data.uncheckURL, data.checkURL, data.uncheckGlowURL, data.checkGlowURL,
+                                        data.onchange,
+                                    );
                                     case 'checkbox_polygon': return this.collection.control.checkbox_polygon(
                                         name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
                                         data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
@@ -12305,35 +14274,34 @@
                                         data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
                                         data.onchange,
                                     );
-                            //     //other
-                            //         case 'rastorgrid': return this.collection.control.rastorgrid(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
-                            //             data.style.backing, data.style.check, data.style.backingGlow, data.style.checkGlow,
-                            //             data.onchange
-                            //         );
-                            //         case 'needleOverlay': return this.collection.control.needleOverlay(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                            //             data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
-                            //             data.onchange, data.onrelease, data.selectionAreaToggle,
-                            //         );
-                            //         case 'grapher_waveWorkspace': return this.collection.control.grapher_waveWorkspace(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
-                            //             data.style.foregrounds, data.style.foregroundText,
-                            //             data.style.background_stroke, data.style.background_lineWidth,
-                            //             data.style.backgroundText_fill, data.style.backgroundText_font,
-                            //             data.style.backing,
-                            //             data.onchange, data.onrelease, data.selectionAreaToggle
-                            //         );
-                            //         case 'sequencer': return this.collection.control.sequencer(
-                            //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
-                            //             data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
-                            //             data.backingStyle, data.selectionAreaStyle,
-                            //             data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
-                            //             data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
-                            //             data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
-                            //             data.playheadStyle,
-                            //             data.onpan, data.onchangeviewarea, data.event,
-                            //         );
+                                    case 'rastorgrid': return this.collection.control.rastorgrid(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
+                                        data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                        data.onchange
+                                    );
+                                    case 'needleOverlay': return this.collection.control.needleOverlay(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                        data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
+                                        data.onchange, data.onrelease, data.selectionAreaToggle,
+                                    );
+                                    case 'grapher_waveWorkspace': return this.collection.control.grapher_waveWorkspace(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
+                                        data.style.foregrounds, data.style.foregroundText,
+                                        data.style.background_stroke, data.style.background_lineWidth,
+                                        data.style.backgroundText_fill, data.style.backgroundText_font,
+                                        data.style.backing,
+                                        data.onchange, data.onrelease, data.selectionAreaToggle
+                                    );
+                                    case 'sequencer': return this.collection.control.sequencer(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
+                                        data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
+                                        data.backingStyle, data.selectionAreaStyle,
+                                        data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
+                                        data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
+                                        data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
+                                        data.playheadStyle,
+                                        data.onpan, data.onchangeviewarea, data.event,
+                                    );
                     
                             //dynamic
                                 case 'cable': return this.collection.dynamic.cable(

@@ -1,4 +1,16 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-03-04
+  - webGL experiment
+    - added in a default image for the image shape (using the old 'no image
+      image' from way back in the Lavendel days)
+    - added checkbox_image part
+    - added rastorGrid part
+    - added core.viewport.cursor function for changing the cursor incon
+    - added needleOverlay part
+    - added grapher_waveWorkspace part
+    - added sequencer part :: thus completes all that parts
+      
+
 2019-03-02
   - webGL experiment
     - fixed rectangle and image anchoring

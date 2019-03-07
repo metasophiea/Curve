@@ -368,6 +368,11 @@ this.viewport = new function(){
             this.calculateViewportExtremities();
         };
         this.getBoundingBox = function(){ return viewbox.boundingBox; };
+        this.cursor = function(type){
+            //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
+            if(type == undefined){return document.body.style.cursor;}
+            document.body.style.cursor = type;
+        };
 };
 this.viewport.refresh();
 

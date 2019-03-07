@@ -383,11 +383,11 @@ this.builder = function(type,name,data){
                     data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
                     data.onchange,
                 );
-        //         case 'checkbox_image': return this.collection.control.checkbox_image(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-        //             data.uncheckURL, data.checkURL,
-        //             data.onchange,
-        //         );
+                case 'checkbox_image': return this.collection.control.checkbox_image(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                    data.uncheckURL, data.checkURL, data.uncheckGlowURL, data.checkGlowURL,
+                    data.onchange,
+                );
                 case 'checkbox_polygon': return this.collection.control.checkbox_polygon(
                     name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
                     data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
@@ -398,35 +398,34 @@ this.builder = function(type,name,data){
                     data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
                     data.onchange,
                 );
-        //     //other
-        //         case 'rastorgrid': return this.collection.control.rastorgrid(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
-        //             data.style.backing, data.style.check, data.style.backingGlow, data.style.checkGlow,
-        //             data.onchange
-        //         );
-        //         case 'needleOverlay': return this.collection.control.needleOverlay(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-        //             data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
-        //             data.onchange, data.onrelease, data.selectionAreaToggle,
-        //         );
-        //         case 'grapher_waveWorkspace': return this.collection.control.grapher_waveWorkspace(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
-        //             data.style.foregrounds, data.style.foregroundText,
-        //             data.style.background_stroke, data.style.background_lineWidth,
-        //             data.style.backgroundText_fill, data.style.backgroundText_font,
-        //             data.style.backing,
-        //             data.onchange, data.onrelease, data.selectionAreaToggle
-        //         );
-        //         case 'sequencer': return this.collection.control.sequencer(
-        //             name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
-        //             data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
-        //             data.backingStyle, data.selectionAreaStyle,
-        //             data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
-        //             data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
-        //             data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
-        //             data.playheadStyle,
-        //             data.onpan, data.onchangeviewarea, data.event,
-        //         );
+                case 'rastorgrid': return this.collection.control.rastorgrid(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
+                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                    data.onchange
+                );
+                case 'needleOverlay': return this.collection.control.needleOverlay(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                    data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
+                    data.onchange, data.onrelease, data.selectionAreaToggle,
+                );
+                case 'grapher_waveWorkspace': return this.collection.control.grapher_waveWorkspace(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
+                    data.style.foregrounds, data.style.foregroundText,
+                    data.style.background_stroke, data.style.background_lineWidth,
+                    data.style.backgroundText_fill, data.style.backgroundText_font,
+                    data.style.backing,
+                    data.onchange, data.onrelease, data.selectionAreaToggle
+                );
+                case 'sequencer': return this.collection.control.sequencer(
+                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
+                    data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
+                    data.backingStyle, data.selectionAreaStyle,
+                    data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
+                    data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
+                    data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
+                    data.playheadStyle,
+                    data.onpan, data.onchangeviewarea, data.event,
+                );
 
         //dynamic
             case 'cable': return this.collection.dynamic.cable(
