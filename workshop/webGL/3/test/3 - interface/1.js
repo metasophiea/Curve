@@ -3,12 +3,12 @@
 _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
-//view positioning
-// _canvas_.core.viewport.scale(3);
-// var x = 1070;
-// var y = 290;
+// //view positioning
+// _canvas_.core.viewport.scale(5);
+// var x = 585;
+// var y = 295;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
-// _canvas_.core.viewport.angle(-0.1);
+// // _canvas_.core.viewport.angle(-0.1);
 
 
 
@@ -24,6 +24,7 @@ _canvas_.core.render.active(true);
         clippingGroup.append( _canvas_.interface.part.builder( 'image', 'clippedImage', { width:50, height:50, url:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg' } ) );
         basicGroup.append(clippingGroup);
     basicGroup.append( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1} } ) );
+    basicGroup.append( _canvas_.interface.part.builder( 'text', 'testText', { x:5, y:75, text:'Hello', height:15, width:15, colour:{r:150/255,g:150/255,b:1,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'path', 'testPath', { points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1 }) );
 
 //display

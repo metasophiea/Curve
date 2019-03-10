@@ -1,3 +1,7 @@
+this.averagePoint = function(points){
+    var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
+    return {x:sum.x/points.length,y:sum.y/points.length};
+};
 this.cartesianAngleAdjust = function(x,y,angle){
     function cartesian2polar(x,y){
         var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;

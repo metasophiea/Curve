@@ -14,6 +14,7 @@ this.builder = function(type,name,data){
             case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.ignored, data.colour );
             case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
             case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
+            case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.calculationMode );
     
         //display
             case 'glowbox_rect': return this.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
@@ -151,7 +152,7 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
+                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -184,7 +185,7 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
+                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -218,7 +219,7 @@ this.builder = function(type,name,data){
                     data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
+                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,

@@ -6,8 +6,9 @@ this.button_rectangle = function(
     
     active=true, hoverable=true, selectable=!false, pressable=true,
 
-    text_font = '5pt Arial',
+    text_font = 'Arial',
     text_textBaseline = 'alphabetic',
+    text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
 
     backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
@@ -76,52 +77,37 @@ this.button_rectangle = function(
         //backing
             var backing = interfacePart.builder('rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
-        // //text
-        //     var text_centre = interfacePart.builder('text','centre', {
-        //         x:width/2, 
-        //         y:height*textVerticalOffsetMux, 
-        //         text:text_centre, 
-        //         style:{
-        //             font:text_font,
-        //             testBaseline:text_textBaseline,
-        //             fill:text_fill,
-        //             stroke:text_stroke,
-        //             lineWidth:text_lineWidth,
-        //             textAlign:'center',
-        //             textBaseline:'middle',
-        //         }
-        //     });
-        //     subject.append(text_centre);
-        //     var text_left = interfacePart.builder('text','left',     {
-        //         x:width*textHorizontalOffsetMux, 
-        //         y:height*textVerticalOffsetMux, 
-        //         text:text_left, 
-        //         style:{
-        //             font:text_font,
-        //             testBaseline:text_textBaseline,
-        //             fill:text_fill,
-        //             stroke:text_stroke,
-        //             lineWidth:text_lineWidth,
-        //             textAlign:'left',
-        //             textBaseline:'middle',
-        //         }
-        //     });
-        //     subject.append(text_left);
-        //     var text_right = interfacePart.builder('text','right',   {
-        //         x:width-(width*textHorizontalOffsetMux), 
-        //         y:height*textVerticalOffsetMux, 
-        //         text:text_right, 
-        //         style:{
-        //             font:text_font,
-        //             testBaseline:text_textBaseline,
-        //             fill:text_fill,
-        //             stroke:text_stroke,
-        //             lineWidth:text_lineWidth,
-        //             textAlign:'right',
-        //             textBaseline:'middle',
-        //         }
-        //     });
-        //     subject.append(text_right);
+        //text
+            var text_centre = interfacePart.builder('text','centre', {
+                x:width/2, 
+                y:height*textVerticalOffsetMux, 
+                text:text_centre, 
+                width:text_size,
+                height:text_size,
+                colour:text_colour,
+                calculationMode:3,
+            });
+            subject.append(text_centre);
+            var text_left = interfacePart.builder('text','left',     {
+                x:width*textHorizontalOffsetMux, 
+                y:height*textVerticalOffsetMux, 
+                text:text_left, 
+                width:text_size,
+                height:text_size,
+                colour:text_colour,
+                calculationMode:2,
+            });
+            subject.append(text_left);
+            var text_right = interfacePart.builder('text','right',   {
+                x:width-(width*textHorizontalOffsetMux), 
+                y:height*textVerticalOffsetMux, 
+                text:text_right, 
+                width:text_size,
+                height:text_size,
+                colour:text_colour,
+                calculationMode:4,
+            });
+            subject.append(text_right);
         //cover
             subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0} });
             subject.append(subject.cover);

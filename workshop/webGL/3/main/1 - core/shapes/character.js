@@ -4,36 +4,7 @@ this.character = function(){
     //attributes 
         //protected attributes
             const type = 'character'; this.getType = function(){return type;}
-            const vectorLibrary = {
-                '':[
-                    0,0,
-                    1,0,
-                    1,1,
-        
-                    0,0,
-                    1,1,
-                    0,1,
-                ],
-                A:_canvas_.library.thirdparty.earcut([ 0,1, 0.4,0, 0.6,0, 1,1, 0.8,1, 0.5,0.2, 0.4,0.5, 0.65,0.5, 0.7,0.7, 0.3,0.7, 0.2,1 ]),
-                B:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.7,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 0.9,0.1, 0.9,0.3, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0,1 ]),
-                C:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.7,0.8, 0.8,0.7, 1,0.8, 0.8,1, 0.3,1, 0,0.7, 0,0.3 ]),
-                D:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0,1 ]),
-                E:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,0.8, 1,0.8, 1,1, 0,1 ]),
-                F:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,1, 0,1 ]),
-                G:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.8,0.8, 0.8,0.6, 1,0.6, 1,1, 0.3,1, 0,0.7, 0,0.3 ]),
-                H:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 0.8,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.6, 0.2,0.6, 0.2,1, 0,1 ]),
-                I:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.4,0.8, 0.4,0.2, 0,0.2 ]),
-                J:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 0.4,1, 0,1, 0,0.8, 0.3,0.8, 0.4,0.7, 0.4,0.2, 0,0.2 ]),
-                K:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 1,0, 1,0.2, 0.5,0.4, 1,1, 0.75,1, 0.3,0.45, 0.2,0.5, 0.2,1, 0,1, ]),
-                L:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 1,0.8, 1,1, 0,1 ]),
-                M:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.3, 0.5,0.7, 0.2,0.3, 0.2,1, 0,1 ]),
-                N:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.8,0.7, 0.8,0, 1,0, 1,1, 0.8,1, 0.2,0.3, 0.2,1, 0,1 ]),
-                O:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.7,1, 0.3,1, 0,0.7, 0,0.3, 0.3,0, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2 ]),
-                P:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]),
-                Q:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.95,0.75, 1,0.8, 1,1, 0.8,1, 0.5,0.7, 0.5,0.5, 0.7,0.5, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.75,0.95, 0.7,1, 0.3,1, 0,0.7, 0,0.3 ]),
-                R:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.6,0.6, 1,1, 0.75,1, 0.35,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]),
-                S:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2 ]),
-            };
+            const vectorLibrary = library.character.vectorLibrary;
 
         //simple attributes
             this.name = '';
@@ -51,16 +22,32 @@ this.character = function(){
             var width = 10;         this.width =     function(a){ if(a==undefined){return width;}     width = a;     this.extremities.isChanged = true; this.computeExtremities(); };
             var height = 10;        this.height =    function(a){ if(a==undefined){return height;}    height = a;    this.extremities.isChanged = true; this.computeExtremities(); };
             var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-            var character = '';     
-            this.character = function(a){ 
-                if(a==undefined){return character;} 
-                character = a; 
 
-                points = vectorLibrary[a];
+    //character
+        var character = '';     
+        this.character = function(a){ 
+            if(a==undefined){return character;} 
+            character = a; 
 
-                this.extremities.isChanged = true; 
-                this.computeExtremities(); 
-            }; setTimeout(function(){ self.character(character);},1);
+            points = vectorLibrary[a] == undefined ? vectorLibrary[''].vector : vectorLibrary[a].vector;
+
+            this.extremities.isChanged = true; 
+            this.computeExtremities(); 
+        }; setTimeout(function(){ self.character(character);},1);
+        this.ratio = function(){
+            if( vectorLibrary[character] == undefined || vectorLibrary[character].ratio == undefined ){ return {x:1,y:1}; }
+            return {
+                x:vectorLibrary[character].ratio.x != undefined ? vectorLibrary[character].ratio.x : 1,
+                y:vectorLibrary[character].ratio.y != undefined ? vectorLibrary[character].ratio.y : 1,
+            };
+        };
+        this.offset = function(){
+            if( vectorLibrary[character] == undefined || vectorLibrary[character].offset == undefined ){ return {x:0,y:0}; }
+            return {
+                x:vectorLibrary[character].offset.x != undefined ? vectorLibrary[character].offset.x : 0,
+                y:vectorLibrary[character].offset.y != undefined ? vectorLibrary[character].offset.y : 0,
+            };
+        };
 
     //addressing
         this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
@@ -228,4 +215,357 @@ this.character = function(){
             //if requested; draw dot frame
                 if(self.dotFrame){drawDotFrame();}
         };
+};
+
+
+const OneOverZeroPointSeven = 1/0.7; const OOZPS = OneOverZeroPointSeven;
+this.character.vectorLibrary = {
+    '':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ])
+    },
+
+
+
+
+    'A':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,1, 0.4,0, 0.6,0, 1,1, 0.8,1, 0.5,0.2, 0.4,0.5, 0.65,0.5, 0.7,0.7, 0.3,0.7, 0.2,1 ])
+    },
+    'B':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.7,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 0.9,0.1, 0.9,0.3, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0,1 ])
+    },
+    'C':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.7,0.8, 0.8,0.7, 1,0.8, 0.8,1, 0.3,1, 0,0.7, 0,0.3 ])
+    },
+    'D':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0,1 ])
+    },
+    'E':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,0.8, 1,0.8, 1,1, 0,1 ])
+    },
+    'F':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,1, 0,1 ])
+    },
+    'G':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.8,0.8, 0.8,0.6, 1,0.6, 1,1, 0.3,1, 0,0.7, 0,0.3 ])
+    },
+    'H':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 0.8,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.6, 0.2,0.6, 0.2,1, 0,1 ])
+    },
+    'I':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.4,0.8, 0.4,0.2, 0,0.2 ])
+    },
+    'J':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 0.4,1, 0,1, 0,0.8, 0.3,0.8, 0.4,0.7, 0.4,0.2, 0,0.2 ])
+    },
+    'K':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 1,0, 1,0.2, 0.5,0.4, 1,1, 0.75,1, 0.3,0.45, 0.2,0.5, 0.2,1, 0,1 ])
+    },
+    'L':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 1,0.8, 1,1, 0,1 ])
+    },
+    'M':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.3, 0.5,0.7, 0.2,0.3, 0.2,1, 0,1 ])
+    },
+    'N':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.8,0.7, 0.8,0, 1,0, 1,1, 0.8,1, 0.2,0.3, 0.2,1, 0,1 ])
+    },
+    'O':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.7,1, 0.3,1, 0,0.7, 0,0.3, 0.3,0, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2 ])
+    },
+    'P':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ])
+    },
+    'Q':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.95,0.75, 1,0.8, 1,1, 0.8,1, 0.5,0.7, 0.5,0.5, 0.7,0.5, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.75,0.95, 0.7,1, 0.3,1, 0,0.7, 0,0.3 ])
+    },
+    'R':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.6,0.6, 1,1, 0.75,1, 0.35,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ])
+    },
+    'S':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2 ])
+    },
+    'T':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,1, 0.4,1, 0.4,0.2, 0,0.2 ])
+    },
+    'U':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0, 1,0, 1,0.7, 0.7,1, 0.3,1, 0,0.7 ])
+    },
+    'V':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.7, 0.8,0, 1,0, 0.6,1, 0.4,1 ])
+    },
+    'W':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,1, 0.2,1, 0.5,0.6, 0.8,1, 1,1, 1,0, 0.8,0, 0.8,0.7, 0.5,0.3, 0.2,0.7, 0.2,0, 0,0 ])
+    },
+    'X':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.6,0.5, 1,1, 0.75,1, 0.5,0.65, 0.25,1, 0,1, 0.4,0.5 ])
+    },
+    'Y':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.25,1, 0,1, 0.35,0.5 ])
+    },
+    'Z':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.3,0.2, 1,0.8, 1,1, 0,1, 0,0.8, 0.7,0.8, 0,0.2 ])
+    },
+
+
+    
+
+    'a':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.7,0, 0.8,0.1*OOZPS, 0.8,0, 1,0, 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,0.6*OOZPS, 0.7,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 0.6,OOZPS/2, 0.7,0.4*OOZPS, 0.7,0.3*OOZPS, 0.6,0.2*OOZPS, 0.3,0.2*OOZPS, 0.2,0.3*OOZPS, 0,0.2*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'b':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.8,0.3, 1,0.5, 1,0.8, 0.8,1, 0,1 ])
+    },
+    'c':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.2*OOZPS, 0.3,0.2*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 1,OOZPS/2, 1,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.3*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'd':{
+        vector: _canvas_.library.thirdparty.earcut([ 1,0, 0.8,0, 0.8,0.8, 0.3,0.8, 0.2,0.7, 0.2,0.6, 0.3,0.5, 0.8,0.5, 0.8,0.3, 0.2,0.3, 0,0.5, 0,0.8, 0.2,1, 1,1 ])
+    },
+    'e':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2*OOZPS, 1,0.4*OOZPS, 0.2,0.4*OOZPS, 0.2,OOZPS/4, 0.8,OOZPS/4, 0.7,0.15*OOZPS, 0.3,0.15*OOZPS, 0.2,0.3*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 1,OOZPS/2, 0.8,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.2*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'f':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 1,0, 0.9,0.2, 0.6,0.2, 0.6,0.3, 0.9,0.3, 0.9,0.5, 0.6,0.5, 0.6,1, 0.4,1, 0.4,0.5, 0.1,0.5, 0.1,0.3, 0.4,0.3])
+    },
+    'g':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0*(1/1.2), 0.7,0*(1/1.2), 0.8,0.1*(1/1.2), 0.8,0*(1/1.2), 1,0*(1/1.2), 1,1*(1/1.2), 0.8,1.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1*(1/1.2), 0,0.9*(1/1.2), 0.2,0.9*(1/1.2), 0.3,1*(1/1.2), 0.7,1*(1/1.2), 0.8,0.9*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.3,0.2*(1/1.2), 0.2,0.3*(1/1.2), 0.2,0.4*(1/1.2), 0.3,0.5*(1/1.2), 0.8,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0,0.5*(1/1.2), 0,0.2*(1/1.2) ]),
+        ratio: {y:1.2},
+        offset: {y:0.3},
+    },
+    'h':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 0.8,0.3, 1,0.5, 1,1, 0.8,1, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,1, 0,1 ])
+    },
+    'i':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0,0.2, 0,0.3, 1,0.3, 1,1, 0,1 ]),
+        ratio: {x:0.2},
+    },
+    'j':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.2, 0.3,0.2, 0.3,0.3, 0.7,0.3, 0.7,0.7, 0.4,1, 0,1, 0,0.8, 0.2,0.8, 0.3,0.7 ]),
+        ratio: {x:2/3},
+    },
+    'k':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 1,0.4, 1,0.6, 0.7,0.6, 1,1, 0.75,1, 0.45,0.6, 0.2,0.6, 0.2,1, 0,1 ])
+    },
+    'l':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.4,0, 0.4,0.7, 0.6,0.8, 1,0.8, 1,1, 0.4,1, 0,0.8 ]),
+        ratio: {x:2/3},
+    },
+    'm':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1*OOZPS, 0.3,0, 0.5,0.1*OOZPS, 0.7,0, 1,0.1*OOZPS, 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,0.3*OOZPS, 0.7,0.2*OOZPS, 0.6,0.3*OOZPS, 0.6,0.7*OOZPS, 0.4,0.7*OOZPS, 0.4,0.3*OOZPS, 0.3,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.7*OOZPS, 0,0.7*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'n':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1*OOZPS, 0.5,0, 1,0.1*OOZPS, 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,OOZPS/4, 0.5,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.7*OOZPS, 0,0.7*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'o':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2*OOZPS, 1,OOZPS/2, 0.8,0.7*OOZPS, 0.5,0.7*OOZPS, 0.5,OOZPS/2, 0.7,OOZPS/2, 0.8,0.4*OOZPS, 0.8,0.3*OOZPS, 0.7,0.2*OOZPS, 0.3,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 0.5,OOZPS/2, 0.5,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.2*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'p':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.8,0*(1/1.2), 1,0.2*(1/1.2), 1,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0.2,0.5*(1/1.2), 0.7,0.5*(1/1.2), 0.8,0.4*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.2,0.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1.2*(1/1.2) ]),
+        offset: {y:0.3},
+    },
+    'q':{
+        vector: _canvas_.library.thirdparty.earcut([ 1,0*(1/1.2), 0.2,0*(1/1.2), 0,0.2*(1/1.2), 0,0.5*(1/1.2), 0.2,0.7*(1/1.2), 0.8,0.7*(1/1.2), 0.8,0.5*(1/1.2), 0.3,0.5*(1/1.2), 0.2,0.4*(1/1.2), 0.2,0.3*(1/1.2), 0.3,0.2*(1/1.2), 0.8,0.2*(1/1.2), 0.8,1.2*(1/1.2), 1,1.2*(1/1.2) ]),
+        offset: {y:0.3},
+    },
+    'r':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1*OOZPS, 0.5,0, 1,0.1*OOZPS, 1,0.3*OOZPS, 0.5,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.7*OOZPS, 0,0.7*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    's':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2*OOZPS, 0.4,0.2*OOZPS, 1,0.4*OOZPS, 0.8,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0.6,OOZPS/2, 0,0.3*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    't':{
+        vector: _canvas_.library.thirdparty.earcut([ 1/3,0, 2/3,0, 2/3,0.2, 1,0.2, 1,0.4, 2/3,0.4, 2/3,0.8, 1,1, 0.5,1, 1/3,0.9, 1/3,0.4, 0,0.4, 0,0.2, 1/3,0.2 ]),
+        ratio: {x:2/3},
+    },
+    'u':{
+        vector: _canvas_.library.thirdparty.earcut([ 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,0.6*OOZPS, 0.5,0.7*OOZPS, 0,0.6*OOZPS, 0,0, 0.2,0, 0.2,0.45*OOZPS, 0.5,OOZPS/2, 0.8,0.4*OOZPS, 0.8,0, 1,0 ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'v':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,OOZPS/2, 0.8,0, 1,0, 0.6,0.7*OOZPS, 0.4,0.7*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'w':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.3,0.4*OOZPS, 0.4,0.1*OOZPS, 0.6,0.1*OOZPS, 0.7,0.4*OOZPS, 0.8,0, 1,0, 0.8,0.7*OOZPS, 0.6,0.7*OOZPS, 0.5,0.4*OOZPS, 0.4,0.7*OOZPS, 0.2,0.7*OOZPS ]),
+        ratio: {x:1, y:2/3},
+        offset: {y:1/3},
+    },
+    'x':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.3,0, 0.5,0.2*OOZPS, 0.7,0, 1,0, 0.65,0.35*OOZPS, 1,0.7*OOZPS, 0.7,0.7*OOZPS, 0.5,OOZPS/2, 0.3,0.7*OOZPS, 0,0.7*OOZPS, 0.35,0.35*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+    'y':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.3,0*(1/1.2), 0.5,0.35*(1/1.2), 0.7,0*(1/1.2), 1,0*(1/1.2), 0.3,1.2*(1/1.2), 0,1.2*(1/1.2), 0.35,0.55*(1/1.2) ]),
+        offset: {y:0.3},
+    },
+    'z':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2*OOZPS, 0.4,0.2*OOZPS, 1,OOZPS/2, 1,0.7*OOZPS, 0,0.7*OOZPS, 0,OOZPS/2, 0.6,OOZPS/2, 0,0.2*OOZPS ]),
+        ratio: {y:2/3},
+        offset: {y:1/3},
+    },
+
+
+
+
+    '0':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 1,0.7, 0.8,1, 0.2,1, 0,0.7, 0,0.3, 0.2,0, 0.3,0.2, 0.2,0.4, 0.2,0.6, 0.3,0.8, 0.7,0.8, 0.8,0.6, 0.8,0.4, 0.7,0.2, 0.3,0.2 ])
+    },
+    '1':{
+        vector: _canvas_.library.thirdparty.earcut([ 1/2,0, 2/3,0, 2/3,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 1/3,0.8, 1/3,0.3, 0,0.3, 0,0.2 ])
+    },
+    '2':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.5, 0.4,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.8,0.4, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3 ])
+    },
+    '3':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.5,0.6, 0.5,0.4, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.2,0.4, 0,0.4 ])
+    },
+    '4':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.6,0, 0.8,0, 0.8,0.6, 1,0.6, 1,0.8, 0.8,0.8, 0.8,1, 0.6,1, 0.6,0.3, 0.3,0.6, 0.6,0.6, 0.6,0.8, 0,0.8, 0,0.6 ])
+    },
+    '5':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 0.9,0.4, 1,0.5, 1,0.8, 0.8,1, 0.1,1, 0,0.9, 0,0.7, 0.2,0.7, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0,0.6 ])
+    },
+    '6':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.2, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.2 ])
+    },
+    '7':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.5,1, 0.25,1, 0.75,0.2, 0,0.2 ])
+    },
+    '8':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.3,0.6, 0.2,0.7, 0,0.6, 0.1,0.5, 0,0.4, 0,0.2, 0.2,0.3, 0.3,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.2 ])
+    },
+    '9':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.8 ])
+    },
+
+
+
+
+    '.':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+        ratio: {x:0.2, y:0.2},
+        offset: {y:0.8},
+    },
+    ',':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0., 1,0, 0.8,1, 0,1 ]),
+        ratio: {x:0.2, y:0.4},
+        offset: {y:0.8},
+    },
+    ':':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
+        ratio: {x:0.2, y:0.8},
+        offset: {y:0.1},
+    },
+    ';':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.3, 0.2,0.3, 0.2,0.7, 1,0.7, 0.8,1, 0,1, 0.2,0.7 ]),
+        ratio: {x:0.2, y:0.8},
+        offset: {y:0.1},
+    },
+    '?':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 0.6,0.5, 0.6,0.7, 0.4,0.7, 0.4,0.8, 0.6,0.8, 0.6,1, 0.4,1, 0.4,0.4, 0.7,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3, 0,0.2 ])
+    },
+    '!':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.7, 0,0.7, 0,0.8, 1,0.8, 1,1, 0,1 ]),
+        ratio: {x:0.2},
+    },
+    '/':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 1,0, 0.7,1, 0,1 ]),
+        ratio: {x:0.4},
+    },
+   '\\':{
+       vector: _canvas_.library.thirdparty.earcut([ 0.7,0, 0,0, 0.3,1, 1,1 ]),
+       ratio: {x:0.4},
+    },
+    '(':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.6,0, 1,0, 0.6,0.2, 0.4,0.5, 0.6,0.8, 1,1, 0.6,1, 0.2,0.8, 0,0.5, 0.2,0.2 ]),
+        ratio: {x:0.4},
+    },
+    ')':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0.4,0.2, 0.6,0.5, 0.4,0.8, 0,1, 0.4,1, 0.8,0.8, 1,0.5, 0.8,0.2 ]),
+        ratio: {x:0.4},
+    },
+    '[':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.4,0.2, 0.4,0.8, 1,0.8, 1,1, 0,1 ]),
+        ratio: {x:0.4},
+    },
+    ']':{
+        vector: _canvas_.library.thirdparty.earcut([ 1,0, 0,0, 0,0.2, 0.6,0.2, 0.6,0.8, 0,0.8, 0,1, 1,1  ]),
+        ratio: {x:0.4},
+    },
+    '#':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.4,0, 0.38,0.2, 0.68,0.2, 0.7,0, 0.9,0, 0.88,0.2, 1,0.2, 1,0.4, 0.86,0.4, 0.84,0.6, 1,0.6, 1,0.8, 0.82,0.8, 0.8,1, 0.6,1, 0.62,0.8, 0.32,0.8, 0.3,1, 0.1,1, 0.12,0.8, 0,0.8, 0,0.6, 0.14,0.6, 0.16,0.4, 0,0.4, 0,0.2, 0.18,0.2, 0.36,0.4, 0.34,0.6, 0.64,0.6, 0.66,0.4, 0.36,0.4, 0.18,0.2 ])
+    },
+    '-':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+        ratio: {x:0.8, y:0.2},
+        offset: {y:0.4},
+    },
+    '_':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+        ratio: {y:0.2},
+        offset: {y:1},
+    },
+    "'":{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+        ratio: {x:0.2, y:0.4},
+    },
+    '"':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0,1, 0.4,1, 0.4,0, 0.6,0, 0.6,1, 1,1, 1,0 ]),
+        ratio: {x:0.5, y:0.4},
+    },
+    '|':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1  ]),
+        ratio: {x:0.2},
+    },
+    '>':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0.4, 1,0.6, 0,1, 0,0.8, 0.7,0.5, 0,0.2 ])
+    },
+    '<':{
+        vector: _canvas_.library.thirdparty.earcut([ 1,0, 0,0.4, 0,0.6, 1,1, 1,0.8, 0.3,0.5, 1,0.2 ])
+    },
+    '+':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.3, 1,0.3, 1,0.7, 0.7,0.7, 0.7,1, 0.3,1, 0.3,0.7, 0,0.7, 0,0.3, 0.3,0.3 ]),
+        ratio: {x:0.5, y:0.5},
+        offset:{y:0.25}
+    },
+    '=':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
+        ratio: {x:0.8, y:0.5},
+        offset:{y:0.25}
+    },
+    '&':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.1,0, 0.6,0, 0.7,0.2, 0.7,0.4, 0.6,0.5, 0.4,0.6, 0.6,0.7, 0.8,0.5, 0.9,0.6, 0.9,0.7, 0.8,0.8, 1,0.8, 1,1, 0.8,1, 0.6,0.9, 0.5,1, 0.1,1, 0,0.9, 0,0.6, 0.1,0.5, 0.2,0.65, 0.2,0.8, 0.4,0.8, 0.2,0.65, 0,0.4, 0,0.3, 0.1,0, 0.2,0.2, 0.2,0.3, 0.3,0.4, 0.5,0.4, 0.5,0.2, 0.2,0.2 ])
+    },
+    '*':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 0.6,0, 0.6,0.25, 0.775,0.075, 0.925,0.225, 0.75,0.4, 1,0.4, 1,0.6, 0.75,0.6, 0.925,0.775, 0.775,0.925, 0.6,0.75, 0.6,1, 0.4,1, 0.4,0.75, 0.225,0.925, 0.075,0.775, 0.25,0.6, 0,0.6, 0,0.4, 0.25,0.4, 0.075,0.225, 0.225,0.075, 0.4,0.25 ]),
+        ratio: {x:0.5, y:0.5},
+        offset:{y:0.25}
+    },
+    '~':{
+        vector: _canvas_.library.thirdparty.earcut([ 0,0.25, 0.25,0.0, 0.75,0.5, 1,0.25, 1,0.75, 0.75,1, 0.25,0.5, 0,0.75 ]),
+        ratio: {x:0.8, y:0.4},
+        offset: {y:0.25},
+    },
+    '%':{
+        vector: _canvas_.library.thirdparty.earcut([ 0.8,0, 1,0.2, 0.2,1, 0,0.8, 0,0.2, 0,0.1, 0.1,0, 0.2,0, 0.3,0.1, 0.3,0.2, 0.3,0.2, 0.2,0.3, 0.1,0.3, 0,0.2, 0,0.8, 0.2,1, 0.8,1, 0.7,0.9, 0.7,0.8, 0.8,0.7, 0.9,0.7, 1,0.8, 1,0.9, 0.9,1, 0.8,1, 0.2,1, 0,0.8 ])
+    },
 };

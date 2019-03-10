@@ -1,4 +1,29 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-03-10
+  - webGL experiment
+    - putting together the text shape (finally have all the character vectors
+      together)
+    - added ratios to those characters, which should make printing them a little
+      easier
+    - added characterString shape, with a couple options for how it attempts to
+      produce the characters
+    - added text to all the parts that were lacking it
+
+  bugs found
+  - the image-based list, doesn't render lots of the button images when you use
+    mouse wheel to scroll
+
+
+2019-03-08
+  - webGL experiment
+    - putting together the text shape
+
+
+2019-03-06
+  - webGL experiment
+    - putting together the text shape
+
+
 2019-03-04
   - webGL experiment
     - added in a default image for the image shape (using the old 'no image

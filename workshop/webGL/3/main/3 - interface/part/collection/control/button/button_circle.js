@@ -7,6 +7,7 @@ this.button_circle = function(
 
     text_font = '5pt Arial',
     text_textBaseline = 'alphabetic',
+    text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
 
     backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
@@ -78,20 +79,15 @@ this.button_circle = function(
         //outline
             var outline = interfacePart.builder('path','outline',{ points:[0,radius, radius,0, 0,-radius, -radius,0, 0,radius], thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
             subject.append(outline);
-        // //text
-        //     var text_centre = interfacePart.builder('text','centre', {
-        //         text:text_centre, 
-        //         style:{
-        //             font:text_font,
-        //             testBaseline:text_textBaseline,
-        //             fill:text_fill,
-        //             stroke:text_stroke,
-        //             lineWidth:text_lineWidth,
-        //             textAlign:'center',
-        //             textBaseline:'middle',
-        //         }
-        //     });
-        //     subject.append(text_centre);
+        //text
+            var text_centre = interfacePart.builder('text','centre', {
+                text:text_centre, 
+                width:text_size,
+                height:text_size,
+                colour:text_colour,
+                calculationMode:3,
+            });
+            subject.append(text_centre);
         //cover
             subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);

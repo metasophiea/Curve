@@ -32,13 +32,13 @@ this.meter_level = function(
                 var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
                 return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
             }
-            // function insertText(y,text){
-            //     // return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
-            // }
+            function insertText(y,text){
+                return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:1, width:1, text:text, colour:markingStyle_fill});
+            }
 
             for(var a = 0; a < markings.length; a++){
                 marks.append( makeMark(height*(1-markings[a])) );
-                // marks.append( insertText(height*(1-markings[a]),markings[a]) );
+                marks.append( insertText(height*(1-markings[a]),markings[a]) );
             }
 
 

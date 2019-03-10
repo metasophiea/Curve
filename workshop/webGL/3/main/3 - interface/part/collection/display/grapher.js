@@ -16,7 +16,7 @@ this.grapher = function(
     backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
     backgroundStyle_thickness=0.25,
     backgroundTextStyle_colour={r:0,g:0.59,b:0,a:1},
-    backgroundTextStyle_size=0.75,
+    backgroundTextStyle_size=1,
     backgroundTextStyle_font='Helvetica',
 
     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
@@ -63,18 +63,16 @@ this.grapher = function(
                             //lines
                                 var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_thickness,colour:backgroundStyle_colour} );
                                 backgroundGroup.append(path);
-                            // //text
-                            //     if( horizontalMarkings.printText ){
-                            //         var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
-                            //             x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
-                            //             text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                            //             style:{
-                            //                 fill:backgroundTextStyle_fill,
-                            //                 font:backgroundTextStyle_font
-                            //             }
-                            //         } );
-                            //         backgroundGroup.append(text);
-                            //     }
+                            //text
+                                if( horizontalMarkings.printText ){
+                                    var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
+                                        x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size,
+                                        text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
+                                        colour:backgroundTextStyle_colour,
+                                        width:backgroundTextStyle_size, height:backgroundTextStyle_size,
+                                    } );
+                                    backgroundGroup.append(text);
+                                }
                     }
 
             //vertical lines
@@ -94,18 +92,16 @@ this.grapher = function(
                                 var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_thickness,height:height,colour:backgroundStyle_colour} );
                                 backgroundGroup.append(path);
                         
-                            // //text
-                            //     if( verticalMarkings.printText ){
-                            //         var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
-                            //             x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
-                            //             text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                            //             style:{
-                            //                 fill:backgroundTextStyle_fill,
-                            //                 font:backgroundTextStyle_font
-                            //             }
-                            //         } );
-                            //         backgroundGroup.append(text);
-                            //     }
+                            //text
+                                if( verticalMarkings.printText ){
+                                    var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
+                                        x:x+verticalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size,
+                                        text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
+                                        colour:backgroundTextStyle_colour,
+                                        width:backgroundTextStyle_size, height:backgroundTextStyle_size,
+                                    } );
+                                    backgroundGroup.append(text);
+                                }
                     }
         }
         function drawForeground(y,x,layer=0){

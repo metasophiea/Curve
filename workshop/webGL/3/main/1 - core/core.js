@@ -4,6 +4,7 @@ _canvas_.setAttribute('tabIndex',1);
 
 this.shape = new function(){
     this.library = new function(){
+        const library = this;
         {{include:shapes/*}} */
     };
 
