@@ -13,9 +13,9 @@ _canvas_.library = new function(){
     this.audio = new function(){
         {{include:audio.js}}
     };
-    // this.misc = new function(){
-    //     {{include:misc.js}}
-    // };
+    this.misc = new function(){
+        {{include:misc.js}}
+    };
     this.thirdparty = new function(){
         {{include:thirdparty.js}}
     };

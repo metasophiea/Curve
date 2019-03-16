@@ -32,7 +32,7 @@ this.slidePanel = function(
             interactable = bool;
 
             for(var a = 0; a < count; a++){
-                object.children[a].interactable(bool);
+                object.children()[a].interactable(bool);
             }
         };
 

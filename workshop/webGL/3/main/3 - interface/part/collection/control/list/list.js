@@ -11,8 +11,9 @@ this.list = function(
     spacingHeightMux=0.005,
     backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
 
-    text_font = '5pt Arial',
+    text_font = 'Arial',
     text_textBaseline = 'alphabetic',
+    text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
 
     item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
@@ -134,6 +135,7 @@ this.list = function(
                                 style:{
                                     text_font:text_font,
                                     text_textBaseline:text_textBaseline,
+                                    text_size:text_size,
                                     text_colour:text_colour,
 
                                     background__off__colour:                            item__off__colour,

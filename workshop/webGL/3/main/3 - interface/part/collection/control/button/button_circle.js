@@ -5,7 +5,7 @@ this.button_circle = function(
     
     active=true, hoverable=true, selectable=false, pressable=true,
 
-    text_font = '5pt Arial',
+    text_font = 'Arial',
     text_textBaseline = 'alphabetic',
     text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
@@ -85,7 +85,8 @@ this.button_circle = function(
                 width:text_size,
                 height:text_size,
                 colour:text_colour,
-                calculationMode:3,
+                font:text_font,
+                printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
             });
             subject.append(text_centre);
         //cover

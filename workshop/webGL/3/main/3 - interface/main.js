@@ -7,7 +7,7 @@ _canvas_.interface = new function(){
     this.part = new function(){
         {{include:part/main.js}}
     };
-    // this.unit = new function(){
-    //     {{include:unit/main.js}}
-    // };
+    this.unit = new function(){
+        {{include:unit/main.js}}
+    };
 };

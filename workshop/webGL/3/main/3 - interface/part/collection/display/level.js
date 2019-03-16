@@ -20,11 +20,14 @@ this.level = function(
             var level = [];
             for(var a = 0; a < levelStyles.length; a++){
                 values.push(0);
-                level.push( interfacePart.builder('rectangle','movingRect_'+a,{
+                var tmp = interfacePart.builder('rectangle','movingRect_'+a,{
                     y:height,
                     width:width, height:0,
                     colour:levelStyles[a],
-                }) );
+                });
+                tmp.stopAttributeStartedExtremityUpdate = true;
+
+                level.push( tmp );
                 levels.prepend(level[a]);
             }
 

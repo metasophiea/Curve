@@ -10,11 +10,12 @@ this.builder = function(type,name,data){
             case 'rectangleWithOutline': return this.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
             case 'image': return this.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
             case 'canvas': return this.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
-            case 'polygon': return this.collection.basic.polygon( name, data.points, data.ignored, data.colour, data.pointsAsXYArray );
+            case 'polygon': return this.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
+            case 'polygonWithOutline': return this.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
             case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.ignored, data.colour );
             case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
             case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
-            case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.calculationMode );
+            case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode );
     
         //display
             case 'glowbox_rect': return this.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
@@ -322,24 +323,24 @@ this.builder = function(type,name,data){
                     data.spacingHeightMux,
 
                     data.style.backing, data.style.break,
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
-                    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
-                    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
-                    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
-                    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
-                    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
-                    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
-                    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
-                    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
-                    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
-                    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
-                    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
-                    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
-                    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
-                    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
-                    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
-                    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
-                    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
+                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                    data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
+                    data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
+                    data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
+                    data.style.item__select__colour,                  data.style.item__select__lineColour,                  data.style.item__select__lineThickness,
+                    data.style.item__select_press__colour,            data.style.item__select_press__lineColour,            data.style.item__select_press__lineThickness,
+                    data.style.item__glow__colour,                    data.style.item__glow__lineColour,                    data.style.item__glow__lineThickness,
+                    data.style.item__glow_press__colour,              data.style.item__glow_press__lineColour,              data.style.item__glow_press__lineThickness,
+                    data.style.item__glow_select__colour,             data.style.item__glow_select__lineColour,             data.style.item__glow_select__lineThickness,
+                    data.style.item__glow_select_press__colour,       data.style.item__glow_select_press__lineColour,       data.style.item__glow_select_press__lineThickness,
+                    data.style.item__hover__colour,                   data.style.item__hover__lineColour,                   data.style.item__hover__lineThickness,
+                    data.style.item__hover_press__colour,             data.style.item__hover_press__lineColour,             data.style.item__hover_press__lineThickness,
+                    data.style.item__hover_select__colour,            data.style.item__hover_select__lineColour,            data.style.item__hover_select__lineThickness,
+                    data.style.item__hover_select_press__colour,      data.style.item__hover_select_press__lineColour,      data.style.item__hover_select_press__lineThickness,
+                    data.style.item__hover_glow__colour,              data.style.item__hover_glow__lineColour,              data.style.item__hover_glow__lineThickness,
+                    data.style.item__hover_glow_press__colour,        data.style.item__hover_glow_press__lineColour,        data.style.item__hover_glow_press__lineThickness,
+                    data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
+                    data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
                 
                     data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
                 );

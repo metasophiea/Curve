@@ -843,6 +843,7 @@ this.sequencer = function(
                     colour:selectionAreaStyle,
                 });
                 object.append(selectionArea);
+                selectionArea.computeExtremities();
     
                 _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
@@ -868,7 +869,7 @@ this.sequencer = function(
                             if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
                             if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
     
-                        //update rectangle 
+                        //update rectangle
                             selectionArea.x(transform.x*width);
                             selectionArea.y(transform.y*height);
                             selectionArea.width(  transform.width  * diff.x*width  );

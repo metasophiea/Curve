@@ -5,26 +5,40 @@ _canvas_.core.render.active(true);
 
 // //view positioning
 // _canvas_.core.viewport.scale(5);
-// var x = 585;
-// var y = 295;
+// var x = 590;
+// var y = 300;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // // _canvas_.core.viewport.angle(-0.1);
 
+_canvas_.core.render.active(true);
+_canvas_.core.stats.active(true);
+var averages = [];
+var rollingAverage = 0;
+var rollingAverageIndex = 1;
+setInterval(function(){
+    var tmp = _canvas_.core.stats.getReport();
+    averages.push(tmp.framesPerSecond);
+    console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
+},1000);
 
 
-// //basic
+
+
+
+//basic
     var basicGroup = _canvas_.interface.part.builder( 'group', 'basic', { x:10, y:10 } );
     _canvas_.system.pane.mm.append( basicGroup );
     basicGroup.append( _canvas_.interface.part.builder( 'rectangle', 'testRectangle', { x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'circle', 'testCircle', { x:20, y:55, radius:15 } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'http://0.0.0.0:8000/testImages/Dore-munchausen-illustration.jpg' } ) );
     var clippingGroup = _canvas_.interface.part.builder( 'group', 'clippingGroup', { x:75, y:5 } );
-        clippingGroup.clipActive(true);
         clippingGroup.stencil( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[0,0, 50,0, 50,50], colour:{r:0,g:1,b:0,a:1} } ) );
         clippingGroup.append( _canvas_.interface.part.builder( 'image', 'clippedImage', { width:50, height:50, url:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg' } ) );
+        clippingGroup.clipActive(true);
         basicGroup.append(clippingGroup);
     basicGroup.append( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1} } ) );
-    basicGroup.append( _canvas_.interface.part.builder( 'text', 'testText', { x:5, y:75, text:'Hello', height:15, width:15, colour:{r:150/255,g:150/255,b:1,a:1} } ) );
+    basicGroup.append( _canvas_.interface.part.builder( 'polygonWithOutline', 'testPolygonWithOutline', { points:[75,15, 75,55, 115,55], thickness:1, colour:{r:1,g:0,b:0.5,a:1}, lineColour:{r:0,g:0,b:0,a:1} } ) );
+    basicGroup.append( _canvas_.interface.part.builder( 'text', 'testText', { x:5, y:75, text:'Hello', height:15, width:70, colour:{r:150/255,g:150/255,b:1,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'path', 'testPath', { points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1 }) );
 
 //display
@@ -259,9 +273,8 @@ _canvas_.core.render.active(true);
         seq.addSignal( 10,10,10,1.0 );
         seq.event = function(data){console.log(data);};
 
-
-//dynamic
-    var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:0, y:450, angle:0 } );
+//dynamicf
+    var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:10, y:450, angle:0 } );
     _canvas_.system.pane.mm.append( dynamicGroup );
     dynamicGroup.append( _canvas_.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
 

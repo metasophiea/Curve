@@ -11,179 +11,127 @@ this.characterString = function(){
             this.dotFrame = false;
             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
             this.ignored = false;
-            var colour = {r:1,g:0,b:0,a:1}; this.colour = function(a){ if(a==undefined){return colour;} colour = a; calculateStringCharacters(); };
+            var colour = {r:1,g:0,b:0,a:1}; this.colour = function(a){ if(a==undefined){return colour;} colour = a; recolourCharacters(); };
+        //advanced use attributes
+            this.devMode = false;
+            this.stopAttributeStartedExtremityUpdate = false;
         
         //attributes pertinent to extremity calculation
-            var x = 0;               this.x =     function(a){ if(a==undefined){return x;}     x = a;        calculateStringCharacters(); computeExtremities(); };
-            var y = 0;               this.y =     function(a){ if(a==undefined){return y;}     y = a;        calculateStringCharacters(); computeExtremities(); };
-            var angle = 0;           this.angle = function(a){ if(a==undefined){return angle;} angle = a;    calculateStringCharacters(); computeExtremities(); };
-            var width = 10;          this.width =  function(a){ if(a==undefined){return width;}  width = a;  calculateStringCharacters(); computeExtremities(); };
-            var height = 10;         this.height = function(a){ if(a==undefined){return height;} height = a; calculateStringCharacters(); computeExtremities(); };
-            var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  calculateStringCharacters(); computeExtremities(); };
-            var calculationMode = 0; this.calculationMode = function(a){ if(a==undefined){return calculationMode;} calculationMode = a; calculateStringCharacters(); computeExtremities(); };
+            var x = 0;               this.x =     function(a){           if(a==undefined){return x;}     x = a;       if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var y = 0;               this.y =     function(a){           if(a==undefined){return y;}     y = a;       if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var angle = 0;           this.angle = function(a){           if(a==undefined){return angle;} angle = a;   if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var width = 10;          this.width =  function(a){          if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var height = 10;         this.height = function(a){          if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var scale = 1;           this.scale = function(a){           if(a==undefined){return scale;} scale = a;   if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var string = '';         this.string = function(a){          if(a==undefined){return string;} string = a; if(this.devMode){console.log(this.getAddress()+'::string');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var font = 'default';    this.font =   function(a){ 
+                                        if(a==undefined){return font;}
+                                        font = a == undefined || a === '' || library.character.vectorLibrary[a] == undefined ? 'default' : a;
 
-        //string
-            var string = '';
-            var children = [];
-            function calculateStringCharacters(){
-                children = [];
-                var tmpString = String(string).split('');
-                var cumulativeWidth = 0;
-                var spacing = 0.1;
-
-                switch(calculationMode){
-                    default: case 0: 
-                        var mux = 0;
-
-                        tmpString.forEach(function(a){
-                            if( library.character.vectorLibrary[a].ratio == undefined || library.character.vectorLibrary[a].ratio.x == undefined ){ mux += 1; }
-                            else{ mux += library.character.vectorLibrary[a].ratio.x; }
-                        });
-                        mux += spacing * (tmpString.length-1);
-
-                        var characterWidth = width/mux;
-                        for(var a = 0; a < tmpString.length; a++){
-                            if(tmpString[a] == ' '){ cumulativeWidth += characterWidth; continue; }
-
-                            var tmp = _canvas_.core.shape.create('character');
-                                tmp.character(tmpString[a]);
-                                tmp.x(cumulativeWidth); 
-                                tmp.y(height*tmp.offset().y);
-                                tmp.width(characterWidth*tmp.ratio().x);
-                                tmp.height(height*tmp.ratio().y);
-                                tmp.colour = colour;
-                                children.push(tmp);
-
-                                cumulativeWidth += characterWidth*tmp.ratio().x + spacing*characterWidth;
-                        }
-                    break;
-                    case 1: 
-                        for(var a = 0; a < tmpString.length; a++){
-                            if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-
-                            var tmp = _canvas_.core.shape.create('character');
-                                tmp.character(tmpString[a]);
-                                tmp.x(cumulativeWidth); 
-                                tmp.y(height*tmp.offset().y);
-                                tmp.width(width*tmp.ratio().x);
-                                tmp.height(height*tmp.ratio().y);
-                                tmp.colour = colour;
-                                children.push(tmp);
-
-                                cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                        }
-                    break;
-                    case 2: 
-                        for(var a = 0; a < tmpString.length; a++){
-                            if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-
-                            var tmp = _canvas_.core.shape.create('character');
-                                tmp.character(tmpString[a]);
-                                tmp.x(cumulativeWidth); 
-                                tmp.y(height*tmp.offset().y - height/2);
-                                tmp.width(width*tmp.ratio().x);
-                                tmp.height(height*tmp.ratio().y);
-                                tmp.colour = colour;
-                                children.push(tmp);
-
-                                cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                        }
-                    break;
-                    case 3: 
-                        for(var a = 0; a < tmpString.length; a++){
-                            if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-
-                            var tmp = _canvas_.core.shape.create('character');
-                                tmp.character(tmpString[a]);
-                                tmp.x(cumulativeWidth); 
-                                tmp.y(height*tmp.offset().y - height/2);
-                                tmp.width(width*tmp.ratio().x);
-                                tmp.height(height*tmp.ratio().y);
-                                tmp.colour = colour;
-                                children.push(tmp);
-
-                                cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                        }
-
-                        children.forEach(a => a.x( a.x() - cumulativeWidth/2 ) );
-                    break;
-                    case 4: 
-                        for(var a = 0; a < tmpString.length; a++){
-                            if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-
-                            var tmp = _canvas_.core.shape.create('character');
-                                tmp.character(tmpString[a]);
-                                tmp.x(cumulativeWidth); 
-                                tmp.y(height*tmp.offset().y - height/2);
-                                tmp.width(width*tmp.ratio().x);
-                                tmp.height(height*tmp.ratio().y);
-                                tmp.colour = colour;
-                                children.push(tmp);
-
-                                cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                        }
-                        children.forEach(a => a.x( a.x() - cumulativeWidth) );
-                    break;
-                }
-
-                self.extremities.isChanged = true; 
-                self.computeExtremities();
-            }
-            this.string = function(a){
-                if(a==undefined){return string;}  
-                string = a;
-                calculateStringCharacters();
+                                        generateStringCharacters(); 
+                                        if(this.devMode){console.log(this.getAddress()+'::font');} 
+                                        computeExtremities(); 
+                                     };
+            var printingMode = {
+                widthCalculation:'filling', //filling / absolute
+                horizontal:'left',          //left    / middle   / right
+                vertical:'top',             //top     / middle   / bottom
             };
-            this.getElementsUnderPoint = function(x,y){
-                var returnList = [];
-    
-                for(var a = children.length-1; a >= 0; a--){
-                    var item = children[a];
-    
-                    if(item.ignored){continue;}
-    
-                    if( _canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, item.extremities.boundingBox ) ){
-                        if( item.getType() == 'group' ){
-                            returnList = returnList.concat( item.getElementsUnderPoint(x,y) );
-                        }else{
-                            if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, item.extremities.points ) ){
-                                returnList = returnList.concat( item );
-                            }
-                        }
-                    }
-                }
-    
-                return returnList;
-            };
-            this.getElementsUnderArea = function(points){
-                var returnList = [];
-                children.forEach(function(item){
-                    if(item.ignored){return;}
-    
-                    if( _canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){
-                        if( item.getType() == 'group' ){
-                            returnList = returnList.concat( item.getElementUnderArea(points) );
-                        }else{
-                            if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){
-                                returnList = returnList.concat( item );
-                            }
-                        }
-                    }
-                });
-    
-                return returnList;
+            this.printingMode = function(a){
+                if(a==undefined){return printingMode;} 
+                printingMode = {
+                    widthCalculation: a.widthCalculation != undefined || a.widthCalculation != '' ? a.widthCalculation : printingMode.widthCalculation,
+                    horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
+                    vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
+                };
+
+                if(this.devMode){console.log(this.getAddress()+'::printingMode');} 
+                generateStringCharacters(); 
+
+                if(this.stopAttributeStartedExtremityUpdate){return;} 
+                computeExtremities(); 
             };
 
     //addressing
         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
 
+    //string
+        function recolourCharacters(){ children.forEach(a => a.colour = colour); }
+        function generateStringCharacters(){
+            if(self.devMode){console.log(self.getAddress()+'::generateStringCharacters');}
+
+            clear();
+            var tmpString = String(string).split('');
+            var cumulativeWidth = 0;
+            var spacing = 0.1;
+
+            var mux = 0;
+            tmpString.forEach(function(a){
+                if( library.character.vectorLibrary[font][a] == undefined || library.character.vectorLibrary[font][a].ratio == undefined || library.character.vectorLibrary[font][a].ratio.x == undefined ){ mux += 1; }
+                else{ mux += library.character.vectorLibrary[font][a].ratio.x; }
+            });
+            mux += spacing * (tmpString.length-1);
+            var characterWidth = printingMode.widthCalculation == 'filling' ? width/mux : width;
+
+            var horizontalOffset = 0;
+            if( printingMode.vertical == 'middle' ){ horizontalOffset = height/2; }
+            else if( printingMode.vertical == 'bottom' ){ horizontalOffset = height; }
+
+            for(var a = 0; a < tmpString.length; a++){
+                if(tmpString[a] == ' '){ cumulativeWidth += characterWidth; continue; }
+
+                var tmp = _canvas_.core.shape.create('character');
+                    tmp.name = ''+a;
+                    tmp.stopAttributeStartedExtremityUpdate = true;
+                    tmp.character(tmpString[a]);
+                    tmp.x(cumulativeWidth); 
+                    tmp.y(height*tmp.offset().y - horizontalOffset);
+                    tmp.width(characterWidth*tmp.ratio().x);
+                    tmp.height(height*tmp.ratio().y);
+                    tmp.stopAttributeStartedExtremityUpdate = false;
+                    tmp.colour = colour;
+                    append(tmp);
+
+                    cumulativeWidth += characterWidth*tmp.ratio().x + spacing*characterWidth;
+            }
+
+            if( printingMode.horizontal == 'middle' ){ children.forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
+            else if( printingMode.horizontal == 'right' ){ children.forEach(a => a.x( a.x() - cumulativeWidth) ); }
+        }
+
+    //group functions
+        var children = [];
+
+        function checkForName(name){ return children.find(a => a.name === name) != undefined; }
+        function isValidShape(shape){
+            if( shape == undefined ){ return false; }
+            if( shape.name.length == 0 ){
+                console.warn('group error: shape with no name being inserted into group "'+self.getAddress()+'", therefore; the shape will not be added');
+                return false;
+            }
+            if( checkForName(shape.name) ){
+                console.warn('group error: shape with name "'+shape.name+'" already exists in group "'+self.getAddress()+'", therefore; the shape will not be added');
+                return false;
+            }
+
+            return true;
+        }
+        function clear(){  children = []; }
+        function append(shape){
+            if( !isValidShape(shape) ){ return; }
+
+            children.push(shape); 
+            shape.parent = self;
+            augmentExtremities_addChild(shape); 
+        }
+
     //clipping
         var clipping = { stencil:undefined, active:false };
         this.stencil = function(shape){
-            if(shape == undefined){return this.clipping.stencil;}
+            if(shape == undefined){return clipping.stencil;}
             clipping.stencil = shape;
             clipping.stencil.parent = this;
-            computeExtremities();
+            if(clipping.active){ computeExtremities(); }
         };
         this.clipActive = function(bool){
             if(bool == undefined){return clipping.active;}
@@ -192,10 +140,33 @@ this.characterString = function(){
         };
 
     //extremities
-        function computeExtremities(informParent=true,offset){
-            //get offset from parent
-                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+        function updateExtremities(informParent=true){
+            if(self.devMode){console.log(self.getAddress()+'::updateExtremities');}
 
+            //generate extremity points
+                self.extremities.points = [];
+
+                //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
+                //otherwise, gather extremities from children and calculate extremities here
+                if(clipping.active && clipping.stencil != undefined){
+                    self.extremities.points = clipping.stencil.extremities.points.slice();
+                }else{
+                    children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
+                }
+
+            //generate bounding box from points
+                self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+
+            //update parent
+                if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+        }
+        function augmentExtremities(shape){
+            if(self.devMode){console.log(self.getAddress()+'::augmentExtremities');}
+
+            //if we're in clipping mode, no addition of a shape can effect the extremities 
+                if(clipping.active && clipping.stencil != undefined){return true;}
+            //get offset from parent
+                var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
             //combine offset with group's position, angle and scale to produce new offset for chilren
                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                 var newOffset = { 
@@ -204,55 +175,65 @@ this.characterString = function(){
                     scale: offset.scale*scale,
                     angle: offset.angle + angle,
                 };
+            //run computeExtremities on new child
+                shape.computeExtremities(false,newOffset);
+        }
+        function augmentExtremities_addChild(newShape){
+            if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
 
+            //augment extremities, and bail if it was found that clipping is active
+                if( augmentExtremities(newShape) ){ return; }
+            //add points to points list
+                self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
+            //recalculate bounding box
+                self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+            //inform parent of change
+                if(self.parent){self.parent.updateExtremities();}
+        }
+        function computeExtremities(informParent=true,offset){
+            if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+            
+            //get offset from parent, if one isn't provided
+                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+            //combine offset with group's position, angle and scale to produce new offset for chilren
+                var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                var newOffset = { 
+                    x: point.x*offset.scale + offset.x,
+                    y: point.y*offset.scale + offset.y,
+                    scale: offset.scale*scale,
+                    angle: offset.angle + angle,
+                };
             //run computeExtremities on all children
                 children.forEach(a => a.computeExtremities(false,newOffset));
-            
             //run computeExtremities on stencil (if applicable)
                 if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
-
-            //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
-            //otherwise, gather extremities from children and calculate extremities here
-                self.extremities.points = [];
-                if(clipping.active && clipping.stencil != undefined){
-                    self.extremities.points = self.extremities.points.concat(clipping.stencil.extremities.points);
-                }else{ 
-                    children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
-                }
-                self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-
-            //if told to do so, inform parent (if there is one) that extremities have changed
-                if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+            //update extremities
+                updateExtremities(informParent,offset);
         }
-        this.computeExtremities = computeExtremities;
+
         this.getOffset = function(){
             if(this.parent){
                 var offset = this.parent.getOffset();
-
                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                var adjust = { 
+                return { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale * scale,
                     angle: offset.angle + angle,
                 };
-
-                return adjust;
-            }else{
-                return {x:x ,y:y ,scale:scale ,angle:angle};
-            }
+            }else{ return {x:x ,y:y ,scale:scale ,angle:angle}; }
         };
+        this.computeExtremities = computeExtremities;
+        this.updateExtremities = updateExtremities;
+
 
     //lead render
         function drawDotFrame(){
-            // self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y,2,{r:0,g:0,b:1,a:1}) );
-
-            var tl = self.extremities.boundingBox.topLeft;
-            var br = self.extremities.boundingBox.bottomRight;
-            core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-            core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
-        };
-        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+            //draw bounding box top left and bottom right points
+            core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
+            core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
+        }
+        this.render = function(context, offset){
             //combine offset with group's position, angle and scale to produce new offset for children
                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                 var newOffset = { 
@@ -293,5 +274,5 @@ this.characterString = function(){
 
             //if requested; draw dot frame
                 if(self.dotFrame){drawDotFrame();}
-        }
+        };
 };

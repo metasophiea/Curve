@@ -85,27 +85,30 @@ this.button_rectangle = function(
                 width:text_size,
                 height:text_size,
                 colour:text_colour,
-                calculationMode:3,
+                font:text_font,
+                printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
             });
             subject.append(text_centre);
-            var text_left = interfacePart.builder('text','left',     {
+            var text_left = interfacePart.builder('text','left', {
                 x:width*textHorizontalOffsetMux, 
                 y:height*textVerticalOffsetMux, 
                 text:text_left, 
                 width:text_size,
                 height:text_size,
                 colour:text_colour,
-                calculationMode:2,
+                font:text_font,
+                printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'middle'},
             });
             subject.append(text_left);
-            var text_right = interfacePart.builder('text','right',   {
+            var text_right = interfacePart.builder('text','right',{
                 x:width-(width*textHorizontalOffsetMux), 
                 y:height*textVerticalOffsetMux, 
                 text:text_right, 
                 width:text_size,
                 height:text_size,
                 colour:text_colour,
-                calculationMode:4,
+                font:text_font,
+                printingMode:{widthCalculation:'absolute',horizontal:'right',vertical:'middle'},
             });
             subject.append(text_right);
         //cover

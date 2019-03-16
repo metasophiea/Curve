@@ -4,9 +4,12 @@ this.circle = function( name=null, x=0, y=0, angle=0, radius=10, ignored=false, 
     temp.ignored = ignored;
     temp.colour = colour;
     
+    temp.stopAttributeStartedExtremityUpdate = true;
     temp.x(x);
     temp.y(y);
     temp.angle(angle);
     temp.radius(radius);
+    temp.stopAttributeStartedExtremityUpdate = false;
+
     return temp;
 };

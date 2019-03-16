@@ -1,39 +1,104 @@
-var group_1 = _canvas_.core.shape.create('group');
-group_1.name = 'group_1';
-    group_1.x(100);
-    group_1.y(100);
-    _canvas_.core.arrangement.append(group_1);
-var rectangle_1 = _canvas_.core.shape.create('rectangle');
-    rectangle_1.name = 'rectangle_1';
-    rectangle_1.width(30);
-    rectangle_1.height(30);
-    rectangle_1.colour = {r:1,g:0,b:0,a:1};
-    group_1.append(rectangle_1);
-var group_2 = _canvas_.core.shape.create('group');
-    group_2.name = 'group_2';
-    group_2.x(50);
-    group_1.append(group_2);
-    var rectangle_2 = _canvas_.core.shape.create('rectangle');
-        rectangle_2.name = 'rectangle_2';
-        rectangle_2.width(30);
-        rectangle_2.height(30);
-        rectangle_2.colour = {r:0,g:1,b:0,a:1};
-        group_2.append(rectangle_2);
-    var rectangle_3 = _canvas_.core.shape.create('rectangle');
-        rectangle_3.name = 'rectangle_3';
-        rectangle_3.x(50);
-        rectangle_3.width(30);
-        rectangle_3.height(30);
-        rectangle_3.colour = {r:0,g:0,b:1,a:1};
-        group_2.append(rectangle_3);
+var dynamicGroup = _canvas_.core.shape.create('group');
+dynamicGroup.name = 'dynamicGroup';
+dynamicGroup.heedCamera = true;
+_canvas_.core.arrangement.append(dynamicGroup);
 
-var tick = 0;
-setInterval(function(){
-    group_2.angle( group_2.angle() + 0.01 );
-    group_1.scale( 1 + 0.5*Math.sin( 2*Math.PI*tick ) );
-    group_2.scale( 1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/4 ) );
-    rectangle_3.scale( 1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/2 ) );
-    tick += 0.01;
-},1000/40);
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'topLeft';
+    tmp.x(0); tmp.y(0); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    tmp.onmousemove = function(x,y,event,shapes){console.log('rectangle::topLeft::onmousemove');};
+    dynamicGroup.append(tmp);
 
-_canvas_.core.render.active(true);
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'topRight';
+    tmp.x(470); tmp.y(0); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'bottomRight';
+    tmp.x(470); tmp.y(470); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'bottomLeft';
+    tmp.x(0); tmp.y(470); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+    
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'centre';
+    tmp.x(30); tmp.y(30); tmp.width(440); tmp.height(440);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    tmp.onmousedown = function(x,y,event,shapes){console.log('rectangle::centre::onmousedown');};
+    tmp.onmouseup = function(x,y,event,shapes){console.log('rectangle::centre::onmouseup');};
+    tmp.onmousemove = function(x,y,event,shapes){console.log('rectangle::centre::onmousemove');};
+    tmp.onmouseenter = function(x,y,event,shapes){console.log('rectangle::centre::onmouseenter');};
+    tmp.onmouseleave = function(x,y,event,shapes){console.log('rectangle::centre::onmouseleave');};
+    tmp.onwheel = function(x,y,event,shapes){console.log('rectangle::centre::onwheel');};
+    tmp.onclick = function(x,y,event,shapes){console.log('rectangle::centre::onclick');};
+    tmp.ondblclick = function(x,y,event,shapes){console.log('rectangle::centre::ondblclick');};
+    tmp.onkeydown = function(x,y,event,shapes){console.log('rectangle::centre::onkeydown');};
+    tmp.onkeyup = function(x,y,event,shapes){console.log('rectangle::centre::onkeyup');};
+    dynamicGroup.append(tmp);
+
+var staticGroup = _canvas_.core.shape.create('group');
+staticGroup.name = 'staticGroup';
+staticGroup.x(100);
+staticGroup.y(200);
+staticGroup.angle(0);
+_canvas_.core.arrangement.append(staticGroup);
+
+    var tmp = _canvas_.core.shape.create('circle');
+    tmp.name = 'circle_1';
+    tmp.x(150); tmp.y(150);
+    tmp.radius(50)
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
+    staticGroup.append(tmp);
+
+    var tmp = _canvas_.core.shape.create('circle');
+        tmp.name = 'circle_2';
+        tmp.x(90); tmp.y(90);
+        tmp.angle(Math.PI/2);
+        tmp.radius(50);
+        tmp.detail(6);
+        tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
+        tmp.onmousedown = function(x,y,event,shapes){console.log('polygon::polygon_1::onmousedown');};
+        staticGroup.append(tmp);
+
+
+
+// console.log( tmp.getAddress() );
+
+// _canvas_.core.viewport.position(100,100);
+// _canvas_.core.viewport.angle( Math.PI/3 );
+// _canvas_.core.viewport.scale(1/2);
+
+
+// console.log( _canvas_.core.arrangement.getElementUnderPoint(70,70) );
+// console.log( _canvas_.core.arrangement.getElementsUnderArea([{x:0,y:0},{x:60,y:0},{x:0,y:60}]) );
+// console.log( _canvas_.core.viewport.getElementUnderCanvasPoint(70,70) );
+// console.log( _canvas_.core.viewport.getElementsUnderCanvasArea([{x:0,y:0},{x:60,y:0},{x:0,y:60}]) );
+
+
+
+// document.getElementById("canvas").onmousedown = function(event){
+//     console.log( _canvas_.core.arrangement.getElementUnderPoint(event.x,event.y) );
+// }
+
+// _canvas_.core.callback.onmousedown   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousedown(x,y,event,shapes)); }
+// _canvas_.core.callback.onmouseup     = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseup(x,y,event,shapes)); }
+// _canvas_.core.callback.onmousemove   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousemove(x,y,event,shapes)); }
+// _canvas_.core.callback.onmouseenter  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseenter(x,y,event,shapes)); }
+// _canvas_.core.callback.onmouseleave  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseleave(x,y,event,shapes)); }
+// _canvas_.core.callback.onwheel       = function(x,y,event,shapes){ shapes.forEach(a => a.onwheel(x,y,event,shapes)); }
+// _canvas_.core.callback.onclick       = function(x,y,event,shapes){ shapes.forEach(a => a.onclick(x,y,event,shapes)); }
+// _canvas_.core.callback.ondblclick    = function(x,y,event,shapes){ shapes.forEach(a => a.ondblclick(x,y,event,shapes)); }
+// _canvas_.core.callback.onkeydown     = function(x,y,event,shapes){ shapes.forEach(a => a.onkeydown(x,y,event,shapes)); }
+// _canvas_.core.callback.onkeyup       = function(x,y,event,shapes){ shapes.forEach(a => a.onkeyup(x,y,event,shapes)); }
+
+
+_canvas_.core.render.frame();
+// this.render.active(true);

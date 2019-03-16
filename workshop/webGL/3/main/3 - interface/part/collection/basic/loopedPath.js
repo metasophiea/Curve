@@ -4,8 +4,11 @@ this.loopedPath = function( name=null, points=[], thickness=1, ignored=false, co
     temp.ignored = ignored;
     temp.colour = colour;
     
+    temp.stopAttributeStartedExtremityUpdate = true;
     if(points.length != 0){ temp.points(points); }
     else{ temp.pointsAsXYArray(pointsAsXYArray); }
-    temp.thickness(thickness); 
+    temp.thickness(thickness);
+    temp.stopAttributeStartedExtremityUpdate = false;
+
     return temp;
 }

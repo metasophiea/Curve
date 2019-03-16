@@ -173,6 +173,8 @@ this.polygon = function(){
             this.extremities = { points:[], boundingBox:{}, isChanged:true };
             this.ignored = false;
             this.colour = {r:1,g:0,b:0,a:1};
+        //advanced use attributes
+            this.__stopExtremityUpdate = false;
 
         //attributes pertinent to extremity calculation
             var pointsChanged = true;
@@ -288,6 +290,8 @@ this.polygon = function(){
         }
         var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
         this.computeExtremities = function(informParent,offset){
+            if(this.__stopExtremityUpdate){return;}
+
             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
 
             if(

@@ -4,11 +4,14 @@ this.rectangle = function( name=null, x=0, y=0, width=10, height=10, angle=0, an
     temp.ignored = ignored;
     temp.colour = colour;
     
+    temp.stopAttributeStartedExtremityUpdate = true;
     temp.x(x); 
     temp.y(y);
     temp.width(width); 
     temp.height(height);
     temp.angle(angle);
     temp.anchor(anchor);
+    temp.stopAttributeStartedExtremityUpdate = false;
+
     return temp;
 };

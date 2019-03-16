@@ -137,24 +137,42 @@
                             return false;
                         };
                     };
-                    this.getIndexOfSequence = function(array,sequence){
-                        var index = 0;
-                        for(index = 0; index < array.length; index++){
-                            if( array[index] == sequence[0] ){
+                    this.getIndexOfSequence = function(array,sequence){ 
+                        function comp(thing_A,thing_B){
+                            var keys = Object.keys(thing_A);
+                            if(keys.length == 0){ return thing_A == thing_B; }
                     
+                            for(var a = 0; a < keys.length; a++){
+                                if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
+                                if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
+                            }
+                            return true;
+                        }
+                    
+                        var index = 0;
+                        for(index = 0; index < array.length - sequence.length + 1; index++){
+                            if( comp(array[index], sequence[0]) ){
                                 var match = true;
                                 for(var a = 1; a < sequence.length; a++){
-                                    if( array[index+a] != sequence[a] ){
+                                    if( !comp(array[index+a],sequence[a]) ){
                                         match = false;
                                         break;
                                     }
                                 }
                                 if(match){return index;}
-                    
                             }
                         }
                     
                         return undefined;
+                    };
+                    this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+                        var leftOvers = [];
+                        theseElements.forEach(function(a){
+                            var index = thatArray.indexOf(a);
+                            if(index == -1){ leftOvers.push(a); }
+                            else{ thatArray.splice(index, 1); }
+                        });
+                        return leftOvers;
                     };
                     this.getDifferenceOfArrays = function(array_a,array_b){
                         var out_a = []; var out_b = [];
@@ -179,14 +197,14 @@
                     
                         return angle;
                     };
-                    this.pathToPolygonGenerator = function(path,thickness){
+                    this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
                         var jointData = [];
                     
                         //parse path
                             for(var a = 0; a < path.length/2; a++){
                                 jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
                             }
-                        //calculate egment angles, joing angles, wing angles and wing widths; then generate wing points
+                        //calculate segment angles, joing angles, wing angles and wing widths; then generate wing points
                             var outputPoints = [];
                             for(var a = 0; a < jointData.length; a++){
                                 var item = jointData[a];
@@ -198,7 +216,7 @@
                                         if(jointData[a+1] != undefined){jointData[a+1].implimentAngle = tmp;}
                                     }
                     
-                                //joing angles
+                                //joining angles
                                     var joiningAngle = item.departAngle == undefined || item.implimentAngle == undefined ? Math.PI : item.departAngle - item.implimentAngle + Math.PI;
                     
                                 //angle
@@ -216,9 +234,24 @@
                                     outputPoints.push( minus.x+item.point.x, minus.y+item.point.y );
                             }
                     
+                    
+                        if(returnedPointsFormat == 'TRIANGLE_STRIP'){
+                            return outputPoints;
+                        }else if(returnedPointsFormat == 'TRIANGLES'){
+                            var replacementPoints = [];
+                    
+                            for(var a = 0; a < outputPoints.length/2-2; a++){
+                                replacementPoints.push( outputPoints[a*2+0],outputPoints[a*2+1] );
+                                replacementPoints.push( outputPoints[a*2+2],outputPoints[a*2+3] );
+                                replacementPoints.push( outputPoints[a*2+4],outputPoints[a*2+5] );
+                            }
+                    
+                            return replacementPoints;
+                        }
+                    
                         return outputPoints;
                     };
-                    this.loopedPathToPolygonGenerator = function(path,thickness){
+                    this.loopedPathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
                         var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                         var loopingPath = [];
                     
@@ -229,7 +262,7 @@
                         loopingPath = loopingPath.concat( [path[0], path[1]] );
                         loopingPath = loopingPath.concat(joinPoint);
                     
-                        return this.pathToPolygonGenerator(loopingPath,thickness);
+                        return this.pathToPolygonGenerator(loopingPath,thickness,returnedPointsFormat);
                     };
                     this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
                         var mux = (d - start)/(end - start);
@@ -720,8 +753,107 @@
                             this.freq2num = function(freq){ return this.names_midinumbers[this.frequencies_names[freq]]; };
                             this.freq2name = function(freq){ return this.frequencies_names[freq]; };
                 };
-                // this.misc = new function(){
-                // };
+                this.misc = new function(){
+                    this.compressString = function(string){return library.thirdparty.lzString.compress(string);};
+                    this.decompressString = function(string){return library.thirdparty.lzString.decompress(string);};
+                    this.serialize = function(data,compress=true){
+                        function getType(obj){
+                            return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+                        }
+                    
+                        var data = JSON.stringify(data, function(key, value){
+                    
+                            //preserve types that JSON.stringify can't handle as "unique types"
+                            switch(getType(value)){
+                                case 'function':
+                                    return {__uniqueType:'function', __value:value.toString(), __name:value.name};
+                                case 'arraybuffer': 
+                                    return {__uniqueType:'arraybuffer', __value:btoa(String.fromCharCode(new Uint8Array(value)))}
+                                case 'audiobuffer':
+                                    var channelData = [];
+                                    for(var a = 0; a < value.numberOfChannels; a++){
+                                        channelData.push( Array.from(value.getChannelData(a)) );
+                                    }
+                    
+                                    return {
+                                        __uniqueType:'audiobuffer', 
+                                        __channelData:channelData, 
+                                        __sampleRate:value.sampleRate,
+                                        __numberOfChannels:value.numberOfChannels,
+                                        __length:value.length
+                                    };
+                                break;
+                                default: return value;
+                            }
+                    
+                        });
+                    
+                        if(compress){ data = library.misc.compressString(data); }
+                        return data;
+                    };
+                    this.unserialize = function(data,compressed=true){
+                        if(data === undefined){return undefined;}
+                    
+                        if(compressed){ data = library.misc.decompressString(data); }
+                    
+                        return JSON.parse(data, function(key, value){
+                    
+                            //recover unique types
+                            if(typeof value == 'object' && value != null && '__uniqueType' in value){
+                                switch(value.__uniqueType){
+                                    case 'function':
+                                        var functionHead = value.__value.substring(0,value.__value.indexOf('{'));
+                                        functionHead = functionHead.substring(functionHead.indexOf('(')+1, functionHead.lastIndexOf(')'));
+                                        var functionBody = value.__value.substring(value.__value.indexOf('{')+1, value.__value.lastIndexOf('}'));
+                    
+                                        value = Function(functionHead,functionBody);
+                                    break;
+                                    case 'arraybuffer':
+                                        value = atob(value.__value);
+                                        for(var a = 0; a < value.length; a++){ value[a] = value[a].charCodeAt(0); }
+                                        value = new ArrayBuffer(value);
+                                    break;
+                                    case 'audiobuffer':
+                                        var audioBuffer = library.audio.context.createBuffer(value.__numberOfChannels, value.__length, value.__sampleRate);
+                    
+                                        for(var a = 0; a < audioBuffer.numberOfChannels; a++){
+                                            workingBuffer = audioBuffer.getChannelData(a);
+                                            for(var i = 0; i < audioBuffer.length; i++){
+                                                workingBuffer[i] = value.__channelData[a][i];
+                                            }
+                                        }
+                    
+                                        value = audioBuffer;
+                                    break;
+                                    default: value = value.__value;
+                                }
+                            }
+                    
+                            return value;
+                        });
+                    };
+                    this.openFile = function(callback,readAsType='readAsBinaryString'){
+                        var i = document.createElement('input');
+                        i.type = 'file';
+                        i.onchange = function(){
+                            var f = new FileReader();
+                            switch(readAsType){
+                                case 'readAsArrayBuffer':           f.readAsArrayBuffer(this.files[0]);  break;
+                                case 'readAsBinaryString': default: f.readAsBinaryString(this.files[0]); break;
+                            }
+                            f.onloadend = function(){ 
+                                if(callback){callback(f.result);}
+                            }
+                        };
+                        i.click();
+                    };
+                    this.printFile = function(filename,data){
+                        var a = document.createElement('a');
+                        a.href = URL.createObjectURL(new Blob([data]));
+                        a.download = filename;
+                        a.click();
+                    };
+                };
                 this.thirdparty = new function(){
                     this.earcut = function(points){
                         var outputPoints = [];
@@ -1375,6 +1507,428 @@
                             return result;
                         };
                     };
+                    this.lzString = (function(){
+                        // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
+                        // This work is free. You can redistribute it and/or modify it
+                        // under the terms of the WTFPL, Version 2
+                        // For more information see LICENSE.txt or http://www.wtfpl.net/
+                        //
+                        // For more information, the home page:
+                        // http://pieroxy.net/blog/pages/lz-string/testing.html
+                        //
+                        // LZ-based compression algorithm, version 1.4.4
+                        //
+                        // Modified by Metasophiea <metasophiea@gmail.com>
+                        var f = String.fromCharCode;
+                        var keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
+                        var baseReverseDic = {};
+                        
+                        function getBaseValue(alphabet, character) {
+                            if(!baseReverseDic[alphabet]){
+                                baseReverseDic[alphabet] = {};
+                                for(var i = 0 ; i < alphabet.length; i++){
+                                    baseReverseDic[alphabet][alphabet.charAt(i)] = i;
+                                }
+                            }	
+                            return baseReverseDic[alphabet][character];
+                        }
+                        
+                        var LZString = {
+                            //compress into a string that is URI encoded
+                            compress: function (input) {
+                                if(input == null){return "";}
+                                return LZString._compress(input, 6, function(a){return keyStrUriSafe.charAt(a);});
+                            },
+                            
+                            //decompress from an output of compress which was URI encoded
+                            decompress:function (input) {
+                                if(input == null){return "";}
+                                if(input == ""){return null;}
+                                input = input.replace(/ /g, "+");
+                                return LZString._decompress(input.length, 32, function(index){ return getBaseValue(keyStrUriSafe, input.charAt(index)); });
+                            },
+                            
+                            _compress: function(uncompressed, bitsPerChar, getCharFromInt){
+                                if (uncompressed == null) return "";
+                                var i, value,
+                                    context_dictionary= {},
+                                    context_dictionaryToCreate= {},
+                                    context_c="",
+                                    context_wc="",
+                                    context_w="",
+                                    context_enlargeIn= 2, // Compensate for the first entry which should not count
+                                    context_dictSize= 3,
+                                    context_numBits= 2,
+                                    context_data=[],
+                                    context_data_val=0,
+                                    context_data_position=0,
+                                    ii;
+                            
+                                for (ii = 0; ii < uncompressed.length; ii += 1) {
+                                context_c = uncompressed.charAt(ii);
+                                if (!Object.prototype.hasOwnProperty.call(context_dictionary,context_c)) {
+                                    context_dictionary[context_c] = context_dictSize++;
+                                    context_dictionaryToCreate[context_c] = true;
+                                }
+                            
+                                context_wc = context_w + context_c;
+                                if (Object.prototype.hasOwnProperty.call(context_dictionary,context_wc)) {
+                                    context_w = context_wc;
+                                } else {
+                                    if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                                    if (context_w.charCodeAt(0)<256) {
+                                        for (i=0 ; i<context_numBits ; i++) {
+                                        context_data_val = (context_data_val << 1);
+                                        if (context_data_position == bitsPerChar-1) {
+                                            context_data_position = 0;
+                                            context_data.push(getCharFromInt(context_data_val));
+                                            context_data_val = 0;
+                                        } else {
+                                            context_data_position++;
+                                        }
+                                        }
+                                        value = context_w.charCodeAt(0);
+                                        for (i=0 ; i<8 ; i++) {
+                                        context_data_val = (context_data_val << 1) | (value&1);
+                                        if (context_data_position == bitsPerChar-1) {
+                                            context_data_position = 0;
+                                            context_data.push(getCharFromInt(context_data_val));
+                                            context_data_val = 0;
+                                        } else {
+                                            context_data_position++;
+                                        }
+                                        value = value >> 1;
+                                        }
+                                    } else {
+                                        value = 1;
+                                        for (i=0 ; i<context_numBits ; i++) {
+                                        context_data_val = (context_data_val << 1) | value;
+                                        if (context_data_position ==bitsPerChar-1) {
+                                            context_data_position = 0;
+                                            context_data.push(getCharFromInt(context_data_val));
+                                            context_data_val = 0;
+                                        } else {
+                                            context_data_position++;
+                                        }
+                                        value = 0;
+                                        }
+                                        value = context_w.charCodeAt(0);
+                                        for (i=0 ; i<16 ; i++) {
+                                        context_data_val = (context_data_val << 1) | (value&1);
+                                        if (context_data_position == bitsPerChar-1) {
+                                            context_data_position = 0;
+                                            context_data.push(getCharFromInt(context_data_val));
+                                            context_data_val = 0;
+                                        } else {
+                                            context_data_position++;
+                                        }
+                                        value = value >> 1;
+                                        }
+                                    }
+                                    context_enlargeIn--;
+                                    if (context_enlargeIn == 0) {
+                                        context_enlargeIn = Math.pow(2, context_numBits);
+                                        context_numBits++;
+                                    }
+                                    delete context_dictionaryToCreate[context_w];
+                                    } else {
+                                    value = context_dictionary[context_w];
+                                    for (i=0 ; i<context_numBits ; i++) {
+                                        context_data_val = (context_data_val << 1) | (value&1);
+                                        if (context_data_position == bitsPerChar-1) {
+                                        context_data_position = 0;
+                                        context_data.push(getCharFromInt(context_data_val));
+                                        context_data_val = 0;
+                                        } else {
+                                        context_data_position++;
+                                        }
+                                        value = value >> 1;
+                                    }
+                            
+                            
+                                    }
+                                    context_enlargeIn--;
+                                    if (context_enlargeIn == 0) {
+                                    context_enlargeIn = Math.pow(2, context_numBits);
+                                    context_numBits++;
+                                    }
+                                    // Add wc to the dictionary.
+                                    context_dictionary[context_wc] = context_dictSize++;
+                                    context_w = String(context_c);
+                                }
+                                }
+                            
+                                // Output the code for w.
+                                if (context_w !== "") {
+                                if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate,context_w)) {
+                                    if (context_w.charCodeAt(0)<256) {
+                                    for (i=0 ; i<context_numBits ; i++) {
+                                        context_data_val = (context_data_val << 1);
+                                        if (context_data_position == bitsPerChar-1) {
+                                        context_data_position = 0;
+                                        context_data.push(getCharFromInt(context_data_val));
+                                        context_data_val = 0;
+                                        } else {
+                                        context_data_position++;
+                                        }
+                                    }
+                                    value = context_w.charCodeAt(0);
+                                    for (i=0 ; i<8 ; i++) {
+                                        context_data_val = (context_data_val << 1) | (value&1);
+                                        if (context_data_position == bitsPerChar-1) {
+                                        context_data_position = 0;
+                                        context_data.push(getCharFromInt(context_data_val));
+                                        context_data_val = 0;
+                                        } else {
+                                        context_data_position++;
+                                        }
+                                        value = value >> 1;
+                                    }
+                                    } else {
+                                    value = 1;
+                                    for (i=0 ; i<context_numBits ; i++) {
+                                        context_data_val = (context_data_val << 1) | value;
+                                        if (context_data_position == bitsPerChar-1) {
+                                        context_data_position = 0;
+                                        context_data.push(getCharFromInt(context_data_val));
+                                        context_data_val = 0;
+                                        } else {
+                                        context_data_position++;
+                                        }
+                                        value = 0;
+                                    }
+                                    value = context_w.charCodeAt(0);
+                                    for (i=0 ; i<16 ; i++) {
+                                        context_data_val = (context_data_val << 1) | (value&1);
+                                        if (context_data_position == bitsPerChar-1) {
+                                        context_data_position = 0;
+                                        context_data.push(getCharFromInt(context_data_val));
+                                        context_data_val = 0;
+                                        } else {
+                                        context_data_position++;
+                                        }
+                                        value = value >> 1;
+                                    }
+                                    }
+                                    context_enlargeIn--;
+                                    if (context_enlargeIn == 0) {
+                                    context_enlargeIn = Math.pow(2, context_numBits);
+                                    context_numBits++;
+                                    }
+                                    delete context_dictionaryToCreate[context_w];
+                                } else {
+                                    value = context_dictionary[context_w];
+                                    for (i=0 ; i<context_numBits ; i++) {
+                                    context_data_val = (context_data_val << 1) | (value&1);
+                                    if (context_data_position == bitsPerChar-1) {
+                                        context_data_position = 0;
+                                        context_data.push(getCharFromInt(context_data_val));
+                                        context_data_val = 0;
+                                    } else {
+                                        context_data_position++;
+                                    }
+                                    value = value >> 1;
+                                    }
+                            
+                            
+                                }
+                                context_enlargeIn--;
+                                if (context_enlargeIn == 0) {
+                                    context_enlargeIn = Math.pow(2, context_numBits);
+                                    context_numBits++;
+                                }
+                                }
+                            
+                                // Mark the end of the stream
+                                value = 2;
+                                for (i=0 ; i<context_numBits ; i++) {
+                                context_data_val = (context_data_val << 1) | (value&1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data_position = 0;
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    context_data_val = 0;
+                                } else {
+                                    context_data_position++;
+                                }
+                                value = value >> 1;
+                                }
+                            
+                                // Flush the last char
+                                while (true) {
+                                context_data_val = (context_data_val << 1);
+                                if (context_data_position == bitsPerChar-1) {
+                                    context_data.push(getCharFromInt(context_data_val));
+                                    break;
+                                }
+                                else context_data_position++;
+                                }
+                                return context_data.join('');
+                            },
+                            
+                            _decompress: function(length, resetValue, getNextValue){
+                                var dictionary = [],
+                                    next,
+                                    enlargeIn = 4,
+                                    dictSize = 4,
+                                    numBits = 3,
+                                    entry = "",
+                                    result = [],
+                                    i,
+                                    w,
+                                    bits, resb, maxpower, power,
+                                    c,
+                                    data = {val:getNextValue(0), position:resetValue, index:1};
+                            
+                                for (i = 0; i < 3; i += 1) {
+                                dictionary[i] = i;
+                                }
+                            
+                                bits = 0;
+                                maxpower = Math.pow(2,2);
+                                power=1;
+                                while (power!=maxpower) {
+                                resb = data.val & data.position;
+                                data.position >>= 1;
+                                if (data.position == 0) {
+                                    data.position = resetValue;
+                                    data.val = getNextValue(data.index++);
+                                }
+                                bits |= (resb>0 ? 1 : 0) * power;
+                                power <<= 1;
+                                }
+                            
+                                switch (next = bits) {
+                                case 0:
+                                    bits = 0;
+                                    maxpower = Math.pow(2,8);
+                                    power=1;
+                                    while (power!=maxpower) {
+                                        resb = data.val & data.position;
+                                        data.position >>= 1;
+                                        if (data.position == 0) {
+                                        data.position = resetValue;
+                                        data.val = getNextValue(data.index++);
+                                        }
+                                        bits |= (resb>0 ? 1 : 0) * power;
+                                        power <<= 1;
+                                    }
+                                    c = f(bits);
+                                    break;
+                                case 1:
+                                    bits = 0;
+                                    maxpower = Math.pow(2,16);
+                                    power=1;
+                                    while (power!=maxpower) {
+                                        resb = data.val & data.position;
+                                        data.position >>= 1;
+                                        if (data.position == 0) {
+                                        data.position = resetValue;
+                                        data.val = getNextValue(data.index++);
+                                        }
+                                        bits |= (resb>0 ? 1 : 0) * power;
+                                        power <<= 1;
+                                    }
+                                    c = f(bits);
+                                    break;
+                                case 2:
+                                    return "";
+                                }
+                                dictionary[3] = c;
+                                w = c;
+                                result.push(c);
+                                while (true) {
+                                if (data.index > length) {
+                                    return "";
+                                }
+                            
+                                bits = 0;
+                                maxpower = Math.pow(2,numBits);
+                                power=1;
+                                while (power!=maxpower) {
+                                    resb = data.val & data.position;
+                                    data.position >>= 1;
+                                    if (data.position == 0) {
+                                    data.position = resetValue;
+                                    data.val = getNextValue(data.index++);
+                                    }
+                                    bits |= (resb>0 ? 1 : 0) * power;
+                                    power <<= 1;
+                                }
+                            
+                                switch (c = bits) {
+                                    case 0:
+                                    bits = 0;
+                                    maxpower = Math.pow(2,8);
+                                    power=1;
+                                    while (power!=maxpower) {
+                                        resb = data.val & data.position;
+                                        data.position >>= 1;
+                                        if (data.position == 0) {
+                                        data.position = resetValue;
+                                        data.val = getNextValue(data.index++);
+                                        }
+                                        bits |= (resb>0 ? 1 : 0) * power;
+                                        power <<= 1;
+                                    }
+                            
+                                    dictionary[dictSize++] = f(bits);
+                                    c = dictSize-1;
+                                    enlargeIn--;
+                                    break;
+                                    case 1:
+                                    bits = 0;
+                                    maxpower = Math.pow(2,16);
+                                    power=1;
+                                    while (power!=maxpower) {
+                                        resb = data.val & data.position;
+                                        data.position >>= 1;
+                                        if (data.position == 0) {
+                                        data.position = resetValue;
+                                        data.val = getNextValue(data.index++);
+                                        }
+                                        bits |= (resb>0 ? 1 : 0) * power;
+                                        power <<= 1;
+                                    }
+                                    dictionary[dictSize++] = f(bits);
+                                    c = dictSize-1;
+                                    enlargeIn--;
+                                    break;
+                                    case 2:
+                                    return result.join('');
+                                }
+                            
+                                if (enlargeIn == 0) {
+                                    enlargeIn = Math.pow(2, numBits);
+                                    numBits++;
+                                }
+                            
+                                if (dictionary[c]) {
+                                    entry = dictionary[c];
+                                } else {
+                                    if (c === dictSize) {
+                                    entry = w + w.charAt(0);
+                                    } else {
+                                    return null;
+                                    }
+                                }
+                                result.push(entry);
+                            
+                                // Add w+entry[0] to the dictionary.
+                                dictionary[dictSize++] = w + entry.charAt(0);
+                                enlargeIn--;
+                            
+                                w = entry;
+                            
+                                if (enlargeIn == 0) {
+                                    enlargeIn = Math.pow(2, numBits);
+                                    numBits++;
+                                }
+                            
+                                }
+                            }
+                        };
+                        return LZString;
+                    })();
                 };
             };
             _canvas_.core = new function(){
@@ -1385,328 +1939,6 @@
                 this.shape = new function(){
                     this.library = new function(){
                         const library = this;
-                        // this.polygon = function(){
-                        //     var self = this;
-                        
-                        //     //attributes 
-                        //         //protected attributes
-                        //             const type = 'polygon'; this.getType = function(){return type;}
-                        
-                        //         //simple attributes
-                        //             this.name = '';
-                        //             this.parent = undefined;
-                        //             this.dotFrame = false;
-                        //             this.extremities = { points:[], boundingBox:{}, isChanged:true };
-                        //             this.ignored = false;
-                        //             this.colour = {r:1,g:0,b:0,a:1};
-                        
-                        //         //attributes pertinent to extremity calculation
-                        //             var pointsChanged = true;
-                        //             var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged = true; computeExtremities(); pointsChanged = true; };
-                        //             var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; computeExtremities(); };
-                        
-                        //             this.pointsAsXYArray = function(a){
-                        //                 if(a==undefined){
-                        //                     var output = [];
-                        //                     for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                        //                     return points;
-                        //                 }
-                        
-                        //                 var array = [];
-                        //                 a.forEach(a => array = array.concat([a.x,a.y]));
-                        //                 this.points(array);
-                        //             };
-                            
-                        //     //addressing
-                        //         this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
-                        
-                        //     //webGL rendering functions
-                        //         var vertexShaderSource = 
-                        //             _canvas_.library.gsls.geometry + `
-                        //             //variables
-                        //                 struct location{
-                        //                     vec2 xy;
-                        //                     float scale;
-                        //                     float angle;
-                        //                 };
-                        //                 uniform location offset;
-                            
-                        //                 attribute vec2 point;
-                        //                 uniform vec2 resolution;
-                            
-                        //             void main(){    
-                        //                 //adjust point by offset
-                        //                     vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
-                            
-                        //                 //convert from unit space to clipspace
-                        //                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        //             }
-                        //         `;
-                        //         var fragmentShaderSource = `  
-                        //             precision mediump float;
-                        //             uniform vec4 colour;
-                                                                                                
-                        //             void main(){
-                        //                 gl_FragColor = colour;
-                        //             }
-                        //         `;
-                        //         var point = { buffer:undefined, attributeLocation:undefined };
-                        //         var uniformLocations;
-                        //         function updateGLAttributes(context,offset){
-                        //             //buffers
-                        //                 //points
-                        //                     if(point.buffer == undefined || pointsChanged){
-                        //                         point.attributeLocation = context.getAttribLocation(program, "point");
-                        //                         point.buffer = context.createBuffer();
-                        //                         context.enableVertexAttribArray(point.attributeLocation);
-                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        //                         context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                        //                         pointsChanged = false;
-                        //                     }else{
-                        //                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                        //                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        //                     }
-                        
-                        //             //uniforms
-                        //                 if( uniformLocations == undefined ){
-                        //                     uniformLocations = {
-                        //                         "offset.xy": context.getUniformLocation(program, "offset.xy"),
-                        //                         "offset.scale": context.getUniformLocation(program, "offset.scale"),
-                        //                         "offset.angle": context.getUniformLocation(program, "offset.angle"),
-                        //                         "resolution": context.getUniformLocation(program, "resolution"),
-                        //                         "colour": context.getUniformLocation(program, "colour"),
-                        //                     };
-                        //                 }
-                        
-                        //                 context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
-                        //                 context.uniform1f(uniformLocations["offset.scale"], offset.scale);
-                        //                 context.uniform1f(uniformLocations["offset.angle"], offset.angle);
-                        //                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                        //                 context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                        //         }
-                        //         var program;
-                        //         function activateGLRender(context,adjust){
-                        //             if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                            
-                        //             context.useProgram(program);
-                        //             updateGLAttributes(context,adjust);
-                        
-                        //             context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
-                        //         }
-                        
-                        //     //extremities
-                        //         function computeExtremities(informParent=true,offset){
-                        //             //get offset from parent
-                        //                 if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                        //             //calculate points based on the offset
-                        //                 self.extremities.points = [];
-                        //                 for(var a = 0; a < points.length; a+=2){
-                        //                     var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
-                        //                     self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                        //                 }
-                        //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
-                        //             //if told to do so, inform parent (if there is one) that extremities have changed
-                        //                 if(informParent){ if(self.parent){self.parent.computeExtremities();} }
-                        //         }
-                        //         var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                        //         this.computeExtremities = function(informParent,offset){
-                        //             if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                        //             if(
-                        //                 this.extremities.isChanged ||
-                        //                 oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                        //             ){
-                        //                 computeExtremities(informParent,offset);
-                        //                 this.extremities.isChanged = false;
-                        //                 oldOffset.x = offset.x;
-                        //                 oldOffset.y = offset.y;
-                        //                 oldOffset.scale = offset.scale;
-                        //                 oldOffset.angle = offset.angle;
-                        //             }
-                        //         };
-                        
-                        //     //lead render
-                        //         function drawDotFrame(){
-                        //             self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                        //             var tl = self.extremities.boundingBox.topLeft;
-                        //             var br = self.extremities.boundingBox.bottomRight;
-                        //             core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                        //             core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
-                        //         }
-                        //         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
-                        //             //activate shape render code
-                        //                 activateGLRender(context,offset);
-                        
-                        //             //if requested; draw dot frame
-                        //                 if(self.dotFrame){drawDotFrame();}
-                        //         };
-                        // };
-                        
-                        this.polygon = function(){
-                            var self = this;
-                        
-                            //attributes 
-                                //protected attributes
-                                    const type = 'polygon'; this.getType = function(){return type;}
-                        
-                                //simple attributes
-                                    this.name = '';
-                                    this.parent = undefined;
-                                    this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
-                                    this.ignored = false;
-                                    this.colour = {r:1,g:0,b:0,a:1};
-                        
-                                //attributes pertinent to extremity calculation
-                                    var pointsChanged = true;
-                                    var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; this.extremities.isChanged = true; computeExtremities(); pointsChanged = true; };
-                                    var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; computeExtremities(); };
-                        
-                                    this.pointsAsXYArray = function(a){
-                                        if(a==undefined){
-                                            var output = [];
-                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                                            return points;
-                                        }
-                        
-                                        var array = [];
-                                        a.forEach(a => array = array.concat([a.x,a.y]));
-                                        this.points(array);
-                                    };
-                            
-                            //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
-                        
-                            //webGL rendering functions
-                                var vertexShaderSource = 
-                                    _canvas_.library.gsls.geometry + `
-                                    //variables
-                                        struct location{
-                                            vec2 xy;
-                                            float scale;
-                                            float angle;
-                                        };
-                                        uniform location offset;
-                            
-                                        attribute vec2 point;
-                                        uniform vec2 resolution;
-                            
-                                    void main(){    
-                                        //adjust point by offset
-                                            vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
-                            
-                                        //convert from unit space to clipspace
-                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                                    }
-                                `;
-                                var fragmentShaderSource = `  
-                                    precision mediump float;
-                                    uniform vec4 colour;
-                                                                                                
-                                    void main(){
-                                        gl_FragColor = colour;
-                                    }
-                                `;
-                                var point = { buffer:undefined, attributeLocation:undefined };
-                                var drawingPoints = [];
-                                var uniformLocations;
-                                function updateGLAttributes(context,offset){
-                                    //buffers
-                                        //points
-                                            if(point.buffer == undefined || pointsChanged){
-                                                point.attributeLocation = context.getAttribLocation(program, "point");
-                                                point.buffer = context.createBuffer();
-                                                context.enableVertexAttribArray(point.attributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
-                                                pointsChanged = false;
-                                            }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                            }
-                        
-                                    //uniforms
-                                        if( uniformLocations == undefined ){
-                                            uniformLocations = {
-                                                "offset.xy": context.getUniformLocation(program, "offset.xy"),
-                                                "offset.scale": context.getUniformLocation(program, "offset.scale"),
-                                                "offset.angle": context.getUniformLocation(program, "offset.angle"),
-                                                "resolution": context.getUniformLocation(program, "resolution"),
-                                                "colour": context.getUniformLocation(program, "colour"),
-                                            };
-                                        }
-                        
-                                        context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
-                                        context.uniform1f(uniformLocations["offset.scale"], offset.scale);
-                                        context.uniform1f(uniformLocations["offset.angle"], offset.angle);
-                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                                }
-                                var program;
-                                function activateGLRender(context,adjust){
-                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                            
-                                    context.useProgram(program);
-                                    updateGLAttributes(context,adjust);
-                        
-                                    context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
-                                }
-                        
-                            //extremities
-                                function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    //calculate points based on the offset
-                                        self.extremities.points = [];
-                                        for(var a = 0; a < points.length; a+=2){
-                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
-                                            self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                                        }
-                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
-                                    //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
-                                }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
-                        
-                            //lead render
-                                function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
-                                }
-                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
-                                    //activate shape render code
-                                        activateGLRender(context,offset);
-                        
-                                    //if requested; draw dot frame
-                                        if(self.dotFrame){drawDotFrame();}
-                                };
-                        };
                         this.rectangleWithOutline = function(){
                             var self = this;
                         
@@ -1718,23 +1950,26 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
-                                    this.ignored = false;
+                                    this.extremities = { points:[], boundingBox:{} };
+                                    this.ignored = !false;
                                     this.colour = {r:1,g:0,b:0,a:1};
-                                    this.lineColour = {r:0,g:0,b:0,a:0};
+                                    this.lineColour = {r:0,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}         x = a;         this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}         y = a;         this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;}    anchor = a;    this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}     width = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;}    height = a;    this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}      x = a;            if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}      y = a;            if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}  angle = a;        if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;} anchor = a;       if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}  width = a;        if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;} height = a;       if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}  scale = a;        if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                         
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //webGL rendering functions
                                 var points = [
@@ -1833,7 +2068,6 @@
                                         gl_FragColor = activeColour;
                                     }
                                 `;
-                        
                                 var index = { buffer:undefined, attributeLocation:undefined };
                                 var point = { buffer:undefined, attributeLocation:undefined };
                                 var uniformLocations;
@@ -1885,7 +2119,7 @@
                                         context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                                         context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                                         context.uniform2f(uniformLocations["dimensions"], width, height);
-                                        context.uniform1f(uniformLocations["thickness"], thickness);
+                                        context.uniform1f(uniformLocations["thickness"], thickness*2);
                                         context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
                                         context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
                                         context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
@@ -1901,10 +2135,11 @@
                         
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    //calculate points based on the offset
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                                    
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    //calculate adjusted offset based on the offset
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var adjusted = { 
                                             x: point.x*offset.scale + offset.x,
@@ -1912,7 +2147,7 @@
                                             scale: offset.scale*scale,
                                             angle: -(offset.angle + angle),
                                         };
-                        
+                                    //calculate points based on the adjusted offset
                                         self.extremities.points = [];
                                         for(var a = 0; a < points.length; a+=2){
                                             var P = {
@@ -1926,35 +2161,19 @@
                                             });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    
+                                
                                     //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
+                                this.computeExtremities = computeExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
                                     //combine offset with shape's position, angle and scale to produce adjust value for render
@@ -1987,15 +2206,19 @@
                                     this.extremities = { points:[], boundingBox:{} };
                                     this.ignored = false;
                                     this.colour = {r:1,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;          this.x =      function(a){ if(a==undefined){return x;}      x = a;      computeExtremities(); };
-                                    var y = 0;          this.y =      function(a){ if(a==undefined){return y;}      y = a;      computeExtremities(); };
-                                    var angle = 0;      this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  computeExtremities(); };
-                                    var radius = 10;    this.radius = function(a){ if(a==undefined){return radius;} radius = a; computeExtremities(); };
-                                    var scale = 1;      this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  computeExtremities(); };
+                                    var x = 0;          this.x =      function(a){ if(a==undefined){return x;}      x = a;      if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;          this.y =      function(a){ if(a==undefined){return y;}      y = a;      if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;      this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var radius = 10;    this.radius = function(a){ if(a==undefined){return radius;} radius = a; if(this.devMode){console.log(this.getAddress()+'::radius');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;      this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var detail = 25;    this.detail = function(a){ 
                                                             if(a==undefined){return detail;} detail = a;
+                                                            if(this.devMode){console.log(this.getAddress()+'::detail');}
                         
                                                             points = [];
                                                             for(var a = 0; a < detail; a++){
@@ -2004,14 +2227,14 @@
                                                                     Math.cos( 2*Math.PI * (a/detail) )
                                                                 );
                                                             }
-                        
-                                                            computeExtremities();
-                        
                                                             pointsChanged = true;
+                        
+                                                            if(this.stopAttributeStartedExtremityUpdate){return;} 
+                                                            computeExtremities();
                                                         };
-                                    
+                        
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //webGL rendering functions
                                 var points = []; 
@@ -2042,112 +2265,95 @@
                                             gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                     }
                                 `;
-                            var fragmentShaderSource = `  
-                                precision mediump float;
-                                uniform vec4 colour;
-                                                                                            
-                                void main(){
-                                    gl_FragColor = colour;
-                                }
-                            `;
-                            var pointBuffer;
-                            var pointAttributeLocation;
-                            var uniformLocations;
-                            function updateGLAttributes(context,adjust){
-                                //buffers
-                                    //points
-                                        if(pointBuffer == undefined || pointsChanged){
-                                            pointAttributeLocation = context.getAttribLocation(program, "point");
-                                            pointBuffer = context.createBuffer();
-                                            context.enableVertexAttribArray(pointAttributeLocation);
-                                            context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                            context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                            context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                            pointsChanged = false;
-                                        }else{
-                                            context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                            context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    uniform vec4 colour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = colour;
+                                    }
+                                `;
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var uniformLocations;
+                                function updateGLAttributes(context,adjust){
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                                pointsChanged = false;
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                        
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+                                                "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+                                                "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "radius": context.getUniformLocation(program, "radius"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                            };
                                         }
                         
-                                //uniforms
-                                    if( uniformLocations == undefined ){
-                                        uniformLocations = {
-                                            "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                            "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                            "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                            "resolution": context.getUniformLocation(program, "resolution"),
-                                            "radius": context.getUniformLocation(program, "radius"),
-                                            "colour": context.getUniformLocation(program, "colour"),
-                                        };
-                                    }
+                                        context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+                                        context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+                                        context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform1f(uniformLocations["radius"], radius);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram('circle', vertexShaderSource, fragmentShaderSource); }
                         
-                                    context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                                    context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                                    context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                                    context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                                    context.uniform1f(uniformLocations["radius"], radius);
-                                    context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                            }
-                            var program;
-                            function activateGLRender(context,adjust){
-                                if(program == undefined){ program = core.render.produceProgram('circle', vertexShaderSource, fragmentShaderSource); }
-                        
-                                context.useProgram(program);
-                                updateGLAttributes(context,adjust);
-                                context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
-                            }
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                                    context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
+                                }
                         
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
                         
-                                    //calculate points based on the offset
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    //calculate adjusted offset based on the offset
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var adjust = { 
+                                        var adjusted = { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale*scale,
-                                            angle: -offset.angle,
+                                            angle: -(offset.angle + angle),
                                         };
-                        
+                                    //calculate points based on the adjusted offset
                                         self.extremities.points = [];
                                         for(var a = 0; a < points.length; a+=2){
                                             self.extremities.points.push({
-                                                x: (points[a]   * radius * adjust.scale) + adjust.x,
-                                                y: (points[a+1] * radius * adjust.scale) + adjust.y,
+                                                x: (points[a]   * radius * adjusted.scale) + adjusted.x,
+                                                y: (points[a+1] * radius * adjusted.scale) + adjusted.y,
                                             });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    
                                     //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
+                                this.computeExtremities = computeExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
                                     //combine offset with shape's position, angle and scale to produce adjust value for render
@@ -2179,179 +2385,127 @@
                                     this.dotFrame = false;
                                     this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
                                     this.ignored = false;
-                                    var colour = {r:1,g:0,b:0,a:1}; this.colour = function(a){ if(a==undefined){return colour;} colour = a; calculateStringCharacters(); };
+                                    var colour = {r:1,g:0,b:0,a:1}; this.colour = function(a){ if(a==undefined){return colour;} colour = a; recolourCharacters(); };
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                                 
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;               this.x =     function(a){ if(a==undefined){return x;}     x = a;        calculateStringCharacters(); computeExtremities(); };
-                                    var y = 0;               this.y =     function(a){ if(a==undefined){return y;}     y = a;        calculateStringCharacters(); computeExtremities(); };
-                                    var angle = 0;           this.angle = function(a){ if(a==undefined){return angle;} angle = a;    calculateStringCharacters(); computeExtremities(); };
-                                    var width = 10;          this.width =  function(a){ if(a==undefined){return width;}  width = a;  calculateStringCharacters(); computeExtremities(); };
-                                    var height = 10;         this.height = function(a){ if(a==undefined){return height;} height = a; calculateStringCharacters(); computeExtremities(); };
-                                    var scale = 1;           this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  calculateStringCharacters(); computeExtremities(); };
-                                    var calculationMode = 0; this.calculationMode = function(a){ if(a==undefined){return calculationMode;} calculationMode = a; calculateStringCharacters(); computeExtremities(); };
+                                    var x = 0;               this.x =     function(a){           if(a==undefined){return x;}     x = a;       if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;               this.y =     function(a){           if(a==undefined){return y;}     y = a;       if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;           this.angle = function(a){           if(a==undefined){return angle;} angle = a;   if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var width = 10;          this.width =  function(a){          if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var height = 10;         this.height = function(a){          if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;           this.scale = function(a){           if(a==undefined){return scale;} scale = a;   if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var string = '';         this.string = function(a){          if(a==undefined){return string;} string = a; if(this.devMode){console.log(this.getAddress()+'::string');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var font = 'default';    this.font =   function(a){ 
+                                                                if(a==undefined){return font;}
+                                                                font = a == undefined || a === '' || library.character.vectorLibrary[a] == undefined ? 'default' : a;
                         
-                                //string
-                                    var string = '';
-                                    var children = [];
-                                    function calculateStringCharacters(){
-                                        children = [];
-                                        var tmpString = String(string).split('');
-                                        var cumulativeWidth = 0;
-                                        var spacing = 0.1;
-                        
-                                        switch(calculationMode){
-                                            default: case 0: 
-                                                var mux = 0;
-                        
-                                                tmpString.forEach(function(a){
-                                                    if( library.character.vectorLibrary[a].ratio == undefined || library.character.vectorLibrary[a].ratio.x == undefined ){ mux += 1; }
-                                                    else{ mux += library.character.vectorLibrary[a].ratio.x; }
-                                                });
-                                                mux += spacing * (tmpString.length-1);
-                        
-                                                var characterWidth = width/mux;
-                                                for(var a = 0; a < tmpString.length; a++){
-                                                    if(tmpString[a] == ' '){ cumulativeWidth += characterWidth; continue; }
-                        
-                                                    var tmp = _canvas_.core.shape.create('character');
-                                                        tmp.character(tmpString[a]);
-                                                        tmp.x(cumulativeWidth); 
-                                                        tmp.y(height*tmp.offset().y);
-                                                        tmp.width(characterWidth*tmp.ratio().x);
-                                                        tmp.height(height*tmp.ratio().y);
-                                                        tmp.colour = colour;
-                                                        children.push(tmp);
-                        
-                                                        cumulativeWidth += characterWidth*tmp.ratio().x + spacing*characterWidth;
-                                                }
-                                            break;
-                                            case 1: 
-                                                for(var a = 0; a < tmpString.length; a++){
-                                                    if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-                        
-                                                    var tmp = _canvas_.core.shape.create('character');
-                                                        tmp.character(tmpString[a]);
-                                                        tmp.x(cumulativeWidth); 
-                                                        tmp.y(height*tmp.offset().y);
-                                                        tmp.width(width*tmp.ratio().x);
-                                                        tmp.height(height*tmp.ratio().y);
-                                                        tmp.colour = colour;
-                                                        children.push(tmp);
-                        
-                                                        cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                                                }
-                                            break;
-                                            case 2: 
-                                                for(var a = 0; a < tmpString.length; a++){
-                                                    if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-                        
-                                                    var tmp = _canvas_.core.shape.create('character');
-                                                        tmp.character(tmpString[a]);
-                                                        tmp.x(cumulativeWidth); 
-                                                        tmp.y(height*tmp.offset().y - height/2);
-                                                        tmp.width(width*tmp.ratio().x);
-                                                        tmp.height(height*tmp.ratio().y);
-                                                        tmp.colour = colour;
-                                                        children.push(tmp);
-                        
-                                                        cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                                                }
-                                            break;
-                                            case 3: 
-                                                for(var a = 0; a < tmpString.length; a++){
-                                                    if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-                        
-                                                    var tmp = _canvas_.core.shape.create('character');
-                                                        tmp.character(tmpString[a]);
-                                                        tmp.x(cumulativeWidth); 
-                                                        tmp.y(height*tmp.offset().y - height/2);
-                                                        tmp.width(width*tmp.ratio().x);
-                                                        tmp.height(height*tmp.ratio().y);
-                                                        tmp.colour = colour;
-                                                        children.push(tmp);
-                        
-                                                        cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                                                }
-                        
-                                                children.forEach(a => a.x( a.x() - cumulativeWidth/2 ) );
-                                            break;
-                                            case 4: 
-                                                for(var a = 0; a < tmpString.length; a++){
-                                                    if(tmpString[a] == ' '){ cumulativeWidth += width; continue; }
-                        
-                                                    var tmp = _canvas_.core.shape.create('character');
-                                                        tmp.character(tmpString[a]);
-                                                        tmp.x(cumulativeWidth); 
-                                                        tmp.y(height*tmp.offset().y - height/2);
-                                                        tmp.width(width*tmp.ratio().x);
-                                                        tmp.height(height*tmp.ratio().y);
-                                                        tmp.colour = colour;
-                                                        children.push(tmp);
-                        
-                                                        cumulativeWidth += width*tmp.ratio().x + spacing*width;
-                                                }
-                                                children.forEach(a => a.x( a.x() - cumulativeWidth) );
-                                            break;
-                                        }
-                        
-                                        self.extremities.isChanged = true; 
-                                        self.computeExtremities();
-                                    }
-                                    this.string = function(a){
-                                        if(a==undefined){return string;}  
-                                        string = a;
-                                        calculateStringCharacters();
+                                                                generateStringCharacters(); 
+                                                                if(this.devMode){console.log(this.getAddress()+'::font');} 
+                                                                computeExtremities(); 
+                                                             };
+                                    var printingMode = {
+                                        widthCalculation:'filling', //filling / absolute
+                                        horizontal:'left',          //left    / middle   / right
+                                        vertical:'top',             //top     / middle   / bottom
                                     };
-                                    this.getElementsUnderPoint = function(x,y){
-                                        var returnList = [];
-                            
-                                        for(var a = children.length-1; a >= 0; a--){
-                                            var item = children[a];
-                            
-                                            if(item.ignored){continue;}
-                            
-                                            if( _canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, item.extremities.boundingBox ) ){
-                                                if( item.getType() == 'group' ){
-                                                    returnList = returnList.concat( item.getElementsUnderPoint(x,y) );
-                                                }else{
-                                                    if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, item.extremities.points ) ){
-                                                        returnList = returnList.concat( item );
-                                                    }
-                                                }
-                                            }
-                                        }
-                            
-                                        return returnList;
-                                    };
-                                    this.getElementsUnderArea = function(points){
-                                        var returnList = [];
-                                        children.forEach(function(item){
-                                            if(item.ignored){return;}
-                            
-                                            if( _canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){
-                                                if( item.getType() == 'group' ){
-                                                    returnList = returnList.concat( item.getElementUnderArea(points) );
-                                                }else{
-                                                    if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){
-                                                        returnList = returnList.concat( item );
-                                                    }
-                                                }
-                                            }
-                                        });
-                            
-                                        return returnList;
+                                    this.printingMode = function(a){
+                                        if(a==undefined){return printingMode;} 
+                                        printingMode = {
+                                            widthCalculation: a.widthCalculation != undefined || a.widthCalculation != '' ? a.widthCalculation : printingMode.widthCalculation,
+                                            horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
+                                            vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
+                                        };
+                        
+                                        if(this.devMode){console.log(this.getAddress()+'::printingMode');} 
+                                        generateStringCharacters(); 
+                        
+                                        if(this.stopAttributeStartedExtremityUpdate){return;} 
+                                        computeExtremities(); 
                                     };
                         
                             //addressing
                                 this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
+                            //string
+                                function recolourCharacters(){ children.forEach(a => a.colour = colour); }
+                                function generateStringCharacters(){
+                                    if(self.devMode){console.log(self.getAddress()+'::generateStringCharacters');}
+                        
+                                    clear();
+                                    var tmpString = String(string).split('');
+                                    var cumulativeWidth = 0;
+                                    var spacing = 0.1;
+                        
+                                    var mux = 0;
+                                    tmpString.forEach(function(a){
+                                        if( library.character.vectorLibrary[font][a] == undefined || library.character.vectorLibrary[font][a].ratio == undefined || library.character.vectorLibrary[font][a].ratio.x == undefined ){ mux += 1; }
+                                        else{ mux += library.character.vectorLibrary[font][a].ratio.x; }
+                                    });
+                                    mux += spacing * (tmpString.length-1);
+                                    var characterWidth = printingMode.widthCalculation == 'filling' ? width/mux : width;
+                        
+                                    var horizontalOffset = 0;
+                                    if( printingMode.vertical == 'middle' ){ horizontalOffset = height/2; }
+                                    else if( printingMode.vertical == 'bottom' ){ horizontalOffset = height; }
+                        
+                                    for(var a = 0; a < tmpString.length; a++){
+                                        if(tmpString[a] == ' '){ cumulativeWidth += characterWidth; continue; }
+                        
+                                        var tmp = _canvas_.core.shape.create('character');
+                                            tmp.name = ''+a;
+                                            tmp.stopAttributeStartedExtremityUpdate = true;
+                                            tmp.character(tmpString[a]);
+                                            tmp.x(cumulativeWidth); 
+                                            tmp.y(height*tmp.offset().y - horizontalOffset);
+                                            tmp.width(characterWidth*tmp.ratio().x);
+                                            tmp.height(height*tmp.ratio().y);
+                                            tmp.stopAttributeStartedExtremityUpdate = false;
+                                            tmp.colour = colour;
+                                            append(tmp);
+                        
+                                            cumulativeWidth += characterWidth*tmp.ratio().x + spacing*characterWidth;
+                                    }
+                        
+                                    if( printingMode.horizontal == 'middle' ){ children.forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
+                                    else if( printingMode.horizontal == 'right' ){ children.forEach(a => a.x( a.x() - cumulativeWidth) ); }
+                                }
+                        
+                            //group functions
+                                var children = [];
+                        
+                                function checkForName(name){ return children.find(a => a.name === name) != undefined; }
+                                function isValidShape(shape){
+                                    if( shape == undefined ){ return false; }
+                                    if( shape.name.length == 0 ){
+                                        console.warn('group error: shape with no name being inserted into group "'+self.getAddress()+'", therefore; the shape will not be added');
+                                        return false;
+                                    }
+                                    if( checkForName(shape.name) ){
+                                        console.warn('group error: shape with name "'+shape.name+'" already exists in group "'+self.getAddress()+'", therefore; the shape will not be added');
+                                        return false;
+                                    }
+                        
+                                    return true;
+                                }
+                                function clear(){  children = []; }
+                                function append(shape){
+                                    if( !isValidShape(shape) ){ return; }
+                        
+                                    children.push(shape); 
+                                    shape.parent = self;
+                                    augmentExtremities_addChild(shape); 
+                                }
+                        
                             //clipping
                                 var clipping = { stencil:undefined, active:false };
                                 this.stencil = function(shape){
-                                    if(shape == undefined){return this.clipping.stencil;}
+                                    if(shape == undefined){return clipping.stencil;}
                                     clipping.stencil = shape;
                                     clipping.stencil.parent = this;
-                                    computeExtremities();
+                                    if(clipping.active){ computeExtremities(); }
                                 };
                                 this.clipActive = function(bool){
                                     if(bool == undefined){return clipping.active;}
@@ -2360,10 +2514,33 @@
                                 };
                         
                             //extremities
-                                function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                function updateExtremities(informParent=true){
+                                    if(self.devMode){console.log(self.getAddress()+'::updateExtremities');}
                         
+                                    //generate extremity points
+                                        self.extremities.points = [];
+                        
+                                        //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
+                                        //otherwise, gather extremities from children and calculate extremities here
+                                        if(clipping.active && clipping.stencil != undefined){
+                                            self.extremities.points = clipping.stencil.extremities.points.slice();
+                                        }else{
+                                            children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
+                                        }
+                        
+                                    //generate bounding box from points
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        
+                                    //update parent
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                                }
+                                function augmentExtremities(shape){
+                                    if(self.devMode){console.log(self.getAddress()+'::augmentExtremities');}
+                        
+                                    //if we're in clipping mode, no addition of a shape can effect the extremities 
+                                        if(clipping.active && clipping.stencil != undefined){return true;}
+                                    //get offset from parent
+                                        var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                                     //combine offset with group's position, angle and scale to produce new offset for chilren
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var newOffset = { 
@@ -2372,55 +2549,65 @@
                                             scale: offset.scale*scale,
                                             angle: offset.angle + angle,
                                         };
+                                    //run computeExtremities on new child
+                                        shape.computeExtremities(false,newOffset);
+                                }
+                                function augmentExtremities_addChild(newShape){
+                                    if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
                         
+                                    //augment extremities, and bail if it was found that clipping is active
+                                        if( augmentExtremities(newShape) ){ return; }
+                                    //add points to points list
+                                        self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
+                                    //recalculate bounding box
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    //inform parent of change
+                                        if(self.parent){self.parent.updateExtremities();}
+                                }
+                                function computeExtremities(informParent=true,offset){
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                                    
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    //combine offset with group's position, angle and scale to produce new offset for chilren
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var newOffset = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: offset.angle + angle,
+                                        };
                                     //run computeExtremities on all children
                                         children.forEach(a => a.computeExtremities(false,newOffset));
-                                    
                                     //run computeExtremities on stencil (if applicable)
                                         if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
-                        
-                                    //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
-                                    //otherwise, gather extremities from children and calculate extremities here
-                                        self.extremities.points = [];
-                                        if(clipping.active && clipping.stencil != undefined){
-                                            self.extremities.points = self.extremities.points.concat(clipping.stencil.extremities.points);
-                                        }else{ 
-                                            children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
-                                        }
-                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
-                                    //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                    //update extremities
+                                        updateExtremities(informParent,offset);
                                 }
-                                this.computeExtremities = computeExtremities;
+                        
                                 this.getOffset = function(){
                                     if(this.parent){
                                         var offset = this.parent.getOffset();
-                        
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var adjust = { 
+                                        return { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale * scale,
                                             angle: offset.angle + angle,
                                         };
-                        
-                                        return adjust;
-                                    }else{
-                                        return {x:x ,y:y ,scale:scale ,angle:angle};
-                                    }
+                                    }else{ return {x:x ,y:y ,scale:scale ,angle:angle}; }
                                 };
+                                this.computeExtremities = computeExtremities;
+                                this.updateExtremities = updateExtremities;
+                        
                         
                             //lead render
                                 function drawDotFrame(){
-                                    // self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y,2,{r:0,g:0,b:1,a:1}) );
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
-                                };
-                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                                    //draw bounding box top left and bottom right points
+                                    core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
+                                    core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
+                                }
+                                this.render = function(context, offset){
                                     //combine offset with group's position, angle and scale to produce new offset for children
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var newOffset = { 
@@ -2461,7 +2648,193 @@
                         
                                     //if requested; draw dot frame
                                         if(self.dotFrame){drawDotFrame();}
+                                };
+                        };
+                        this.polygonWithOutline = function(){
+                            var self = this;
+                        
+                            //attributes 
+                                //protected attributes
+                                    const type = 'polygonWithOutline'; this.getType = function(){return type;}
+                        
+                                //simple attributes
+                                    this.name = '';
+                                    this.parent = undefined;
+                                    this.dotFrame = false;
+                                    this.extremities = { points:[], boundingBox:{} };
+                                    this.ignored = false;
+                                    this.colour = {r:1,g:0,b:0,a:1};
+                                    this.lineColour = {r:0,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
+                        
+                                //attributes pertinent to extremity calculation
+                                    var pointsChanged = true; var generatedPathPolygon = [];
+                                    var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;    generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                   if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    
+                                    function loopedLineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }
+                                    this.pointsAsXYArray = function(a){
+                                        if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
+                        
+                                        if(a==undefined){
+                                            var output = [];
+                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
+                                            return output;
+                                        }
+                        
+                                        this.points( a.map(function(a){
+                                            if( isNaN(a.x) || isNaN(a.y) ){ console.error('polygonWithOutline::'+self.getAddress()+'::pointsAsXYArray:: points entered contain NAN values'); }
+                                            return [a.x,a.y];
+                                        }).flat() );
+                                    };
+                            
+                            //addressing
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+                        
+                            //webGL rendering functions
+                                var vertexShaderSource = 
+                                    _canvas_.library.gsls.geometry + `
+                                    //index
+                                        attribute lowp float index;
+                                    
+                                    //constants
+                                        attribute vec2 point;
+                        
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location offset;
+                                        uniform vec2 resolution;
+                                        uniform vec4 colour;
+                                        uniform vec4 lineColour;
+                                        uniform lowp float indexParting;
+                                
+                                    //varyings
+                                        varying vec4 activeColour;
+                        
+                                    void main(){    
+                                        //adjust point by offset
+                                            vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+                        
+                                        //select colour
+                                            activeColour = index < indexParting ? colour : lineColour;
+                        
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                    }
+                                `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    varying vec4 activeColour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = activeColour;
+                                    }
+                                `;
+                                var index = { buffer:undefined, attributeLocation:undefined };
+                                var point = { buffer:undefined, attributeLocation:undefined, earcut:[] };
+                                var drawingPoints = [];
+                                var uniformLocations;
+                                function updateGLAttributes(context,offset){                
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                point.earcut = _canvas_.library.thirdparty.earcut(points);
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.earcut.concat(generatedPathPolygon)), context.STATIC_DRAW);
+                                                pointsChanged = false;
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                        
+                                    //index
+                                        if(index.buffer == undefined || pointsChanged){
+                                            index.attributeLocation = context.getAttribLocation(program, "index");
+                                            index.buffer = context.createBuffer();
+                                            context.enableVertexAttribArray(index.attributeLocation);
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                            context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.earcut.length/2 + generatedPathPolygon.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
+                                        }else{
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                        }
+                        
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "offset.xy": context.getUniformLocation(program, "offset.xy"),
+                                                "offset.scale": context.getUniformLocation(program, "offset.scale"),
+                                                "offset.angle": context.getUniformLocation(program, "offset.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                                "indexParting": context.getUniformLocation(program, "indexParting"),
+                                                "lineColour": context.getUniformLocation(program, "lineColour"),
+                                            };
+                                        }
+                        
+                                        context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
+                                        context.uniform1f(uniformLocations["offset.scale"], offset.scale);
+                                        context.uniform1f(uniformLocations["offset.angle"], offset.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                        context.uniform1f(uniformLocations["indexParting"], point.earcut.length/2);
+                                        context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
                                 }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                        
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                        
+                                    context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
+                                }
+                        
+                            //extremities
+                                function computeExtremities(informParent=true,offset){
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                        
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                                    //calculate points based on the offset
+                                        self.extremities.points = [];
+                                        for(var a = 0; a < points.length; a+=2){
+                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                                            self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
+                                        }
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                                }
+                                this.computeExtremities = computeExtremities;
+                        
+                            //lead render
+                                function drawDotFrame(){
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
+                                }
+                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                                    //activate shape render code
+                                        activateGLRender(context,offset);
+                        
+                                    //if requested; draw dot frame
+                                        if(self.dotFrame){drawDotFrame();}
+                                };
                         };
                         this.canvas = function(){
                             var self = this;
@@ -2474,20 +2847,23 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.extremities = { points:[], boundingBox:{} };
                                     this.ignored = false;
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
-                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; this.computeExtremities(); updateDimentions(); };
+                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      updateDimentions(); if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      updateDimentions(); if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  updateDimentions(); if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; updateDimentions(); if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  updateDimentions(); if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; updateDimentions(); if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  updateDimentions(); if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                         
                                 //subCanvas
-                                    var subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1, isChanged:true };
+                                    var subCanvas = { object:document.createElement('canvas'), textureData:undefined, context:undefined, resolution:1, isChanged:true };
                                     subCanvas.context = subCanvas.object.getContext('2d');
                         
                                     function updateDimentions(){
@@ -2507,7 +2883,7 @@
                                     this.requestUpdate = function(){ subCanvas.isChanged = true; };
                         
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //webGL rendering
                                 var points = [
@@ -2563,37 +2939,35 @@
                                         gl_FragColor = texture2D(textureImage, textureCoordinates);
                                     }
                                 `;
-                                var pointBuffer;
-                                var pointAttributeLocation;
+                                var point = { buffer:undefined, attributeLocation:undefined };
                                 var uniformLocations;
-                                var subCanvasTexture;
                                 function updateGLAttributes(context,adjust){
                                     //buffers
                                         //points
-                                            if(pointBuffer == undefined){
-                                                pointAttributeLocation = context.getAttribLocation(program, "point");
-                                                pointBuffer = context.createBuffer();
-                                                context.enableVertexAttribArray(pointAttributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            if(point.buffer == undefined){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                                 context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                             }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                             }
                         
                                         //texture
                                             if(subCanvas.isChanged){
                                                 subCanvas.isChanged = false;
-                                                subCanvasTexture = context.createTexture();
-                                                context.bindTexture(context.TEXTURE_2D, subCanvasTexture);
+                                                subCanvas.textureData = context.createTexture();
+                                                context.bindTexture(context.TEXTURE_2D, subCanvas.textureData);
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
                                                 context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, subCanvas.object);
                                             }else{
-                                                context.bindTexture(context.TEXTURE_2D, subCanvasTexture);
+                                                context.bindTexture(context.TEXTURE_2D, subCanvas.textureData);
                                             }
                         
                                     //uniforms
@@ -2626,10 +3000,11 @@
                         
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    //calculate points based on the offset
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                                    
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    //calculate adjusted offset based on the offset
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var adjusted = { 
                                             x: point.x*offset.scale + offset.x,
@@ -2637,7 +3012,7 @@
                                             scale: offset.scale*scale,
                                             angle: -(offset.angle + angle),
                                         };
-                        
+                                    //calculate points based on the adjusted offset
                                         self.extremities.points = [];
                                         for(var a = 0; a < points.length; a+=2){
                                             var P = {
@@ -2651,35 +3026,19 @@
                                             });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    
+                                
                                     //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
+                                this.computeExtremities = computeExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
                                     //combine offset with shape's position, angle and scale to produce adjust value for render
@@ -2709,36 +3068,45 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.extremities = { points:[], boundingBox:{} };
                                     this.ignored = false;
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                         
                                 //image data
-                                    var image = { object:undefined, url:'', isLoaded:false, isChanged:true, defaultURL:'http://0.0.0.0:8000/testImages/noimageimage.png' };
+                                    var image = { object:undefined, textureData:undefined, url:'', isLoaded:false, isChanged:true, defaultURL:'http://0.0.0.0:8000/testImages/noimageimage.png' };
+                                    function loadImage(url){
+                                        image.object = new Image();
+                                        image.object.src = url;
+                                        image.isLoaded = false; 
+                                        image.object.onload = function(){ image.isLoaded = true; image.isChanged = true; };
+                                    }
+                                    loadImage(image.defaultURL);
                                     this.imageURL = function(a){
+                                        if(this.devMode){console.log(this.getAddress()+'::imageURL');}
+                        
                                         if(a==undefined){return image.url;}
                                         image.url = a;
                         
                                         if(image.url === ''){ image.url = image.defaultURL; }
                         
-                                        image.object = new Image();
-                                        image.object.src = image.url;
-                                        image.isLoaded = false; image.object.onload = function(){ image.isLoaded = true; image.isChanged = true; };
+                                        loadImage(image.url);
                                     };
-                                    this.imageURL('');
                         
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
-                            //webGL rendering
+                            //webGL rendering functions
                                 var points = [
                                     0,0,
                                     1,0,
@@ -2786,37 +3154,35 @@
                                         gl_FragColor = texture2D(textureImage, textureCoordinates);
                                     }
                                 `;
-                                var pointBuffer;
-                                var pointAttributeLocation;
+                                var point = { buffer:undefined, attributeLocation:undefined };
                                 var uniformLocations;
-                                var imageTexture;
                                 function updateGLAttributes(context,adjust){
                                     //buffers
                                         //points
-                                            if(pointBuffer == undefined){
-                                                pointAttributeLocation = context.getAttribLocation(program, "point");
-                                                pointBuffer = context.createBuffer();
-                                                context.enableVertexAttribArray(pointAttributeLocation);
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            if(point.buffer == undefined){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                                 context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
                                             }else{
-                                                context.bindBuffer(context.ARRAY_BUFFER, pointBuffer); 
-                                                context.vertexAttribPointer( pointAttributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                             }
                         
                                         //texture
                                             if(image.isChanged){
                                                 image.isChanged = false;
-                                                imageTexture = context.createTexture();
-                                                context.bindTexture(context.TEXTURE_2D, imageTexture);
+                                                image.textureData = context.createTexture();
+                                                context.bindTexture(context.TEXTURE_2D, image.textureData);
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_S, context.CLAMP_TO_EDGE );
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_WRAP_T, context.CLAMP_TO_EDGE );
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MIN_FILTER, context.NEAREST );
                                                 context.texParameteri( context.TEXTURE_2D, context.TEXTURE_MAG_FILTER, context.NEAREST );
                                                 context.texImage2D(context.TEXTURE_2D, 0, context.RGBA, context.RGBA, context.UNSIGNED_BYTE, image.object);
                                             }else{
-                                                context.bindTexture(context.TEXTURE_2D, imageTexture);
+                                                context.bindTexture(context.TEXTURE_2D, image.textureData);
                                             }
                         
                                     //uniforms
@@ -2848,13 +3214,14 @@
                                     updateGLAttributes(context,adjust);
                                     context.drawArrays(context.TRIANGLE_FAN, 0, 4);
                                 }
-                        
+                                
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    //calculate points based on the offset
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                                    
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    //calculate adjusted offset based on the offset
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var adjusted = { 
                                             x: point.x*offset.scale + offset.x,
@@ -2862,7 +3229,7 @@
                                             scale: offset.scale*scale,
                                             angle: -(offset.angle + angle),
                                         };
-                        
+                                    //calculate points based on the adjusted offset
                                         self.extremities.points = [];
                                         for(var a = 0; a < points.length; a+=2){
                                             var P = {
@@ -2876,35 +3243,19 @@
                                             });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    
+                                
                                     //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
-                        
+                                this.computeExtremities = computeExtremities;
+                                
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
                                     //combine offset with shape's position, angle and scale to produce adjust value for render
@@ -2934,31 +3285,34 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.extremities = { points:[], boundingBox:{} };
                                     this.ignored = false;
                                     this.colour = {r:0,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var scale = 1; this.scale = function(a){ if(a==undefined){return scale;}  scale = a; this.extremities.isChanged=true; this.computeExtremities(); };
-                                    var points = []; var pointsChanged = true; 
-                                    function lineGenerator(){ points = _canvas_.library.math.loopedPathToPolygonGenerator( path, thickness ); }
-                                    var path = [];      this.points =  function(a){ if(a==undefined){return path;} path = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
-                                    var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
+                                    var pointsChanged = true; var generatedPathPolygon = [];
+                                    var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
                                     
+                                    function lineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness ); }
                                     this.pointsAsXYArray = function(a){
+                                        if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
+                        
                                         if(a==undefined){
                                             var output = [];
-                                            for(var a = 0; a < path.length; a+=2){ output.push({ x:path[a], y:path[a+1] }); }
+                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
                                             return output;
                                         }
                         
-                                        var array = [];
-                                        a.forEach(a => array = array.concat([a.x,a.y]));
-                                        this.points(array);
+                                        this.points( a.map( a => [a.x,a.y] ).flat() );
                                     };
                                     
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //webGL rendering functions
                                 var vertexShaderSource = 
@@ -3001,8 +3355,7 @@
                                                 context.enableVertexAttribArray(point.attributeLocation);
                                                 context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                 context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                                pointsChanged = false;
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
                                             }else{
                                                 context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                 context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
@@ -3031,50 +3384,34 @@
                         
                                     context.useProgram(program);
                                     updateGLAttributes(context,adjust);
-                                    context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
+                                    context.drawArrays(context.TRIANGLE_STRIP, 0, generatedPathPolygon.length/2);
                                 }
                         
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
                         
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
                                     //calculate points based on the offset
                                         self.extremities.points = [];
-                                        for(var a = 0; a < points.length; a+=2){
-                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                                        for(var a = 0; a < generatedPathPolygon.length; a+=2){
+                                            var P = _canvas_.library.math.cartesianAngleAdjust(generatedPathPolygon[a]*offset.scale,generatedPathPolygon[a+1]*offset.scale, offset.angle);
                                             self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
                                     //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
+                                this.computeExtremities = computeExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                                 }
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
                                     //activate shape render code
@@ -3095,31 +3432,34 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.extremities = { points:[], boundingBox:{} };
                                     this.ignored = false;
                                     this.colour = {r:0,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var scale = 1; this.scale = function(a){ if(a==undefined){return scale;}  scale = a; this.extremities.isChanged=true; this.computeExtremities(); };
-                                    var points = []; var pointsChanged = true; 
-                                    function lineGenerator(){ points = _canvas_.library.math.pathToPolygonGenerator( path, thickness ); }
-                                    var path = [];      this.points =  function(a){ if(a==undefined){return path;} path = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
-                                    var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
+                                    var pointsChanged = true; var generatedPathPolygon = [];
+                                    var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
                                     
+                                    function lineGenerator(){ return _canvas_.library.math.pathToPolygonGenerator( points, thickness ); }
                                     this.pointsAsXYArray = function(a){
+                                        if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
+                        
                                         if(a==undefined){
                                             var output = [];
-                                            for(var a = 0; a < path.length; a+=2){ output.push({ x:path[a], y:path[a+1] }); }
+                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
                                             return output;
                                         }
                         
-                                        var array = [];
-                                        a.forEach(a => array = array.concat([a.x,a.y]));
-                                        this.points(array);
+                                        this.points( a.map( a => [a.x,a.y] ).flat() );
                                     };
                                     
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //webGL rendering functions
                                 var vertexShaderSource = 
@@ -3162,7 +3502,7 @@
                                                 context.enableVertexAttribArray(point.attributeLocation);
                                                 context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                 context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
                                             }else{
                                                 context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                 context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
@@ -3191,50 +3531,34 @@
                         
                                     context.useProgram(program);
                                     updateGLAttributes(context,adjust);
-                                    context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
+                                    context.drawArrays(context.TRIANGLE_STRIP, 0, generatedPathPolygon.length/2);
                                 }
                         
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
                         
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
                                     //calculate points based on the offset
                                         self.extremities.points = [];
-                                        for(var a = 0; a < points.length; a+=2){
-                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                                        for(var a = 0; a < generatedPathPolygon.length; a+=2){
+                                            var P = _canvas_.library.math.cartesianAngleAdjust(generatedPathPolygon[a]*offset.scale,generatedPathPolygon[a+1]*offset.scale, offset.angle);
                                             self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
                                     //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
+                                this.computeExtremities = computeExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                                 }
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
                                     //activate shape render code
@@ -3256,59 +3580,64 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.extremities = { points:[], boundingBox:{} };
                                     this.ignored = false;
                                     this.colour = {r:1,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}         x = a;         this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}         y = a;         this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;}    anchor = a;    this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}     width = a;     this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;}    height = a;    this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var font = 'default';   this.font =   function(a){ 
+                                                                if(a==undefined){return font;}
+                                                                font = a == undefined || a === '' || vectorLibrary[font] == undefined ? 'default' : a;
+                                                                points = vectorLibrary[font][a] == undefined ? vectorLibrary[font][''].vector : vectorLibrary[font][a].vector;
+                                                                pointsChanged = true;
                         
-                            //character
-                                var character = '';     
-                                this.character = function(a){ 
-                                    if(a==undefined){return character;} 
-                                    character = a; 
+                                                                if(this.devMode){console.log(this.getAddress()+'::font');} 
+                                                                computeExtremities(); 
+                                                            };
+                                    var character = '';     this.character = function(a){
+                                                                if(a==undefined){return character;} 
+                                                                character = a; 
+                                                                points = vectorLibrary[font][a] == undefined ? vectorLibrary[font][''].vector : vectorLibrary[font][a].vector;
+                                                                pointsChanged = true;
+                                                    
+                                                                if(this.devMode){console.log(this.getAddress()+'::character - '+a);}
+                                                                if(this.stopAttributeStartedExtremityUpdate){return;} 
+                                                                computeExtremities(); 
+                                                            };
                         
-                                    points = vectorLibrary[a] == undefined ? vectorLibrary[''].vector : vectorLibrary[a].vector;
+                            //addressing
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
-                                    this.extremities.isChanged = true; 
-                                    this.computeExtremities(); 
-                                }; setTimeout(function(){ self.character(character);},1);
+                            //character data
                                 this.ratio = function(){
-                                    if( vectorLibrary[character] == undefined || vectorLibrary[character].ratio == undefined ){ return {x:1,y:1}; }
+                                    if( vectorLibrary[font][character] == undefined || vectorLibrary[font][character].ratio == undefined ){ return {x:1,y:1}; }
                                     return {
-                                        x:vectorLibrary[character].ratio.x != undefined ? vectorLibrary[character].ratio.x : 1,
-                                        y:vectorLibrary[character].ratio.y != undefined ? vectorLibrary[character].ratio.y : 1,
+                                        x:vectorLibrary[font][character].ratio.x != undefined ? vectorLibrary[font][character].ratio.x : 1,
+                                        y:vectorLibrary[font][character].ratio.y != undefined ? vectorLibrary[font][character].ratio.y : 1,
                                     };
                                 };
                                 this.offset = function(){
-                                    if( vectorLibrary[character] == undefined || vectorLibrary[character].offset == undefined ){ return {x:0,y:0}; }
+                                    if( vectorLibrary[font][character] == undefined || vectorLibrary[font][character].offset == undefined ){ return {x:0,y:0}; }
                                     return {
-                                        x:vectorLibrary[character].offset.x != undefined ? vectorLibrary[character].offset.x : 0,
-                                        y:vectorLibrary[character].offset.y != undefined ? vectorLibrary[character].offset.y : 0,
+                                        x:vectorLibrary[font][character].offset.x != undefined ? vectorLibrary[font][character].offset.x : 0,
+                                        y:vectorLibrary[font][character].offset.y != undefined ? vectorLibrary[font][character].offset.y : 0,
                                     };
                                 };
                         
-                            //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
-                        
                             //webGL rendering functions
-                                var points = [
-                                    0,0,
-                                    1,0,
-                                    1,1,
-                        
-                                    0,0,
-                                    1,1,
-                                    0,1,
-                                ];
-                                var vertexShaderSource = `
+                                var points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
+                                var vertexShaderSource = 
+                                    _canvas_.library.gsls.geometry + `
                                     //constants
                                         attribute vec2 point;
                         
@@ -3346,18 +3675,19 @@
                                 function updateGLAttributes(context,adjust){
                                     //buffers
                                         //points
-                                            if(point.buffer == undefined){
+                                            if(point.buffer == undefined || pointsChanged){
                                                 point.attributeLocation = context.getAttribLocation(program, "point");
                                                 point.buffer = context.createBuffer();
                                                 context.enableVertexAttribArray(point.attributeLocation);
                                                 context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                 context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                                 context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                                pointsChanged = false;
                                             }else{
                                                 context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                 context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                                             }
-                                    
+                        
                                     //uniforms
                                         if( uniformLocations == undefined ){
                                             uniformLocations = {
@@ -3382,18 +3712,20 @@
                                 var program;
                                 function activateGLRender(context,adjust){
                                     if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                            
+                        
                                     context.useProgram(program);
                                     updateGLAttributes(context,adjust);
+                        
                                     context.drawArrays(context.TRIANGLES, 0, points.length/2);
                                 }
                         
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
                         
-                                    //calculate points based on the offset
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }    
+                                    //calculate adjusted offset based on the offset
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var adjusted = { 
                                             x: point.x*offset.scale + offset.x,
@@ -3401,7 +3733,7 @@
                                             scale: offset.scale*scale,
                                             angle: -(offset.angle + angle),
                                         };
-                        
+                                    //calculate points based on the adjusted offset
                                         self.extremities.points = [];
                                         for(var a = 0; a < points.length; a+=2){
                                             var P = {
@@ -3415,35 +3747,26 @@
                                             });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    
-                                    //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
-                                }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
+                                    //// "point in poly" detection currently doesn't understand polys with holes in them, so these complex
+                                    //// shapes are being simplified to their boudning boxes
+                                        self.extremities.points = [
+                                            {x:self.extremities.boundingBox.topLeft.x,y:self.extremities.boundingBox.topLeft.y},
+                                            {x:self.extremities.boundingBox.bottomRight.x,y:self.extremities.boundingBox.bottomRight.y},
+                                        ];
+                        
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                                }
+                                this.computeExtremities = computeExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
                                     //combine offset with shape's position, angle and scale to produce adjust value for render
@@ -3464,355 +3787,267 @@
                         };
                         
                         
-                        const OneOverZeroPointSeven = 1/0.7; const OOZPS = OneOverZeroPointSeven;
-                        this.character.vectorLibrary = {
-                            '':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ])
-                            },
                         
                         
                         
                         
-                            'A':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,1, 0.4,0, 0.6,0, 1,1, 0.8,1, 0.5,0.2, 0.4,0.5, 0.65,0.5, 0.7,0.7, 0.3,0.7, 0.2,1 ])
-                            },
-                            'B':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.7,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 0.9,0.1, 0.9,0.3, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0,1 ])
-                            },
-                            'C':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.7,0.8, 0.8,0.7, 1,0.8, 0.8,1, 0.3,1, 0,0.7, 0,0.3 ])
-                            },
-                            'D':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0,1 ])
-                            },
-                            'E':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,0.8, 1,0.8, 1,1, 0,1 ])
-                            },
-                            'F':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,1, 0,1 ])
-                            },
-                            'G':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.8,0.8, 0.8,0.6, 1,0.6, 1,1, 0.3,1, 0,0.7, 0,0.3 ])
-                            },
-                            'H':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 0.8,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.6, 0.2,0.6, 0.2,1, 0,1 ])
-                            },
-                            'I':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.4,0.8, 0.4,0.2, 0,0.2 ])
-                            },
-                            'J':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 0.4,1, 0,1, 0,0.8, 0.3,0.8, 0.4,0.7, 0.4,0.2, 0,0.2 ])
-                            },
-                            'K':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 1,0, 1,0.2, 0.5,0.4, 1,1, 0.75,1, 0.3,0.45, 0.2,0.5, 0.2,1, 0,1 ])
-                            },
-                            'L':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 1,0.8, 1,1, 0,1 ])
-                            },
-                            'M':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.3, 0.5,0.7, 0.2,0.3, 0.2,1, 0,1 ])
-                            },
-                            'N':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.8,0.7, 0.8,0, 1,0, 1,1, 0.8,1, 0.2,0.3, 0.2,1, 0,1 ])
-                            },
-                            'O':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.7,1, 0.3,1, 0,0.7, 0,0.3, 0.3,0, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2 ])
-                            },
-                            'P':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ])
-                            },
-                            'Q':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.95,0.75, 1,0.8, 1,1, 0.8,1, 0.5,0.7, 0.5,0.5, 0.7,0.5, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.75,0.95, 0.7,1, 0.3,1, 0,0.7, 0,0.3 ])
-                            },
-                            'R':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.6,0.6, 1,1, 0.75,1, 0.35,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ])
-                            },
-                            'S':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2 ])
-                            },
-                            'T':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,1, 0.4,1, 0.4,0.2, 0,0.2 ])
-                            },
-                            'U':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0, 1,0, 1,0.7, 0.7,1, 0.3,1, 0,0.7 ])
-                            },
-                            'V':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.7, 0.8,0, 1,0, 0.6,1, 0.4,1 ])
-                            },
-                            'W':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,1, 0.2,1, 0.5,0.6, 0.8,1, 1,1, 1,0, 0.8,0, 0.8,0.7, 0.5,0.3, 0.2,0.7, 0.2,0, 0,0 ])
-                            },
-                            'X':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.6,0.5, 1,1, 0.75,1, 0.5,0.65, 0.25,1, 0,1, 0.4,0.5 ])
-                            },
-                            'Y':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.25,1, 0,1, 0.35,0.5 ])
-                            },
-                            'Z':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.3,0.2, 1,0.8, 1,1, 0,1, 0,0.8, 0.7,0.8, 0,0.2 ])
-                            },
                         
                         
-                            
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.character.vectorLibrary = {};
+                        this.character.vectorLibrary.default = {
+                            '':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ]) },
+                        
+                        
+                            'A':{ vector:_canvas_.library.thirdparty.earcut([ 0,1, 0.4,0, 0.6,0, 1,1, 0.8,1, 0.5,0.2, 0.4,0.5, 0.65,0.5, 0.7,0.7, 0.3,0.7, 0.2,1 ]) },
+                            'B':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.7,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 0.9,0.1, 0.9,0.3, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0,1 ]) },
+                            'C':{ vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.7,0.8, 0.8,0.7, 1,0.8, 0.8,1, 0.3,1, 0,0.7, 0,0.3 ]) },
+                            'D':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0,1 ]) },
+                            'E':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,0.8, 1,0.8, 1,1, 0,1 ]) },
+                            'F':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,1, 0,1 ]) },
+                            'G':{ vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.8,0.8, 0.8,0.6, 1,0.6, 1,1, 0.3,1, 0,0.7, 0,0.3 ]) },
+                            'H':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 0.8,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.6, 0.2,0.6, 0.2,1, 0,1 ]) },
+                            'I':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.4,0.8, 0.4,0.2, 0,0.2 ]) },
+                            'J':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 0.4,1, 0,1, 0,0.8, 0.3,0.8, 0.4,0.7, 0.4,0.2, 0,0.2 ]) },
+                            'K':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 1,0, 1,0.2, 0.5,0.4, 1,1, 0.75,1, 0.3,0.45, 0.2,0.5, 0.2,1, 0,1 ]) },
+                            'L':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 1,0.8, 1,1, 0,1 ]) },
+                            'M':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.3, 0.5,0.7, 0.2,0.3, 0.2,1, 0,1 ]) },
+                            'N':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.8,0.7, 0.8,0, 1,0, 1,1, 0.8,1, 0.2,0.3, 0.2,1, 0,1 ]) },
+                            'O':{ vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.7,1, 0.3,1, 0,0.7, 0,0.3, 0.3,0, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2 ]) },
+                            'P':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]) },
+                            'Q':{ vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.95,0.75, 1,0.8, 1,1, 0.8,1, 0.5,0.7, 0.5,0.5, 0.7,0.5, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.75,0.95, 0.7,1, 0.3,1, 0,0.7, 0,0.3 ]) },
+                            'R':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.6,0.6, 1,1, 0.75,1, 0.35,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]) },
+                            'S':{ vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2 ]) },
+                            'T':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,1, 0.4,1, 0.4,0.2, 0,0.2 ]) },
+                            'U':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0, 1,0, 1,0.7, 0.7,1, 0.3,1, 0,0.7 ]) },
+                            'V':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.7, 0.8,0, 1,0, 0.6,1, 0.4,1 ]) },
+                            'W':{ vector:_canvas_.library.thirdparty.earcut([ 0,1, 0.2,1, 0.5,0.6, 0.8,1, 1,1, 1,0, 0.8,0, 0.8,0.7, 0.5,0.3, 0.2,0.7, 0.2,0, 0,0 ]) },
+                            'X':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.6,0.5, 1,1, 0.75,1, 0.5,0.65, 0.25,1, 0,1, 0.4,0.5 ]) },
+                            'Y':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.25,1, 0,1, 0.35,0.5 ]) },
+                            'Z':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.3,0.2, 1,0.8, 1,1, 0,1, 0,0.8, 0.7,0.8, 0,0.2 ]) },
+                        
                         
                             'a':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.7,0, 0.8,0.1*OOZPS, 0.8,0, 1,0, 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,0.6*OOZPS, 0.7,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 0.6,OOZPS/2, 0.7,0.4*OOZPS, 0.7,0.3*OOZPS, 0.6,0.2*OOZPS, 0.3,0.2*OOZPS, 0.2,0.3*OOZPS, 0,0.2*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.7,0, 0.8,0.1/0.7, 0.8,0, 1,0, 1,0.7/0.7, 0.8,0.7/0.7, 0.8,0.6/0.7, 0.7,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.2/0.7, 0.2,0.3/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 0.6,1/0.7/2, 0.7,0.4/0.7, 0.7,0.3/0.7, 0.6,0.2/0.7, 0.3,0.2/0.7, 0.2,0.3/0.7, 0,0.2/0.7 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             'b':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.8,0.3, 1,0.5, 1,0.8, 0.8,1, 0,1 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.8,0.3, 1,0.5, 1,0.8, 0.8,1, 0,1 ]),
+                                ratio:{x:2/3}
                             },
                             'c':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.2*OOZPS, 0.3,0.2*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 1,OOZPS/2, 1,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.3*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.2/0.7, 0.3,0.2/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 1,1/0.7/2, 1,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.3/0.7 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             'd':{
-                                vector: _canvas_.library.thirdparty.earcut([ 1,0, 0.8,0, 0.8,0.8, 0.3,0.8, 0.2,0.7, 0.2,0.6, 0.3,0.5, 0.8,0.5, 0.8,0.3, 0.2,0.3, 0,0.5, 0,0.8, 0.2,1, 1,1 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 1,0, 0.8,0, 0.8,0.8, 0.3,0.8, 0.2,0.7, 0.2,0.6, 0.3,0.5, 0.8,0.5, 0.8,0.3, 0.2,0.3, 0,0.5, 0,0.8, 0.2,1, 1,1 ]),
+                                ratio:{x:2/3},
                             },
                             'e':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2*OOZPS, 1,0.4*OOZPS, 0.2,0.4*OOZPS, 0.2,OOZPS/4, 0.8,OOZPS/4, 0.7,0.15*OOZPS, 0.3,0.15*OOZPS, 0.2,0.3*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 1,OOZPS/2, 0.8,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.2*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2/0.7, 1,0.4/0.7, 0.2,0.4/0.7, 0.2,1/0.7/4, 0.8,1/0.7/4, 0.7,0.15/0.7, 0.3,0.15/0.7, 0.2,0.3/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 1,1/0.7/2, 0.8,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.2/0.7 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             'f':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 1,0, 0.9,0.2, 0.6,0.2, 0.6,0.3, 0.9,0.3, 0.9,0.5, 0.6,0.5, 0.6,1, 0.4,1, 0.4,0.5, 0.1,0.5, 0.1,0.3, 0.4,0.3])
+                                vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 1,0, 0.9,0.2, 0.6,0.2, 0.6,0.3, 0.9,0.3, 0.9,0.5, 0.6,0.5, 0.6,1, 0.4,1, 0.4,0.5, 0.1,0.5, 0.1,0.3, 0.4,0.3]),
+                                ratio:{x:2/3},
                             },
                             'g':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0*(1/1.2), 0.7,0*(1/1.2), 0.8,0.1*(1/1.2), 0.8,0*(1/1.2), 1,0*(1/1.2), 1,1*(1/1.2), 0.8,1.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1*(1/1.2), 0,0.9*(1/1.2), 0.2,0.9*(1/1.2), 0.3,1*(1/1.2), 0.7,1*(1/1.2), 0.8,0.9*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.3,0.2*(1/1.2), 0.2,0.3*(1/1.2), 0.2,0.4*(1/1.2), 0.3,0.5*(1/1.2), 0.8,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0,0.5*(1/1.2), 0,0.2*(1/1.2) ]),
-                                ratio: {y:1.2},
-                                offset: {y:0.3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0*(1/1.2), 0.7,0*(1/1.2), 0.8,0.1*(1/1.2), 0.8,0*(1/1.2), 1,0*(1/1.2), 1,1*(1/1.2), 0.8,1.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1*(1/1.2), 0,0.9*(1/1.2), 0.2,0.9*(1/1.2), 0.3,1*(1/1.2), 0.7,1*(1/1.2), 0.8,0.9*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.3,0.2*(1/1.2), 0.2,0.3*(1/1.2), 0.2,0.4*(1/1.2), 0.3,0.5*(1/1.2), 0.8,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0,0.5*(1/1.2), 0,0.2*(1/1.2) ]),
+                                ratio:{x:2/3,y:1.2}, offset:{y:0.3},
                             },
                             'h':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 0.8,0.3, 1,0.5, 1,1, 0.8,1, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,1, 0,1 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 0.8,0.3, 1,0.5, 1,1, 0.8,1, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,1, 0,1 ]),
+                                ratio:{x:2/3},
                             },
                             'i':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0,0.2, 0,0.3, 1,0.3, 1,1, 0,1 ]),
-                                ratio: {x:0.2},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0,0.2, 0,0.3, 1,0.3, 1,1, 0,1 ]),
+                                ratio:{x:0.2},
                             },
                             'j':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.2, 0.3,0.2, 0.3,0.3, 0.7,0.3, 0.7,0.7, 0.4,1, 0,1, 0,0.8, 0.2,0.8, 0.3,0.7 ]),
-                                ratio: {x:2/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.2, 0.3,0.2, 0.3,0.3, 0.7,0.3, 0.7,0.7, 0.4,1, 0,1, 0,0.8, 0.2,0.8, 0.3,0.7 ]),
+                                ratio:{x:2/3},
                             },
                             'k':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 1,0.4, 1,0.6, 0.7,0.6, 1,1, 0.75,1, 0.45,0.6, 0.2,0.6, 0.2,1, 0,1 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 1,0.4, 1,0.6, 0.7,0.6, 1,1, 0.75,1, 0.45,0.6, 0.2,0.6, 0.2,1, 0,1 ])
                             },
                             'l':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.4,0, 0.4,0.7, 0.6,0.8, 1,0.8, 1,1, 0.4,1, 0,0.8 ]),
-                                ratio: {x:2/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.4,0, 0.4,0.7, 0.6,0.8, 1,0.8, 1,1, 0.4,1, 0,0.8 ]),
+                                ratio:{x:1/3},
                             },
                             'm':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1*OOZPS, 0.3,0, 0.5,0.1*OOZPS, 0.7,0, 1,0.1*OOZPS, 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,0.3*OOZPS, 0.7,0.2*OOZPS, 0.6,0.3*OOZPS, 0.6,0.7*OOZPS, 0.4,0.7*OOZPS, 0.4,0.3*OOZPS, 0.3,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.7*OOZPS, 0,0.7*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1/0.7, 0.3,0, 0.5,0.1/0.7, 0.7,0, 1,0.1/0.7, 1,0.7/0.7, 0.8,0.7/0.7, 0.8,0.3/0.7, 0.7,0.2/0.7, 0.6,0.3/0.7, 0.6,0.7/0.7, 0.4,0.7/0.7, 0.4,0.3/0.7, 0.3,0.2/0.7, 0.2,0.3/0.7, 0.2,0.7/0.7, 0,0.7/0.7 ]),
+                                ratio:{y:2/3}, offset:{y:1/3},
                             },
                             'n':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1*OOZPS, 0.5,0, 1,0.1*OOZPS, 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,OOZPS/4, 0.5,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.7*OOZPS, 0,0.7*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1/0.7, 0.5,0, 1,0.1/0.7, 1,0.7/0.7, 0.8,0.7/0.7, 0.8,1/0.7/4, 0.5,0.2/0.7, 0.2,0.3/0.7, 0.2,0.7/0.7, 0,0.7/0.7 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             'o':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2*OOZPS, 1,OOZPS/2, 0.8,0.7*OOZPS, 0.5,0.7*OOZPS, 0.5,OOZPS/2, 0.7,OOZPS/2, 0.8,0.4*OOZPS, 0.8,0.3*OOZPS, 0.7,0.2*OOZPS, 0.3,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.4*OOZPS, 0.3,OOZPS/2, 0.5,OOZPS/2, 0.5,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0,0.2*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2/0.7, 1,1/0.7/2, 0.8,0.7/0.7, 0.5,0.7/0.7, 0.5,1/0.7/2, 0.7,1/0.7/2, 0.8,0.4/0.7, 0.8,0.3/0.7, 0.7,0.2/0.7, 0.3,0.2/0.7, 0.2,0.3/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 0.5,1/0.7/2, 0.5,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.2/0.7 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             'p':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.8,0*(1/1.2), 1,0.2*(1/1.2), 1,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0.2,0.5*(1/1.2), 0.7,0.5*(1/1.2), 0.8,0.4*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.2,0.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1.2*(1/1.2) ]),
-                                offset: {y:0.3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.8,0*(1/1.2), 1,0.2*(1/1.2), 1,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0.2,0.5*(1/1.2), 0.7,0.5*(1/1.2), 0.8,0.4*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.2,0.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1.2*(1/1.2) ]),
+                                ratio:{x:2/3}, offset:{y:2/5},
                             },
                             'q':{
-                                vector: _canvas_.library.thirdparty.earcut([ 1,0*(1/1.2), 0.2,0*(1/1.2), 0,0.2*(1/1.2), 0,0.5*(1/1.2), 0.2,0.7*(1/1.2), 0.8,0.7*(1/1.2), 0.8,0.5*(1/1.2), 0.3,0.5*(1/1.2), 0.2,0.4*(1/1.2), 0.2,0.3*(1/1.2), 0.3,0.2*(1/1.2), 0.8,0.2*(1/1.2), 0.8,1.2*(1/1.2), 1,1.2*(1/1.2) ]),
-                                offset: {y:0.3},
+                                vector:_canvas_.library.thirdparty.earcut([ 1,0*(1/1.2), 0.2,0*(1/1.2), 0,0.2*(1/1.2), 0,0.5*(1/1.2), 0.2,0.7*(1/1.2), 0.8,0.7*(1/1.2), 0.8,0.5*(1/1.2), 0.3,0.5*(1/1.2), 0.2,0.4*(1/1.2), 0.2,0.3*(1/1.2), 0.3,0.2*(1/1.2), 0.8,0.2*(1/1.2), 0.8,1.2*(1/1.2), 1,1.2*(1/1.2) ]),
+                                offset:{y:0.3},
                             },
                             'r':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1*OOZPS, 0.5,0, 1,0.1*OOZPS, 1,0.3*OOZPS, 0.5,0.2*OOZPS, 0.2,0.3*OOZPS, 0.2,0.7*OOZPS, 0,0.7*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1/0.7, 0.5,0, 1,0.1/0.7, 1,0.3/0.7, 0.5,0.2/0.7, 0.2,0.3/0.7, 0.2,0.7/0.7, 0,0.7/0.7 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             's':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2*OOZPS, 0.4,0.2*OOZPS, 1,0.4*OOZPS, 0.8,0.7*OOZPS, 0.2,0.7*OOZPS, 0,OOZPS/2, 0.6,OOZPS/2, 0,0.3*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2/0.7, 0.4,0.2/0.7, 1,0.4/0.7, 0.8,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0.6,1/0.7/2, 0,0.3/0.7 ]),
+                                ratio:{y:2/3}, offset:{y:1/3},
                             },
                             't':{
-                                vector: _canvas_.library.thirdparty.earcut([ 1/3,0, 2/3,0, 2/3,0.2, 1,0.2, 1,0.4, 2/3,0.4, 2/3,0.8, 1,1, 0.5,1, 1/3,0.9, 1/3,0.4, 0,0.4, 0,0.2, 1/3,0.2 ]),
-                                ratio: {x:2/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 1/3,0, 2/3,0, 2/3,0.2, 1,0.2, 1,0.4, 2/3,0.4, 2/3,0.8, 1,1, 0.5,1, 1/3,0.9, 1/3,0.4, 0,0.4, 0,0.2, 1/3,0.2 ]),
+                                ratio:{x:2/3},
                             },
                             'u':{
-                                vector: _canvas_.library.thirdparty.earcut([ 1,0.7*OOZPS, 0.8,0.7*OOZPS, 0.8,0.6*OOZPS, 0.5,0.7*OOZPS, 0,0.6*OOZPS, 0,0, 0.2,0, 0.2,0.45*OOZPS, 0.5,OOZPS/2, 0.8,0.4*OOZPS, 0.8,0, 1,0 ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 1,0.7/0.7, 0.8,0.7/0.7, 0.8,0.6/0.7, 0.5,0.7/0.7, 0,0.6/0.7, 0,0, 0.2,0, 0.2,0.45/0.7, 0.5,1/0.7/2, 0.8,0.4/0.7, 0.8,0, 1,0 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             'v':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,OOZPS/2, 0.8,0, 1,0, 0.6,0.7*OOZPS, 0.4,0.7*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,1/0.7/2, 0.8,0, 1,0, 0.6,0.7/0.7, 0.4,0.7/0.7 ]),
+                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
                             },
                             'w':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.3,0.4*OOZPS, 0.4,0.1*OOZPS, 0.6,0.1*OOZPS, 0.7,0.4*OOZPS, 0.8,0, 1,0, 0.8,0.7*OOZPS, 0.6,0.7*OOZPS, 0.5,0.4*OOZPS, 0.4,0.7*OOZPS, 0.2,0.7*OOZPS ]),
-                                ratio: {x:1, y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.3,0.4/0.7, 0.4,0.1/0.7, 0.6,0.1/0.7, 0.7,0.4/0.7, 0.8,0, 1,0, 0.8,0.7/0.7, 0.6,0.7/0.7, 0.5,0.4/0.7, 0.4,0.7/0.7, 0.2,0.7/0.7 ]),
+                                ratio:{x:1, y:2/3}, offset:{y:1/3},
                             },
                             'x':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 0.3,0, 0.5,0.2*OOZPS, 0.7,0, 1,0, 0.65,0.35*OOZPS, 1,0.7*OOZPS, 0.7,0.7*OOZPS, 0.5,OOZPS/2, 0.3,0.7*OOZPS, 0,0.7*OOZPS, 0.35,0.35*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.3,0, 0.5,0.2/0.7, 0.7,0, 1,0, 0.65,0.35/0.7, 1,0.7/0.7, 0.7,0.7/0.7, 0.5,1/0.7/2, 0.3,0.7/0.7, 0,0.7/0.7, 0.35,0.35/0.7 ]),
+                                ratio:{y:2/3}, offset:{y:1/3},
                             },
                             'y':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.3,0*(1/1.2), 0.5,0.35*(1/1.2), 0.7,0*(1/1.2), 1,0*(1/1.2), 0.3,1.2*(1/1.2), 0,1.2*(1/1.2), 0.35,0.55*(1/1.2) ]),
-                                offset: {y:0.3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.3,0*(1/1.2), 0.5,0.35*(1/1.2), 0.7,0*(1/1.2), 1,0*(1/1.2), 0.3,1.2*(1/1.2), 0,1.2*(1/1.2), 0.35,0.55*(1/1.2) ]),
+                                ratio:{x:2/3,}, offset:{y:0.3},
                             },
                             'z':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2*OOZPS, 0.4,0.2*OOZPS, 1,OOZPS/2, 1,0.7*OOZPS, 0,0.7*OOZPS, 0,OOZPS/2, 0.6,OOZPS/2, 0,0.2*OOZPS ]),
-                                ratio: {y:2/3},
-                                offset: {y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2/0.7, 0.4,0.2/0.7, 1,1/0.7/2, 1,0.7/0.7, 0,0.7/0.7, 0,1/0.7/2, 0.6,1/0.7/2, 0,0.2/0.7 ]),
+                                ratio:{y:2/3}, offset:{y:1/3},
                             },
                         
                         
-                        
-                        
-                            '0':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 1,0.7, 0.8,1, 0.2,1, 0,0.7, 0,0.3, 0.2,0, 0.3,0.2, 0.2,0.4, 0.2,0.6, 0.3,0.8, 0.7,0.8, 0.8,0.6, 0.8,0.4, 0.7,0.2, 0.3,0.2 ])
-                            },
-                            '1':{
-                                vector: _canvas_.library.thirdparty.earcut([ 1/2,0, 2/3,0, 2/3,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 1/3,0.8, 1/3,0.3, 0,0.3, 0,0.2 ])
-                            },
-                            '2':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.5, 0.4,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.8,0.4, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3 ])
-                            },
-                            '3':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.5,0.6, 0.5,0.4, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.2,0.4, 0,0.4 ])
-                            },
-                            '4':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.6,0, 0.8,0, 0.8,0.6, 1,0.6, 1,0.8, 0.8,0.8, 0.8,1, 0.6,1, 0.6,0.3, 0.3,0.6, 0.6,0.6, 0.6,0.8, 0,0.8, 0,0.6 ])
-                            },
-                            '5':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 0.9,0.4, 1,0.5, 1,0.8, 0.8,1, 0.1,1, 0,0.9, 0,0.7, 0.2,0.7, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0,0.6 ])
-                            },
-                            '6':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.2, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.2 ])
-                            },
-                            '7':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.5,1, 0.25,1, 0.75,0.2, 0,0.2 ])
-                            },
-                            '8':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.3,0.6, 0.2,0.7, 0,0.6, 0.1,0.5, 0,0.4, 0,0.2, 0.2,0.3, 0.3,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.2 ])
-                            },
-                            '9':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.8 ])
-                            },
-                        
-                        
+                            '0':{ vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 1,0.7, 0.8,1, 0.2,1, 0,0.7, 0,0.3, 0.2,0, 0.3,0.2, 0.2,0.4, 0.2,0.6, 0.3,0.8, 0.7,0.8, 0.8,0.6, 0.8,0.4, 0.7,0.2, 0.3,0.2 ]) },
+                            '1':{ vector:_canvas_.library.thirdparty.earcut([ 1/2,0, 2/3,0, 2/3,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 1/3,0.8, 1/3,0.3, 0,0.3, 0,0.2 ]) },
+                            '2':{ vector:_canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.5, 0.4,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.8,0.4, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3 ]) },
+                            '3':{ vector:_canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.5,0.6, 0.5,0.4, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.2,0.4, 0,0.4 ]) },
+                            '4':{ vector:_canvas_.library.thirdparty.earcut([ 0.6,0, 0.8,0, 0.8,0.6, 1,0.6, 1,0.8, 0.8,0.8, 0.8,1, 0.6,1, 0.6,0.3, 0.3,0.6, 0.6,0.6, 0.6,0.8, 0,0.8, 0,0.6 ]) },
+                            '5':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 0.9,0.4, 1,0.5, 1,0.8, 0.8,1, 0.1,1, 0,0.9, 0,0.7, 0.2,0.7, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0,0.6 ]) },
+                            '6':{ vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.2, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.2 ]) },
+                            '7':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.5,1, 0.25,1, 0.75,0.2, 0,0.2 ]) },
+                            '8':{ vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.3,0.6, 0.2,0.7, 0,0.6, 0.1,0.5, 0,0.4, 0,0.2, 0.2,0.3, 0.3,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.2 ]) },
+                            '9':{ vector:_canvas_.library.thirdparty.earcut([ 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.8 ]) },
                         
                         
                             '.':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
-                                ratio: {x:0.2, y:0.2},
-                                offset: {y:0.8},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                ratio:{x:0.2, y:0.2}, offset:{y:0.8},
                             },
                             ',':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0., 1,0, 0.8,1, 0,1 ]),
-                                ratio: {x:0.2, y:0.4},
-                                offset: {y:0.8},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0., 1,0, 0.8,1, 0,1 ]),
+                                ratio:{x:0.2, y:0.4}, offset:{y:0.8},
                             },
                             ':':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
-                                ratio: {x:0.2, y:0.8},
-                                offset: {y:0.1},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
+                                ratio:{x:0.2, y:0.8}, offset:{y:0.1},
                             },
                             ';':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.3, 0.2,0.3, 0.2,0.7, 1,0.7, 0.8,1, 0,1, 0.2,0.7 ]),
-                                ratio: {x:0.2, y:0.8},
-                                offset: {y:0.1},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.3, 0.2,0.3, 0.2,0.7, 1,0.7, 0.8,1, 0,1, 0.2,0.7 ]),
+                                ratio:{x:0.2, y:0.8}, offset:{y:0.1},
                             },
                             '?':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 0.6,0.5, 0.6,0.7, 0.4,0.7, 0.4,0.8, 0.6,0.8, 0.6,1, 0.4,1, 0.4,0.4, 0.7,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3, 0,0.2 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 0.6,0.5, 0.6,0.7, 0.4,0.7, 0.4,0.8, 0.6,0.8, 0.6,1, 0.4,1, 0.4,0.4, 0.7,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3, 0,0.2 ])
                             },
                             '!':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.7, 0,0.7, 0,0.8, 1,0.8, 1,1, 0,1 ]),
-                                ratio: {x:0.2},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.7, 0,0.7, 0,0.8, 1,0.8, 1,1, 0,1 ]),
+                                ratio:{x:0.2},
                             },
                             '/':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 1,0, 0.7,1, 0,1 ]),
-                                ratio: {x:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 1,0, 0.7,1, 0,1 ]),
+                                ratio:{x:0.4},
                             },
                            '\\':{
-                               vector: _canvas_.library.thirdparty.earcut([ 0.7,0, 0,0, 0.3,1, 1,1 ]),
-                               ratio: {x:0.4},
+                               vector:_canvas_.library.thirdparty.earcut([ 0.7,0, 0,0, 0.3,1, 1,1 ]),
+                               ratio:{x:0.4},
                             },
                             '(':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.6,0, 1,0, 0.6,0.2, 0.4,0.5, 0.6,0.8, 1,1, 0.6,1, 0.2,0.8, 0,0.5, 0.2,0.2 ]),
-                                ratio: {x:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.6,0, 1,0, 0.6,0.2, 0.4,0.5, 0.6,0.8, 1,1, 0.6,1, 0.2,0.8, 0,0.5, 0.2,0.2 ]),
+                                ratio:{x:0.4},
                             },
                             ')':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0.4,0.2, 0.6,0.5, 0.4,0.8, 0,1, 0.4,1, 0.8,0.8, 1,0.5, 0.8,0.2 ]),
-                                ratio: {x:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0.4,0.2, 0.6,0.5, 0.4,0.8, 0,1, 0.4,1, 0.8,0.8, 1,0.5, 0.8,0.2 ]),
+                                ratio:{x:0.4},
                             },
                             '[':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.4,0.2, 0.4,0.8, 1,0.8, 1,1, 0,1 ]),
-                                ratio: {x:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.4,0.2, 0.4,0.8, 1,0.8, 1,1, 0,1 ]),
+                                ratio:{x:0.4},
                             },
                             ']':{
-                                vector: _canvas_.library.thirdparty.earcut([ 1,0, 0,0, 0,0.2, 0.6,0.2, 0.6,0.8, 0,0.8, 0,1, 1,1  ]),
-                                ratio: {x:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 1,0, 0,0, 0,0.2, 0.6,0.2, 0.6,0.8, 0,0.8, 0,1, 1,1  ]),
+                                ratio:{x:0.4},
                             },
                             '#':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.2,0, 0.4,0, 0.38,0.2, 0.68,0.2, 0.7,0, 0.9,0, 0.88,0.2, 1,0.2, 1,0.4, 0.86,0.4, 0.84,0.6, 1,0.6, 1,0.8, 0.82,0.8, 0.8,1, 0.6,1, 0.62,0.8, 0.32,0.8, 0.3,1, 0.1,1, 0.12,0.8, 0,0.8, 0,0.6, 0.14,0.6, 0.16,0.4, 0,0.4, 0,0.2, 0.18,0.2, 0.36,0.4, 0.34,0.6, 0.64,0.6, 0.66,0.4, 0.36,0.4, 0.18,0.2 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.4,0, 0.38,0.2, 0.68,0.2, 0.7,0, 0.9,0, 0.88,0.2, 1,0.2, 1,0.4, 0.86,0.4, 0.84,0.6, 1,0.6, 1,0.8, 0.82,0.8, 0.8,1, 0.6,1, 0.62,0.8, 0.32,0.8, 0.3,1, 0.1,1, 0.12,0.8, 0,0.8, 0,0.6, 0.14,0.6, 0.16,0.4, 0,0.4, 0,0.2, 0.18,0.2, 0.36,0.4, 0.34,0.6, 0.64,0.6, 0.66,0.4, 0.36,0.4, 0.18,0.2 ])
                             },
                             '-':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
-                                ratio: {x:0.8, y:0.2},
-                                offset: {y:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                ratio:{x:0.8, y:0.2}, offset:{y:0.4},
                             },
                             '_':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
-                                ratio: {y:0.2},
-                                offset: {y:1},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                ratio:{y:0.2}, offset:{y:1},
                             },
                             "'":{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
-                                ratio: {x:0.2, y:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                ratio:{x:0.2, y:0.4},
                             },
                             '"':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0,1, 0.4,1, 0.4,0, 0.6,0, 0.6,1, 1,1, 1,0 ]),
-                                ratio: {x:0.5, y:0.4},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0,1, 0.4,1, 0.4,0, 0.6,0, 0.6,1, 1,1, 1,0 ]),
+                                ratio:{x:0.5, y:0.4},
                             },
                             '|':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1  ]),
-                                ratio: {x:0.2},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1  ]),
+                                ratio:{x:0.2},
                             },
                             '>':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0.4, 1,0.6, 0,1, 0,0.8, 0.7,0.5, 0,0.2 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0.4, 1,0.6, 0,1, 0,0.8, 0.7,0.5, 0,0.2 ])
                             },
                             '<':{
-                                vector: _canvas_.library.thirdparty.earcut([ 1,0, 0,0.4, 0,0.6, 1,1, 1,0.8, 0.3,0.5, 1,0.2 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 1,0, 0,0.4, 0,0.6, 1,1, 1,0.8, 0.3,0.5, 1,0.2 ])
                             },
                             '+':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.3, 1,0.3, 1,0.7, 0.7,0.7, 0.7,1, 0.3,1, 0.3,0.7, 0,0.7, 0,0.3, 0.3,0.3 ]),
-                                ratio: {x:0.5, y:0.5},
-                                offset:{y:0.25}
+                                vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.3, 1,0.3, 1,0.7, 0.7,0.7, 0.7,1, 0.3,1, 0.3,0.7, 0,0.7, 0,0.3, 0.3,0.3 ]),
+                                ratio:{x:0.5, y:0.5}, offset:{y:0.25}
                             },
                             '=':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
-                                ratio: {x:0.8, y:0.5},
-                                offset:{y:0.25}
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
+                                ratio:{x:0.8, y:0.5}, offset:{y:0.25}
                             },
                             '&':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.1,0, 0.6,0, 0.7,0.2, 0.7,0.4, 0.6,0.5, 0.4,0.6, 0.6,0.7, 0.8,0.5, 0.9,0.6, 0.9,0.7, 0.8,0.8, 1,0.8, 1,1, 0.8,1, 0.6,0.9, 0.5,1, 0.1,1, 0,0.9, 0,0.6, 0.1,0.5, 0.2,0.65, 0.2,0.8, 0.4,0.8, 0.2,0.65, 0,0.4, 0,0.3, 0.1,0, 0.2,0.2, 0.2,0.3, 0.3,0.4, 0.5,0.4, 0.5,0.2, 0.2,0.2 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0.1,0, 0.6,0, 0.7,0.2, 0.7,0.4, 0.6,0.5, 0.4,0.6, 0.6,0.7, 0.8,0.5, 0.9,0.6, 0.9,0.7, 0.8,0.8, 1,0.8, 1,1, 0.8,1, 0.6,0.9, 0.5,1, 0.1,1, 0,0.9, 0,0.6, 0.1,0.5, 0.2,0.65, 0.2,0.8, 0.4,0.8, 0.2,0.65, 0,0.4, 0,0.3, 0.1,0, 0.2,0.2, 0.2,0.3, 0.3,0.4, 0.5,0.4, 0.5,0.2, 0.2,0.2 ])
                             },
                             '*':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.4,0, 0.6,0, 0.6,0.25, 0.775,0.075, 0.925,0.225, 0.75,0.4, 1,0.4, 1,0.6, 0.75,0.6, 0.925,0.775, 0.775,0.925, 0.6,0.75, 0.6,1, 0.4,1, 0.4,0.75, 0.225,0.925, 0.075,0.775, 0.25,0.6, 0,0.6, 0,0.4, 0.25,0.4, 0.075,0.225, 0.225,0.075, 0.4,0.25 ]),
-                                ratio: {x:0.5, y:0.5},
-                                offset:{y:0.25}
+                                vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 0.6,0, 0.6,0.25, 0.775,0.075, 0.925,0.225, 0.75,0.4, 1,0.4, 1,0.6, 0.75,0.6, 0.925,0.775, 0.775,0.925, 0.6,0.75, 0.6,1, 0.4,1, 0.4,0.75, 0.225,0.925, 0.075,0.775, 0.25,0.6, 0,0.6, 0,0.4, 0.25,0.4, 0.075,0.225, 0.225,0.075, 0.4,0.25 ]),
+                                ratio:{x:0.5, y:0.5}, offset:{y:0.25}
                             },
                             '~':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0,0.25, 0.25,0.0, 0.75,0.5, 1,0.25, 1,0.75, 0.75,1, 0.25,0.5, 0,0.75 ]),
-                                ratio: {x:0.8, y:0.4},
-                                offset: {y:0.25},
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0.25, 0.25,0.0, 0.75,0.5, 1,0.25, 1,0.75, 0.75,1, 0.25,0.5, 0,0.75 ]),
+                                ratio:{x:0.8, y:0.4}, offset:{y:0.25},
                             },
                             '%':{
-                                vector: _canvas_.library.thirdparty.earcut([ 0.8,0, 1,0.2, 0.2,1, 0,0.8, 0,0.2, 0,0.1, 0.1,0, 0.2,0, 0.3,0.1, 0.3,0.2, 0.3,0.2, 0.2,0.3, 0.1,0.3, 0,0.2, 0,0.8, 0.2,1, 0.8,1, 0.7,0.9, 0.7,0.8, 0.8,0.7, 0.9,0.7, 1,0.8, 1,0.9, 0.9,1, 0.8,1, 0.2,1, 0,0.8 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0.8,0, 1,0.2, 0.2,1, 0,0.8, 0,0.2, 0,0.1, 0.1,0, 0.2,0, 0.3,0.1, 0.3,0.2, 0.3,0.2, 0.2,0.3, 0.1,0.3, 0,0.2, 0,0.8, 0.2,1, 0.8,1, 0.7,0.9, 0.7,0.8, 0.8,0.7, 0.9,0.7, 1,0.8, 1,0.9, 0.9,1, 0.8,1, 0.2,1, 0,0.8 ])
                             },
                         };
                         this.rectangle = function(){
@@ -3826,21 +4061,24 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{}, isChanged:true };
+                                    this.extremities = { points:[], boundingBox:{} };
                                     this.ignored = false;
                                     this.colour = {r:1,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; this.extremities.isChanged = true; this.computeExtremities(); };
-                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  this.extremities.isChanged = true; this.computeExtremities(); };
+                                    var x = 0;              this.x =      function(a){ if(a==undefined){return x;}      x = a;      if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;              this.y =      function(a){ if(a==undefined){return y;}      y = a;      if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;          this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var width = 10;         this.width =  function(a){ if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var height = 10;        this.height = function(a){ if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                         
                             //addressing
-                                this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //webGL rendering functions
                                 var points = [
@@ -3931,10 +4169,11 @@
                         
                             //extremities
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
-                                        if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    //calculate points based on the offset
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                                    
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    //calculate adjusted offset based on the offset
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var adjusted = { 
                                             x: point.x*offset.scale + offset.x,
@@ -3942,7 +4181,7 @@
                                             scale: offset.scale*scale,
                                             angle: -(offset.angle + angle),
                                         };
-                        
+                                    //calculate points based on the adjusted offset
                                         self.extremities.points = [];
                                         for(var a = 0; a < points.length; a+=2){
                                             var P = {
@@ -3956,35 +4195,19 @@
                                             });
                                         }
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                    
+                                
                                     //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
-                                var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-                                this.computeExtremities = function(informParent,offset){
-                                    if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
-                                    if(
-                                        this.extremities.isChanged ||
-                                        oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-                                    ){
-                                        computeExtremities(informParent,offset);
-                                        this.extremities.isChanged = false;
-                                        oldOffset.x = offset.x;
-                                        oldOffset.y = offset.y;
-                                        oldOffset.scale = offset.scale;
-                                        oldOffset.angle = offset.angle;
-                                    }
-                                };
+                                this.computeExtremities = computeExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
                                 };
                                 this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
                                     //combine offset with shape's position, angle and scale to produce adjust value for render
@@ -4017,19 +4240,25 @@
                                     this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
                                     this.ignored = false;
                                     this.heedCamera = false;
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
                                 
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;     this.x =     function(a){ if(a==undefined){return x;}     x = a;     computeExtremities(); };
-                                    var y = 0;     this.y =     function(a){ if(a==undefined){return y;}     y = a;     computeExtremities(); };
-                                    var angle = 0; this.angle = function(a){ if(a==undefined){return angle;} angle = a; computeExtremities(); };
-                                    var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
+                                    var x = 0;     this.x =     function(a){ if(a==undefined){return x;}     x = a;     if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;     this.y =     function(a){ if(a==undefined){return y;}     y = a;     if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0; this.angle = function(a){ if(a==undefined){return angle;} angle = a; if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                         
                             //addressing
                                 this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                         
                             //group functions
+                                var children = [];
+                        
                                 function getChildByName(name){ return children.find(a => a.name == name); }
                                 function checkForName(name){ return getChildByName(name) != undefined; }
+                                function checkForShape(shape){ return children.find(a => a == shape); }
                                 function isValidShape(shape){
                                     if( shape == undefined ){ return false; }
                                     if( shape.name.length == 0 ){
@@ -4044,15 +4273,9 @@
                                     return true;
                                 }
                         
-                                var children = [];
                                 this.children = function(){return children;};
                                 this.getChildByName = getChildByName;
-                                this.contains = function(child){
-                                    for(var a = 0; a < children.length; a++){
-                                        if(children[a] === child){return true;}
-                                    }
-                                    return false;
-                                };
+                                this.contains = checkForShape;
                                 this.append = function(shape){
                                     if( !isValidShape(shape) ){ return; }
                         
@@ -4072,39 +4295,40 @@
                                 this.getElementsUnderPoint = function(x,y){
                                     var returnList = [];
                         
+                                    //run though children backwords (thus, front to back)
                                     for(var a = children.length-1; a >= 0; a--){
-                                        var item = children[a];
+                                        //if child wants to be ignored, just move on to the next one
+                                            if( children[a].ignored ){ continue; }
                         
-                                        if(item.ignored){continue;}
+                                        //if the point is not within this child's bounding box, just move on to the next one
+                                            if( !_canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
                         
-                                        if( _canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, item.extremities.boundingBox ) ){
-                                            if( item.getType() == 'group' ){
-                                                returnList = returnList.concat( item.getElementsUnderPoint(x,y) );
-                                            }else{
-                                                if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, item.extremities.points ) ){
-                                                    returnList = returnList.concat( item );
-                                                }
-                                            }
-                                        }
+                                        //if the child is a group type; pass this point to it's "getElementsUnderPoint" function and collect the results, then move on to the next item
+                                            if( children[a].getType() == 'group' ){ returnList = returnList.concat( children[a].getElementsUnderPoint(x,y) ); continue; }
+                        
+                                        //if this point exists within the child; add it to the results list
+                                            if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, children[a].extremities.points ) ){ returnList = returnList.concat( children[a] ); }
                                     }
                         
                                     return returnList;
                                 };
                                 this.getElementsUnderArea = function(points){
                                     var returnList = [];
-                                    children.forEach(function(item){
-                                        if(item.ignored){return;}
                         
-                                        if( _canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){
-                                            if( item.getType() == 'group' ){
-                                                returnList = returnList.concat( item.getElementUnderArea(points) );
-                                            }else{
-                                                if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){
-                                                    returnList = returnList.concat( item );
-                                                }
-                                            }
-                                        }
-                                    });
+                                    //run though children backwords (thus, front to back)
+                                    for(var a = children.length-1; a >= 0; a--){
+                                        //if child wants to be ignored, just move on to the next one
+                                            if( children[a].ignored ){ continue; }
+                        
+                                        //if the area does not overlap with this child's bounding box, just move on to the next one
+                                            if( !_canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
+                        
+                                        //if the child is a group type; pass this area to it's "getElementsUnderArea" function and collect the results, then move on to the next item
+                                            if( children[a].getType() == 'group' ){ returnList = returnList.concat( item.getElementUnderArea(points) ); continue; }
+                        
+                                        //if this area overlaps with the child; add it to the results list
+                                            if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){ returnList = returnList.concat( children[a] ); }
+                                    }
                         
                                     return returnList;
                                 };
@@ -4112,11 +4336,8 @@
                                     var result = {name:this.name,type:type,children:[]};
                         
                                     children.forEach(function(a){
-                                        if(a.getType() == 'group'){
-                                            result.children.push( a.getTree() );
-                                        }else{
-                                            result.children.push({ type:a.getType(), name:a.name });
-                                        }
+                                        if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
+                                        else{ result.children.push({ type:a.getType(), name:a.name }); }
                                     });
                         
                                     return result;
@@ -4125,10 +4346,10 @@
                             //clipping
                                 var clipping = { stencil:undefined, active:false };
                                 this.stencil = function(shape){
-                                    if(shape == undefined){return this.clipping.stencil;}
+                                    if(shape == undefined){return clipping.stencil;}
                                     clipping.stencil = shape;
                                     clipping.stencil.parent = this;
-                                    computeExtremities();
+                                    if(clipping.active){ computeExtremities(); }
                                 };
                                 this.clipActive = function(bool){
                                     if(bool == undefined){return clipping.active;}
@@ -4137,9 +4358,31 @@
                                 };
                         
                             //extremities
-                                function augmentExtremities_addChild(newShape){
+                                function updateExtremities(informParent=true){
+                                    if(self.devMode){console.log(self.getAddress()+'::updateExtremities');}
+                        
+                                    //generate extremity points
+                                        self.extremities.points = [];
+                        
+                                        //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
+                                        //otherwise, gather extremities from children and calculate extremities here
+                                        if(clipping.active && clipping.stencil != undefined){
+                                            self.extremities.points = clipping.stencil.extremities.points.slice();
+                                        }else{
+                                            children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
+                                        }
+                        
+                                    //generate bounding box from points
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        
+                                    //update parent
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                                }
+                                function augmentExtremities(shape){
+                                    if(self.devMode){console.log(self.getAddress()+'::augmentExtremities');}
+                        
                                     //if we're in clipping mode, no addition of a shape can effect the extremities 
-                                        if(clipping.active && clipping.stencil != undefined){return;}
+                                        if(clipping.active && clipping.stencil != undefined){return true;}
                                     //get offset from parent
                                         var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
                                     //combine offset with group's position, angle and scale to produce new offset for chilren
@@ -4151,42 +4394,41 @@
                                             angle: offset.angle + angle,
                                         };
                                     //run computeExtremities on new child
-                                        newShape.computeExtremities(false,newOffset);
+                                        shape.computeExtremities(false,newOffset);
+                                }
+                                function augmentExtremities_addChild(newShape){
+                                    if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
+                        
+                                    //augment extremities, and bail if it was found that clipping is active
+                                        if( augmentExtremities(newShape) ){ return; }
                                     //add points to points list
                                         self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
                                     //recalculate bounding box
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
                                     //inform parent of change
-                                        if(self.parent){self.parent.computeExtremities();}
+                                        if(self.parent){self.parent.updateExtremities();}
                                 }
                                 function augmentExtremities_removeChild(departingShape){
-                                    //if we're in clipping mode, no removal of a shape can effect the extremities 
-                                        if(clipping.active && clipping.stencil != undefined){return;}
-                                    //get offset from parent
-                                        var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                                    //combine offset with group's position, angle and scale to produce new offset for chilren
-                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var newOffset = { 
-                                            x: point.x*offset.scale + offset.x,
-                                            y: point.y*offset.scale + offset.y,
-                                            scale: offset.scale*scale,
-                                            angle: offset.angle + angle,
-                                        };
-                                    //run computeExtremities on departing child
-                                        departingShape.computeExtremities(false,newOffset);
+                                    if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_removeChild - type:'+newShape.getType()+' - name:'+newShape.name);}
+                        
+                                    //augment extremities, and bail if it was found that clipping is active
+                                        if( augmentExtremities(departingShape) ){ return; }
                                     //remove matching points from points list
-                                        var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
-                                        if(index == undefined){console.error("core:: group shape: departing shape points not found");}
-                                        self.extremities.points.splice(index, index+departingShape.extremities.points.length);
+                                        // var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
+                                        // if(index == undefined){console.error("core:: group shape: departing shape points not found. Bailing.."); return;}
+                                        // self.extremities.points.splice(index, index+departingShape.extremities.points.length);
+                                        var leftOvers = _canvas_.library.math.removeTheseElementsFromThatArray(self.extremities.points,departingShape.extremities.points,self.extremities.points);
+                                        if(leftOvers.length < 0){console.error('core:: group shape: not all of departing shape\'s points were found');console.error('left overs:',leftOvers);}
                                     //recalculate bounding box
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
                                     //inform parent of change
-                                        if(self.parent){self.parent.computeExtremities();}
+                                        if(self.parent){self.parent.updateExtremities();}
                                 }
                                 function computeExtremities(informParent=true,offset){
-                                    //get offset from parent
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                                    
+                                    //get offset from parent, if one isn't provided
                                         if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        
                                     //combine offset with group's position, angle and scale to produce new offset for chilren
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var newOffset = { 
@@ -4195,55 +4437,36 @@
                                             scale: offset.scale*scale,
                                             angle: offset.angle + angle,
                                         };
-                        
                                     //run computeExtremities on all children
                                         children.forEach(a => a.computeExtremities(false,newOffset));
-                                    
                                     //run computeExtremities on stencil (if applicable)
                                         if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
-                        
-                                    //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
-                                    //otherwise, gather extremities from children and calculate extremities here
-                                        self.extremities.points = [];
-                                        if(clipping.active && clipping.stencil != undefined){
-                                            self.extremities.points = self.extremities.points.concat(clipping.stencil.extremities.points);
-                                        }else{ 
-                                            children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
-                                        }
-                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                        
-                                    //if told to do so, inform parent (if there is one) that extremities have changed
-                                        if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                                    //update extremities
+                                        updateExtremities(informParent,offset);
                                 }
-                                this.computeExtremities = computeExtremities;
+                        
                                 this.getOffset = function(){
                                     if(this.parent){
                                         var offset = this.parent.getOffset();
-                        
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                                        var adjust = { 
+                                        return { 
                                             x: point.x*offset.scale + offset.x,
                                             y: point.y*offset.scale + offset.y,
                                             scale: offset.scale * scale,
                                             angle: offset.angle + angle,
                                         };
-                        
-                                        return adjust;
-                                    }else{
-                                        return {x:x ,y:y ,scale:scale ,angle:angle};
-                                    }
+                                    }else{ return {x:x ,y:y ,scale:scale ,angle:angle}; }
                                 };
+                                this.computeExtremities = computeExtremities;
+                                this.updateExtremities = updateExtremities;
                         
                             //lead render
                                 function drawDotFrame(){
-                                    // self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y,2,{r:0,g:0,b:1,a:1}) );
-                        
-                                    var tl = self.extremities.boundingBox.topLeft;
-                                    var br = self.extremities.boundingBox.bottomRight;
-                                    core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-                                    core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
-                                };
-                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                                    //draw bounding box top left and bottom right points
+                                    core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
+                                    core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
+                                }
+                                this.render = function(context, offset){
                                     //combine offset with group's position, angle and scale to produce new offset for children
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var newOffset = { 
@@ -4266,7 +4489,6 @@
                                             //reactive regular rendering
                                                 context.colorMask(true,true,true,true);
                                                 context.stencilFunc(context.EQUAL,1,0xFF);
-                                                context.stencilMask(0x00);
                                         }
                                     
                                     //render children
@@ -4284,7 +4506,159 @@
                         
                                     //if requested; draw dot frame
                                         if(self.dotFrame){drawDotFrame();}
+                                };
+                        };
+                        this.polygon = function(){
+                            var self = this;
+                        
+                            //attributes 
+                                //protected attributes
+                                    const type = 'polygon'; this.getType = function(){return type;}
+                        
+                                //simple attributes
+                                    this.name = '';
+                                    this.parent = undefined;
+                                    this.dotFrame = false;
+                                    this.extremities = { points:[], boundingBox:{} };
+                                    this.ignored = false;
+                                    this.colour = {r:1,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
+                        
+                                //attributes pertinent to extremity calculation
+                                    var pointsChanged = true;
+                                    var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); pointsChanged = true; };
+                                    var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');}  if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                        
+                                    this.pointsAsXYArray = function(a){
+                                        if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
+                        
+                                        if(a==undefined){
+                                            var output = [];
+                                            for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
+                                            return output;
+                                        }
+                        
+                                        this.points( a.map(function(a){
+                                            if( isNaN(a.x) || isNaN(a.y) ){ console.error('ploygon::'+self.getAddress()+'::pointsAsXYArray:: points entered contain NAN values'); }
+                                            return [a.x,a.y];
+                                        }).flat() );
+                                    };
+                            
+                            //addressing
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+                        
+                            //webGL rendering functions
+                                var points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
+                                var vertexShaderSource = 
+                                    _canvas_.library.gsls.geometry + `
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location offset;
+                        
+                                        attribute vec2 point;
+                                        uniform vec2 resolution;
+                        
+                                    void main(){    
+                                        //adjust point by offset
+                                            vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+                        
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                    }
+                                `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    uniform vec4 colour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = colour;
+                                    }
+                                `;
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var drawingPoints = [];
+                                var uniformLocations;
+                                function updateGLAttributes(context,offset){
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
+                                                pointsChanged = false;
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                        
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "offset.xy": context.getUniformLocation(program, "offset.xy"),
+                                                "offset.scale": context.getUniformLocation(program, "offset.scale"),
+                                                "offset.angle": context.getUniformLocation(program, "offset.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                            };
+                                        }
+                        
+                                        context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
+                                        context.uniform1f(uniformLocations["offset.scale"], offset.scale);
+                                        context.uniform1f(uniformLocations["offset.angle"], offset.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
                                 }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                        
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                        
+                                    context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
+                                }
+                        
+                            //extremities
+                                function computeExtremities(informParent=true,offset){
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                        
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                                    //calculate points based on the offset
+                                        self.extremities.points = [];
+                                        for(var a = 0; a < points.length; a+=2){
+                                            var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                                            self.extremities.points.push({ x:P.x+offset.x, y:P.y+offset.y });
+                                        }
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                                }
+                                this.computeExtremities = computeExtremities;
+                        
+                            //lead render
+                                function drawDotFrame(){
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
+                                }
+                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                                    //activate shape render code
+                                        activateGLRender(context,offset);
+                        
+                                    //if requested; draw dot frame
+                                        if(self.dotFrame){drawDotFrame();}
+                                };
                         };
                     };
                 
@@ -4314,7 +4688,7 @@
                 this.shape.checkShapes(this.shape.library);
                 
                 this.arrangement = new function(){
-                    var design = core.shape.create('group');
+                    var design = core.shape.create('group'); design.name = 'root';
                 
                     this.new = function(){ design = core.shape.create('group'); };
                     this.get = function(){ return design; };
@@ -4336,7 +4710,6 @@
                     };
                     this.getElementsUnderPoint = function(x,y){ return design.getElementsUnderPoint(x,y); };
                     this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
-                    this.getTree = function(){ return design.getTree(); };
                     this.printTree = function(mode='address'){ //modes: tabular / address
                         function recursivePrint(grouping,prefix=''){
                             grouping.children.forEach(function(a){
@@ -4350,7 +4723,7 @@
                             });
                         }
                 
-                        recursivePrint(this.getTree(), '');
+                        recursivePrint(design.getTree(), '');
                     };
                 };
                 this.render = new function(){
@@ -4454,7 +4827,7 @@
                         this.refreshCoordinates = function(){
                             var w = context.canvas.width;
                             var h = context.canvas.height;
-                            var m = window.devicePixelRatio;
+                            // var m = window.devicePixelRatio;
                 
                             var x, y, width, height = 0;
                             if(window.devicePixelRatio == 1){
@@ -4480,7 +4853,7 @@
                     //actual render
                         function renderFrame(){
                             context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);
-                            core.arrangement.get().render(context);
+                            core.arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
                         }
                         function animate(timestamp){
                             animationRequestId = requestAnimationFrame(animate);
@@ -4515,12 +4888,16 @@
                         this.getCanvasDimensions = function(){ return {width:pageData.width, height:pageData.height}; };
                         this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){
                             var dot = core.shape.create('circle');
-                            dot.x(x); dot.y(y);
-                            dot.colour = colour;
-                            dot.radius(r);
+                            dot.name = 'core-drawDot-dot';
+                            dot.stopAttributeStartedExtremityUpdate = true;
                             dot.dotFrame = false;
+                            dot.x(x); dot.y(y);
+                            dot.radius(r);
+                            dot.computeExtremities();
+                            dot.colour = colour;
                             dot.render(context);
                         };
+                        // this.__context = function(){return context;};
                 };
                 this.stats = new function(){
                     var active = false;
@@ -4564,6 +4941,11 @@
                     var viewbox = {
                         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
                         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
+                    };
+                    var mouseData = { 
+                        x:undefined, 
+                        y:undefined, 
+                        stopScrollActive:false,
                     };
                 
                     //adapter
@@ -4646,13 +5028,26 @@
                         }
                         this.calculateViewportExtremities = calculateViewportExtremities;
                         this.refresh = function(){
-                            this.calculateViewportExtremities();
+                            core.render.refresh();
+                            calculateViewportExtremities();
                         };
                         this.getBoundingBox = function(){ return viewbox.boundingBox; };
                         this.cursor = function(type){
                             //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
                             if(type == undefined){return document.body.style.cursor;}
                             document.body.style.cursor = type;
+                        };
+                        this.mousePosition = function(x,y){
+                            if(x == undefined || y == undefined){return {x:mouseData.x, y:mouseData.y};}
+                            mouseData.x = x;
+                            mouseData.y = y;
+                        };
+                        this.stopMouseScroll = function(bool){
+                            if(bool == undefined){return mouseData.stopScrollActive;}
+                            mouseData.stopScrollActive = bool;
+                    
+                            //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
+                            if(!bool){ document.body.style.overflow = ''; }
                         };
                 };
                 this.viewport.refresh();
@@ -4681,11 +5076,22 @@
                         }
                 
                     //special cases
-                        //onmousemove / onmouseenter / onmouseleave
+                        //canvas onmouseenter / onmouseleave
+                            _canvas_.onmouseenter = function(event){
+                                //if appropriate, remove the window scrollbars
+                                    if(core.viewport.stopMouseScroll()){ document.body.style.overflow = 'hidden'; }
+                            };
+                            _canvas_.onmouseleave = function(event){
+                                //if appropriate, replace the window scrollbars
+                                    if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
+                            };
+                
+                        //onmousemove / shape's onmouseenter / shape's onmouseleave
                             var shapeMouseoverList = [];
                             _canvas_.onmousemove = function(event){
                                 //update the stored mouse position
                                     mouseposition = {x:event.x,y:event.y};
+                                    core.viewport.mousePosition(event.x,event.y);
                 
                                 //check for onmouseenter / onmouseleave
                                     //get all shapes under point that have onmouseenter or onmouseleave callbacks
@@ -4814,7 +5220,9 @@
                     });
             };
             _canvas_.system.keyboard = new function(){
+                var keyboard = this;
                 //setup
+                    var keyboard = this;
                     this.pressedKeys = {
                         control:false,
                         alt:false,
@@ -4839,31 +5247,33 @@
                             }
                     }
                     this.releaseAll = function(){
-                        for(var a = 0; a < this.pressedKeys.length; a++){
-                            this.releaseKey(this.pressedKeys[a]);
-                        }
+                        // var keys = Object.keys(this.pressedKeys);
+                        // for(var a = 0; a < keys.length; a++){ this.releaseKey(keys[a]); }
+                        Object.keys(this.pressedKeys).forEach(a => keyboard.releaseKey(a))
                     };
                     this.releaseKey = function(code){
                         _canvas_.onkeyup( new KeyboardEvent('keyup',{code:code}) );
                     }
                 
                 //connect callbacks to keyboard function lists
-                    _canvas_.core.callback.onkeydown = function(x,y,event,shapes){
+                    _canvas_.core.callback.onkeydown = function(x,y,event,shapes){console.log('down: '+event.code);
                         //if key is already pressed, don't press it again
                             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                             _canvas_.system.keyboard.pressedKeys[event.code] = true;
                             customKeyInterpreter(event,true);
+                            console.log(JSON.stringify(_canvas_.system.keyboard.pressedKeys));
                         
                         //perform action
                             if(shapes.length > 0){ shapes[0].onkeydown(x,y,event,shapes); }
                             else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); }
                     };
                 
-                    _canvas_.core.callback.onkeyup = function(x,y,event,shapes){
+                    _canvas_.core.callback.onkeyup = function(x,y,event,shapes){console.log('up: '+event.code);
                         //if key isn't pressed, don't release it
                             if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
                             delete _canvas_.system.keyboard.pressedKeys[event.code];
                             customKeyInterpreter(event,false);
+                            console.log(JSON.stringify(_canvas_.system.keyboard.pressedKeys));
                         
                         //perform action
                             if(shapes.length > 0){ shapes[0].onkeyup(x,y,event,shapes); }
@@ -6268,14 +6678,17 @@
                     
                     this.collection = new function(){
                         this.basic = new function(){
-                            this.polygon = function( name=null, points=[], ignored=false, colour={r:1,g:0,b:1,a:1}, pointsAsXYArray=[] ){
+                            this.polygon = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1} ){
                                 var temp = _canvas_.core.shape.create('polygon');
                                 temp.name = name;
                                 temp.ignored = ignored;
                                 temp.colour = colour;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 if(points.length != 0){ temp.points(points); }
                                 else{ temp.pointsAsXYArray(pointsAsXYArray); }
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             }
                             this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=0, lineColour={r:0,g:0,b:0,a:0} ){
@@ -6285,6 +6698,7 @@
                                 temp.colour = colour;
                                 temp.lineColour = lineColour;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 temp.x(x); 
                                 temp.y(y);
                                 temp.width(width); 
@@ -6292,6 +6706,8 @@
                                 temp.angle(angle);
                                 temp.anchor(anchor);
                                 temp.thickness(thickness);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             };
                             this.circle = function( name=null, x=0, y=0, angle=0, radius=10, ignored=false, colour={r:1,g:0,b:1,a:1} ){
@@ -6300,10 +6716,13 @@
                                 temp.ignored = ignored;
                                 temp.colour = colour;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 temp.x(x);
                                 temp.y(y);
                                 temp.angle(angle);
                                 temp.radius(radius);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             };
                             this.canvas = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1 ){
@@ -6311,6 +6730,7 @@
                                 temp.name = name;
                                 temp.ignored = ignored;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 temp.x(x); 
                                 temp.y(y);
                                 temp.width(width); 
@@ -6318,6 +6738,8 @@
                                 temp.angle(angle);
                                 temp.anchor(anchor);
                                 temp.resolution(resolution);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             };
                             this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url='' ){
@@ -6325,6 +6747,7 @@
                                 temp.name = name;
                                 temp.ignored = ignored;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 temp.x(x); 
                                 temp.y(y);
                                 temp.width(width); 
@@ -6332,6 +6755,8 @@
                                 temp.angle(angle);
                                 temp.anchor(anchor);
                                 temp.imageURL(url);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             };
                             this.loopedPath = function( name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[] ){
@@ -6340,9 +6765,12 @@
                                 temp.ignored = ignored;
                                 temp.colour = colour;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 if(points.length != 0){ temp.points(points); }
                                 else{ temp.pointsAsXYArray(pointsAsXYArray); }
-                                temp.thickness(thickness); 
+                                temp.thickness(thickness);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             }
                             this.path = function( name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[] ){
@@ -6351,9 +6779,12 @@
                                 temp.ignored = ignored;
                                 temp.colour = colour;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 if(points.length != 0){ temp.points(points); }
                                 else{ temp.pointsAsXYArray(pointsAsXYArray); }
                                 temp.thickness(thickness); 
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             }
                             this.rectangle = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1} ){
@@ -6362,39 +6793,64 @@
                                 temp.ignored = ignored;
                                 temp.colour = colour;
                                 
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 temp.x(x); 
                                 temp.y(y);
                                 temp.width(width); 
                                 temp.height(height);
                                 temp.angle(angle);
                                 temp.anchor(anchor);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             };
                             this.group = function( name=null, x=0, y=0, angle=0, ignored=false ){
                                 var temp = _canvas_.core.shape.create('group');
                                 temp.name = name;
                                 temp.ignored = ignored;
-                                
+                            
+                                temp.stopAttributeStartedExtremityUpdate = true;
                                 temp.x(x); 
                                 temp.y(y);
                                 temp.angle(angle);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
                                 return temp;
                             }
-                            this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, calculationMode=1 ){
+                            this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, font='default', printingMode={widthCalculation:'filling',horizontal:'left',vertical:'top'} ){
                                 var temp = _canvas_.core.shape.create('characterString');
                                 temp.name = name;
                                 temp.ignored = ignored;
                                 temp.colour(colour);
-                                temp.calculationMode(calculationMode);
-                                temp.string(text);
-                                temp.x(x); 
+                            
+                                temp.stopAttributeStartedExtremityUpdate = true;
+                                temp.font(font);
+                                temp.printingMode(printingMode);
+                                temp.x(x);
                                 temp.y(y);
                                 temp.width(width); 
                                 temp.height(height);
                                 temp.angle(angle);
-                            
+                                temp.string(text);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                                
                                 return temp;
                             };
+                            this.polygonWithOutline = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                                var temp = _canvas_.core.shape.create('polygonWithOutline');
+                                temp.name = name;
+                                temp.ignored = ignored;
+                                temp.colour = colour;
+                                temp.lineColour = lineColour;
+                                
+                                temp.stopAttributeStartedExtremityUpdate = true;
+                                if(points.length != 0){ temp.points(points); }
+                                else{ temp.pointsAsXYArray(pointsAsXYArray); }
+                                temp.thickness(thickness);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
+                                return temp;
+                            }
                         };
                         this.control = new function(){
                             this.rastorgrid = function(
@@ -7368,7 +7824,7 @@
                                         interactable = bool;
                             
                                         for(var a = 0; a < count; a++){
-                                            object.children[a].interactable(bool);
+                                            object.children()[a].interactable(bool);
                                         }
                                     };
                             
@@ -8864,6 +9320,7 @@
                                                 colour:selectionAreaStyle,
                                             });
                                             object.append(selectionArea);
+                                            selectionArea.computeExtremities();
                                 
                                             _canvas_.system.mouse.mouseInteractionHandler(
                                                 function(event){
@@ -8889,7 +9346,7 @@
                                                         if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
                                                         if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
                                 
-                                                    //update rectangle 
+                                                    //update rectangle
                                                         selectionArea.x(transform.x*width);
                                                         selectionArea.y(transform.y*height);
                                                         selectionArea.width(  transform.width  * diff.x*width  );
@@ -9673,7 +10130,7 @@
                                 
                                 active=true, hoverable=true, selectable=false, pressable=true,
                             
-                                text_font = '5pt Arial',
+                                text_font = 'Arial',
                                 text_textBaseline = 'alphabetic',
                                 text_size=2.5,
                                 text_colour = {r:0/255,g:0/255,b:0/255,a:1},
@@ -9753,7 +10210,8 @@
                                             width:text_size,
                                             height:text_size,
                                             colour:text_colour,
-                                            calculationMode:3,
+                                            font:text_font,
+                                            printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
                                         });
                                         subject.append(text_centre);
                                     //cover
@@ -9905,27 +10363,30 @@
                                             width:text_size,
                                             height:text_size,
                                             colour:text_colour,
-                                            calculationMode:3,
+                                            font:text_font,
+                                            printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
                                         });
                                         subject.append(text_centre);
-                                        var text_left = interfacePart.builder('text','left',     {
+                                        var text_left = interfacePart.builder('text','left', {
                                             x:width*textHorizontalOffsetMux, 
                                             y:height*textVerticalOffsetMux, 
                                             text:text_left, 
                                             width:text_size,
                                             height:text_size,
                                             colour:text_colour,
-                                            calculationMode:2,
+                                            font:text_font,
+                                            printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'middle'},
                                         });
                                         subject.append(text_left);
-                                        var text_right = interfacePart.builder('text','right',   {
+                                        var text_right = interfacePart.builder('text','right',{
                                             x:width-(width*textHorizontalOffsetMux), 
                                             y:height*textVerticalOffsetMux, 
                                             text:text_right, 
                                             width:text_size,
                                             height:text_size,
                                             colour:text_colour,
-                                            calculationMode:4,
+                                            font:text_font,
+                                            printingMode:{widthCalculation:'absolute',horizontal:'right',vertical:'middle'},
                                         });
                                         subject.append(text_right);
                                     //cover
@@ -10106,7 +10567,7 @@
                                 
                                 active=true, hoverable=true, selectable=false, pressable=true,
                             
-                                text_font = '5pt Arial',
+                                text_font = 'Arial',
                                 text_textBaseline = 'alphabetic',
                                 text_size=2.5,
                                 text_colour = {r:0/255,g:0/255,b:0/255,a:1},
@@ -10188,7 +10649,8 @@
                                             width:text_size,
                                             height:text_size,
                                             colour:text_colour,
-                                            calculationMode:3,
+                                            font:text_font,
+                                            printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
                                         });
                                         subject.append(text_centre);
                                     //cover
@@ -10719,8 +11181,9 @@
                                 spacingHeightMux=0.005,
                                 backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
                             
-                                text_font = '5pt Arial',
+                                text_font = 'Arial',
                                 text_textBaseline = 'alphabetic',
+                                text_size=2.5,
                                 text_colour = {r:0/255,g:0/255,b:0/255,a:1},
                             
                                 item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
@@ -10842,6 +11305,7 @@
                                                             style:{
                                                                 text_font:text_font,
                                                                 text_textBaseline:text_textBaseline,
+                                                                text_size:text_size,
                                                                 text_colour:text_colour,
                             
                                                                 background__off__colour:                            item__off__colour,
@@ -14129,11 +14593,14 @@
                                         var level = [];
                                         for(var a = 0; a < levelStyles.length; a++){
                                             values.push(0);
-                                            level.push( interfacePart.builder('rectangle','movingRect_'+a,{
+                                            var tmp = interfacePart.builder('rectangle','movingRect_'+a,{
                                                 y:height,
                                                 width:width, height:0,
                                                 colour:levelStyles[a],
-                                            }) );
+                                            });
+                                            tmp.stopAttributeStartedExtremityUpdate = true;
+                            
+                                            level.push( tmp );
                                             levels.prepend(level[a]);
                                         }
                             
@@ -14519,11 +14986,12 @@
                                 case 'rectangleWithOutline': return this.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
                                 case 'image': return this.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
                                 case 'canvas': return this.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
-                                case 'polygon': return this.collection.basic.polygon( name, data.points, data.ignored, data.colour, data.pointsAsXYArray );
+                                case 'polygon': return this.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
+                                case 'polygonWithOutline': return this.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
                                 case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.ignored, data.colour );
                                 case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
                                 case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
-                                case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.calculationMode );
+                                case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode );
                         
                             //display
                                 case 'glowbox_rect': return this.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
@@ -14831,24 +15299,24 @@
                                         data.spacingHeightMux,
                     
                                         data.style.backing, data.style.break,
-                                        data.style.text_font, data.style.text_textBaseline, data.style.text_colour,
-                                        data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
-                                        data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
-                                        data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
-                                        data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
-                                        data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
-                                        data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
-                                        data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
-                                        data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
-                                        data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
-                                        data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
-                                        data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
-                                        data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
-                                        data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
-                                        data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
-                                        data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
-                                        data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
-                                        data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
+                                        data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                                        data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
+                                        data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
+                                        data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
+                                        data.style.item__select__colour,                  data.style.item__select__lineColour,                  data.style.item__select__lineThickness,
+                                        data.style.item__select_press__colour,            data.style.item__select_press__lineColour,            data.style.item__select_press__lineThickness,
+                                        data.style.item__glow__colour,                    data.style.item__glow__lineColour,                    data.style.item__glow__lineThickness,
+                                        data.style.item__glow_press__colour,              data.style.item__glow_press__lineColour,              data.style.item__glow_press__lineThickness,
+                                        data.style.item__glow_select__colour,             data.style.item__glow_select__lineColour,             data.style.item__glow_select__lineThickness,
+                                        data.style.item__glow_select_press__colour,       data.style.item__glow_select_press__lineColour,       data.style.item__glow_select_press__lineThickness,
+                                        data.style.item__hover__colour,                   data.style.item__hover__lineColour,                   data.style.item__hover__lineThickness,
+                                        data.style.item__hover_press__colour,             data.style.item__hover_press__lineColour,             data.style.item__hover_press__lineThickness,
+                                        data.style.item__hover_select__colour,            data.style.item__hover_select__lineColour,            data.style.item__hover_select__lineThickness,
+                                        data.style.item__hover_select_press__colour,      data.style.item__hover_select_press__lineColour,      data.style.item__hover_select_press__lineThickness,
+                                        data.style.item__hover_glow__colour,              data.style.item__hover_glow__lineColour,              data.style.item__hover_glow__lineThickness,
+                                        data.style.item__hover_glow_press__colour,        data.style.item__hover_glow_press__lineColour,        data.style.item__hover_glow_press__lineThickness,
+                                        data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
+                                        data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
                                     
                                         data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
                                     );
@@ -14971,303 +15439,1444 @@
                     }
 
                 };
-                // this.unit = new function(){
-                // };
+                this.unit = new function(){
+                    this.collection = new function(){
+                        this.test = new function(){
+                            var testUnit = this;
+                            
+                            this.testUnit_1 = function(x,y,angle){
+                                var design = {
+                                    name: 'testUnit_1',
+                                    collection: 'test',
+                                    x:x, y:y, angle:angle,
+                                    space: [
+                                        {x:-5,y:-5}, 
+                                        {x:280,y:-5}, 
+                                        {x:280,y:30}, 
+                                        {x:605,y:30}, 
+                                        {x:605,y:130}, 
+                                        {x:705,y:130}, 
+                                        {x:705,y:210}, 
+                                        {x:240,y:210}, 
+                                        {x:240,y:325}, 
+                                        {x:430,y:325}, 
+                                        {x:430,y:435}, 
+                                        {x:-5,y:445}
+                                    ],
+                                    // spaceOutline: true,
+                                    elements:[
+                                        //basic
+                                            {type:'rectangle', name:'testRectangle', data:{ x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1} }},
+                                            {type:'circle', name:'testCircle', data:{ x:20, y:55, radius:15 }},
+                                            {type:'image', name:'testImage', data:{ x:40, y:40, width:30, height:30, url:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg' } }, 
+                                            {type:'polygon', name:'testPolygon', data:{ pointsAsXYArray:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], colour:{r:0,g:1,b:0,a:1} } }, 
+                                            {type:'text', name:'testText', data:{ x:7.5, y:95, printingMode:{widthCalculation:'absolute'}, text:'Hello', colour:{r:150/255,g:150/255,b:1,a:1} } }, 
+                                            {type:'path', name:'testPath', data:{ pointsAsXYArray:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] } }, 
+                                        //display
+                                            {type:'glowbox_rect', name:'test_glowbox_rect', data:{x:90,y:0}},
+                                            {type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay', data:{x:125,y:0}},
+                                            {type:'sixteenSegmentDisplay', name:'test_sixteenSegmentDisplay', data:{x:150,y:0}},
+                                            {type:'readout_sixteenSegmentDisplay', name:'test_readout_sixteenSegmentDisplay', data:{x:175,y:0}},
+                                            {type:'level', name:'test_level1', data:{x:90, y:35}},
+                                            {type:'meter_level', name:'test_meterLevel1', data:{x:115, y:35}},
+                                            {type:'audio_meter_level', name:'test_audioMeterLevel1', data:{x:140, y:35}},
+                                            {type:'rastorDisplay', name:'test_rastorDisplay1', data:{x:165, y:35}},
+                                            {type:'grapher', name:'test_grapher1', data:{x:230, y:35}},
+                                            {type:'grapher_periodicWave', name:'test_grapher_periodicWave1', data:{x:355, y:35}},
+                                            {type:'grapher_audioScope', name:'test_grapher_audioScope1', data:{x:480, y:35}},
+                                        //control
+                                            {type:'slide', name:'test_slide1', data:{x:0,y:110}},
+                                            {type:'slidePanel', name:'test_slidePanel1', data:{x:15,y:110}},
+                                            {type:'slide', name:'test_slide2', data:{x:0,y:220,angle:-Math.PI/2}},
+                                            {type:'slidePanel', name:'test_slidePanel2', data:{x:0,y:305,angle:-Math.PI/2}},
+                                            {type:'rangeslide', name:'test_rangeslide1', data:{x:100,y:110}},
+                                            {type:'rangeslide', name:'test_rangeslide2', data:{x:100,y:220,angle:-Math.PI/2}},
+                                            {type:'dial_continuous', name:'test_dial_continuous1', data:{x:130,y:125}},
+                                            {type:'dial_discrete', name:'test_dial_discrete1', data:{x:170,y:125}},
+                                            {type:'button_rectangle', name:'test_button_rectangle1', data:{x:115,y:145}},
+                                            {type:'list', name:'test_list1', data:{x:185,y:225,list:[
+                                                'space',
+                                                { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
+                                                { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
+                                                { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
+                                                { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
+                                                { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
+                                                'break',
+                                                { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
+                                                { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
+                                                { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
+                                                { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
+                                                { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
+                                                'break',
+                                                { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
+                                                { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
+                                                { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
+                                                { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
+                                                { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
+                                                'space',
+                                            ]}},
+                                            {type:'checkbox_rect', name:'test_checkbox_rect1', data:{x:150,y:145}},
+                                            {type:'rastorgrid', name:'test_rastorgrid1', data:{x:100,y:225}},
+                                            {type:'needleOverlay', name:'test_needleOverlay1', data:{x:0,y:310}},
+                                            {type:'grapher_waveWorkspace', name:'test_grapher_waveWorkspace1', data:{x:0,y:375}},
+                                            {type:'sequencer', name:'test_sequencer1', data:{x:125,y:330}},
+                                        //dynamic nodes
+                                            {type:'connectionNode', name:'test_connectionNode1', data:{ x:255, y:135 }},
+                                            {type:'connectionNode', name:'test_connectionNode2', data:{ x:230, y:185 }},
+                                            {type:'connectionNode', name:'test_connectionNode3', data:{ x:280, y:185 }},
+                                            {type:'connectionNode_signal', name:'test_connectionNode_signal1', data:{ x:355, y:135 }},
+                                            {type:'connectionNode_signal', name:'test_connectionNode_signal2', data:{ x:330, y:185 }},
+                                            {type:'connectionNode_signal', name:'test_connectionNode_signal3', data:{ x:380, y:185 }},
+                                            {type:'connectionNode_voltage', name:'test_connectionNode_voltage1', data:{ x:455, y:135 }},
+                                            {type:'connectionNode_voltage', name:'test_connectionNode_voltage2', data:{ x:430, y:185 }},
+                                            {type:'connectionNode_voltage', name:'test_connectionNode_voltage3', data:{ x:480, y:185 }},
+                                            {type:'connectionNode_data', name:'test_connectionNode_data1', data:{ x:555, y:135 }},
+                                            {type:'connectionNode_data', name:'test_connectionNode_data2', data:{ x:530, y:185 }},
+                                            {type:'connectionNode_data', name:'test_connectionNode_data3', data:{ x:580, y:185 }},
+                                            {type:'connectionNode_audio', name:'test_connectionNode_audio1', data:{ x:655, y:135, isAudioOutput:true}},
+                                            {type:'connectionNode_audio', name:'test_connectionNode_audio2', data:{ x:630, y:185 }},
+                                            {type:'connectionNode_audio', name:'test_connectionNode_audio3', data:{ x:680, y:185 }},
+                                    ],
+                                };
+                            
+                                //main object
+                                    var object = interface.unit.builder(this.testUnit_1,design);
+                            
+                                //playing with the parts
+                                    object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.text('hello');
+                                    object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.print();
+                            
+                                    object.elements.grapher.test_grapher1.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+                                    object.elements.grapher.test_grapher1.draw([0,0.25,1],undefined,1);
+                                    
+                                    object.elements.grapher_periodicWave.test_grapher_periodicWave1.updateBackground();
+                                    object.elements.grapher_periodicWave.test_grapher_periodicWave1.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
+                                    object.elements.grapher_periodicWave.test_grapher_periodicWave1.draw();
+                            
+                                    object.elements.needleOverlay.test_needleOverlay1.select(0.25);
+                                    object.elements.needleOverlay.test_needleOverlay1.area(0.5,0.75);
+                            
+                                    object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace1.select(0.25);
+                                    object.elements.grapher_waveWorkspace.test_grapher_waveWorkspace1.area(0.5,0.75);
+                                    
+                                    object.elements.sequencer.test_sequencer1.addSignal( 0,0,  10,0.0 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 1,1,  10,0.1 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 2,2,  10,0.2 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 3,3,  10,0.3 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 4,4,  10,0.4 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 5,5,  10,0.5 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 6,6,  10,0.6 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 7,7,  10,0.7 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 8,8,  10,0.8 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 9,9,  10,0.9 );
+                                    object.elements.sequencer.test_sequencer1.addSignal( 10,10,10,1.0 );
+                                
+                                return object;
+                            };
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.testUnit_1.devUnit = true;
+                            this.testUnit_1.metadata = {
+                                name:'Test Unit 1',
+                                helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_1/'
+                            };
+                            this.testUnit_2 = function(x,y,angle){
+                                var design = {
+                                    name: 'testUnit_2',
+                                    collection: 'test',
+                                    x:x, y:y, angle:angle,
+                                    space: [
+                                        {x:0,y:0}, 
+                                        {x:100,y:0}, 
+                                        {x:100,y:100}, 
+                                        {x:0,y:100}, 
+                                    ],
+                                    // spaceOutline: true,
+                                    elements:[
+                                        {type:'rectangle', name:'testRectangle1', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
+                                        {type:'rectangle', name:'testRectangle2', data:{ x:10, y:10, width:80, height:80, colour:{r:200/255,g:100/255,b:200/255,a:1} }},
+                                    ],
+                                };
+                            
+                                //main object
+                                    var object = interface.unit.builder(this.testUnit_2,design);
+                                
+                                return object;
+                            };
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            this.testUnit_2.devUnit = true;
+                            this.testUnit_2.metadata = {
+                                name:'Test Unit 2',
+                                helpURL:'https://curve.metasophiea.com/help/units/test/testUnit_2/'
+                            };
+
+                        };
+                    };
+                    /*
+                        a design
+                        {
+                            name: 'name of unit (unique to collection)',
+                            collection: 'name of the collection to which this unit belongs',
+                            x: 0, y: 0, angle: 0,
+                            space: [{x:0,y:0}, ...], //a collection of points, used to determine the unit's selection/collision area
+                            spaceOutline: true/false, //a helper graphic, which when set to true will draw an outline of the space
+                            elements:[ //a list of all the parts
+                                {
+                                    type:'part type name',
+                                    name:'a unique name',
+                                    data:{}, //data relevant to this part type
+                                }
+                            ] 
+                        }
+                    */
+                    this.builder = function(creatorMethod,design){
+                        if(!creatorMethod){console.error("workspace unit builder:: creatorMethod missing");return;}
+                    
+                        //input check
+                            if(design.x == undefined){ design.x = 0; }
+                            if(design.y == undefined){ design.y = 0; }
+                            if(design.angle == undefined){ design.angle = 0; }
+                    
+                        //main group
+                            var unit = _canvas_.interface.part.builder('group',design.name,{x:design.x, y:design.y, angle:design.angle});
+                            unit.model = design.name;
+                            unit.collection = design.collection;
+                            unit.creatorMethod = creatorMethod;
+                    
+                        //generate parts and append to main group
+                            unit.elements = {};
+                            for(var a = 0; a < design.elements.length; a++){
+                                //check for name collision
+                                    if( unit.getChildByName(design.elements[a].name) != undefined ){
+                                        console.warn('error: part with the name "'+design.elements[a].name+'" already exists. Part:',design.elements[a],'will not be added');
+                                        continue;
+                                    }    
+                    
+                                //produce and append part
+                                    var newPart = _canvas_.interface.part.builder( design.elements[a].type, design.elements[a].name, design.elements[a].data );
+                                    unit.append(newPart);
+                    
+                                //add part to element tree
+                                    if( unit.elements[design.elements[a].type] == undefined ){ unit.elements[design.elements[a].type] = {}; }
+                                    unit.elements[design.elements[a].type][design.elements[a].name] = newPart;
+                            }
+                    
+                        //gather together io ports
+                            unit.io = {};
+                            [
+                                {key:'_', name:'connectionNode'},
+                                {key:'signal', name:'connectionNode_signal'},
+                                {key:'voltage', name:'connectionNode_voltage'},
+                                {key:'data', name:'connectionNode_data'},
+                                {key:'audio', name:'connectionNode_audio'},
+                            ].forEach(function(type){
+                                if(!unit.elements[type.name]){return;}
+                                var keys = Object.keys(unit.elements[type.name]);
+                                for(var a = 0; a < keys.length; a++){
+                                    var part = unit.elements[type.name][keys[a]];
+                                    if( unit.io[type.key] == undefined ){ unit.io[type.key] = {}; }
+                                    unit.io[type.key][part.name] = part;
+                                }
+                            });
+                    
+                            unit.disconnectEverything = function(){
+                                for(connectionType in unit.io){
+                                    for(connectionName in unit.io[connectionType]){
+                                        unit.io[connectionType][connectionName].disconnect();
+                                    }
+                                }
+                            };
+                            unit.allowIOConnections = function(bool){
+                                if(bool == undefined){return;}
+                                for(connectionType in unit.io){
+                                    for(connectionName in unit.io[connectionType]){
+                                        unit.io[connectionType][connectionName].allowConnections(bool);
+                                    }
+                                }
+                            };
+                            unit.allowIODisconnections = function(bool){
+                                if(bool == undefined){return;}
+                                for(connectionType in unit.io){
+                                    for(connectionName in unit.io[connectionType]){
+                                        unit.io[connectionType][connectionName].allowDisconnections(bool);
+                                    }
+                                }
+                            };
+                    
+                        //generate unit's personal space
+                            unit.space = {};
+                            unit.space.originalPoints = design.space;
+                            function generatePersonalSpace(){
+                                unit.space.points = design.space.map(a => _canvas_.library.math.cartesianAngleAdjust(a.x+design.x,a.y+design.y,unit.angle()) );
+                                unit.space.boundingBox = _canvas_.library.math.boundingBoxFromPoints(unit.space.points);
+                    
+                                //create invisible space shape
+                                if( unit.space.shape != undefined ){
+                                    unit.space.shape.pointsAsXYArray(unit.space.originalPoints);
+                                }else{
+                                    unit.space.shape = _canvas_.interface.part.builder( 'polygon', 'unit.space.shape', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
+                                    unit.space.shape.unit = unit;
+                                    unit.prepend( unit.space.shape );
+                                }
+                            }
+                            generatePersonalSpace();
+                    
+                            //if requested, add an outline shape
+                                if( design.spaceOutline ){
+                                    unit.append( _canvas_.interface.part.builder( 'polygonWithOutline', spaceName+'Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
+                                }
+                    
+                        //augment unit x, y and angle adjustment methods
+                            unit._x = unit.x;
+                            unit._y = unit.y;
+                            unit._angle = unit.angle;
+                            unit.x = function(newX){
+                                if( unit._x(newX) != undefined ){ return design.x; }
+                                design.x = newX;
+                                generatePersonalSpace();
+                            };
+                            unit.y = function(newY){
+                                if( unit._y(newY) != undefined ){ return design.y; }
+                                design.y = newY;
+                                generatePersonalSpace();
+                            };
+                            unit.angle = function(newAngle){
+                                if( unit._angle(newAngle) != undefined ){ return design.angle; }
+                                design.angle = newAngle;
+                                generatePersonalSpace();
+                            };
+                    
+                    
+                        //disable all control parts method
+                            unit.interactable = function(bool){
+                                if(bool == undefined){return;}
+                                for(partType in unit.elements){
+                                    for(partName in unit.elements[partType]){
+                                        if( unit.elements[partType][partName].interactable ){
+                                            unit.elements[partType][partName].interactable(bool);
+                                        }
+                                    }
+                                }
+                            };
+                    
+                        return unit;
+                    };
+
+                };
+            };
+            //close dropdowns on click
+            _canvas_.system.mouse.functionList.onmousedown.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        //close any open menubar dropdowns
+                            _canvas_.control.gui.closeAllDropdowns();
+                    }
+                }
+            );
+            //group select (shift)
+            _canvas_.system.mouse.functionList.onmousedown.push(
+                {
+                    requiredKeys:[['shift']],
+                    function:function(data){
+                        //control switch
+                            if(!_canvas_.control.interaction.mouseGroupSelect()){return;}
+            
+            
+            
+                        //creat selection graphic and add it to the foregroud
+                            var mouseDownPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
+                            _canvas_.system.mouse.tmp.selectionRectangle = _canvas_.interface.part.builder( 
+                                'rectangle', 'selectionRectangle', 
+                                { x:mouseDownPoint.x, y:mouseDownPoint.y, width:0, height:0, colour:{r:224/255, g:184/255, b:252/255, a:0.25} } 
+                            );
+                            _canvas_.system.pane.mf.append( _canvas_.system.mouse.tmp.selectionRectangle );
+            
+                        //follow mouse, adjusting selection rectangle as it moves. On mouse up, remove the rectangle and select all
+                        //units that touch the area
+                            _canvas_.system.mouse.tmp.start = {x:mouseDownPoint.x, y:mouseDownPoint.y};
+                            _canvas_.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    var start = _canvas_.system.mouse.tmp.start;
+                                    var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+            
+                                    _canvas_.system.mouse.tmp.selectionRectangle.width( end.x - start.x );
+                                    _canvas_.system.mouse.tmp.selectionRectangle.height( end.y - start.y );
+                                },
+                                function(event){
+                                    _canvas_.system.pane.mf.remove( _canvas_.system.mouse.tmp.selectionRectangle );
+            
+                                    var start = _canvas_.system.mouse.tmp.start;
+                                    var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+            
+                                    _canvas_.control.selection.selectUnits(
+                                        _canvas_.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
+                                    );
+                                },
+                            );
+            
+                        return true;
+                    }
+                }
+            );
+            //panning
+            _canvas_.system.mouse.functionList.onmousedown.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        //control switch
+                            if(!_canvas_.control.interaction.mouseGripPanningEnabled()){return;}
+            
+            
+            
+                        _canvas_.control.selection.deselectEverything();
+            
+                        //save the viewport position and click position
+                            _canvas_.system.mouse.tmp.oldPosition = _canvas_.core.viewport.position();
+                            _canvas_.system.mouse.tmp.clickPosition = {x:data.x, y:data.y};
+            
+                        //perform viewport movement
+                            _canvas_.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    //update the viewport position
+                                        _canvas_.core.viewport.position(
+                                            _canvas_.system.mouse.tmp.oldPosition.x - ((_canvas_.system.mouse.tmp.clickPosition.x-event.x)),
+                                            _canvas_.system.mouse.tmp.oldPosition.y - ((_canvas_.system.mouse.tmp.clickPosition.y-event.y)),
+                                        );
+                                },
+                                function(event){},
+                            );
+            
+                        //request that the function list stop here
+                            return true;
+                    }
+                }
+            );
+            
+            //zoom
+            _canvas_.system.mouse.functionList.onwheel.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        //control switch
+                            if(!_canvas_.control.interaction.mouseWheelZoomEnabled()){return;}
+            
+            
+            
+                        var scaleLimits = {'max':20, 'min':0.1};
+            
+                        //perform scale and associated pan
+                            //discover point under mouse
+                                var originalPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
+                            //perform actual scaling
+                                var scale = _canvas_.core.viewport.scale();
+                                scale -= scale*(data.event.deltaY/100);
+                                if( scale > scaleLimits.max ){scale = scaleLimits.max;}
+                                if( scale < scaleLimits.min ){scale = scaleLimits.min;}
+                                _canvas_.core.viewport.scale(scale);
+                            //discover new point under mouse
+                                var newPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
+                            //pan so we're back at the old point (accounting for angle)
+                                var pan = _canvas_.library.math.cartesianAngleAdjust(
+                                    (newPoint.x - originalPoint.x),
+                                    (newPoint.y - originalPoint.y),
+                                    _canvas_.core.viewport.angle()
+                                );
+                                var temp = _canvas_.core.viewport.position();
+                                _canvas_.core.viewport.position(temp.x+pan.x*scale,temp.y+pan.y*scale)
+            
+                        //request that the function list stop here
+                            return true;
+                    }
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['control','F2'],['command','F2']],
+                    function:function(data){ _canvas_.control.scene.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['control','F3'],['command','F3']],
+                    function:function(data){ _canvas_.control.scene.save(); _canvas_.system.keyboard.releaseAll(); return true; }
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['control','KeyX'],['command','KeyX']],
+                    function:function(data){ _canvas_.system.keyboard.releaseAll(); _canvas_.control.selection.cut(); return true; }
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['control','KeyC'],['command','KeyC']],
+                    function:function(data){
+                        _canvas_.system.keyboard.releaseAll(); 
+                        _canvas_.control.selection.copy();
+                        return true;
+                    }
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['control','KeyV'],['command','KeyV']],
+                    function:function(data){
+                        _canvas_.system.keyboard.releaseAll(); 
+                        _canvas_.control.selection.paste();
+                        return true; 
+                    }
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['control','KeyB'],['command','KeyB']],
+                    function:function(data){ _canvas_.control.selection.duplicate(); return true; }
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['Delete'],['Backspace']],
+                    function:function(data){ _canvas_.control.selection.delete(); return true; }
+                }
+            );
+            
+            _canvas_.control = new function(){
+                var control = this;
+            
+                this.interaction = new function(){
+                    //global dev mode
+                        var devMode = false;
+                        this.devMode = function(bool){
+                            if(bool==undefined){return devMode;}
+                            devMode = bool;
+            
+                            //if we're in dev mode; enable all switches
+                                if(devMode){
+                                    for(item in this){
+                                        if(item != 'devMode'){
+                                            this[item](true);
+                                        }
+                                    }
+                                }
+                        };
+            
+                    //control
+                        var enableMenubar = true;
+                        this.enableMenubar = function(bool){
+                            if(bool==undefined){return enableMenubar;}
+                            // if(devMode){return;}
+                            enableMenubar = bool;
+                            if(!enableMenubar){ control.gui.hideMenubar(); }
+                        };
+                        var enableSceneSave = true;
+                        this.enableSceneSave = function(bool){
+                            if(bool==undefined){return enableSceneSave;}
+                            if(devMode){return;}
+                            enableSceneSave = bool;
+                        };
+                        var enableSceneLoad = true;
+                        this.enableSceneLoad = function(bool){
+                            if(bool==undefined){return enableSceneLoad;}
+                            if(devMode){return;}
+                            enableSceneLoad = bool;
+                    };
+            
+                    //unit modifications
+                        var enableUnitAdditionRemoval = true;
+                        this.enableUnitAdditionRemoval = function(bool){
+                            if(bool==undefined){return enableUnitAdditionRemoval;}
+                            if(devMode){return;}
+                            enableUnitAdditionRemoval = bool;
+                        };
+                        var enableUnitSelection = true;
+                        this.enableUnitSelection = function(bool){
+                            if(bool==undefined){return enableUnitSelection;}
+                            if(devMode){return;}
+                            enableUnitSelection = bool;
+                        };
+                        var enableUnitInteractable = true;
+                        this.enableUnitInteractable = function(bool){
+                            if(bool==undefined){return enableUnitInteractable;}
+                            if(devMode){return;}
+                            enableUnitInteractable = bool;
+                            control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
+                        };
+                        var enableUnitCollision = !true;
+                        this.enableUnitCollision = function(bool){
+                            if(bool==undefined){return enableUnitCollision;}
+                            if(devMode){return;}
+                            enableUnitCollision = bool;
+                        };
+                        var enablCableDisconnectionConnection = true;
+                        this.enableCableDisconnectionConnection = function(bool){
+                            if(bool==undefined){return enablCableDisconnectionConnection;}
+                            if(devMode){return;}
+                            enablCableDisconnectionConnection = bool;
+                            control.scene.getAllUnits().forEach(a => {
+                                a.allowIOConnections(enablCableDisconnectionConnection);
+                                a.allowIODisconnections(enablCableDisconnectionConnection);
+                            });
+                        };
+            
+                    //general mouse actions
+                        var mouseGripPanningEnabled = true;
+                        this.mouseGripPanningEnabled = function(bool){
+                            if(bool==undefined){return mouseGripPanningEnabled;}
+                            if(devMode){return;}
+                            mouseGripPanningEnabled = bool;
+                        };
+                        var mouseWheelZoomEnabled = true;
+                        this.mouseWheelZoomEnabled = function(bool){
+                            if(bool==undefined){return mouseWheelZoomEnabled;}
+                            if(devMode){return;}
+                            mouseWheelZoomEnabled = bool;
+                        };
+                        var mouseGroupSelect = true;
+                        this.mouseGroupSelect = function(bool){
+                            if(bool==undefined){return mouseGroupSelect;}
+                            if(devMode){return;}
+                            mouseGroupSelect = bool;
+                        };
+                };
+            
+                this.gui = new function(){
+                    var pane = _canvas_.system.pane.f;
+                    var menubar = undefined;
+                    var scale = window.devicePixelRatio;
+            
+                    this.refresh = function(){
+                        if(menubar != undefined){menubar.refresh();}
+                    };
+            
+                    this.showMenubar = function(){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableMenubar()){
+                                this.hideMenubar();
+                                return;
+                            }
+            
+                        if(menubar != undefined){return;}
+                        menubar = control.gui.elements.menubar(0,0,scale);
+                        pane.append( menubar );
+                    };
+                    this.hideMenubar = function(){
+                        if(menubar == undefined){return;}
+                        pane.remove( menubar );
+                        menubar = undefined;
+                    };
+                    this.closeAllDropdowns = function(){
+                        if(menubar != undefined){
+                            menubar.closeAllDropdowns();
+                        }
+                    };
+            
+                    this.elements = new function(){
+                        this.menubar = function(x,y,scale){
+                            var vars = {
+                                width: _canvas_.control.viewport.width(),
+                                height: 10*scale,
+                                selected: undefined,
+                                activedropdown: undefined,
+                            };
+                            var style = {
+                                bar:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                button:{
+                                    text_colour:{r:0,g:0,b:0,a:1},
+                                    text_font:'Helvetica',
+                                    text_size:11.25,
+                                    background__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                    background__press__colour:{r:240/255,g:240/255,b:240/255,a:1},
+                                    background__select_press__colour:{r:229/255,g:167/255,b:255/255,a:1},
+                                    background__press__lineColour:{r:0/255,g:0/255,b:0/255,a:0},
+                                    background__select__colour:{r:229/255,g:167/255,b:255/255,a:1}, background__select__lineColour:{r:0/255,g:0/255,b:0/255,a:0},
+                                    background__select_press__lineColour:{r:0,g:0,b:0,a:0},
+                                },
+                                list:{
+                                    text_size:9,
+                                    text_font:'Helvetica',
+                                    item__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                    item__hover__colour:{r:229/255,g:167/255,b:255/255,a:1}, 
+                                },
+                            };
+                        
+                            //elements
+                                //main
+                                    var object = _canvas_.interface.part.builder( 'group', 'menubar', {});
+                                    var bar = _canvas_.interface.part.builder( 'rectangle', 'rectangle', {x:0, y:0, width:vars.height, height:vars.height, colour:style.bar} );
+                                        object.append(bar);
+                        
+                                //items
+                                    var accWidth = 0;
+                                    for(var a = 0; a < this.menubar.dropdowns.length; a++){
+                                        var item = _canvas_.interface.part.builder( 'button_rectangle', 'dropdownButton_'+a, {
+                                            x:accWidth*scale, y:0, 
+                                            width:this.menubar.dropdowns[a].width*scale,
+                                            height:vars.height, 
+                                            hoverable:false, selectable:true,
+                                            text_centre:this.menubar.dropdowns[a].text,
+                                            style:style.button,
+                                        } );
+                                        object.append(item);
+                        
+                                        item.onpress = function(a){ return function(){
+                                            // if this item has already been selected (and will be deselected after this callback)
+                                            // sent the menubar's 'vars.selected' value to undefined. Otherwise, set it to
+                                            // this item's number
+                        
+                                            vars.selected = object.getChildByName('dropdownButton_'+a).select() ? undefined : a;
+                                        }; }(a);
+                                        item.onenter = function(a){ return function(event){
+                                            //assuming an item has been selected, and it isn't the item that's currently being 
+                                            //entered; deselect that one and tell the menubar that this item is selected now.
+                                            //if no mouse button is pressed (no button rolling is happening) select it manually
+                                            if( vars.selected != undefined && vars.selected != a){
+                                                object.getChildByName('dropdownButton_'+vars.selected).select(false);
+                                                vars.selected = a;
+                                                if(event.buttons == 0){ object.getChildByName('dropdownButton_'+vars.selected).select(true); }
+                                            }
+                                        }; }(a);
+                                        item.onselect = function(a,x,that){ return function(){
+                                            //precalc
+                                                var height = 0;
+                                                for(var b = 0; b < that.menubar.dropdowns[a].itemList.length; b++){
+                                                    switch(that.menubar.dropdowns[a].itemList[b]){
+                                                        case 'break': height += that.menubar.dropdowns[a].breakHeight*scale; break;
+                                                        case 'space': height += that.menubar.dropdowns[a].spaceHeight*scale; break;
+                                                        default: height += that.menubar.dropdowns[a].listItemHeight*scale; break;
+                                                    }
+                                                }
+                                                if(height > _canvas_.control.viewport.height()*scale){
+                                                    height = _canvas_.control.viewport.height()*scale;
+                                                }
+                        
+                                            //produce dropdown
+                                                vars.activedropdown = _canvas_.interface.part.builder( 'list', 'dropdown', {
+                                                    x:x*scale, y:vars.height, style:style.list,
+                                                    width:that.menubar.dropdowns[a].listWidth*scale, height:height,
+                        
+                                                    multiSelect:false, selectable:false,
+                        
+                                                    itemWidthMux: 1,
+                                                    itemHeightMux:  (that.menubar.dropdowns[a].listItemHeight/height)*scale, 
+                                                    breakHeightMux: (that.menubar.dropdowns[a].breakHeight/height)*scale,
+                                                    spaceHeightMux: (that.menubar.dropdowns[a].spaceHeight/height)*scale,
+                                                    itemSpacingMux: 0, 
+                        
+                                                    list:that.menubar.dropdowns[a].itemList,
+                                                });
+                        
+                                            //upon selection of an item in a dropdown; close the dropdown and have nothing selected
+                                                vars.activedropdown.onrelease = function(){
+                                                    object.getChildByName('dropdownButton_'+a).select(false); 
+                                                    vars.selected = undefined;
+                                                };
+                        
+                                            object.append(vars.activedropdown);
+                                        } }(a,accWidth,this);
+                                        item.ondeselect = function(){ 
+                                            object.remove(vars.activedropdown); 
+                                        };
+                        
+                                        this.menubar.dropdowns[a].x = accWidth;
+                                        accWidth += this.menubar.dropdowns[a].width;
+                                    }
+                        
+                            //control
+                                object.closeAllDropdowns = function(){
+                                    if(vars.activedropdown != undefined){
+                                        vars.activedropdown.onrelease();
+                                    }
+                                };
+                        
+                            //refresh callback
+                                object.refresh = function(){
+                                    bar.width( _canvas_.control.viewport.width() );
+                                };
+                                object.refresh();
+                        
+                            return object;
+                        };
+                    };
+                };
+                this.viewport = new function(){
+                    this.width = function(){ return _canvas_.width/window.devicePixelRatio; };
+                    this.height = function(){ return _canvas_.height/window.devicePixelRatio; };
+            
+                    this.scale = function(a){ return _canvas_.core.viewport.scale(a); };
+                    this.position = function(x,y){ return _canvas_.core.viewport.position(x,y); };
+                    this.refresh = function(){ 
+                        _canvas_.core.viewport.refresh();
+                        // control.gui.refresh();
+                    };
+                    this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
+                    this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
+                };
+                this.scene = new function(){
+                    var pane = _canvas_.system.pane.mm;
+                    var IDcounter = 0;
+            
+                    this.backgroundColour = function(colour){ return _canvas_.core.render.clearColour(colour); };
+                    
+                    this.new = function(askForConfirmation=false){
+                        if(askForConfirmation){
+                            if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
+                        }
+                    
+                        control.selection.selectEverything();
+                        control.selection.delete();
+                    
+                        IDcounter = 0;
+                        control.viewport.position(0,0);
+                        control.viewport.scale(0);
+                    };
+                    this.documentUnits = function(units){
+                        // position             -   the X, Y and angle of the original object
+                        // details              -   data on the unit's type
+                        //      collection
+                        //      model
+                        // data                 -   the exported data from the original object
+                        // connections          -   an array of where to connect what
+                        //      typeAndNameOfSourcePort
+                        //      indexOfDestinationUnit
+                        //      typeAndNameOfDestinationPort
+                    
+                        var outputData = [];
+                    
+                        //cycle through this array, and create the scene data
+                            for(var a = 0; a < units.length; a++){
+                                var unit = units[a];
+                                var entry = {};
+                    
+                                //get the units position
+                                    entry.position = {
+                                        x: unit.x(),
+                                        y: unit.y(),
+                                        angle: unit.angle(),
+                                    };
+                    
+                                //unitDetails
+                                    entry.details = {
+                                        collection: unit.collection,
+                                        model: unit.model,
+                                    };
+                    
+                                //export the unit's state
+                                    entry.data = unit.exportData ? unit.exportData() : null;
+                    
+                                //log all connections
+                                    entry.connections = [];
+                                        for(var connectionType in unit.io){
+                                            for(var connection in unit.io[connectionType]){
+                                                var foreignNode = unit.io[connectionType][connection].getForeignNode();
+                                                if(foreignNode == undefined){continue;} //this node isn't connected to anything, so just bail
+                                        
+                                                var newConnectionEntry = {};
+                    
+                                                //typeAndNameOfSourcePort
+                                                    newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
+                    
+                                                //indexOfDestinationUnit
+                                                    newConnectionEntry.indexOfDestinationUnit = units.indexOf(foreignNode.parent);
+                    
+                                                //typeAndNameOfDestinationPort
+                                                    newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignNode.name };
+                    
+                                                entry.connections.push(newConnectionEntry);
+                                            }
+                                        }
+                    
+                                //add this entry to the save data list
+                                    outputData.push(entry);
+                            }
+                    
+                        return outputData;  
+                    };
+                    this.printUnits = function(units){
+                        var printedUnits = [];
+                    
+                        for(var a = 0; a < units.length; a++){
+                            var item = units[a];
+                    
+                            //create the object with its new position adding it to the pane
+                                var unit = control.scene.addUnit(item.position.x, item.position.y,  item.position.angle, item.details.model, item.details.collection);
+                                printedUnits.push(unit);
+                    
+                            //import data and select unit
+                                if(unit.importData){unit.importData(item.data);}
+                                control.selection.selectUnit(unit);
+                    
+                            //go through its connections, and attempt to connect them to everything they should be connected to
+                            // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
+                                for(var b = 0; b < item.connections.length; b++){
+                                    var connection = item.connections[b];
+                    
+                                    var destinationUnit = control.selection.selectedUnits[connection.indexOfDestinationUnit];
+                                    if(destinationUnit == undefined){continue;}
+                    
+                                    var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
+                                    var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
+                                    
+                                    sourceNode.connectTo(destinationNode);
+                                }
+                        }
+                    
+                        return printedUnits;
+                    };
+                    this.export = function(){
+                        //creating an array of all units to be saved (strip out all the cable units)
+                        //document all units in the main pane
+                        return this.documentUnits( Array.from(pane.children()).filter(a => !a._isCable) );
+                    };
+                    this.import = function(data){ this.printUnits( data ); };
+                    this.save = function(filename='project',compress=true){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableSceneSave()){return;}
+                        
+                    
+                    
+                        //gather some initial data
+                            var outputData = {
+                                filename: filename,
+                                viewportLocation: {
+                                    xy: _canvas_.control.viewport.position(),
+                                    scale: _canvas_.control.viewport.scale(),
+                                },
+                            };
+                    
+                        //stopping audio
+                            _canvas_.library.audio.destination.masterGain(0);
+                    
+                        //gather the scene data
+                            outputData.units = this.export();
+                    
+                        //serialize data
+                            outputData = _canvas_.library.misc.serialize(outputData,compress);
+                    
+                        //wrap serialized scene
+                            outputData = {
+                                compressed: compress,
+                                data: outputData
+                            };
+                    
+                        //serialize again
+                            outputData = _canvas_.library.misc.serialize(outputData,false);
+                    
+                        //print to file
+                            _canvas_.library.misc.printFile(filename,outputData);
+                    
+                        //restarting audio
+                            _canvas_.library.audio.destination.masterGain(1);
+                    };
+                    this.load = function(url,callback,askForConfirmation=false){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableSceneLoad()){return;}
+                    
+                    
+                    
+                        if(askForConfirmation){
+                            if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
+                        }
+                    
+                        //procedure for loading in a .crv file
+                            function procedure(data,callback){
+                                //stopping audio
+                                    _canvas_.library.audio.destination.masterGain(0);
+                    
+                                //deserialize first layer
+                                    try{
+                                        var data = _canvas_.library.misc.unserialize(data,false);
+                                    }catch(e){
+                                        console.error( "Major error unserializing first layer of file" );
+                                        console.error(e);
+                                        return;
+                                    }
+                    
+                                //determine if this data is compressed or not
+                                    var compressed = data.compressed;
+                    
+                                //deserialize second layer (knowing now whether it's compressed or not)
+                                    try{
+                                        var data = _canvas_.library.misc.unserialize(data.data,compressed);
+                                    }catch(e){
+                                        console.error( "Major error unserializing second layer of file" );
+                                        console.error(e);
+                                        return;
+                                    }
+                    
+                                //clear scene
+                                    control.scene.new();
+                    
+                                //print to scene
+                                    control.scene.import(data.units);
+                                
+                                //reposition viewport
+                                    control.viewport.position( data.viewportLocation.xy.x, data.viewportLocation.xy.y );
+                                    control.viewport.scale( data.viewportLocation.scale );
+                    
+                                //restarting audio
+                                    _canvas_.library.audio.destination.masterGain(1);
+                    
+                                //deselect all units
+                                    control.selection.deselectEverything();
+                    
+                                //callback
+                                    if(callback){callback(metadata);}
+                            }
+                    
+                        //depending on whether a url has been provided or not, perform the appropiate load
+                            if(url == undefined){ //load from file
+                                _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
+                            }else{  //load from url
+                                var request = new XMLHttpRequest();
+                                request.open('GET', url, true);
+                                request.responseType = 'text';
+                                request.onload = function(){ procedure(this.response,callback); };
+                                request.send();
+                            }
+                    };
+                    
+                    this.generateUnitName = function(){ return IDcounter++; };
+                    this.addUnit = function(x,y,a,model,collection='alpha'){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                    
+                    
+                    
+                        //generate new name for unit
+                            var name = this.generateUnitName();
+                    
+                        //produce unit, assign its name and add grapple code
+                            if( _canvas_.interface.unit.collection[collection] == undefined ){
+                                console.warn('unknown unit collection "'+collection+'" (_canvas_.interface.unit.collection['+collection+'])'); 
+                                return;
+                            }
+                            if( _canvas_.interface.unit.collection[collection][model] == undefined ){
+                                console.warn('unknown unit model "'+model+'" (_canvas_.interface.unit.collection['+collection+']['+model+'])'); 
+                                return;
+                            }
+                    
+                            var tmp = _canvas_.interface.unit.collection[collection][model](x,y,a);
+                            tmp.name = ''+name;
+                            tmp = _canvas_.control.grapple.declare(tmp);
+                    
+                        //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                            this.rectifyUnitPosition(tmp);
+                    
+                        //add it to the main pane
+                            pane.append( tmp );
+                    
+                        return tmp;
+                    };
+                    this.removeUnit = function(unit){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                            
+                            pane.remove(unit);
+                    };
+                    
+                    this.getAllUnits = function(){ return pane.children().filter( a => !a._isCable ); };
+                    this.getUnitByName = function(name){ return pane.getChildByName(name); };
+                    // this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
+                    this.getUnitUnderPoint = function(x,y){
+                        for( var a = 0; a < pane.children().length; a++){
+                            if( _canvas_.library.math.detectOverlap.boundingBoxes({bottomRight:{x:x,y:y},topLeft:{x:x,y:y}}, pane.children()[a].space.box) ){
+                                if( _canvas_.library.math.detectOverlap.pointWithinPoly({x:x,y:y}, pane.children()[a].space.points) ){
+                                    return pane.children()[a];
+                                }
+                            }
+                        }
+                    };
+                    this.getUnitsWithinPoly = function(points){
+                        var box = _canvas_.library.math.boundingBoxFromPoints(points);
+                        return pane.children().filter(function(a){ return !a._isCable && _canvas_.library.math.detectOverlap.boundingBoxes(box, a.space.boundingBox) && _canvas_.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
+                    };
+                    
+                    this.rectifyUnitPosition = function(unit){
+                        return false;
+                        // //control switch
+                        //     if(!_canvas_.control.interaction.enableUnitCollision()){return;}
+                    
+                        // //discover if there's an overlap; if not skip all this
+                        //     var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit).map(a => { return a.space; });
+                        //     if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
+                    
+                        // //get the offset which will allow this unit to fit
+                        //     var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits );
+                            
+                        // //apply offset
+                        //     unit.parameter.x( unit.parameter.x() + offset.x);
+                        //     unit.parameter.y( unit.parameter.y() + offset.y);
+                        
+                        // return true; //false: no change was made - true: a change was made
+                    };
+                };
+                this.selection = new function(){
+                    this.selectedUnits = [];
+                    this.lastSelectedUnits = null;
+                    this.clipboard = [];
+                    
+                    this.selectUnit = function(unit,shiftToFront=true){ 
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitSelection()){return;}
+                    
+                        //check if object is already selected
+                            if( this.selectedUnits.indexOf(unit) != -1 ){return;}
+                    
+                        //shift object to front of view, (within it's particular pane)
+                            if(shiftToFront){
+                                var pane = _canvas_.system.pane.getMiddlegroundPane(unit);
+                                pane.remove(unit);
+                                pane.append(unit);
+                            }
+                    
+                        //colourize space
+                            var tmp = _canvas_.interface.part.builder( 
+                                'polygonWithOutline', 'selectionGlow-'+unit.getAddress(), 
+                                {
+                                    pointsAsXYArray:unit.space.originalPoints, 
+                                    colour:{r:244/255,g:226/255,b:66/255,a:0.25}, lineColour:{r:244/255,g:226/255,b:66/255,a:1}
+                                } 
+                            );
+                            unit.append(tmp);
+                    
+                        //perform selection
+                            if(unit.onselect){object.onselect();}
+                            this.selectedUnits.push(unit);
+                            this.lastSelectedUnits = unit;
+                    };
+                    this.selectUnits = function(unitList){
+                        for(var a = 0; a < unitList.length; a++){
+                            this.selectUnit(unitList[a]);
+                        }
+                    };
+                    this.deselectUnit = function(unit){
+                        //decolourize space
+                            unit.remove( unit.getChildByName('selectionGlow-'+unit.getAddress()) );
+                        
+                        //remove unit from selectedUnits list, and activate it's "ondeselect" function
+                            this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
+                            if(unit.ondeselect){unit.ondeselect();}
+                    };
+                    this.selectEverything = function(){
+                        this.deselectEverything();
+                        for(var a = 0; a < _canvas_.system.pane.mm.children().length; a++){
+                            if( !_canvas_.system.pane.mm.children()[a]._isCable ){
+                                this.selectUnit(_canvas_.system.pane.mm.children()[a],false);
+                            }
+                        }
+                    };
+                    this.deselectEverything = function(){
+                        while(this.selectedUnits.length > 0){
+                            this.deselectUnit( this.selectedUnits[0] );
+                        }
+                    };
+                    
+                    this.cut = function(){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                    
+                    
+                            
+                        this.copy();
+                        this.delete();
+                    };
+                    this.copy = function(){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                    
+                    
+                    
+                        this.clipboard = _canvas_.control.scene.documentUnits(this.selectedUnits);
+                    };
+                    this.paste = function(position){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                    
+                    
+                    
+                        //if clipboard is empty, don't bother
+                            if(this.clipboard.length == 0){return;}
+                    
+                        //deselect everything
+                            this.deselectEverything();
+                    
+                        //position manipulation
+                        //if position is not set to 'duplicate'; calculate new positions for the objects
+                            if(position != 'duplicate'){
+                                //collect all positions
+                                    var points = [];
+                                    this.clipboard.forEach( element => points.push(element.position) );
+                    
+                                //get the bounding box of this selection, and then the top left point of that
+                                    var topLeft = _canvas_.library.math.boundingBoxFromPoints(points).topLeft;
+                    
+                                //if no position has been provided at all; calculate a new one from the mouse position
+                                    if(position == undefined){
+                                        position = _canvas_.core.viewport.mousePosition();
+                                        if(position.x == undefined || position.y == undefined){
+                                            position = _canvas_.core.viewport.windowPoint2workspacePoint(0, 0);
+                                        }
+                                    }
+                    
+                                //combine this topLeft point with the provided (or calculated) position, 
+                                //then add this to the mouses' position
+                                    this.clipboard.forEach( function(element){
+                                        element.position.x += position.x - topLeft.x;
+                                        element.position.y += position.y - topLeft.y;
+                                    } );
+                            }
+                    
+                        //unit printing
+                            _canvas_.control.scene.printUnits( this.clipboard );
+                    
+                    };
+                    this.duplicate = function(){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                    
+                    
+                    
+                        this.copy();
+                        this.paste('duplicate');
+                        this.clipboard = [];
+                    };
+                    this.delete = function(){
+                        //control switch
+                            if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                    
+                    
+                    
+                        while(this.selectedUnits.length > 0){
+                            var unit = this.selectedUnits[0];
+                            //delete object
+                                //run the unit's onDelete method
+                                    if(unit.ondelete){unit.ondelete();}
+                                //run disconnect on every connection node of this unit
+                                    unit.disconnectEverything();
+                                //remove the object from the pane it's in
+                                    _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
+                            //remove object from selected array
+                                this.selectedUnits.shift();
+                        }
+                        this.lastSelectedUnits = null;
+                    };
+                };
             };
             
-            //test of all parts
+            _canvas_.control.grapple = {
+                tmpdata:{},
+                tmpunit:undefined,
+                functionList:{ onmousedown:[], onmouseup:[], },
+                declare:function(unit){
             
-            _canvas_.core.render.active(true);
-            // _canvas_.core.render.frame();
+                    function grappleFunctionRunner(list){
+                        return function(x,y,event){
+                            //ensure that it's the action button on the mouse
+                                if(event.button != 0){return;}
             
-            // //view positioning
-            // _canvas_.core.viewport.scale(5);
-            // var x = 585;
-            // var y = 295;
-            // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
-            // // _canvas_.core.viewport.angle(-0.1);
+                            //save unit
+                                _canvas_.control.grapple.tmpunit = this.unit;
+                            
+                            //run through function list, and activate functions where necessary
+                                _canvas_.library.structure.functionListRunner(list,_canvas_.system.keyboard.pressedKeys)({event:event,x:x,y:y});
+                        };
+                    }
             
-            
-            
-            // //basic
-                var basicGroup = _canvas_.interface.part.builder( 'group', 'basic', { x:10, y:10 } );
-                _canvas_.system.pane.mm.append( basicGroup );
-                basicGroup.append( _canvas_.interface.part.builder( 'rectangle', 'testRectangle', { x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1} } ) );
-                basicGroup.append( _canvas_.interface.part.builder( 'circle', 'testCircle', { x:20, y:55, radius:15 } ) );
-                basicGroup.append( _canvas_.interface.part.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'http://0.0.0.0:8000/testImages/Dore-munchausen-illustration.jpg' } ) );
-                var clippingGroup = _canvas_.interface.part.builder( 'group', 'clippingGroup', { x:75, y:5 } );
-                    clippingGroup.clipActive(true);
-                    clippingGroup.stencil( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[0,0, 50,0, 50,50], colour:{r:0,g:1,b:0,a:1} } ) );
-                    clippingGroup.append( _canvas_.interface.part.builder( 'image', 'clippedImage', { width:50, height:50, url:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg' } ) );
-                    basicGroup.append(clippingGroup);
-                basicGroup.append( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1} } ) );
-                basicGroup.append( _canvas_.interface.part.builder( 'text', 'testText', { x:5, y:75, text:'Hello', height:15, width:15, colour:{r:150/255,g:150/255,b:1,a:1} } ) );
-                basicGroup.append( _canvas_.interface.part.builder( 'path', 'testPath', { points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1 }) );
-            
-            //display
-                var displayGroup = _canvas_.interface.part.builder( 'group', 'display', { x:10, y:150, angle:0 } );
-                _canvas_.system.pane.mm.append( displayGroup );
-                displayGroup.append( _canvas_.interface.part.builder( 'glowbox_rect', 'test_glowbox_rect', {x:0,y:0} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'sevenSegmentDisplay_static', 'test_sevenSegmentDisplay_static', {x:35,y:70} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'sixteenSegmentDisplay_static', 'test_sixteenSegmentDisplay_static', {x:60,y:70} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:85,y:0} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'readout_sixteenSegmentDisplay_static', 'test_readout_sixteenSegmentDisplay_static', {x:85,y:70} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'level', 'test_level1', {x:190, y:0} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'meter_level', 'test_meterLevel1', {x:215, y:0} ) );
-                displayGroup.append( _canvas_.interface.part.builder( 'audio_meter_level', 'test_audioMeterLevel1', {x:240, y:0} ) );
-                var rastorDisplay = _canvas_.interface.part.builder( 'rastorDisplay', 'test_rastorDisplay1', {x:265, y:0} ); displayGroup.append( rastorDisplay ); rastorDisplay.test();
-                var grapher = _canvas_.interface.part.builder( 'grapher', 'test_grapher1', {x:330, y:0} );
-                    displayGroup.append( grapher );
-                    grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-                    grapher.draw([0,0.25,1],undefined,1);
-                var grapher = _canvas_.interface.part.builder( 'grapher_static', 'test_grapher_static1', {x:330, y:70} );
-                    displayGroup.append( grapher );
-                    grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-                    grapher.draw([0,0.25,1],undefined,1);
-                var grapher = _canvas_.interface.part.builder( 'grapher_periodicWave', 'test_grapher_periodicWave1', {x:455, y:0} );
-                    displayGroup.append( grapher );
-                    grapher.updateBackground();
-                    grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
-                    grapher.draw();
-                var grapher = _canvas_.interface.part.builder( 'grapher_periodicWave_static', 'test_grapher_periodicWave_static1', {x:455, y:70} );
-                    displayGroup.append( grapher );
-                    grapher.updateBackground();
-                    grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
-                    grapher.draw();
-                var grapher = _canvas_.interface.part.builder( 'grapher_audioScope', 'test_grapher_audioScope1', {x:580, y:0} );
-                    displayGroup.append( grapher );
-                var grapher = _canvas_.interface.part.builder( 'grapher_audioScope_static', 'test_grapher_audioScope_static1', {x:580, y:70} );
-                    displayGroup.append( grapher );
-            
-            //control
-                var controlGroup = _canvas_.interface.part.builder( 'group', 'control', { x:10, y:300, angle:0 } );
-                _canvas_.system.pane.mm.append( controlGroup );
-                //slide
-                    var s_1 = _canvas_.interface.part.builder( 'slide', 'test_slide1', {x:0,y:0} ); controlGroup.append( s_1 );
-                    var si_1 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image1', {
-                        x:12.5,y:0,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        backingURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                    } ); controlGroup.append( si_1 );
-                    var sp_1 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel1', {x:25,y:0} ); controlGroup.append( sp_1 );
-                    var spi_1 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image1', {
-                        x:107.5,y:0,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        backingURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                        overlayURL:'http://0.0.0.0:8000/testImages/glowbox_rect_overlay_1.png',
-                    } ); controlGroup.append( spi_1 );
-                    var s_2 = _canvas_.interface.part.builder( 'slide', 'test_slide2', {x:190,y:10,angle:-Math.PI/2} ); controlGroup.append( s_2 );
-                    var si_2 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image2', {
-                        x:190,y:22.5,angle:-Math.PI/2,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        backingURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                    } ); controlGroup.append( si_2 );
-                    var sp_2 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel2', {x:287.5,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
-                    var spi_2 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image2', {
-                        x:287.5,y:162.5,angle:-Math.PI/2,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        backingURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                    } ); controlGroup.append( spi_2 );
-                    var r_1 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide1', {x:385,y:0} ); controlGroup.append(r_1);
-                    var ri_1 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image1', {
-                        x:397.5,y:0,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        backingURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                        spanURL:'http://0.0.0.0:8000/testImages/glowbox_rect_overlay_1.png',
-                    } ); controlGroup.append(ri_1);
-                    var r_2 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide2', {x:410,y:10,angle:-Math.PI/2} ); controlGroup.append(r_2);
-                    var ri_2 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image2', {
-                        x:410,y:22.5,angle:-Math.PI/2,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        backingURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                        spanURL:'http://0.0.0.0:8000/testImages/glowbox_rect_overlay_1.png',
-                    } ); controlGroup.append(ri_2);
-                //dial
-                    var dc_1 = _canvas_.interface.part.builder( 'dial_continuous', 'test_dial_continuous1', {x:525,y:20} ); controlGroup.append(dc_1);
-                    var dd_1 = _canvas_.interface.part.builder( 'dial_discrete', 'test_dial_discrete1', {x:560,y:20} ); controlGroup.append(dd_1);
-                    var dic_1 = _canvas_.interface.part.builder( 'dial_continuous_image', 'test_dial_continuous_image1', {
-                        x:525,y:60,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                        needleURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                    } ); controlGroup.append(dic_1);
-                    var did_1 = _canvas_.interface.part.builder( 'dial_discrete_image', 'test_dial_discrete_image1', {
-                        x:560,y:60,
-                        handleURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        slotURL:'http://0.0.0.0:8000/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-                        needleURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                    } ); controlGroup.append(did_1);
-                //button
-                    var br_1 = _canvas_.interface.part.builder( 'button_rectangle', 'test_button_rectangle1', {x:580,y:0,text_centre:'rectangle'} ); controlGroup.append(br_1);
-                    var bc_1 = _canvas_.interface.part.builder( 'button_circle', 'test_button_circle1', {x:595,y:37.5,text_centre:'circle'} ); controlGroup.append(bc_1);
-                    var bp_1 = _canvas_.interface.part.builder( 'button_polygon', 'test_button_polygon1', {
-                        x:580,y:55, points:[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}],
-                        text_centre:'polygon'
-                    } ); controlGroup.append(bp_1);
-                    var bi_1 = _canvas_.interface.part.builder( 'button_image', 'test_button_image1', {
-                        x:580,y:87.5,
-                        backingURL__off:'http://0.0.0.0:8000/testImages/buttonStates/off.png',
-                        backingURL__up:'http://0.0.0.0:8000/testImages/buttonStates/up.png',
-                        backingURL__press:'http://0.0.0.0:8000/testImages/buttonStates/press.png',
-                        backingURL__select:'http://0.0.0.0:8000/testImages/buttonStates/select.png',
-                        backingURL__select_press:'http://0.0.0.0:8000/testImages/buttonStates/select_press.png',
-                        backingURL__glow:'http://0.0.0.0:8000/testImages/buttonStates/glow.png',
-                        backingURL__glow_press:'http://0.0.0.0:8000/testImages/buttonStates/glow_press.png',
-                        backingURL__glow_select:'http://0.0.0.0:8000/testImages/buttonStates/glow_select.png',
-                        backingURL__glow_select_press:'http://0.0.0.0:8000/testImages/buttonStates/glow_select_press.png',
-                        backingURL__hover:'http://0.0.0.0:8000/testImages/buttonStates/hover.png',
-                        backingURL__hover_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_press.png',
-                        backingURL__hover_select:'http://0.0.0.0:8000/testImages/buttonStates/hover_select.png',
-                        backingURL__hover_select_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_select_press.png',
-                        backingURL__hover_glow:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow.png',
-                        backingURL__hover_glow_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow_press.png',
-                        backingURL__hover_glow_select:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow_select.png',
-                        backingURL__hover_glow_select_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow_select_press.png',
-                    } ); controlGroup.append(bi_1);
-                //list
-                    var l_1 = _canvas_.interface.part.builder( 'list', 'test_list1', {x:612.5,y:0,list:[
-                        'space',
-                        { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
-                        { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
-                        { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
-                        { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
-                        { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
-                        'break',
-                        { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
-                        { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
-                        { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
-                        { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
-                        { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
-                        'break',
-                        { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
-                        { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
-                        { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
-                        { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
-                        { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
-                        'space',
-                    ]} ); controlGroup.append(l_1);
-                    var li_1 = _canvas_.interface.part.builder( 'list_image', 'test_list_image1', {
-                        x:665,y:0,list:[
-                            'space',
-                            { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
-                            { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
-                            { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
-                            { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
-                            { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
-                            'break',
-                            { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
-                            { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
-                            { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
-                            { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
-                            { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
-                            'break',
-                            { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
-                            { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
-                            { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
-                            { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
-                            { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
-                            'space',
-                        ],
-                        backingURL:'http://0.0.0.0:8000/testImages/41-satin-stainless-steel.jpg',
-                        breakURL:'http://0.0.0.0:8000/testImages/expanded-metal-1.jpg',
-                        itemURL__off:'http://0.0.0.0:8000/testImages/buttonStates/off.png',
-                        itemURL__up:'http://0.0.0.0:8000/testImages/buttonStates/up.png',
-                        itemURL__press:'http://0.0.0.0:8000/testImages/buttonStates/press.png',
-                        itemURL__select:'http://0.0.0.0:8000/testImages/buttonStates/select.png',
-                        itemURL__select_press:'http://0.0.0.0:8000/testImages/buttonStates/select_press.png',
-                        itemURL__glow:'http://0.0.0.0:8000/testImages/buttonStates/glow.png',
-                        itemURL__glow_press:'http://0.0.0.0:8000/testImages/buttonStates/glow_press.png',
-                        itemURL__glow_select:'http://0.0.0.0:8000/testImages/buttonStates/glow_select.png',
-                        itemURL__glow_select_press:'http://0.0.0.0:8000/testImages/buttonStates/glow_select_press.png',
-                        itemURL__hover:'http://0.0.0.0:8000/testImages/buttonStates/hover.png',
-                        itemURL__hover_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_press.png',
-                        itemURL__hover_select:'http://0.0.0.0:8000/testImages/buttonStates/hover_select.png',
-                        itemURL__hover_select_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_select_press.png',
-                        itemURL__hover_glow:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow.png',
-                        itemURL__hover_glow_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow_press.png',
-                        itemURL__hover_glow_select:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow_select.png',
-                        itemURL__hover_glow_select_press:'http://0.0.0.0:8000/testImages/buttonStates/hover_glow_select_press.png',
-                    } ); controlGroup.append(li_1);
-                //check box
-                    var cr_1 = _canvas_.interface.part.builder( 'checkbox_rectangle', 'test_checkbox_rectangle1', {x:717.5,y:0} ); controlGroup.append(cr_1);
-                    var cc_1 = _canvas_.interface.part.builder( 'checkbox_circle', 'test_checkbox_circle1', {x:727.5,y:32.5} ); controlGroup.append(cc_1);
-                    var cp_1 = _canvas_.interface.part.builder( 'checkbox_polygon', 'test_checkbox_polygon1', {
-                        x:717.5,y:45,
-                        outterPoints:[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
-                        innerPoints:[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
-            
-                    } ); controlGroup.append(cp_1);
-                    var ci_1 = _canvas_.interface.part.builder( 'checkbox_image', 'test_checkbox_image1', {
-                        x:717.5,y:67.5,
-                        uncheckURL:'http://0.0.0.0:8000/testImages/Dore-munchausen-illustration.jpg',
-                        checkURL:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg',
-                    } ); controlGroup.append(ci_1);
-                    var ras_1 = _canvas_.interface.part.builder( 'rastorgrid', 'test_rastorgrid1', {x:740,y:0} ); controlGroup.append(ras_1);
-                    var no = _canvas_.interface.part.builder( 'needleOverlay', 'test_needleOverlay1', {x:822.5,y:0} );
-                        controlGroup.append( no );
-                        no.select(0.25);
-                        no.area(0.5,0.75);
-                        no.mark(0.1);
-                        no.mark(0.1);
-                    var gww = _canvas_.interface.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:945,y:0} );
-                        controlGroup.append( gww );
-                        gww.select(0.2);
-                        gww.area(0.5,0.7);
-                var seq = _canvas_.interface.part.builder( 'sequencer', 'test_sequencer1', {x:1067.5,y:0,zoomLevel_x:1/2} );
-                    controlGroup.append( seq );
-                    seq.addSignal( 0,0,  10,0.0 );
-                    seq.addSignal( 1,1,  10,0.1 );
-                    seq.addSignal( 2,2,  10,0.2 );
-                    seq.addSignal( 3,3,  10,0.3 );
-                    seq.addSignal( 4,4,  10,0.4 );
-                    seq.addSignal( 5,5,  10,0.5 );
-                    seq.addSignal( 6,6,  10,0.6 );
-                    seq.addSignal( 7,7,  10,0.7 );
-                    seq.addSignal( 8,8,  10,0.8 );
-                    seq.addSignal( 9,9,  10,0.9 );
-                    seq.addSignal( 10,10,10,1.0 );
-                    seq.event = function(data){console.log(data);};
+                    unit.space.shape.onmousedown = grappleFunctionRunner( this.functionList.onmousedown );
+                    unit.space.shape.onmouseup = grappleFunctionRunner( this.functionList.onmouseup );
+                    return unit;
+                },
+            };
             
             
-            //dynamic
-                var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:0, y:450, angle:0 } );
-                _canvas_.system.pane.mm.append( dynamicGroup );
-                dynamicGroup.append( _canvas_.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
+            //selection of current unit and deselection of previous unit (if shift is not pressed)
+            _canvas_.control.grapple.functionList.onmousedown.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        var control = _canvas_.control;
             
-                var cn_reg_0 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode1', { x:25, y:25 } ); dynamicGroup.append( cn_reg_0 );
-                var cn_reg_1 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode2', { x:0,  y:75 } ); dynamicGroup.append( cn_reg_1 );
-                var cn_reg_2 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode3', { x:50, y:60 } ); dynamicGroup.append( cn_reg_2 );
-                var cn_reg_3 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode4', { x:30, y:100 } ); dynamicGroup.append( cn_reg_3 );
-                var cn_sig_0 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal1', { x:125, y:25 } ); dynamicGroup.append( cn_sig_0 );
-                var cn_sig_1 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal2', { x:100, y:75 } ); dynamicGroup.append( cn_sig_1 );
-                var cn_sig_2 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal3', { x:150, y:60 } ); dynamicGroup.append( cn_sig_2 );
-                var cn_sig_3 = _canvas_.interface.part.builder( 'connectionNode_signal', 'test_connectionNode_signal4', { x:130, y:100 } ); dynamicGroup.append( cn_sig_3 );
-                var cn_vol_0 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage1', { x:225, y:25 } ); dynamicGroup.append( cn_vol_0 ); 
-                var cn_vol_1 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage2', { x:200, y:75 } ); dynamicGroup.append( cn_vol_1 ); 
-                var cn_vol_2 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage3', { x:250, y:60 } ); dynamicGroup.append( cn_vol_2 ); 
-                var cn_vol_3 = _canvas_.interface.part.builder( 'connectionNode_voltage', 'test_connectionNode_voltage4', { x:230, y:100 } ); dynamicGroup.append( cn_vol_3 ); 
-                var cn_dat_0 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data1', { x:325, y:25 } ); dynamicGroup.append( cn_dat_0 ); 
-                var cn_dat_1 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data2', { x:300, y:75 } ); dynamicGroup.append( cn_dat_1 ); 
-                var cn_dat_2 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data3', { x:350, y:60 } ); dynamicGroup.append( cn_dat_2 ); 
-                var cn_dat_3 = _canvas_.interface.part.builder( 'connectionNode_data', 'test_connectionNode_data4', { x:320, y:100 } ); dynamicGroup.append( cn_dat_3 ); 
-                var cn_aud_0 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio1', { x:425, y:25, isAudioOutput:true} ); dynamicGroup.append( cn_aud_0 ); 
-                var cn_aud_1 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio2', { x:400, y:75 } ); dynamicGroup.append( cn_aud_1 ); 
-                var cn_aud_2 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:60 } ); dynamicGroup.append( cn_aud_2 ); 
-                var cn_aud_3 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio4', { x:420, y:100, isAudioOutput:true} ); dynamicGroup.append( cn_aud_3 ); 
+                        // if mousedown occurs over an unit that isn't selected
+                        //  and if the shift key is not pressed
+                        //   deselect everything
+                        //  now, select the unit we're working on if not selected
+                            if( !control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
+                                if(!data.event.shiftKey){ control.selection.deselectEverything(); }
+                                control.selection.selectUnit(control.grapple.tmpunit);
+                            }
+                    },
+                }
+            );
+            //unit rotation
+            _canvas_.control.grapple.functionList.onmousedown.push(
+                {
+                    requiredKeys:[['shift','alt']],
+                    function:function(data){
+                        var control = _canvas_.control;
+                        
+                        //collect together information on the click position and the selected unit's positions and section area
+                            control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                            control.grapple.tmpdata.oldUnitsPositions = [];
+                            control.grapple.tmpdata.oldUnitsSelectionArea = [];
+                            for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                                control.grapple.tmpdata.oldUnitsPositions.push( {x:control.selection.selectedUnits[a].x(), y:control.selection.selectedUnits[a].y(), angle:control.selection.selectedUnits[a].angle()} );
+                                control.grapple.tmpdata.oldUnitsSelectionArea.push( Object.assign({},control.selection.selectedUnits[a].selectionArea) );
+                            }
             
-                cn_reg_0.connectTo(cn_reg_1); cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
-                cn_sig_0.connectTo(cn_sig_1); cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
-                cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
-                cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
-                cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
+                        //perform the rotation for all selected units
+                            _canvas_.system.mouse.mouseInteractionHandler(
+                                function(event){
+            
+                                    for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                                        var unit = control.selection.selectedUnits[a];
+            
+                                        //calculate new angle
+                                            var rotationalMux = 1;
+                                            var oldClickPosition = control.grapple.tmpdata.oldClickPosition;
+                                            var newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+                                            var oldUnitAngle = control.grapple.tmpdata.oldUnitsPositions[a].angle;
+                                            var newUnitAngle = oldUnitAngle + ((newClickPosition.y - oldClickPosition.y) / 100 ) * rotationalMux;
+            
+                                        //rotate unit
+                                            unit.angle(newUnitAngle);
+            
+                                        //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                                            _canvas_.control.scene.rectifyUnitPosition(unit);
+            
+                                        //perform all redraws and updates for unit
+                                            if( unit.onrotate ){unit.onrotate();}
+                                            if( unit.io ){
+                                                var connectionTypes = Object.keys( unit.io );
+                                                for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                                                    var connectionNodes = unit.io[connectionTypes[connectionType]];
+                                                    var nodeNames = Object.keys( connectionNodes );
+                                                    for(var b = 0; b < nodeNames.length; b++){
+                                                        connectionNodes[nodeNames[b]].draw();
+                                                    }
+                                                }
+                                            }
+                                    }
+            
+                                },
+                                function(event){},
+                            );
+            
+                        return true;
+                    }
+                }
+            );
+            _canvas_.control.grapple.functionList.onmousedown.push(
+                {
+                    requiredKeys:[['alt']],
+                    function:function(data){ _canvas_.control.selection.duplicate(); },
+                }
+            );
+            //unit movement
+            _canvas_.control.grapple.functionList.onmousedown.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        var control = _canvas_.control;
+            
+                        //collect together information on the click position and the selected unit's positions and section area
+                            control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                            control.grapple.tmpdata.oldUnitsPositions = [];
+                            control.grapple.tmpdata.oldUnitsSelectionArea = [];
+                            for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                                control.grapple.tmpdata.oldUnitsPositions.push( {x:control.selection.selectedUnits[a].x(),y:control.selection.selectedUnits[a].y()} );
+                                control.grapple.tmpdata.oldUnitsSelectionArea.push( Object.assign({},control.selection.selectedUnits[a].selectionArea) );
+                            }
+            
+                        //perform the move for all selected units
+                            _canvas_.system.mouse.mouseInteractionHandler(
+                                function(event){
+                                    for(var a = 0; a < control.selection.selectedUnits.length; a++){
+                                        var unit = control.selection.selectedUnits[a];
+            
+                                        //calculate new position
+                                            var oldClickPosition = control.grapple.tmpdata.oldClickPosition;
+                                            var newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+                                            var oldUnitPosition = control.grapple.tmpdata.oldUnitsPositions[a];
+                                            var newUnitPosition = {
+                                                x: oldUnitPosition.x + (newClickPosition.x - oldClickPosition.x),
+                                                y: oldUnitPosition.y + (newClickPosition.y - oldClickPosition.y),
+                                            };
+            
+                                        //move unit
+                                            unit.x(newUnitPosition.x);
+                                            unit.y(newUnitPosition.y);
+            
+                                        // //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                                        //     _canvas_.control.scene.rectifyUnitPosition(unit);
+            
+                                        //perform all redraws and updates for unit
+                                            if( unit.onmove ){unit.onmove();}
+                                            if( unit.io ){
+                                                var connectionTypes = Object.keys( unit.io );
+                                                for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                                                    var connectionNodes = unit.io[connectionTypes[connectionType]];
+                                                    var nodeNames = Object.keys( connectionNodes );
+                                                    for(var b = 0; b < nodeNames.length; b++){
+                                                        connectionNodes[nodeNames[b]].draw();
+                                                    }
+                                                }
+                                            }
+                                            
+                                    }
+                                },
+                                function(event){}
+                            );
+            
+                        return true;
+                    }
+                }
+            );
+            
+            //unselection of unit (with shift pressed)
+            _canvas_.control.grapple.functionList.onmouseup.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        var control = _canvas_.control;
+            
+                        //if mouse-up occurs over an unit that is selected
+                        // and if the shift key is pressed
+                        // and if the unit we're working on is not the most recently selected
+                        //  deselect the unit we're working on
+                        // now set the most recently selected reference to null
+                            if( control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
+                                if( data.event.shiftKey && (control.selection.lastSelectedUnits != control.grapple.tmpunit) ){
+                                    control.selection.deselectUnit(control.grapple.tmpunit);
+                                }
+                                control.selection.lastSelectedUnits = null;
+                            }
+            
+                        return true;
+                    }
+                }
+            );
+            
+            window.onresize = _canvas_.control.viewport.refresh; 
+            _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
+            
+            _canvas_.control.viewport.activeRender(true);
+            _canvas_.control.scene.addUnit(10,10,0,'testUnit_1','test');
+            
+
 
 
         }

@@ -3,6 +3,7 @@ this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor
     temp.name = name;
     temp.ignored = ignored;
     
+    temp.stopAttributeStartedExtremityUpdate = true;
     temp.x(x); 
     temp.y(y);
     temp.width(width); 
@@ -10,5 +11,7 @@ this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor
     temp.angle(angle);
     temp.anchor(anchor);
     temp.imageURL(url);
+    temp.stopAttributeStartedExtremityUpdate = false;
+
     return temp;
 };

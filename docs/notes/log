@@ -1,4 +1,79 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-03-16
+  - webGL experiment
+    - still working on layer 4. Unit selection is working pretty good now
+    - GUI is back (that font is shocking)
+    
+
+2019-03-15
+  - webGL experiment
+    - fixed polygonWithOutline outline (the indexing math wasn't being done
+      correctly)
+    - fixed group clipping (by removing the "context.stencilMask(0x00);" line
+      ...I don't know why this works)
+    - on to the control layer again
+    - mouse panning and zoom works again
+
+
+2019-03-14
+  - webGL experiment
+    - turned out I was using a global by accident, so characterString is working
+      now. Plus its got a more advanced aligning method too
+    - we're back to having layer 3 working again
+
+
+2019-03-13
+  - webGL experiment
+    - serious work on version 2 of the shapes. I'm paying special attention to
+      what enduces extremity calculations, and have hopefully kept things under
+      control. I'm almost done with them all, just some niggly bits of the
+      characterString shape remain
+    - also added the "polygonWithOutline" shape
+
+
+2019-03-12
+  - webGL experiment
+    - fixed some issues surounding how long it takes extremities to be
+      calculated, with calculations being redone needlessly. It's revealed a
+      number of issues throughout the core system however..something I'l need to
+      rewrite. Hopefully things will be fine but slow, thus allowing me to make
+      those fixes in future without much issue
+        It basically boils down to how the extremities are being done. In the
+      past they were calculated on a virtual plane; the "workspace". But now
+      they're being calculated on the canvas plane itself. Though not
+      inherently bad, it means that the system is a little less intuitive,
+      and point conversion is more complicated..I'd like to switch back to the
+      old way..I need to think more about it though.
+
+
+  notes
+  - control layer is getting buggier and buggier, it's revealing issues in the
+    interface layer too...I'm just going deep dive back into layer 1, 2 and 3.
+  - turns out; extremities are being calculated this way to make camera movement
+    easier. It's easier to shift everything to the left to make it look like the
+    camera has moved to the right, then to additional calculations to convert
+    "workspace" points to renderable canvas points
+
+
+2019-03-11
+  - webGL experiment
+    - the display part "level" seemed to be taking a very very long time to
+      update itself..at least, that's how it looks. Lots of recalculation going
+      on. fixed by adding an advanced attribute to rectangle:
+      "__stopExtremityUpdate" which stops any entremity update from happenning.
+      (Should perhaps look into doing something similar for the graphers? Though
+      the sub-canvas kinda covers that ...really, there should be a canvas
+      version of the level too)
+    - fixed issue with character extremity calculation
+
+  notes
+  - ...the text is a bit shit, honestly
+
+  bugs
+  - zooming is borked. I've just left it commented out for now
+  - group clipping seems broken too
+  - unit grappling is borked too (probably because I removed group callbacks)
+
 2019-03-10
   - webGL experiment
     - putting together the text shape (finally have all the character vectors
@@ -9,7 +84,11 @@
       produce the characters
     - added text to all the parts that were lacking it
 
-  bugs found
+  notes
+  - the font is very stylized; not as friendly or unassuming as the old arial
+    font
+
+  bugs
   - the image-based list, doesn't render lots of the button images when you use
     mouse wheel to scroll
 

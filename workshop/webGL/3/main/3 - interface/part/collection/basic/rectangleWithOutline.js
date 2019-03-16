@@ -5,6 +5,7 @@ this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, 
     temp.colour = colour;
     temp.lineColour = lineColour;
     
+    temp.stopAttributeStartedExtremityUpdate = true;
     temp.x(x); 
     temp.y(y);
     temp.width(width); 
@@ -12,5 +13,7 @@ this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, 
     temp.angle(angle);
     temp.anchor(anchor);
     temp.thickness(thickness);
+    temp.stopAttributeStartedExtremityUpdate = false;
+
     return temp;
 };

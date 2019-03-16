@@ -96,8 +96,6 @@ workspace.control.grapple.functionList.onmousedown.push(
                     function(event){},
                 );
 
-
-
             return true;
         }
     }

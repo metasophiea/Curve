@@ -34,7 +34,7 @@ this.shape = new function(){
 this.shape.checkShapes(this.shape.library);
 
 this.arrangement = new function(){
-    var design = core.shape.create('group');
+    var design = core.shape.create('group'); design.name = 'root';
 
     this.new = function(){ design = core.shape.create('group'); };
     this.get = function(){ return design; };
@@ -56,7 +56,6 @@ this.arrangement = new function(){
     };
     this.getElementsUnderPoint = function(x,y){ return design.getElementsUnderPoint(x,y); };
     this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
-    this.getTree = function(){ return design.getTree(); };
     this.printTree = function(mode='address'){ //modes: tabular / address
         function recursivePrint(grouping,prefix=''){
             grouping.children.forEach(function(a){
@@ -70,7 +69,7 @@ this.arrangement = new function(){
             });
         }
 
-        recursivePrint(this.getTree(), '');
+        recursivePrint(design.getTree(), '');
     };
 };
 this.render = new function(){
@@ -174,7 +173,7 @@ this.render = new function(){
         this.refreshCoordinates = function(){
             var w = context.canvas.width;
             var h = context.canvas.height;
-            var m = window.devicePixelRatio;
+            // var m = window.devicePixelRatio;
 
             var x, y, width, height = 0;
             if(window.devicePixelRatio == 1){
@@ -200,7 +199,7 @@ this.render = new function(){
     //actual render
         function renderFrame(){
             context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);
-            core.arrangement.get().render(context);
+            core.arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
         }
         function animate(timestamp){
             animationRequestId = requestAnimationFrame(animate);
@@ -235,12 +234,16 @@ this.render = new function(){
         this.getCanvasDimensions = function(){ return {width:pageData.width, height:pageData.height}; };
         this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){
             var dot = core.shape.create('circle');
-            dot.x(x); dot.y(y);
-            dot.colour = colour;
-            dot.radius(r);
+            dot.name = 'core-drawDot-dot';
+            dot.stopAttributeStartedExtremityUpdate = true;
             dot.dotFrame = false;
+            dot.x(x); dot.y(y);
+            dot.radius(r);
+            dot.computeExtremities();
+            dot.colour = colour;
             dot.render(context);
         };
+        // this.__context = function(){return context;};
 };
 this.stats = new function(){
     var active = false;
@@ -284,6 +287,11 @@ this.viewport = new function(){
     var viewbox = {
         points:{ tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
         boundingBox:{ topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} },
+    };
+    var mouseData = { 
+        x:undefined, 
+        y:undefined, 
+        stopScrollActive:false,
     };
 
     //adapter
@@ -366,13 +374,26 @@ this.viewport = new function(){
         }
         this.calculateViewportExtremities = calculateViewportExtremities;
         this.refresh = function(){
-            this.calculateViewportExtremities();
+            core.render.refresh();
+            calculateViewportExtremities();
         };
         this.getBoundingBox = function(){ return viewbox.boundingBox; };
         this.cursor = function(type){
             //cursor types: https://www.w3schools.com/csSref/tryit.asp?filename=trycss_cursor
             if(type == undefined){return document.body.style.cursor;}
             document.body.style.cursor = type;
+        };
+        this.mousePosition = function(x,y){
+            if(x == undefined || y == undefined){return {x:mouseData.x, y:mouseData.y};}
+            mouseData.x = x;
+            mouseData.y = y;
+        };
+        this.stopMouseScroll = function(bool){
+            if(bool == undefined){return mouseData.stopScrollActive;}
+            mouseData.stopScrollActive = bool;
+    
+            //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
+            if(!bool){ document.body.style.overflow = ''; }
         };
 };
 this.viewport.refresh();
@@ -401,11 +422,22 @@ this.callback = new function(){
         }
 
     //special cases
-        //onmousemove / onmouseenter / onmouseleave
+        //canvas onmouseenter / onmouseleave
+            _canvas_.onmouseenter = function(event){
+                //if appropriate, remove the window scrollbars
+                    if(core.viewport.stopMouseScroll()){ document.body.style.overflow = 'hidden'; }
+            };
+            _canvas_.onmouseleave = function(event){
+                //if appropriate, replace the window scrollbars
+                    if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
+            };
+
+        //onmousemove / shape's onmouseenter / shape's onmouseleave
             var shapeMouseoverList = [];
             _canvas_.onmousemove = function(event){
                 //update the stored mouse position
                     mouseposition = {x:event.x,y:event.y};
+                    core.viewport.mousePosition(event.x,event.y);
 
                 //check for onmouseenter / onmouseleave
                     //get all shapes under point that have onmouseenter or onmouseleave callbacks

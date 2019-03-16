@@ -9,31 +9,34 @@ this.loopedPath = function(){
             this.name = '';
             this.parent = undefined;
             this.dotFrame = false;
-            this.extremities = { points:[], boundingBox:{}, isChanged:true };
+            this.extremities = { points:[], boundingBox:{} };
             this.ignored = false;
             this.colour = {r:0,g:0,b:0,a:1};
+        //advanced use attributes
+            this.devMode = false;
+            this.stopAttributeStartedExtremityUpdate = false;
 
         //attributes pertinent to extremity calculation
-            var scale = 1; this.scale = function(a){ if(a==undefined){return scale;}  scale = a; this.extremities.isChanged=true; this.computeExtremities(); };
-            var points = []; var pointsChanged = true; 
-            function lineGenerator(){ points = _canvas_.library.math.loopedPathToPolygonGenerator( path, thickness ); }
-            var path = [];      this.points =  function(a){ if(a==undefined){return path;} path = a; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
-            var thickness = 1;  this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; lineGenerator(); this.extremities.isChanged=true; this.computeExtremities(); pointsChanged = true; };
+            var pointsChanged = true; var generatedPathPolygon = [];
+            var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
             
+            function lineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness ); }
             this.pointsAsXYArray = function(a){
+                if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
+
                 if(a==undefined){
                     var output = [];
-                    for(var a = 0; a < path.length; a+=2){ output.push({ x:path[a], y:path[a+1] }); }
+                    for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
                     return output;
                 }
 
-                var array = [];
-                a.forEach(a => array = array.concat([a.x,a.y]));
-                this.points(array);
+                this.points( a.map( a => [a.x,a.y] ).flat() );
             };
             
     //addressing
-        this.getAddress = function(){ return this.parent.getAddress() + '/' + this.name; };
+        this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
 
     //webGL rendering functions
         var vertexShaderSource = 
@@ -76,8 +79,7 @@ this.loopedPath = function(){
                         context.enableVertexAttribArray(point.attributeLocation);
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                        pointsChanged = false;
+                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
                     }else{
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
@@ -106,50 +108,34 @@ this.loopedPath = function(){
 
             context.useProgram(program);
             updateGLAttributes(context,adjust);
-            context.drawArrays(context.TRIANGLE_STRIP, 0, points.length/2);
+            context.drawArrays(context.TRIANGLE_STRIP, 0, generatedPathPolygon.length/2);
         }
 
     //extremities
         function computeExtremities(informParent=true,offset){
-            //get offset from parent
-                if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+            if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
 
+            //get offset from parent, if one isn't provided
+                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
             //calculate points based on the offset
                 self.extremities.points = [];
-                for(var a = 0; a < points.length; a+=2){
-                    var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                for(var a = 0; a < generatedPathPolygon.length; a+=2){
+                    var P = _canvas_.library.math.cartesianAngleAdjust(generatedPathPolygon[a]*offset.scale,generatedPathPolygon[a+1]*offset.scale, offset.angle);
                     self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
                 }
                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-
             //if told to do so, inform parent (if there is one) that extremities have changed
-                if(informParent){ if(self.parent){self.parent.computeExtremities();} }
+                if(informParent){ if(self.parent){self.parent.updateExtremities();} }
         }
-        var oldOffset = {x:undefined,y:undefined,scale:undefined,angle:undefined};
-        this.computeExtremities = function(informParent,offset){
-            if(offset == undefined){ offset = self.parent ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-
-            if(
-                this.extremities.isChanged ||
-                oldOffset.x != offset.x || oldOffset.y != offset.y || oldOffset.scale != offset.scale || oldOffset.angle != offset.angle
-            ){
-                computeExtremities(informParent,offset);
-                this.extremities.isChanged = false;
-                oldOffset.x = offset.x;
-                oldOffset.y = offset.y;
-                oldOffset.scale = offset.scale;
-                oldOffset.angle = offset.angle;
-            }
-        };
+        this.computeExtremities = computeExtremities;
 
     //lead render
         function drawDotFrame(){
-            self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-
-            var tl = self.extremities.boundingBox.topLeft;
-            var br = self.extremities.boundingBox.bottomRight;
-            core.render.drawDot(tl.x,tl.y,2,{r:0,g:0,b:0,a:1});
-            core.render.drawDot(br.x,br.y,2,{r:0,g:0,b:0,a:1});
+            //draw shape extremity points
+                self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+            //draw bounding box top left and bottom right points
+                core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
         }
         this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
             //activate shape render code

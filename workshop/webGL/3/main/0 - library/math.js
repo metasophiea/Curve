@@ -125,24 +125,42 @@ this.detectOverlap = new function(){
         return false;
     };
 };
-this.getIndexOfSequence = function(array,sequence){
-    var index = 0;
-    for(index = 0; index < array.length; index++){
-        if( array[index] == sequence[0] ){
+this.getIndexOfSequence = function(array,sequence){ 
+    function comp(thing_A,thing_B){
+        var keys = Object.keys(thing_A);
+        if(keys.length == 0){ return thing_A == thing_B; }
 
+        for(var a = 0; a < keys.length; a++){
+            if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
+            if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
+        }
+        return true;
+    }
+
+    var index = 0;
+    for(index = 0; index < array.length - sequence.length + 1; index++){
+        if( comp(array[index], sequence[0]) ){
             var match = true;
             for(var a = 1; a < sequence.length; a++){
-                if( array[index+a] != sequence[a] ){
+                if( !comp(array[index+a],sequence[a]) ){
                     match = false;
                     break;
                 }
             }
             if(match){return index;}
-
         }
     }
 
     return undefined;
+};
+this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+    var leftOvers = [];
+    theseElements.forEach(function(a){
+        var index = thatArray.indexOf(a);
+        if(index == -1){ leftOvers.push(a); }
+        else{ thatArray.splice(index, 1); }
+    });
+    return leftOvers;
 };
 this.getDifferenceOfArrays = function(array_a,array_b){
     var out_a = []; var out_b = [];
@@ -167,14 +185,14 @@ this.getAngleOfTwoPoints = function(point_1,point_2){
 
     return angle;
 };
-this.pathToPolygonGenerator = function(path,thickness){
+this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
     var jointData = [];
 
     //parse path
         for(var a = 0; a < path.length/2; a++){
             jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
         }
-    //calculate egment angles, joing angles, wing angles and wing widths; then generate wing points
+    //calculate segment angles, joing angles, wing angles and wing widths; then generate wing points
         var outputPoints = [];
         for(var a = 0; a < jointData.length; a++){
             var item = jointData[a];
@@ -186,7 +204,7 @@ this.pathToPolygonGenerator = function(path,thickness){
                     if(jointData[a+1] != undefined){jointData[a+1].implimentAngle = tmp;}
                 }
 
-            //joing angles
+            //joining angles
                 var joiningAngle = item.departAngle == undefined || item.implimentAngle == undefined ? Math.PI : item.departAngle - item.implimentAngle + Math.PI;
 
             //angle
@@ -204,9 +222,24 @@ this.pathToPolygonGenerator = function(path,thickness){
                 outputPoints.push( minus.x+item.point.x, minus.y+item.point.y );
         }
 
+
+    if(returnedPointsFormat == 'TRIANGLE_STRIP'){
+        return outputPoints;
+    }else if(returnedPointsFormat == 'TRIANGLES'){
+        var replacementPoints = [];
+
+        for(var a = 0; a < outputPoints.length/2-2; a++){
+            replacementPoints.push( outputPoints[a*2+0],outputPoints[a*2+1] );
+            replacementPoints.push( outputPoints[a*2+2],outputPoints[a*2+3] );
+            replacementPoints.push( outputPoints[a*2+4],outputPoints[a*2+5] );
+        }
+
+        return replacementPoints;
+    }
+
     return outputPoints;
 };
-this.loopedPathToPolygonGenerator = function(path,thickness){
+this.loopedPathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
     var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
     var loopingPath = [];
 
@@ -217,7 +250,7 @@ this.loopedPathToPolygonGenerator = function(path,thickness){
     loopingPath = loopingPath.concat( [path[0], path[1]] );
     loopingPath = loopingPath.concat(joinPoint);
 
-    return this.pathToPolygonGenerator(loopingPath,thickness);
+    return this.pathToPolygonGenerator(loopingPath,thickness,returnedPointsFormat);
 };
 this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
     var mux = (d - start)/(end - start);
