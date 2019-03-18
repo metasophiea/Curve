@@ -1,6 +1,6 @@
 this.dial_continuous = function(
     name='dial_continuous',
-    x, y, radius=15, angle=0, interactable=true,
+    x, y, radius=10, angle=0, interactable=true,
     value=0, resetValue=-1,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
@@ -16,11 +16,11 @@ this.dial_continuous = function(
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, colour:slotStyle});
+            var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
             object.append(slot);
 
         //handle
-            var handle = interfacePart.builder('circle','handle',{radius:radius, colour:handleStyle});
+            var handle = interfacePart.builder('circle','handle',{radius:radius, detail:50, colour:handleStyle});
             object.append(handle);
 
         //needle group

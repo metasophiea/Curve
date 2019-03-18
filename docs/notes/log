@@ -1,4 +1,10 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-03-17
+  - webGL experiment
+    - work continues on the curve units. Along the way though, I discover issues
+      with some of the interface parts, particularly the graphers
+
+
 2019-03-16
   - webGL experiment
     - still working on layer 4. Unit selection is working pretty good now

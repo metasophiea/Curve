@@ -1,3 +1,13 @@
+this.padString = function(string,length,padding=' '){
+    if(padding.length<1){return string;}
+    string = ''+string;
+
+    while(string.length < length){
+        string = padding + string;
+    }
+
+    return string;
+};
 this.compressString = function(string){return library.thirdparty.lzString.compress(string);};
 this.decompressString = function(string){return library.thirdparty.lzString.decompress(string);};
 this.serialize = function(data,compress=true){

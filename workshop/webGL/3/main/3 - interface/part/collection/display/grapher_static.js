@@ -59,7 +59,7 @@ this.grapher_static = function(
                             //text
                                 if( horizontalMarkings.printText ){
                                     canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
-                                    canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
+                                    canvas._.font = parseFloat(backgroundTextStyle_size.match(/[0-9]*.[0-9]*/i)[0])*resolution/8 +'pt '+backgroundTextStyle_font;
                                     canvas._.fillText(
                                         (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
                                         canvas.$(x+horizontalMarkings.textPositionOffset.x),
@@ -88,7 +88,7 @@ this.grapher_static = function(
                             //text
                                 if( verticalMarkings.printText ){
                                     canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
-                                    canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
+                                    canvas._.font = parseFloat(backgroundTextStyle_size.match(/[0-9]*.[0-9]*/i)[0])*resolution/8 +'pt '+backgroundTextStyle_font;
                                     canvas._.fillText(
                                         (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
                                         canvas.$(x+verticalMarkings.textPositionOffset.x),

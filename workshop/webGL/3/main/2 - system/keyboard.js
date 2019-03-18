@@ -36,7 +36,6 @@
             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
             _canvas_.system.keyboard.pressedKeys[event.code] = true;
             customKeyInterpreter(event,true);
-            console.log(JSON.stringify(_canvas_.system.keyboard.pressedKeys));
         
         //perform action
             if(shapes.length > 0){ shapes[0].onkeydown(x,y,event,shapes); }
@@ -48,7 +47,6 @@
             if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
             delete _canvas_.system.keyboard.pressedKeys[event.code];
             customKeyInterpreter(event,false);
-            console.log(JSON.stringify(_canvas_.system.keyboard.pressedKeys));
         
         //perform action
             if(shapes.length > 0){ shapes[0].onkeyup(x,y,event,shapes); }

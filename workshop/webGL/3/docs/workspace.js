@@ -283,6 +283,134 @@
                             var p = ratio*(rgbaList.length-1);
                             return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
                     };
+                    this.curvePoint = new function(){
+                        this.linear = function(x=0.5, start=0, end=1){
+                            return x *(end-start)+start;
+                        };
+                        this.sin = function(x=0.5, start=0, end=1){
+                            return Math.sin(Math.PI/2*x) *(end-start)+start;
+                        };
+                        this.cos = function(x=0.5, start=0, end=1){
+                            return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
+                        };
+                        this.s = function(x=0.5, start=0, end=1, sharpness=8){
+                            var temp = library.math.normalizeStretchArray([
+                                1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
+                                1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
+                                1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
+                            ]);
+                            return temp[1] *(end-start)+start;
+                        };
+                        this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+                            var temp = library.math.normalizeStretchArray([
+                                (Math.exp(sharpness*0)-1)/(Math.E-1),
+                                (Math.exp(sharpness*x)-1)/(Math.E-1),
+                                (Math.exp(sharpness*1)-1)/(Math.E-1),
+                            ]);
+                            return temp[1] *(end-start)+start;
+                        };
+                    };
+                    this.curveGenerator = new function(){
+                        this.linear = function(stepCount=2, start=0, end=1){
+                            stepCount = Math.abs(stepCount)-1; var outputArray = [0];
+                            for(var a = 1; a < stepCount; a++){ 
+                                outputArray.push(a/stepCount);
+                            }
+                            outputArray.push(1); 
+                    
+                            var mux = end-start;
+                            for(var a = 0 ; a < outputArray.length; a++){
+                                outputArray[a] = outputArray[a]*mux + start;
+                            }
+                    
+                            return outputArray;
+                        };
+                        this.sin = function(stepCount=2, start=0, end=1){
+                            stepCount = Math.abs(stepCount) -1;
+                            var outputArray = [0];
+                            for(var a = 1; a < stepCount; a++){ 
+                                outputArray.push(
+                                    Math.sin( Math.PI/2*(a/stepCount) )
+                                );
+                            }
+                            outputArray.push(1); 
+                    
+                            var mux = end-start;
+                            for(var a = 0 ; a < outputArray.length; a++){
+                                outputArray[a] = outputArray[a]*mux + start;
+                            }
+                    
+                            return outputArray;		
+                        };
+                        this.cos = function(stepCount=2, start=0, end=1){
+                            stepCount = Math.abs(stepCount) -1;
+                            var outputArray = [0];
+                            for(var a = 1; a < stepCount; a++){ 
+                                outputArray.push(
+                                    1 - Math.cos( Math.PI/2*(a/stepCount) )
+                                );
+                            }
+                            outputArray.push(1); 
+                    
+                            var mux = end-start;
+                            for(var a = 0 ; a < outputArray.length; a++){
+                                outputArray[a] = outputArray[a]*mux + start;
+                            }
+                    
+                            return outputArray;	
+                        };
+                        this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+                            if(sharpness == 0){sharpness = 1/1000000;}
+                    
+                            var curve = [];
+                            for(var a = 0; a < stepCount; a++){
+                                curve.push(
+                                    1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
+                                );
+                            }
+                    
+                            var outputArray = library.math.normalizeStretchArray(curve);
+                    
+                            var mux = end-start;
+                            for(var a = 0 ; a < outputArray.length; a++){
+                                outputArray[a] = outputArray[a]*mux + start;
+                            }
+                    
+                            return outputArray;
+                        };
+                        this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+                            var stepCount = stepCount-1;
+                            var outputArray = [];
+                            
+                            for(var a = 0; a <= stepCount; a++){
+                                outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
+                            }
+                    
+                            outputArray = system.utility.math.normalizeStretchArray(outputArray);
+                    
+                            var mux = end-start;
+                            for(var a = 0 ; a < outputArray.length; a++){
+                                outputArray[a] = outputArray[a]*mux + start;
+                            }
+                    
+                            return outputArray;
+                        };
+                    };
+                    this.normalizeStretchArray = function(array){
+                        //discover the largest number
+                            var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+                    
+                        //devide everything by this largest number, making everything a ratio of this value 
+                            var dux = Math.abs(array[biggestIndex]);
+                            array = array.map(x => x / dux);
+                    
+                        //stretch the other side of the array to meet 0 or 1
+                            if(array[0] == 0 && array[array.length-1] == 1){return array;}
+                            var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+                            array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+                    
+                        return array;
+                    };
                 };
                 this.gsls = new function(){
                     this.geometry = `
@@ -752,6 +880,16 @@
                             this.freq2name = function(freq){ return this.frequencies_names[freq]; };
                 };
                 this.misc = new function(){
+                    this.padString = function(string,length,padding=' '){
+                        if(padding.length<1){return string;}
+                        string = ''+string;
+                    
+                        while(string.length < length){
+                            string = padding + string;
+                        }
+                    
+                        return string;
+                    };
                     this.compressString = function(string){return library.thirdparty.lzString.compress(string);};
                     this.decompressString = function(string){return library.thirdparty.lzString.decompress(string);};
                     this.serialize = function(data,compress=true){
@@ -5218,7 +5356,6 @@
                     });
             };
             _canvas_.system.keyboard = new function(){
-                var keyboard = this;
                 //setup
                     var keyboard = this;
                     this.pressedKeys = {
@@ -5245,8 +5382,6 @@
                             }
                     }
                     this.releaseAll = function(){
-                        // var keys = Object.keys(this.pressedKeys);
-                        // for(var a = 0; a < keys.length; a++){ this.releaseKey(keys[a]); }
                         Object.keys(this.pressedKeys).forEach(a => keyboard.releaseKey(a))
                     };
                     this.releaseKey = function(code){
@@ -5259,7 +5394,6 @@
                             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                             _canvas_.system.keyboard.pressedKeys[event.code] = true;
                             customKeyInterpreter(event,true);
-                            console.log(JSON.stringify(_canvas_.system.keyboard.pressedKeys));
                         
                         //perform action
                             if(shapes.length > 0){ shapes[0].onkeydown(x,y,event,shapes); }
@@ -5271,7 +5405,6 @@
                             if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
                             delete _canvas_.system.keyboard.pressedKeys[event.code];
                             customKeyInterpreter(event,false);
-                            console.log(JSON.stringify(_canvas_.system.keyboard.pressedKeys));
                         
                         //perform action
                             if(shapes.length > 0){ shapes[0].onkeyup(x,y,event,shapes); }
@@ -6708,7 +6841,7 @@
                             
                                 return temp;
                             };
-                            this.circle = function( name=null, x=0, y=0, angle=0, radius=10, ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                            this.circle = function( name=null, x=0, y=0, angle=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1} ){
                                 var temp = _canvas_.core.shape.create('circle');
                                 temp.name = name;
                                 temp.ignored = ignored;
@@ -6719,6 +6852,7 @@
                                 temp.y(y);
                                 temp.angle(angle);
                                 temp.radius(radius);
+                                temp.detail(detail);
                                 temp.stopAttributeStartedExtremityUpdate = false;
                             
                                 return temp;
@@ -9759,7 +9893,7 @@
                             };
                             this.dial_continuous = function(
                                 name='dial_continuous',
-                                x, y, radius=15, angle=0, interactable=true,
+                                x, y, radius=10, angle=0, interactable=true,
                                 value=0, resetValue=-1,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
@@ -9775,11 +9909,11 @@
                                         var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                     
                                     //slot
-                                        var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, colour:slotStyle});
+                                        var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
                                         object.append(slot);
                             
                                     //handle
-                                        var handle = interfacePart.builder('circle','handle',{radius:radius, colour:handleStyle});
+                                        var handle = interfacePart.builder('circle','handle',{radius:radius, detail:50, colour:handleStyle});
                                         object.append(handle);
                             
                                     //needle group
@@ -10280,7 +10414,7 @@
                                 text_centre='', text_left='', text_right='',
                                 textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
                                 
-                                active=true, hoverable=true, selectable=!false, pressable=true,
+                                active=true, hoverable=true, selectable=false, pressable=true,
                             
                                 text_font = 'Arial',
                                 text_textBaseline = 'alphabetic',
@@ -12688,7 +12822,8 @@
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
                                 levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
                                 markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
-                                markingStyle_font='1pt Courier New',
+                                markingStyle_font='Courier New',
+                                markingStyle_printingMode='absolute',
                             ){
                                 //elements
                                     //main
@@ -12701,6 +12836,7 @@
                                                 levels:levelStyles,
                                                 markingStyle_fill:markingStyle_fill,
                                                 markingStyle_font:markingStyle_font,
+                                                markingStyle_printingMode:markingStyle_printingMode,
                                             },
                                         });
                                         object.append(meter);
@@ -12779,7 +12915,7 @@
                                                         //text
                                                             if( horizontalMarkings.printText ){
                                                                 canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
-                                                                canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
+                                                                canvas._.font = parseFloat(backgroundTextStyle_size.match(/[0-9]*.[0-9]*/i)[0])*resolution/8 +'pt '+backgroundTextStyle_font;
                                                                 canvas._.fillText(
                                                                     (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
                                                                     canvas.$(x+horizontalMarkings.textPositionOffset.x),
@@ -12808,7 +12944,7 @@
                                                         //text
                                                             if( verticalMarkings.printText ){
                                                                 canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
-                                                                canvas._.font = backgroundTextStyle_size+' '+backgroundTextStyle_font;
+                                                                canvas._.font = parseFloat(backgroundTextStyle_size.match(/[0-9]*.[0-9]*/i)[0])*resolution/8 +'pt '+backgroundTextStyle_font;
                                                                 canvas._.fillText(
                                                                     (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
                                                                     canvas.$(x+verticalMarkings.textPositionOffset.x),
@@ -13194,7 +13330,8 @@
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
                                 levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
                                 markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
-                                markingStyle_font='1pt Courier New',
+                                markingStyle_font='Courier New',
+                                markingStyle_printingMode='absolute',
                             ){
                             
                                 //elements
@@ -13220,7 +13357,7 @@
                                             return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
                                         }
                                         function insertText(y,text){
-                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:1, width:1, text:text, colour:markingStyle_fill});
+                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:1, width:1, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
                                         }
                             
                                         for(var a = 0; a < markings.length; a++){
@@ -14986,7 +15123,7 @@
                                 case 'canvas': return this.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
                                 case 'polygon': return this.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
                                 case 'polygonWithOutline': return this.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
-                                case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.ignored, data.colour );
+                                case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour );
                                 case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
                                 case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
                                 case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode );
@@ -15023,11 +15160,11 @@
                                 );
                                 case 'meter_level': return this.collection.display.meter_level(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.markings,
-                                    data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                                    data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
                                 );
                                 case 'audio_meter_level': return this.collection.display.audio_meter_level(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
-                                    data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                                    data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
                                 );
                                 case 'rastorDisplay': return this.collection.display.rastorDisplay(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
@@ -15091,7 +15228,6 @@
                                         
                                         data.subject,
                                     );
-                    
                                     case 'button_image': return this.collection.control.button_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                                         data.active, data.hoverable, data.selectable, data.pressable,
@@ -15225,7 +15361,7 @@
                                 //dial
                                     case 'dial_continuous': return this.collection.control.dial_continuous(
                                         name,
-                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.x, data.y, data.radius, data.angle, data.interactable,
                                         data.value, data.resetValue,
                                         data.startAngle, data.maxAngle,
                                         data.style.handle, data.style.slot, data.style.needle,
@@ -15233,7 +15369,7 @@
                                     );
                                     case 'dial_discrete': return this.collection.control.dial_discrete(
                                         name,
-                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.x, data.y, data.radius, data.angle, data.interactable,
                                         data.value, data.resetValue, data.optionCount,
                                         data.startAngle, data.maxAngle,
                                         data.style.handle, data.style.slot, data.style.needle,
@@ -15241,7 +15377,7 @@
                                     );
                                     case 'dial_continuous_image': return this.collection.control.dial_continuous_image(
                                         name,
-                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.x, data.y, data.radius, data.angle, data.interactable,
                                         data.value, data.resetValue,
                                         data.startAngle, data.maxAngle,
                                         data.handleURL, data.slotURL, data.needleURL,
@@ -15249,7 +15385,7 @@
                                     );
                                     case 'dial_discrete_image': return this.collection.control.dial_discrete_image(
                                         name,
-                                        data.x, data.y, data.r, data.angle, data.interactable,
+                                        data.x, data.y, data.radius, data.angle, data.interactable,
                                         data.value, data.resetValue, data.optionCount,
                                         data.startAngle, data.maxAngle,
                                         data.handleURL, data.slotURL, data.needleURL,

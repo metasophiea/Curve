@@ -273,3 +273,131 @@ this.multiBlendColours = function(rgbaList,ratio){
         var p = ratio*(rgbaList.length-1);
         return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
 };
+this.curvePoint = new function(){
+    this.linear = function(x=0.5, start=0, end=1){
+        return x *(end-start)+start;
+    };
+    this.sin = function(x=0.5, start=0, end=1){
+        return Math.sin(Math.PI/2*x) *(end-start)+start;
+    };
+    this.cos = function(x=0.5, start=0, end=1){
+        return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
+    };
+    this.s = function(x=0.5, start=0, end=1, sharpness=8){
+        var temp = library.math.normalizeStretchArray([
+            1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
+            1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
+            1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
+        ]);
+        return temp[1] *(end-start)+start;
+    };
+    this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+        var temp = library.math.normalizeStretchArray([
+            (Math.exp(sharpness*0)-1)/(Math.E-1),
+            (Math.exp(sharpness*x)-1)/(Math.E-1),
+            (Math.exp(sharpness*1)-1)/(Math.E-1),
+        ]);
+        return temp[1] *(end-start)+start;
+    };
+};
+this.curveGenerator = new function(){
+    this.linear = function(stepCount=2, start=0, end=1){
+        stepCount = Math.abs(stepCount)-1; var outputArray = [0];
+        for(var a = 1; a < stepCount; a++){ 
+            outputArray.push(a/stepCount);
+        }
+        outputArray.push(1); 
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;
+    };
+    this.sin = function(stepCount=2, start=0, end=1){
+        stepCount = Math.abs(stepCount) -1;
+        var outputArray = [0];
+        for(var a = 1; a < stepCount; a++){ 
+            outputArray.push(
+                Math.sin( Math.PI/2*(a/stepCount) )
+            );
+        }
+        outputArray.push(1); 
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;		
+    };
+    this.cos = function(stepCount=2, start=0, end=1){
+        stepCount = Math.abs(stepCount) -1;
+        var outputArray = [0];
+        for(var a = 1; a < stepCount; a++){ 
+            outputArray.push(
+                1 - Math.cos( Math.PI/2*(a/stepCount) )
+            );
+        }
+        outputArray.push(1); 
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;	
+    };
+    this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+        if(sharpness == 0){sharpness = 1/1000000;}
+
+        var curve = [];
+        for(var a = 0; a < stepCount; a++){
+            curve.push(
+                1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
+            );
+        }
+
+        var outputArray = library.math.normalizeStretchArray(curve);
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;
+    };
+    this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+        var stepCount = stepCount-1;
+        var outputArray = [];
+        
+        for(var a = 0; a <= stepCount; a++){
+            outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
+        }
+
+        outputArray = system.utility.math.normalizeStretchArray(outputArray);
+
+        var mux = end-start;
+        for(var a = 0 ; a < outputArray.length; a++){
+            outputArray[a] = outputArray[a]*mux + start;
+        }
+
+        return outputArray;
+    };
+};
+this.normalizeStretchArray = function(array){
+    //discover the largest number
+        var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
+
+    //devide everything by this largest number, making everything a ratio of this value 
+        var dux = Math.abs(array[biggestIndex]);
+        array = array.map(x => x / dux);
+
+    //stretch the other side of the array to meet 0 or 1
+        if(array[0] == 0 && array[array.length-1] == 1){return array;}
+        var pertinentValue = array[0] != 0 ? array[0] : array[array.length-1];
+        array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
+
+    return array;
+};

@@ -4,7 +4,7 @@ this.button_rectangle = function(
     text_centre='', text_left='', text_right='',
     textVerticalOffsetMux=0.5, textHorizontalOffsetMux=0.05,
     
-    active=true, hoverable=true, selectable=!false, pressable=true,
+    active=true, hoverable=true, selectable=false, pressable=true,
 
     text_font = 'Arial',
     text_textBaseline = 'alphabetic',

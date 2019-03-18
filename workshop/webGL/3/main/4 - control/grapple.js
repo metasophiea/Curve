@@ -114,7 +114,7 @@ _canvas_.control.grapple.functionList.onmousedown.push(
             var control = _canvas_.control;
 
             //collect together information on the click position and the selected unit's positions and section area
-                control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
                 control.grapple.tmpdata.oldUnitsPositions = [];
                 control.grapple.tmpdata.oldUnitsSelectionArea = [];
                 for(var a = 0; a < control.selection.selectedUnits.length; a++){

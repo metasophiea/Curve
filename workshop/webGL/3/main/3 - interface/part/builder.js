@@ -12,7 +12,7 @@ this.builder = function(type,name,data){
             case 'canvas': return this.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
             case 'polygon': return this.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
             case 'polygonWithOutline': return this.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
-            case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.ignored, data.colour );
+            case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour );
             case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
             case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
             case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode );
@@ -49,11 +49,11 @@ this.builder = function(type,name,data){
             );
             case 'meter_level': return this.collection.display.meter_level(
                 name, data.x, data.y, data.angle, data.width, data.height, data.markings,
-                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
             );
             case 'audio_meter_level': return this.collection.display.audio_meter_level(
                 name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
-                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
             );
             case 'rastorDisplay': return this.collection.display.rastorDisplay(
                 name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
@@ -117,7 +117,6 @@ this.builder = function(type,name,data){
                     
                     data.subject,
                 );
-
                 case 'button_image': return this.collection.control.button_image(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                     data.active, data.hoverable, data.selectable, data.pressable,
@@ -251,7 +250,7 @@ this.builder = function(type,name,data){
             //dial
                 case 'dial_continuous': return this.collection.control.dial_continuous(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue,
                     data.startAngle, data.maxAngle,
                     data.style.handle, data.style.slot, data.style.needle,
@@ -259,7 +258,7 @@ this.builder = function(type,name,data){
                 );
                 case 'dial_discrete': return this.collection.control.dial_discrete(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue, data.optionCount,
                     data.startAngle, data.maxAngle,
                     data.style.handle, data.style.slot, data.style.needle,
@@ -267,7 +266,7 @@ this.builder = function(type,name,data){
                 );
                 case 'dial_continuous_image': return this.collection.control.dial_continuous_image(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue,
                     data.startAngle, data.maxAngle,
                     data.handleURL, data.slotURL, data.needleURL,
@@ -275,7 +274,7 @@ this.builder = function(type,name,data){
                 );
                 case 'dial_discrete_image': return this.collection.control.dial_discrete_image(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue, data.optionCount,
                     data.startAngle, data.maxAngle,
                     data.handleURL, data.slotURL, data.needleURL,
