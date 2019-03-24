@@ -18,14 +18,14 @@ this.rectangleWithOutline = function(){
             this.stopAttributeStartedExtremityUpdate = false;
 
         //attributes pertinent to extremity calculation
-            var x = 0;              this.x =         function(a){ if(a==undefined){return x;}      x = a;            if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var y = 0;              this.y =         function(a){ if(a==undefined){return y;}      y = a;            if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}  angle = a;        if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;} anchor = a;       if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var width = 10;         this.width =     function(a){ if(a==undefined){return width;}  width = a;        if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var height = 10;        this.height =    function(a){ if(a==undefined){return height;} height = a;       if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}  scale = a;        if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var x = 0;              this.x =         function(a){ if(a==undefined){return x;}      x = a;              if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var y = 0;              this.y =         function(a){ if(a==undefined){return y;}      y = a;              if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}  angle = a;          if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;} anchor = a;         if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var width = 10;         this.width =     function(a){ if(a==undefined){return width;}  width = a;          if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var height = 10;        this.height =    function(a){ if(a==undefined){return height;} height = a;         if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}  scale = a;          if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
 
     //addressing
         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };

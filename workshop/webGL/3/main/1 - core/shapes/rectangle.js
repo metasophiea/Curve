@@ -9,7 +9,7 @@ this.rectangle = function(){
             this.name = '';
             this.parent = undefined;
             this.dotFrame = false;
-            this.extremities = { points:[], boundingBox:{} };
+            this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
             this.ignored = false;
             this.colour = {r:1,g:0,b:0,a:1};
         //advanced use attributes
@@ -148,6 +148,7 @@ this.rectangle = function(){
                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
         }
         this.computeExtremities = computeExtremities;
+        this.__ext = function(){return JSON.stringify(this.extremities);};
 
     //lead render
         function drawDotFrame(){

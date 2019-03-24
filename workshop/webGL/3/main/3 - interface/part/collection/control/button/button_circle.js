@@ -6,7 +6,6 @@ this.button_circle = function(
     active=true, hoverable=true, selectable=false, pressable=true,
 
     text_font = 'Arial',
-    text_textBaseline = 'alphabetic',
     text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
 

@@ -1,7 +1,8 @@
 this.menubar = function(x,y,scale){
+    scale = 1;
     var vars = {
         width: _canvas_.control.viewport.width(),
-        height: 10*scale,
+        height: 20,
         selected: undefined,
         activedropdown: undefined,
     };

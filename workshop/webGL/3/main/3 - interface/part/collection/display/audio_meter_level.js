@@ -9,6 +9,7 @@ this.audio_meter_level = function(
     markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
     markingStyle_font='Courier New',
     markingStyle_printingMode='absolute',
+    markingStyle_size=2,
 ){
     //elements
         //main
@@ -22,6 +23,7 @@ this.audio_meter_level = function(
                     markingStyle_fill:markingStyle_fill,
                     markingStyle_font:markingStyle_font,
                     markingStyle_printingMode:markingStyle_printingMode,
+                    markingStyle_size:markingStyle_size,
                 },
             });
             object.append(meter);

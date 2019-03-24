@@ -1,5 +1,69 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
-2019-03-17
+ 2019-03-24
+  - webGL experiment
+    - fixed that crossover thing (I was to do with stenciling, where the groups
+      weren't clearing the stencil buffer after they're all done)
+    - fixed the sequencer zooming thing (classic case of trying to access the
+      children of a group with '.children' instead of '.children()')
+    - more issues with the GUI scaling fixed
+
+
+ 2019-03-23
+  - webGL experiment
+    - midi sequencer unit mouse panning now updates the randeslides
+    - fixed rangeSlide-sequencer control issue. Turned out, the sequencer was
+      doing too many update on an adjust (classic problem) using the fresh
+      'stopAttributeStartedExtremityUpdate' attribute on shapes that don't need
+      their extremities calculated, this was fixed
+
+  bugs
+  - zooming the midi sequencer unit is fine for the background, but bad for the
+    note blocks
+  - sequencer parts worksheets crossover onto eachother's space
+
+
+2019-03-21
+  - webGL experiment
+
+  bugs
+  - on the sequencer units, mouse panning on the sequencer doesn't update the
+    randeslides
+
+
+2019-03-20
+  - webGL experiment
+    - added last of curve units
+    - updated interface parts to have a more unified argument structure
+      (particularly when it comes to styling)
+    - updated image shape so that it doesn't reload its image, when the url is
+      changed to the one it already has. This has fixed the list_image
+      scrolling problem
+    - the webGL version has reached ~21000 lines (the canvas version is at
+      around 19000)
+
+  notes
+  - I need to redo these characters. I need to get a big grid together and draw
+    them all beside eachother, so I can get them in better proportion to
+    eachother
+
+  bugs
+  - using the rangeslide on the sequencer is super slow. The sequencer's
+    interface functionality itself is fine (eg, spacebar and mouse to pan) so
+    I'm guessing its something to do with how the rangeslide is interacting with
+    the sequencer..perhaps the number of change requests it sends
+
+
+2019-03-19
+  - webGL experiment
+    - added "circleWithOutline" shape (which uses a trick to draw its outline,
+      so you can't get a ring with transparent centre...might change that in
+      future)
+    - unified core path shapes with "WithOutline" shapes, so the thickness
+      values are all the same (I think)
+    - added a number of curve units
+
+
+2019-03-18
   - webGL experiment
     - work continues on the curve units. Along the way though, I discover issues
       with some of the interface parts, particularly the graphers

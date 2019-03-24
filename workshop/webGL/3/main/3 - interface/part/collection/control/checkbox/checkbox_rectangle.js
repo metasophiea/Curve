@@ -1,10 +1,10 @@
 this.checkbox_rectangle = function(
     name='checkbox_rectangle',
     x, y, width=20, height=20, angle=0, interactable=true,
-    checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-    backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-    checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-    backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+    checkStyle={r:0.58,g:0.58,b:0.58,a:1},
+    backingStyle={r:0.78,g:0.78,b:0.78,a:1},
+    checkGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
+    backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
     onchange = function(){},
 ){
     //adding on the specific shapes

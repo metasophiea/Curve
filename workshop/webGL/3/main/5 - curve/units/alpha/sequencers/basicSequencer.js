@@ -6,36 +6,33 @@ this.basicSequencer = function(x,y,a){
     };
 
     var style = {
-        background:{fill:'rgba(200,200,200,1)'},
-        markings: {
-            fill:{fill:'rgba(150,150,150,1)'},
-            stroke:{stroke:'rgba(150,150,150,1)', lineWidth:1}, 
-        },
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
         rangeslide:{
-            handle:'rgba(240,240,240,1)',
-            backing:'rgba(150,150,150,1)',
-            slot:'rgba(50,50,50,1)',
-            invisibleHandle:'rgba(0,0,0,0)',
-            span:'rgba(220,220,220,1)',
+            handle:{r:240/255,g:240/255,b:240/255,a:1},
+            backing:{r:150/255,g:150/255,b:150/255,a:1},
+            slot:{r:50/255,g:50/255,b:50/255,a:1},
+            invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
+            span:{r:220/255,g:220/255,b:220/255,a:1},
         },
         rangeslide_loop:{
-            handle:'rgba(240,240,240,1)',
-            backing:'rgba(150,150,150,1)',
-            slot:'rgba(50,50,50,1)',
-            span:'rgba(255,247,145,0.5)',
+            handle:{r:240/255,g:240/255,b:240/255,a:1},
+            backing:{r:150/255,g:150/255,b:150/255,a:1},
+            slot:{r:50/255,g:50/255,b:50/255,a:1},
+            span:{r:255/255,g:247/255,b:145/255,a:0.5},
         },
         button:{
-            background__up__fill:'rgba(220,220,220,1)', 
-            background__hover__fill:'rgba(240,240,240,1)', 
-            background__hover_press__fill:'rgba(180,180,180,1)',
+            background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+            background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+            background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
         },
         checkbox:{
-            backing:'rgba(229, 229, 229,1)',
-            check:'rgba(252,252,252,1)',
+            backing:{r:229/255,g: 229/255,b: 229/255,a:1},
+            check:{r:252/255,g:252/255,b:252/255,a:1},
         },
         checkbox_loop:{
-            backing:'rgba(229, 221, 112,1)',
-            check:'rgba(252,244,128,1)',
+            backing:{r:229/255,g: 221/255,b: 112/255,a:1},
+            check:{r:252/255,g:244/255,b:128/255,a:1},
         },
     };
 
@@ -47,7 +44,7 @@ this.basicSequencer = function(x,y,a){
         space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
 
             //main sequencer
                 {type:'sequencer', name:'main', data:{ x:10, y:20, width:780, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
@@ -78,7 +75,7 @@ this.basicSequencer = function(x,y,a){
                 {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
                     onpress:function(){object.elements.sequencer.main.progress();},
                 }},
-                {type:'path', name:'progress_arrow', data:{ points:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+                {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
 
             //reset
                 {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
@@ -87,8 +84,8 @@ this.basicSequencer = function(x,y,a){
                 {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
                     onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
                 }},
-                {type:'path', name:'reset_arrow', data:{ points:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
-                {type:'path', name:'reset_line', data:{ points:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
         ]
     };
     //dynamic design
@@ -106,7 +103,7 @@ this.basicSequencer = function(x,y,a){
         var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
 
     //wiring
-        object.elements.rangeslide.viewselect.onchange = function(values){ 
+        object.elements.rangeslide.viewselect.onchange = function(values){
             object.elements.sequencer.main.viewarea({topLeft:{x:values.start, y:0}, bottomRight:{x:values.end, y:1}},false); 
         };
         object.elements.rangeslide.loopSelect.onchange = function(values){ 

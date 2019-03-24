@@ -3,10 +3,10 @@ this.grapher_periodicWave = function(
     x, y, width=120, height=60, angle=0,
 
     foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
-    foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+    foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
 
     backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-    backgroundStyle_thickness=0.25,
+    backgroundStyle_lineThickness=0.25,
     backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
     backgroundTextStyle_size=0.1,
     backgroundTextStyle_font='Helvetica',
@@ -24,7 +24,7 @@ this.grapher_periodicWave = function(
                 x:0, y:0, width:width, height:height,
                 foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                 backgroundStyle_colour:backgroundStyle_colour, 
-                backgroundStyle_thickness:backgroundStyle_thickness,
+                backgroundStyle_lineThickness:backgroundStyle_lineThickness,
                 backgroundTextStyle_fill:backgroundTextStyle_fill, 
                 backgroundTextStyle_size:backgroundTextStyle_size,
                 backgroundTextStyle_font:backgroundTextStyle_font,

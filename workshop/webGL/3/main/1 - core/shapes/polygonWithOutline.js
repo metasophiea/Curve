@@ -19,8 +19,8 @@ this.polygonWithOutline = function(){
 
         //attributes pertinent to extremity calculation
             var pointsChanged = true; var generatedPathPolygon = [];
-            var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;    generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;        generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                   if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             
             function loopedLineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }

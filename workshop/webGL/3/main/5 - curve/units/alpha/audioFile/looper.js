@@ -1,22 +1,21 @@
 this.looper = function(x,y,a){
     var style = {
-        background: {fill:'rgba(200,200,200,1)'},
-        markings: {fill:'rgba(150,150,150,1)'},
-        strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
         button:{
-            background__up__fill:'rgba(175,175,175,1)', 
-            background__hover__fill:'rgba(220,220,220,1)', 
-            background__hover_press__fill:'rgba(150,150,150,1)',
+            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
         },
         fire_button:{
-            background__up__fill:'rgba(175,195,175,1)', 
-            background__hover__fill:'rgba(220,240,220,1)', 
-            background__hover_press__fill:'rgba(150,170,150,1)',
+            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
         },
         stop_button:{
-            background__up__fill:'rgba(195,175,175,1)', 
-            background__hover__fill:'rgba(240,220,220,1)', 
-            background__hover_press__fill:'rgba(170,150,150,1)',
+            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
         },
     };
     var design = {
@@ -27,7 +26,7 @@ this.looper = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
 
             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
@@ -37,11 +36,11 @@ this.looper = function(x,y,a){
             }},
 
             //symbol
-                {type:'circle', name:'symbol_outterCircle1', data:{ x:11.5, y:41, r:6, style:style.strokeMarkings }},
-                {type:'circle', name:'symbol_outterCircle2', data:{ x:18.5, y:41, r:6, style:style.strokeMarkings }},
-                {type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, style:style.background }},
-                {type:'path', name:'symbol_upperarrow', data:{ points:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], style:style.strokeMarkings }},
-                {type:'path', name:'symbol_lowerarrow', data:{ points:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], style:style.strokeMarkings }},
+                {type:'circleWithOutline', name:'symbol_outterCircle1', data:{ x:11.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {type:'circleWithOutline', name:'symbol_outterCircle2', data:{ x:18.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, colour:style.background }},
+                {type:'path', name:'symbol_upperarrow', data:{ pointsAsXYArray:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {type:'path', name:'symbol_lowerarrow', data:{ pointsAsXYArray:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], colour:style.markings.colour, thickness:style.markings.thickness }},
 
             {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                 onpress: function(){

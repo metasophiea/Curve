@@ -19,7 +19,7 @@ this.path = function(){
         //attributes pertinent to extremity calculation
             var pointsChanged = true; var generatedPathPolygon = [];
             var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
             
             function lineGenerator(){ return _canvas_.library.math.pathToPolygonGenerator( points, thickness ); }

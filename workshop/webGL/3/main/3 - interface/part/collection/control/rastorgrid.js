@@ -2,10 +2,10 @@ this.rastorgrid = function(
     name='rastorgrid', 
     x, y, width=80, height=80, angle=0, interactable=true,
     xcount=5, ycount=5,
-    checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-    backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-    checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-    backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+    checkStyle={r:0.58,g:0.58,b:0.58,a:1},
+    backingStyle={r:0.78,g:0.78,b:0.78,a:1},
+    checkGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
+    backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
     onchange = function(){},
 ){
     //elements 
@@ -16,8 +16,8 @@ this.rastorgrid = function(
             for(var y = 0; y < ycount; y++){
                 for(var x = 0; x < xcount; x++){
                     var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
-                        x:x*(width/xcount),  y:y*(height/ycount), 
-                        width:width/xcount,  height:height/ycount, interactable:interactable,
+                        x:x*(width/xcount), y:y*(height/ycount), 
+                        width:width/xcount, height:height/ycount, interactable:interactable,
                         style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
                         onchange:function(){ if(object.onchange){object.onchange(object.get());} },
                     });

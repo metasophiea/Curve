@@ -4,22 +4,22 @@ _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
 // //view positioning
-// _canvas_.core.viewport.scale(5);
-// var x = 590;
-// var y = 300;
+// _canvas_.core.viewport.scale(2);
+// var x = 325;
+// var y = 145;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // // _canvas_.core.viewport.angle(-0.1);
 
 _canvas_.core.render.active(true);
-_canvas_.core.stats.active(true);
-var averages = [];
-var rollingAverage = 0;
-var rollingAverageIndex = 1;
-setInterval(function(){
-    var tmp = _canvas_.core.stats.getReport();
-    averages.push(tmp.framesPerSecond);
-    console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
-},1000);
+// _canvas_.core.stats.active(true);
+// var averages = [];
+// var rollingAverage = 0;
+// var rollingAverageIndex = 1;
+// setInterval(function(){
+//     var tmp = _canvas_.core.stats.getReport();
+//     averages.push(tmp.framesPerSecond);
+//     console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
+// },1000);
 
 
 
@@ -40,6 +40,7 @@ setInterval(function(){
     basicGroup.append( _canvas_.interface.part.builder( 'polygonWithOutline', 'testPolygonWithOutline', { points:[75,15, 75,55, 115,55], thickness:1, colour:{r:1,g:0,b:0.5,a:1}, lineColour:{r:0,g:0,b:0,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'text', 'testText', { x:5, y:75, text:'Hello', height:15, width:70, colour:{r:150/255,g:150/255,b:1,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'path', 'testPath', { points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1 }) );
+    basicGroup.append( _canvas_.interface.part.builder( 'circleWithOutline', 'testCircleWithOutline', { x:90, y:70, radius:10 } ) );
 
 //display
     var displayGroup = _canvas_.interface.part.builder( 'group', 'display', { x:10, y:150, angle:0 } );
@@ -273,7 +274,7 @@ setInterval(function(){
         seq.addSignal( 10,10,10,1.0 );
         seq.event = function(data){console.log(data);};
 
-//dynamicf
+//dynamic
     var dynamicGroup = _canvas_.interface.part.builder( 'group', 'dynamic', { x:10, y:450, angle:0 } );
     _canvas_.system.pane.mm.append( dynamicGroup );
     dynamicGroup.append( _canvas_.interface.part.builder( 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );

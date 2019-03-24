@@ -1,9 +1,9 @@
 _canvas_.control.gui.elements.menubar.dropdowns = [
     {
         text:'file',
-        width:45/2,
-        listWidth:150/2,
-        listItemHeight:22.5/2,
+        width:45,
+        listWidth:150,
+        listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
@@ -14,9 +14,9 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
     },
     {
         text:'edit',
-        width:45/2,
-        listWidth:150/2,
-        listItemHeight:22.5/2,
+        width:45,
+        listWidth:150,
+        listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
@@ -29,9 +29,9 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
     },
     {
         text:'create',
-        width:65/2,
-        listWidth:250/2,
-        listItemHeight:22.5/2,
+        width:65,
+        listWidth:250,
+        listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
@@ -44,9 +44,9 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
     },
     {
         text:'help',
-        width:50/2,
-        listWidth:150/2,
-        listItemHeight:22.5/2,
+        width:50,
+        listWidth:150,
+        listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[

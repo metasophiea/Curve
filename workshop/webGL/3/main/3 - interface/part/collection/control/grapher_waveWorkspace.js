@@ -7,17 +7,17 @@ this.grapher_waveWorkspace = function(
         {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
     ],
     foregroundTextStyles=[
-        {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-        {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+        {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
     ],
 
-    backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
-    backgroundStyle_thickness=0.25,
+    backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+    backgroundStyle_lineThickness=0.25,
     backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
-    backgroundTextStyle_size='7.5pt',
+    backgroundTextStyle_size=7.5,
     backgroundTextStyle_font='Helvetica',
 
-    backingStyle='rgba(50,50,50,1)',
+    backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 
     onchange=function(needle,value){}, 
     onrelease=function(needle,value){}, 
@@ -32,8 +32,8 @@ this.grapher_waveWorkspace = function(
                 style:{
                     foregrounds:foregroundStyles,   
                     foregroundText:foregroundTextStyles,
-                    background_stroke:backgroundStyle_stroke,
-                    background_thickness:backgroundStyle_thickness,
+                    backgroundStyle_colour:backgroundStyle_colour,
+                    backgroundStyle_lineThickness:backgroundStyle_lineThickness,
                     backgroundText_colour:backgroundTextStyle_colour,
                     backgroundText_size:backgroundTextStyle_size,
                     backgroundText_font:backgroundTextStyle_font,

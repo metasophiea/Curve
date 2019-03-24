@@ -30,8 +30,8 @@ this.sequencer = function(
     horizontalStripStyle_pattern=[0,1],
     horizontalStripStyle_glow={colour:{r:120/255,g:120/255,b:120/255,a:0.8}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
     horizontalStripStyle_styles=[
-        {colour:{r:120/255,g:120/255,b:120/255,a:0.5}, stroke:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
-        {colour:{r:100/255,g:100/255,b:100/255,a:  0}, stroke:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+        {colour:{r:120/255,g:120/255,b:120/255,a:0.5}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+        {colour:{r:100/255,g:100/255,b:100/255,a:0.0}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
     ],
     verticalStripStyle_pattern=[0],
     verticalStripStyle_glow={colour:{r:229/255,g: 221/255,b: 112/255,a:0.25}, lineColour:{r:252/255,g:244/255,b:128/255,a:0.5}, lineThickness:0.5},
@@ -101,8 +101,10 @@ this.sequencer = function(
                 var backgroundDrawArea = interfacePart.builder('group','backgroundDrawArea');
                 workarea.append(backgroundDrawArea);
                 var backgroundDrawArea_horizontal = interfacePart.builder('group','backgroundDrawArea_horizontal');
+                backgroundDrawArea_horizontal.stopAttributeStartedExtremityUpdate = true;
                 backgroundDrawArea.append(backgroundDrawArea_horizontal);
                 var backgroundDrawArea_vertical = interfacePart.builder('group','backgroundDrawArea_vertical');
+                backgroundDrawArea_vertical.stopAttributeStartedExtremityUpdate = true;
                 backgroundDrawArea.append(backgroundDrawArea_vertical);
             //interaction pane back
                 var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
@@ -151,30 +153,30 @@ this.sequencer = function(
                 backgroundDrawArea_horizontal.clear();
                 for(var a = 0; a < yCount; a++){
                     var style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                    backgroundDrawArea_horizontal.append(
-                        interfacePart.builder( 'rectangleWithOutline', 'strip_horizontal_'+a,
-                            {
-                                x:0, y:a*(height/(yCount*zoomLevel_y)),
-                                width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
-                                colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
-                            }
-                        )
+                    var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_horizontal_'+a,
+                        {
+                            x:0, y:a*(height/(yCount*zoomLevel_y)),
+                            width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
+                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                        }
                     );
+                    tmp.stopAttributeStartedExtremityUpdate = true;
+                    backgroundDrawArea_horizontal.append(tmp);
                 }
 
             //vertical strips
                 backgroundDrawArea_vertical.clear();
                 for(var a = 0; a < xCount; a++){
                     var style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                    backgroundDrawArea_vertical.append(
-                        interfacePart.builder( 'rectangleWithOutline', 'strip_vertical_'+a,
-                            {
-                                x:a*(width/(xCount*zoomLevel_x)), y:0,
-                                width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
-                                colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
-                            }
-                        )
+                    var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_vertical_'+a,
+                        {
+                            x:a*(width/(xCount*zoomLevel_x)), y:0,
+                            width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
+                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                        }
                     );
+                    tmp.stopAttributeStartedExtremityUpdate = true;
+                    backgroundDrawArea_vertical.append(tmp);
                 }
         }
         function setViewposition(x,y,update=true){
@@ -197,6 +199,11 @@ this.sequencer = function(
                     topLeft:     { x:x - zoomLevel_x*x,     y:y - zoomLevel_y*y     },
                     bottomRight: { x:x + zoomLevel_x*(1-x), y:y + zoomLevel_y*(1-y) },
                 };
+
+            //callback
+                if(update){
+                    object.onpan(viewport.viewArea);
+                }
         }
         function adjustZoom(x,y){
             if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
@@ -225,26 +232,26 @@ this.sequencer = function(
 
                 //update background strips
                     for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children[a].x( a*(width/(xCount*zoomLevel_x)) );
-                        backgroundDrawArea_vertical.children[a].width( width/(xCount*zoomLevel_x) );
-                        backgroundDrawArea_vertical.children[a].height( viewport.totalSize.height );
+                        backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
+                        backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
+                        backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
                     }
                     for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children[a].y( a*(height/(yCount*zoomLevel_y)) );
-                        backgroundDrawArea_horizontal.children[a].height( height/(yCount*zoomLevel_y) );
-                        backgroundDrawArea_horizontal.children[a].width( viewport.totalSize.width );
+                        backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
+                        backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
+                        backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
                     }
 
                 //update signals
-                    for(var a = 0; a < signalPane.children.length; a++){
-                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
+                    for(var a = 0; a < signalPane.children().length; a++){
+                        signalPane.children()[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
                     }
 
                 //update playhead (if there is one)
                     if(playhead.present){
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].height(viewport.totalSize.height);
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].height(viewport.totalSize.height);
-                        workarea.getElementsWithName('playhead')[0].x( playhead.position*(viewport.totalSize.width/xCount) );
+                        workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
                 }
             }else if( x != undefined && x != zoomLevel_x ){
                 //make sure things are between maxZoom and 1
@@ -261,21 +268,21 @@ this.sequencer = function(
 
                 //update background strips
                     for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children[a].x( a*(width/(xCount*zoomLevel_x)) );
-                        backgroundDrawArea_vertical.children[a].width( width/(xCount*zoomLevel_x) );
+                        backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
+                        backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
                     }
                     for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children[a].width( viewport.totalSize.width );
+                        backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
                     }
 
                 //update signals
-                    for(var a = 0; a < signalPane.children.length; a++){
-                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
+                    for(var a = 0; a < signalPane.children().length; a++){
+                        signalPane.children()[a].unit(width/(xCount*zoomLevel_x), undefined);
                     }
 
                 //update playhead (if there is one)
                     if(playhead.present){
-                        workarea.getElementsWithName('playhead')[0].x( playhead.position*(viewport.totalSize.width/xCount) );
+                        workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
                     }
             }else if( y != undefined && y != zoomLevel_y ){
                 //make sure things are between maxZoom and 1
@@ -292,22 +299,22 @@ this.sequencer = function(
 
                 //update background strips
                     for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children[a].height( viewport.totalSize.height );
+                        backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
                     }
                     for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children[a].y( a*(height/(yCount*zoomLevel_y)) );
-                        backgroundDrawArea_horizontal.children[a].height( height/(yCount*zoomLevel_y) );
+                        backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
+                        backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
                     }
 
                 //update signals
-                    for(var a = 0; a < signalPane.children.length; a++){
-                        signalPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
+                    for(var a = 0; a < signalPane.children().length; a++){
+                        signalPane.children()[a].unit(undefined, height/(yCount*zoomLevel_y));
                     }
 
                 //update playhead (if there is one)
                     if(playhead.present){
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].height(viewport.totalSize.height);
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
                     }
             }
         }
@@ -343,6 +350,11 @@ this.sequencer = function(
 
             //update state
                 viewport.viewArea = Object.assign(d,{});
+
+            //callback
+                if(update){
+                    object.onchangeviewarea(viewport.viewArea);
+                }
         }
         function makeSignal(line, position, length, strength=signals.defaultStrength){
             //register signal and get new id. From the registry, get the approved signal values
@@ -685,9 +697,9 @@ this.sequencer = function(
 
                 for(var a = start; a <= end; a++){
                     var tmp = state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                    backgroundDrawArea_horizontal.children[a].colour = tmp.colour;
-                    backgroundDrawArea_horizontal.children[a].lineColour = tmp.lineColour;
-                    backgroundDrawArea_horizontal.children[a].thickness = tmp.thickness;
+                    backgroundDrawArea_horizontal.children()[a].colour = tmp.colour;
+                    backgroundDrawArea_horizontal.children()[a].lineColour = tmp.lineColour;
+                    backgroundDrawArea_horizontal.children()[a].thickness = tmp.thickness;
                 }
             };
             object.glowVertical = function(state,start,end){
@@ -695,9 +707,9 @@ this.sequencer = function(
 
                 for(var a = start; a < end; a++){
                     var tmp = state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                    backgroundDrawArea_vertical.children[a].colour = tmp.colour;
-                    backgroundDrawArea_vertical.children[a].lineColour = tmp.lineColour;
-                    backgroundDrawArea_vertical.children[a].thickness = tmp.thickness;
+                    backgroundDrawArea_vertical.children()[a].colour = tmp.colour;
+                    backgroundDrawArea_vertical.children()[a].lineColour = tmp.lineColour;
+                    backgroundDrawArea_vertical.children()[a].thickness = tmp.thickness;
                 }
             };
         
@@ -764,7 +776,7 @@ this.sequencer = function(
                     }
     
                 //reposition graphical playhead
-                    var playheadObject = workarea.getElementsWithName('playhead')[0];
+                    var playheadObject = workarea.getChildByName('playhead');
                     if(playhead.position < 0 || playhead.position > xCount){
                         //outside viable bounds, so remove
                             if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }

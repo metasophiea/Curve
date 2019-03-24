@@ -2,26 +2,25 @@ this.oneShot_multi_multiTrack = function(x,y,a){
     var trackCount = 8;
 
     var style = {
-        background: {fill:'rgba(200,200,200,1)'},
-        markings: {fill:'rgba(150,150,150,1)'},
-        strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
         button:{
-            background__up__fill:'rgba(175,175,175,1)', 
-            background__hover__fill:'rgba(220,220,220,1)', 
-            background__hover_press__fill:'rgba(150,150,150,1)',
+            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
         },
         fire_button:{
-            background__up__fill:'rgba(175,195,175,1)', 
-            background__hover__fill:'rgba(220,240,220,1)', 
-            background__hover_press__fill:'rgba(150,170,150,1)',
+            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
         },
         stop_button:{
-            background__up__fill:'rgba(195,175,175,1)', 
-            background__hover__fill:'rgba(240,220,220,1)', 
-            background__hover_press__fill:'rgba(170,150,150,1)',
+            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
         },
         slide:{
-            handle:'rgba(220,220,220,1)'
+            handle:{r:220/255,g:220/255,b:220/255,a:1}
         },
     };
     var design = {
@@ -32,7 +31,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], colour:style.background }},
 
             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
@@ -42,11 +41,11 @@ this.oneShot_multi_multiTrack = function(x,y,a){
         for(var a = 0; a < trackCount; a++){
             //symbols
                 design.elements = design.elements.concat([
-                    {type:'path', name:'symbol_'+a+'_arrow', data:{ points:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], style:style.strokeMarkings }},
-                    {type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, style:style.markings }},
-                    {type:'circle', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), r:5.5, style:style.strokeMarkings }},
-                    {type:'circle', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
-                    {type:'circle', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
+                    {type:'path', name:'symbol_'+a+'_arrow', data:{ pointsAsXYArray:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                    {type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, colour:style.markings.colour }},
+                    {type:'circleWithOutline', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                    {type:'circleWithOutline', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                    {type:'circleWithOutline', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
                 ]);
 
             //rate adjust

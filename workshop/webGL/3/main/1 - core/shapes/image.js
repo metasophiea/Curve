@@ -37,6 +37,7 @@ this.image = function(){
                 if(this.devMode){console.log(this.getAddress()+'::imageURL');}
 
                 if(a==undefined){return image.url;}
+                if(a==image.url){return;} //no need to reload the same image
                 image.url = a;
 
                 if(image.url === ''){ image.url = image.defaultURL; }

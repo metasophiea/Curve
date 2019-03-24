@@ -13,6 +13,7 @@ this.builder = function(type,name,data){
             case 'polygon': return this.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
             case 'polygonWithOutline': return this.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
             case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour );
+            case 'circleWithOutline': return this.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
             case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
             case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
             case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode );
@@ -49,11 +50,11 @@ this.builder = function(type,name,data){
             );
             case 'meter_level': return this.collection.display.meter_level(
                 name, data.x, data.y, data.angle, data.width, data.height, data.markings,
-                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
+                data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
             );
             case 'audio_meter_level': return this.collection.display.audio_meter_level(
                 name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
-                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
+                data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
             );
             case 'rastorDisplay': return this.collection.display.rastorDisplay(
                 name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
@@ -61,42 +62,42 @@ this.builder = function(type,name,data){
             case 'grapher': return this.collection.display.grapher(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_thickness,
+                data.style.background_colour, data.style.background_lineThickness,
                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_static': return this.collection.display.grapher_static(
                 name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_thickness,
+                data.style.background_colour, data.style.background_lineThickness,
                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_periodicWave': return this.collection.display.grapher_periodicWave(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_thickness,
+                data.style.background_colour, data.style.background_lineThickness,
                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_periodicWave_static': return this.collection.display.grapher_periodicWave_static(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_thickness,
+                data.style.background_colour, data.style.background_lineThickness,
                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_audioScope': return this.collection.display.grapher_audioScope(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_thickness,
+                data.style.background_colour, data.style.background_lineThickness,
                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_audioScope_static': return this.collection.display.grapher_audioScope_static(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_thickness,
+                data.style.background_colour, data.style.background_lineThickness,
                 data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
@@ -152,7 +153,7 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                    data.style.text_font, data.style.text_size, data.style.text_colour,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -185,7 +186,7 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                    data.style.text_font, data.style.text_size, data.style.text_colour,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -219,7 +220,7 @@ this.builder = function(type,name,data){
                     data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                    data.style.text_font, data.style.text_size, data.style.text_colour,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -322,7 +323,7 @@ this.builder = function(type,name,data){
                     data.spacingHeightMux,
 
                     data.style.backing, data.style.break,
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                    data.style.text_font, data.style.text_size, data.style.text_colour,
                     data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
                     data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
                     data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
@@ -412,8 +413,8 @@ this.builder = function(type,name,data){
                 case 'grapher_waveWorkspace': return this.collection.control.grapher_waveWorkspace(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
                     data.style.foregrounds, data.style.foregroundText,
-                    data.style.background_stroke, data.style.background_lineWidth,
-                    data.style.backgroundText_fill, data.style.backgroundText_font,
+                    data.style.background_colour, data.style.background_lineThickness,
+                    data.style.backgroundText_colour, data.style.backgroundText_font,
                     data.style.backing,
                     data.onchange, data.onrelease, data.selectionAreaToggle
                 );

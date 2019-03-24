@@ -49,6 +49,8 @@ this.group = function(){
         this.getChildByName = getChildByName;
         this.contains = checkForShape;
         this.append = function(shape){
+            if(self.devMode){console.log(self.getAddress()+'::.append - type:'+shape.getType()+' - name:'+shape.name);}
+
             if( !isValidShape(shape) ){ return; }
 
             children.push(shape); 
@@ -153,11 +155,9 @@ this.group = function(){
         function augmentExtremities(shape){
             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities');}
 
-            //if we're in clipping mode, no addition of a shape can effect the extremities 
-                if(clipping.active && clipping.stencil != undefined){return true;}
             //get offset from parent
                 var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-            //combine offset with group's position, angle and scale to produce new offset for chilren
+            //combine offset with group's position, angle and scale to produce new offset for children
                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                 var newOffset = { 
                     x: point.x*offset.scale + offset.x,
@@ -273,8 +273,11 @@ this.group = function(){
                     ){ a.render(context,newOffset); }
                 });
 
-            //disactivate clipping
-                if(clipping.active){ context.disable(context.STENCIL_TEST); }
+            //deactivate clipping
+                if(clipping.active){ 
+                    context.disable(context.STENCIL_TEST); 
+                    context.clear(context.STENCIL_BUFFER_BIT);
+                }
 
             //if requested; draw dot frame
                 if(self.dotFrame){drawDotFrame();}

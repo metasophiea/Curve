@@ -4,7 +4,7 @@ this.rangeslide_image = function(
     handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
 
     handleURL, backingURL, slotURL,
-    invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+    invisibleHandleStyle={r:1,g:0,b:0,a:0},
     spanURL,
 
     onchange=function(){},

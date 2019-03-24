@@ -31,7 +31,7 @@
     }
 
 //connect callbacks to keyboard function lists
-    _canvas_.core.callback.onkeydown = function(x,y,event,shapes){console.log('down: '+event.code);
+    _canvas_.core.callback.onkeydown = function(x,y,event,shapes){
         //if key is already pressed, don't press it again
             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
             _canvas_.system.keyboard.pressedKeys[event.code] = true;
@@ -42,7 +42,7 @@
             else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); }
     };
 
-    _canvas_.core.callback.onkeyup = function(x,y,event,shapes){console.log('up: '+event.code);
+    _canvas_.core.callback.onkeyup = function(x,y,event,shapes){
         //if key isn't pressed, don't release it
             if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
             delete _canvas_.system.keyboard.pressedKeys[event.code];

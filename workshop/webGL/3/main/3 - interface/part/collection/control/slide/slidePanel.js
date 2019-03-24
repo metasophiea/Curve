@@ -2,9 +2,9 @@ this.slidePanel = function(
     name='slidePanel', 
     x, y, width=80, height=95, angle=0, interactable=true,
     handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-    handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
-    backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
-    slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
+    handleStyle={r:0.78,g:0.78,b:0.78,a:1},
+    backingStyle={r:0.58,g:0.58,b:0.58,a:1},
+    slotStyle={r:0.2,g:0.2,b:0.2,a:1},
     onchange=function(){},
     onrelease=function(){},
 ){

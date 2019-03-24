@@ -2,6 +2,19 @@ this.averagePoint = function(points){
     var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
     return {x:sum.x/points.length,y:sum.y/points.length};
 };
+this.seconds2time = function(seconds){
+    var result = {h:0, m:0, s:0};
+    
+    result.h = Math.floor(seconds/3600);
+    seconds = seconds - result.h*3600;
+
+    result.m = Math.floor(seconds/60);
+    seconds = seconds - result.m*60;
+
+    result.s = seconds;
+
+    return result;
+};
 this.cartesianAngleAdjust = function(x,y,angle){
     function cartesian2polar(x,y){
         var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
@@ -256,6 +269,16 @@ this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
     var mux = (d - start)/(end - start);
     if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
     return mux*realLength;
+};
+this.convertColour = new function(){
+    this.obj2rgba = obj => 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
+    this.rgba2obj = function(rgba){
+        rgba = rgba.split(',');
+        rgba[0] = rgba[0].replace('rgba(', '');
+        rgba[3] = rgba[3].replace(')', '');
+        rgba = rgba.map(function(a){return parseFloat(a);})
+        return {r:rgba[0]/255,g:rgba[1]/255,b:rgba[2]/255,a:rgba[3]};
+    };
 };
 this.blendColours = function(rgba_1,rgba_2,ratio){
     return {

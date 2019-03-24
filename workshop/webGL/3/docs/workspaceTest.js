@@ -14,6 +14,19 @@
                         var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
                         return {x:sum.x/points.length,y:sum.y/points.length};
                     };
+                    this.seconds2time = function(seconds){
+                        var result = {h:0, m:0, s:0};
+                        
+                        result.h = Math.floor(seconds/3600);
+                        seconds = seconds - result.h*3600;
+                    
+                        result.m = Math.floor(seconds/60);
+                        seconds = seconds - result.m*60;
+                    
+                        result.s = seconds;
+                    
+                        return result;
+                    };
                     this.cartesianAngleAdjust = function(x,y,angle){
                         function cartesian2polar(x,y){
                             var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
@@ -268,6 +281,16 @@
                         var mux = (d - start)/(end - start);
                         if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
                         return mux*realLength;
+                    };
+                    this.convertColour = new function(){
+                        this.obj2rgba = obj => 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
+                        this.rgba2obj = function(rgba){
+                            rgba = rgba.split(',');
+                            rgba[0] = rgba[0].replace('rgba(', '');
+                            rgba[3] = rgba[3].replace(')', '');
+                            rgba = rgba.map(function(a){return parseFloat(a);})
+                            return {r:rgba[0]/255,g:rgba[1]/255,b:rgba[2]/255,a:rgba[3]};
+                        };
                     };
                     this.blendColours = function(rgba_1,rgba_2,ratio){
                         return {
@@ -2097,14 +2120,14 @@
                                     this.stopAttributeStartedExtremityUpdate = false;
                         
                                 //attributes pertinent to extremity calculation
-                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}      x = a;            if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}      y = a;            if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}  angle = a;        if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;} anchor = a;       if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}  width = a;        if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;} height = a;       if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}  scale = a;        if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var x = 0;              this.x =         function(a){ if(a==undefined){return x;}      x = a;              if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;              this.y =         function(a){ if(a==undefined){return y;}      y = a;              if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;          this.angle =     function(a){ if(a==undefined){return angle;}  angle = a;          if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var anchor = {x:0,y:0}; this.anchor =    function(a){ if(a==undefined){return anchor;} anchor = a;         if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var width = 10;         this.width =     function(a){ if(a==undefined){return width;}  width = a;          if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var height = 10;        this.height =    function(a){ if(a==undefined){return height;} height = a;         if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}  scale = a;          if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                         
                             //addressing
                                 this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
@@ -2809,8 +2832,8 @@
                         
                                 //attributes pertinent to extremity calculation
                                     var pointsChanged = true; var generatedPathPolygon = [];
-                                    var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;    generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;        generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                   if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     
                                     function loopedLineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }
@@ -3234,6 +3257,7 @@
                                         if(this.devMode){console.log(this.getAddress()+'::imageURL');}
                         
                                         if(a==undefined){return image.url;}
+                                        if(a==image.url){return;} //no need to reload the same image
                                         image.url = a;
                         
                                         if(image.url === ''){ image.url = image.defaultURL; }
@@ -3433,7 +3457,7 @@
                                 //attributes pertinent to extremity calculation
                                     var pointsChanged = true; var generatedPathPolygon = [];
                                     var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
                                     
                                     function lineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness ); }
@@ -3580,7 +3604,7 @@
                                 //attributes pertinent to extremity calculation
                                     var pointsChanged = true; var generatedPathPolygon = [];
                                     var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
                                     
                                     function lineGenerator(){ return _canvas_.library.math.pathToPolygonGenerator( points, thickness ); }
@@ -4199,7 +4223,7 @@
                                     this.name = '';
                                     this.parent = undefined;
                                     this.dotFrame = false;
-                                    this.extremities = { points:[], boundingBox:{} };
+                                    this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
                                     this.ignored = false;
                                     this.colour = {r:1,g:0,b:0,a:1};
                                 //advanced use attributes
@@ -4338,6 +4362,7 @@
                                         if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                                 }
                                 this.computeExtremities = computeExtremities;
+                                this.__ext = function(){return JSON.stringify(this.extremities);};
                         
                             //lead render
                                 function drawDotFrame(){
@@ -4415,6 +4440,8 @@
                                 this.getChildByName = getChildByName;
                                 this.contains = checkForShape;
                                 this.append = function(shape){
+                                    if(self.devMode){console.log(self.getAddress()+'::.append - type:'+shape.getType()+' - name:'+shape.name);}
+                        
                                     if( !isValidShape(shape) ){ return; }
                         
                                     children.push(shape); 
@@ -4519,11 +4546,9 @@
                                 function augmentExtremities(shape){
                                     if(self.devMode){console.log(self.getAddress()+'::augmentExtremities');}
                         
-                                    //if we're in clipping mode, no addition of a shape can effect the extremities 
-                                        if(clipping.active && clipping.stencil != undefined){return true;}
                                     //get offset from parent
                                         var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                                    //combine offset with group's position, angle and scale to produce new offset for chilren
+                                    //combine offset with group's position, angle and scale to produce new offset for children
                                         var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
                                         var newOffset = { 
                                             x: point.x*offset.scale + offset.x,
@@ -4639,8 +4664,237 @@
                                             ){ a.render(context,newOffset); }
                                         });
                         
-                                    //disactivate clipping
-                                        if(clipping.active){ context.disable(context.STENCIL_TEST); }
+                                    //deactivate clipping
+                                        if(clipping.active){ 
+                                            context.disable(context.STENCIL_TEST); 
+                                            context.clear(context.STENCIL_BUFFER_BIT);
+                                        }
+                        
+                                    //if requested; draw dot frame
+                                        if(self.dotFrame){drawDotFrame();}
+                                };
+                        };
+                        this.circleWithOutline = function(){
+                            var self = this;
+                        
+                            //attributes 
+                                //protected attributes
+                                    const type = 'circleWithOutline'; this.getType = function(){return type;}
+                        
+                                //simple attributes
+                                    this.name = '';
+                                    this.parent = undefined;
+                                    this.dotFrame = false;
+                                    this.extremities = { points:[], boundingBox:{} };
+                                    this.ignored = false;
+                                    this.colour = {r:1,g:0,b:0,a:1};
+                                    this.lineColour = {r:0,g:0,b:0,a:1};
+                                //advanced use attributes
+                                    this.devMode = false;
+                                    this.stopAttributeStartedExtremityUpdate = false;
+                        
+                                //attributes pertinent to extremity calculation
+                                    var x = 0;         this.x =         function(a){ if(a==undefined){return x;}         x = a;         if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var y = 0;         this.y =         function(a){ if(a==undefined){return y;}         y = a;         if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var angle = 0;     this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var radius = 10;   this.radius =    function(a){ if(a==undefined){return radius;}    radius = a;    if(this.devMode){console.log(this.getAddress()+'::radius');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 2; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var detail = 25;   this.detail =    function(a){ 
+                                                           if(a==undefined){return detail;} detail = a;
+                                                           if(this.devMode){console.log(this.getAddress()+'::detail');}
+                        
+                                                           generatePoints();
+                        
+                                                           if(this.stopAttributeStartedExtremityUpdate){return;} 
+                                                           computeExtremities();
+                                                       };
+                        
+                            //addressing
+                                this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+                        
+                            //webGL rendering functions
+                                var points = []; 
+                                var pointsChanged = true;
+                                function generatePoints(){
+                                    points = [];
+                        
+                                    //outline
+                                        for(var a = 0; a < detail; a++){
+                                            points.push(0,0);
+                                            points.push( Math.sin( 2*Math.PI * (a/detail) ), Math.cos( 2*Math.PI * (a/detail) ) );
+                                            points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
+                                        }
+                                    //main circle
+                                        for(var a = 0; a < detail; a++){
+                                            points.push(0,0);
+                                            points.push( Math.sin( 2*Math.PI * (a/detail) ), Math.cos( 2*Math.PI * (a/detail) ) );
+                                            points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
+                                        }
+                        
+                                    pointsChanged = true;
+                                }
+                                this.detail(detail);
+                                var vertexShaderSource = 
+                                    _canvas_.library.gsls.geometry + `
+                                    //index
+                                        attribute lowp float index;
+                                    
+                                    //constants
+                                        attribute vec2 point;
+                        
+                                    //variables
+                                        struct location{
+                                            vec2 xy;
+                                            float scale;
+                                            float angle;
+                                        };
+                                        uniform location adjust;
+                        
+                                        uniform vec2 resolution;
+                                        uniform float radius;
+                                        uniform float thickness;
+                                        uniform vec4 colour;
+                                        uniform vec4 lineColour;
+                                        uniform lowp float indexParting;
+                                
+                                    //varyings
+                                        varying vec4 activeColour;
+                        
+                                    void main(){    
+                                        //adjust points by radius and xy offset
+                                            float tmpRadius = radius + (thickness/2.0) * (index < indexParting ? 1.0 : -1.0);
+                                            vec2 P = cartesianAngleAdjust(point*tmpRadius*adjust.scale, -adjust.angle) + adjust.xy;
+                        
+                                        //select colour
+                                            activeColour = index >= indexParting ? colour : lineColour;
+                        
+                                        //convert from unit space to clipspace
+                                            gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                    }
+                                `;
+                                var fragmentShaderSource = `  
+                                    precision mediump float;
+                                    varying vec4 activeColour;
+                                                                                                
+                                    void main(){
+                                        gl_FragColor = activeColour;
+                                    }
+                                `;
+                                var index = { buffer:undefined, attributeLocation:undefined };
+                                var point = { buffer:undefined, attributeLocation:undefined };
+                                var uniformLocations;
+                                function updateGLAttributes(context,adjust){
+                                    //buffers
+                                        //points
+                                            if(point.buffer == undefined || pointsChanged){
+                                                point.attributeLocation = context.getAttribLocation(program, "point");
+                                                point.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(point.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                                pointsChanged = false;
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                                context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            }
+                        
+                                        //index
+                                            if(index.buffer == undefined || pointsChanged){
+                                                index.attributeLocation = context.getAttribLocation(program, "index");
+                                                index.buffer = context.createBuffer();
+                                                context.enableVertexAttribArray(index.attributeLocation);
+                                                context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
+                                                context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
+                                            }else{
+                                                context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
+                                                context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                            }
+                        
+                                    //uniforms
+                                        if( uniformLocations == undefined ){
+                                            uniformLocations = {
+                                                "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+                                                "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+                                                "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+                                                "resolution": context.getUniformLocation(program, "resolution"),
+                                                "radius": context.getUniformLocation(program, "radius"),
+                                                "thickness": context.getUniformLocation(program, "thickness"),
+                                                "colour": context.getUniformLocation(program, "colour"),
+                                                "indexParting": context.getUniformLocation(program, "indexParting"),
+                                                "lineColour": context.getUniformLocation(program, "lineColour"),
+                                            };
+                                        }
+                        
+                                        context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+                                        context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+                                        context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+                                        context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                        context.uniform1f(uniformLocations["radius"], radius);
+                                        context.uniform1f(uniformLocations["thickness"], thickness);
+                                        context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                        context.uniform1f(uniformLocations["indexParting"], points.length/4);
+                                        context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
+                                }
+                                var program;
+                                function activateGLRender(context,adjust){
+                                    if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                        
+                                    context.useProgram(program);
+                                    updateGLAttributes(context,adjust);
+                                    context.drawArrays(context.TRIANGLES, 0, points.length/2);
+                                }
+                        
+                            //extremities
+                                function computeExtremities(informParent=true,offset){
+                                    if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                        
+                                    //get offset from parent, if one isn't provided
+                                        if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                    //calculate adjusted offset based on the offset
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var adjusted = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: -(offset.angle + angle),
+                                        };
+                                    //calculate points based on the adjusted offset
+                                        self.extremities.points = [];
+                                        for(var a = 0; a < points.length; a+=2){
+                                            self.extremities.points.push({
+                                                x: (points[a]   * radius * adjusted.scale) + adjusted.x,
+                                                y: (points[a+1] * radius * adjusted.scale) + adjusted.y,
+                                            });
+                                        }
+                                        self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                    //if told to do so, inform parent (if there is one) that extremities have changed
+                                        if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                                }
+                                this.computeExtremities = computeExtremities;
+                        
+                            //lead render
+                                function drawDotFrame(){
+                                    //draw shape extremity points
+                                        self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+                                    //draw bounding box top left and bottom right points
+                                        core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
+                                        core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
+                                };
+                                this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                                    //combine offset with shape's position, angle and scale to produce adjust value for render
+                                        var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                        var adjust = { 
+                                            x: point.x*offset.scale + offset.x,
+                                            y: point.y*offset.scale + offset.y,
+                                            scale: offset.scale*scale,
+                                            angle: -(offset.angle + angle),
+                                        };
+                        
+                                    //activate shape render code
+                                        activateGLRender(context,adjust);
                         
                                     //if requested; draw dot frame
                                         if(self.dotFrame){drawDotFrame();}
@@ -4871,7 +5125,7 @@
                         selectedWidth:0, selectedHeight:0,
                         width:0, height:0,
                     };
-                    var context = _canvas_.getContext("webgl", {alpha:false, preserveDrawingBuffer:true, stencil:true });
+                    var context = _canvas_.getContext("webgl", {alpha:false, preserveDrawingBuffer:true, stencil:true});
                     var animationRequestId = undefined;
                     var clearColour = {r:1,g:1,b:1,a:1};
                 
@@ -5391,7 +5645,7 @@
                     }
                 
                 //connect callbacks to keyboard function lists
-                    _canvas_.core.callback.onkeydown = function(x,y,event,shapes){console.log('down: '+event.code);
+                    _canvas_.core.callback.onkeydown = function(x,y,event,shapes){
                         //if key is already pressed, don't press it again
                             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                             _canvas_.system.keyboard.pressedKeys[event.code] = true;
@@ -5402,7 +5656,7 @@
                             else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); }
                     };
                 
-                    _canvas_.core.callback.onkeyup = function(x,y,event,shapes){console.log('up: '+event.code);
+                    _canvas_.core.callback.onkeyup = function(x,y,event,shapes){
                         //if key isn't pressed, don't release it
                             if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
                             delete _canvas_.system.keyboard.pressedKeys[event.code];
@@ -6985,16 +7239,34 @@
                             
                                 return temp;
                             }
+                            this.circleWithOutline = function( name=null, x=0, y=0, angle=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                                var temp = _canvas_.core.shape.create('circleWithOutline');
+                                temp.name = name;
+                                temp.ignored = ignored;
+                                temp.colour = colour;
+                                temp.lineColour = lineColour;
+                                
+                                temp.stopAttributeStartedExtremityUpdate = true;
+                                temp.x(x);
+                                temp.y(y);
+                                temp.angle(angle);
+                                temp.radius(radius);
+                                temp.detail(detail);
+                                temp.thickness(thickness);
+                                temp.stopAttributeStartedExtremityUpdate = false;
+                            
+                                return temp;
+                            };
                         };
                         this.control = new function(){
                             this.rastorgrid = function(
                                 name='rastorgrid', 
                                 x, y, width=80, height=80, angle=0, interactable=true,
                                 xcount=5, ycount=5,
-                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                checkStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
                                 //elements 
@@ -7005,8 +7277,8 @@
                                         for(var y = 0; y < ycount; y++){
                                             for(var x = 0; x < xcount; x++){
                                                 var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
-                                                    x:x*(width/xcount),  y:y*(height/ycount), 
-                                                    width:width/xcount,  height:height/ycount, interactable:interactable,
+                                                    x:x*(width/xcount), y:y*(height/ycount), 
+                                                    width:width/xcount, height:height/ycount, interactable:interactable,
                                                     style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },
                                                     onchange:function(){ if(object.onchange){object.onchange(object.get());} },
                                                 });
@@ -7513,7 +7785,7 @@
                                 handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
                             
                                 handleURL, backingURL, slotURL,
-                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                invisibleHandleStyle={r:1,g:0,b:0,a:0},
                                 spanURL,
                             
                                 onchange=function(){},
@@ -7928,9 +8200,9 @@
                                 name='slidePanel', 
                                 x, y, width=80, height=95, angle=0, interactable=true,
                                 handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                                handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
+                                handleStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                backingStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                slotStyle={r:0.2,g:0.2,b:0.2,a:1},
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
@@ -8128,10 +8400,10 @@
                                 name='rangeslide', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
                                 handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
-                                handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
-                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                handleStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                backingStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                slotStyle={r:0.2,g:0.2,b:0.2,a:1},
+                                invisibleHandleStyle={r:1,g:0,b:0,a:0},
                                 spanStyle={r:0.78,g:0,b:0.78,a:0.5},
                                 onchange=function(){},
                                 onrelease=function(){},
@@ -8382,10 +8654,10 @@
                             this.checkbox_rectangle = function(
                                 name='checkbox_rectangle',
                                 x, y, width=20, height=20, angle=0, interactable=true,
-                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                checkStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
                                 //adding on the specific shapes
@@ -8519,13 +8791,13 @@
                             this.checkbox_polygon = function(
                                 name='checkbox_polygon',
                                 x, y, 
-                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20},{x:4,y:20},{x:0,y:16}],
+                                outterPoints=[{x:0,y:4},{x:4,y:0}, {x:16,y:0},{x:20,y:4}, {x:20,y:16},{x:16,y:20}, {x:4,y:20},{x:0,y:16}],
                                 innerPoints=[ {x:2,y:4},{x:4,y:2}, {x:16,y:2},{x:18,y:4}, {x:18,y:16},{x:16,y:18}, {x:4,y:18},{x:2,y:16}],
                                 angle=0, interactable=true,
-                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                checkStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
                                 //adding on the specific shapes
@@ -8567,10 +8839,10 @@
                             this.checkbox_circle = function(
                                 name='checkbox_circle',
                                 x, y, radius=10, angle=0, interactable=true,
-                                checkStyle = {r:0.58,g:0.58,b:0.58,a:1},
-                                backingStyle = {r:0.78,g:0.78,b:0.78,a:1},
-                                checkGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
-                                backingGlowStyle = {r:0.86,g:0.86,b:0.86,a:1},
+                                checkStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                backingStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                checkGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
+                                backingGlowStyle={r:0.86,g:0.86,b:0.86,a:1},
                                 onchange = function(){},
                             ){
                                 //adding on the specific shapes
@@ -8641,8 +8913,8 @@
                                 horizontalStripStyle_pattern=[0,1],
                                 horizontalStripStyle_glow={colour:{r:120/255,g:120/255,b:120/255,a:0.8}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
                                 horizontalStripStyle_styles=[
-                                    {colour:{r:120/255,g:120/255,b:120/255,a:0.5}, stroke:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
-                                    {colour:{r:100/255,g:100/255,b:100/255,a:  0}, stroke:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:120/255,g:120/255,b:120/255,a:0.5}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+                                    {colour:{r:100/255,g:100/255,b:100/255,a:0.0}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
                                 ],
                                 verticalStripStyle_pattern=[0],
                                 verticalStripStyle_glow={colour:{r:229/255,g: 221/255,b: 112/255,a:0.25}, lineColour:{r:252/255,g:244/255,b:128/255,a:0.5}, lineThickness:0.5},
@@ -8712,8 +8984,10 @@
                                             var backgroundDrawArea = interfacePart.builder('group','backgroundDrawArea');
                                             workarea.append(backgroundDrawArea);
                                             var backgroundDrawArea_horizontal = interfacePart.builder('group','backgroundDrawArea_horizontal');
+                                            backgroundDrawArea_horizontal.stopAttributeStartedExtremityUpdate = true;
                                             backgroundDrawArea.append(backgroundDrawArea_horizontal);
                                             var backgroundDrawArea_vertical = interfacePart.builder('group','backgroundDrawArea_vertical');
+                                            backgroundDrawArea_vertical.stopAttributeStartedExtremityUpdate = true;
                                             backgroundDrawArea.append(backgroundDrawArea_vertical);
                                         //interaction pane back
                                             var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
@@ -8762,30 +9036,30 @@
                                             backgroundDrawArea_horizontal.clear();
                                             for(var a = 0; a < yCount; a++){
                                                 var style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                                                backgroundDrawArea_horizontal.append(
-                                                    interfacePart.builder( 'rectangleWithOutline', 'strip_horizontal_'+a,
-                                                        {
-                                                            x:0, y:a*(height/(yCount*zoomLevel_y)),
-                                                            width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
-                                                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
-                                                        }
-                                                    )
+                                                var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_horizontal_'+a,
+                                                    {
+                                                        x:0, y:a*(height/(yCount*zoomLevel_y)),
+                                                        width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
+                                                        colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                                                    }
                                                 );
+                                                tmp.stopAttributeStartedExtremityUpdate = true;
+                                                backgroundDrawArea_horizontal.append(tmp);
                                             }
                             
                                         //vertical strips
                                             backgroundDrawArea_vertical.clear();
                                             for(var a = 0; a < xCount; a++){
                                                 var style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                                                backgroundDrawArea_vertical.append(
-                                                    interfacePart.builder( 'rectangleWithOutline', 'strip_vertical_'+a,
-                                                        {
-                                                            x:a*(width/(xCount*zoomLevel_x)), y:0,
-                                                            width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
-                                                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
-                                                        }
-                                                    )
+                                                var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_vertical_'+a,
+                                                    {
+                                                        x:a*(width/(xCount*zoomLevel_x)), y:0,
+                                                        width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
+                                                        colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                                                    }
                                                 );
+                                                tmp.stopAttributeStartedExtremityUpdate = true;
+                                                backgroundDrawArea_vertical.append(tmp);
                                             }
                                     }
                                     function setViewposition(x,y,update=true){
@@ -8808,6 +9082,11 @@
                                                 topLeft:     { x:x - zoomLevel_x*x,     y:y - zoomLevel_y*y     },
                                                 bottomRight: { x:x + zoomLevel_x*(1-x), y:y + zoomLevel_y*(1-y) },
                                             };
+                            
+                                        //callback
+                                            if(update){
+                                                object.onpan(viewport.viewArea);
+                                            }
                                     }
                                     function adjustZoom(x,y){
                                         if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
@@ -8836,26 +9115,26 @@
                             
                                             //update background strips
                                                 for(var a = 0; a < xCount; a++){
-                                                    backgroundDrawArea_vertical.children[a].x( a*(width/(xCount*zoomLevel_x)) );
-                                                    backgroundDrawArea_vertical.children[a].width( width/(xCount*zoomLevel_x) );
-                                                    backgroundDrawArea_vertical.children[a].height( viewport.totalSize.height );
+                                                    backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
+                                                    backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
+                                                    backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
                                                 }
                                                 for(var a = 0; a < yCount; a++){
-                                                    backgroundDrawArea_horizontal.children[a].y( a*(height/(yCount*zoomLevel_y)) );
-                                                    backgroundDrawArea_horizontal.children[a].height( height/(yCount*zoomLevel_y) );
-                                                    backgroundDrawArea_horizontal.children[a].width( viewport.totalSize.width );
+                                                    backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
+                                                    backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
+                                                    backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
                                                 }
                             
                                             //update signals
-                                                for(var a = 0; a < signalPane.children.length; a++){
-                                                    signalPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
+                                                for(var a = 0; a < signalPane.children().length; a++){
+                                                    signalPane.children()[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
                                                 }
                             
                                             //update playhead (if there is one)
                                                 if(playhead.present){
-                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].height(viewport.totalSize.height);
-                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].height(viewport.totalSize.height);
-                                                    workarea.getElementsWithName('playhead')[0].x( playhead.position*(viewport.totalSize.width/xCount) );
+                                                    workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                                                    workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
+                                                    workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
                                             }
                                         }else if( x != undefined && x != zoomLevel_x ){
                                             //make sure things are between maxZoom and 1
@@ -8872,21 +9151,21 @@
                             
                                             //update background strips
                                                 for(var a = 0; a < xCount; a++){
-                                                    backgroundDrawArea_vertical.children[a].x( a*(width/(xCount*zoomLevel_x)) );
-                                                    backgroundDrawArea_vertical.children[a].width( width/(xCount*zoomLevel_x) );
+                                                    backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
+                                                    backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
                                                 }
                                                 for(var a = 0; a < yCount; a++){
-                                                    backgroundDrawArea_horizontal.children[a].width( viewport.totalSize.width );
+                                                    backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
                                                 }
                             
                                             //update signals
-                                                for(var a = 0; a < signalPane.children.length; a++){
-                                                    signalPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
+                                                for(var a = 0; a < signalPane.children().length; a++){
+                                                    signalPane.children()[a].unit(width/(xCount*zoomLevel_x), undefined);
                                                 }
                             
                                             //update playhead (if there is one)
                                                 if(playhead.present){
-                                                    workarea.getElementsWithName('playhead')[0].x( playhead.position*(viewport.totalSize.width/xCount) );
+                                                    workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
                                                 }
                                         }else if( y != undefined && y != zoomLevel_y ){
                                             //make sure things are between maxZoom and 1
@@ -8903,22 +9182,22 @@
                             
                                             //update background strips
                                                 for(var a = 0; a < xCount; a++){
-                                                    backgroundDrawArea_vertical.children[a].height( viewport.totalSize.height );
+                                                    backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
                                                 }
                                                 for(var a = 0; a < yCount; a++){
-                                                    backgroundDrawArea_horizontal.children[a].y( a*(height/(yCount*zoomLevel_y)) );
-                                                    backgroundDrawArea_horizontal.children[a].height( height/(yCount*zoomLevel_y) );
+                                                    backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
+                                                    backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
                                                 }
                             
                                             //update signals
-                                                for(var a = 0; a < signalPane.children.length; a++){
-                                                    signalPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
+                                                for(var a = 0; a < signalPane.children().length; a++){
+                                                    signalPane.children()[a].unit(undefined, height/(yCount*zoomLevel_y));
                                                 }
                             
                                             //update playhead (if there is one)
                                                 if(playhead.present){
-                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].height(viewport.totalSize.height);
-                                                    workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].height(viewport.totalSize.height);
+                                                    workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                                                    workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
                                                 }
                                         }
                                     }
@@ -8954,6 +9233,11 @@
                             
                                         //update state
                                             viewport.viewArea = Object.assign(d,{});
+                            
+                                        //callback
+                                            if(update){
+                                                object.onchangeviewarea(viewport.viewArea);
+                                            }
                                     }
                                     function makeSignal(line, position, length, strength=signals.defaultStrength){
                                         //register signal and get new id. From the registry, get the approved signal values
@@ -9296,9 +9580,9 @@
                             
                                             for(var a = start; a <= end; a++){
                                                 var tmp = state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                                                backgroundDrawArea_horizontal.children[a].colour = tmp.colour;
-                                                backgroundDrawArea_horizontal.children[a].lineColour = tmp.lineColour;
-                                                backgroundDrawArea_horizontal.children[a].thickness = tmp.thickness;
+                                                backgroundDrawArea_horizontal.children()[a].colour = tmp.colour;
+                                                backgroundDrawArea_horizontal.children()[a].lineColour = tmp.lineColour;
+                                                backgroundDrawArea_horizontal.children()[a].thickness = tmp.thickness;
                                             }
                                         };
                                         object.glowVertical = function(state,start,end){
@@ -9306,9 +9590,9 @@
                             
                                             for(var a = start; a < end; a++){
                                                 var tmp = state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                                                backgroundDrawArea_vertical.children[a].colour = tmp.colour;
-                                                backgroundDrawArea_vertical.children[a].lineColour = tmp.lineColour;
-                                                backgroundDrawArea_vertical.children[a].thickness = tmp.thickness;
+                                                backgroundDrawArea_vertical.children()[a].colour = tmp.colour;
+                                                backgroundDrawArea_vertical.children()[a].lineColour = tmp.lineColour;
+                                                backgroundDrawArea_vertical.children()[a].thickness = tmp.thickness;
                                             }
                                         };
                                     
@@ -9375,7 +9659,7 @@
                                                 }
                                 
                                             //reposition graphical playhead
-                                                var playheadObject = workarea.getElementsWithName('playhead')[0];
+                                                var playheadObject = workarea.getChildByName('playhead');
                                                 if(playhead.position < 0 || playhead.position > xCount){
                                                     //outside viable bounds, so remove
                                                         if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
@@ -10265,7 +10549,6 @@
                                 active=true, hoverable=true, selectable=false, pressable=true,
                             
                                 text_font = 'Arial',
-                                text_textBaseline = 'alphabetic',
                                 text_size=2.5,
                                 text_colour = {r:0/255,g:0/255,b:0/255,a:1},
                             
@@ -10419,7 +10702,6 @@
                                 active=true, hoverable=true, selectable=false, pressable=true,
                             
                                 text_font = 'Arial',
-                                text_textBaseline = 'alphabetic',
                                 text_size=2.5,
                                 text_colour = {r:0/255,g:0/255,b:0/255,a:1},
                             
@@ -10702,7 +10984,6 @@
                                 active=true, hoverable=true, selectable=false, pressable=true,
                             
                                 text_font = 'Arial',
-                                text_textBaseline = 'alphabetic',
                                 text_size=2.5,
                                 text_colour = {r:0/255,g:0/255,b:0/255,a:1},
                             
@@ -10976,17 +11257,17 @@
                                     {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
                                 ],
                                 foregroundTextStyles=[
-                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
                                 ],
                             
-                                backgroundStyle_stroke={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_thickness=0.25,
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_lineThickness=0.25,
                                 backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
-                                backgroundTextStyle_size='7.5pt',
+                                backgroundTextStyle_size=7.5,
                                 backgroundTextStyle_font='Helvetica',
                             
-                                backingStyle='rgba(50,50,50,1)',
+                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
                             
                                 onchange=function(needle,value){}, 
                                 onrelease=function(needle,value){}, 
@@ -11001,8 +11282,8 @@
                                             style:{
                                                 foregrounds:foregroundStyles,   
                                                 foregroundText:foregroundTextStyles,
-                                                background_stroke:backgroundStyle_stroke,
-                                                background_thickness:backgroundStyle_thickness,
+                                                backgroundStyle_colour:backgroundStyle_colour,
+                                                backgroundStyle_lineThickness:backgroundStyle_lineThickness,
                                                 backgroundText_colour:backgroundTextStyle_colour,
                                                 backgroundText_size:backgroundTextStyle_size,
                                                 backgroundText_font:backgroundTextStyle_font,
@@ -11316,7 +11597,6 @@
                                 backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
                             
                                 text_font = 'Arial',
-                                text_textBaseline = 'alphabetic',
                                 text_size=2.5,
                                 text_colour = {r:0/255,g:0/255,b:0/255,a:1},
                             
@@ -11438,7 +11718,6 @@
                             
                                                             style:{
                                                                 text_font:text_font,
-                                                                text_textBaseline:text_textBaseline,
                                                                 text_size:text_size,
                                                                 text_colour:text_colour,
                             
@@ -11648,10 +11927,10 @@
                                 x, y, width=120, height=60, angle=0,
                             
                                 foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
-                                foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
                             
                                 backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_thickness=0.25,
+                                backgroundStyle_lineThickness=0.25,
                                 backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
@@ -11684,7 +11963,7 @@
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                                             backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_thickness:backgroundStyle_thickness,
+                                            backgroundStyle_lineThickness:backgroundStyle_lineThickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -12826,6 +13105,7 @@
                                 markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
                                 markingStyle_font='Courier New',
                                 markingStyle_printingMode='absolute',
+                                markingStyle_size=2,
                             ){
                                 //elements
                                     //main
@@ -12839,6 +13119,7 @@
                                                 markingStyle_fill:markingStyle_fill,
                                                 markingStyle_font:markingStyle_font,
                                                 markingStyle_printingMode:markingStyle_printingMode,
+                                                markingStyle_size:markingStyle_size,
                                             },
                                         });
                                         object.append(meter);
@@ -12866,18 +13147,18 @@
                                     {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
                                 ],
                                 foregroundTextStyles=[
-                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {colour:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:1,a:1}, size:7.5, font:'Helvetica'},
                                 ],
                             
                                 backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_thickness=0.25,
+                                backgroundStyle_lineThickness=0.25,
                                 backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
-                                backgroundTextStyle_size='7.5pt',
+                                backgroundTextStyle_size=7.5,
                                 backgroundTextStyle_font='Helvetica',
                             
-                                backingStyle='rgba(50,50,50,1)',
+                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
                             ){
                                 var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
                                 var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
@@ -12893,7 +13174,7 @@
                             
                                 //graphics
                                     function clear(){
-                                        canvas._.fillStyle = backingStyle;
+                                        canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backingStyle);
                                         canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                     };
                                     function drawBackground(){
@@ -12912,12 +13193,12 @@
                                                     //add line and text to group
                                                         //lines
                                                             canvas._.fillStyle = 'rgba('+backgroundStyle_colour.r*255+','+backgroundStyle_colour.g*255+','+backgroundStyle_colour.b*255+','+backgroundStyle_colour.a+')';
-                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_thickness));
+                                                            canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineThickness));
                             
                                                         //text
                                                             if( horizontalMarkings.printText ){
                                                                 canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
-                                                                canvas._.font = parseFloat(backgroundTextStyle_size.match(/[0-9]*.[0-9]*/i)[0])*resolution/8 +'pt '+backgroundTextStyle_font;
+                                                                canvas._.font = backgroundTextStyle_size*resolution/8 +'pt '+backgroundTextStyle_font;
                                                                 canvas._.fillText(
                                                                     (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
                                                                     canvas.$(x+horizontalMarkings.textPositionOffset.x),
@@ -12941,12 +13222,12 @@
                                                     //add line and text to group
                                                         //lines
                                                             canvas._.fillStyle = 'rgba('+backgroundStyle_colour.r*255+','+backgroundStyle_colour.g*255+','+backgroundStyle_colour.b*255+','+backgroundStyle_colour.a+')';
-                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_thickness),canvas.$(height));
+                                                            canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineThickness),canvas.$(height));
                                                     
                                                         //text
                                                             if( verticalMarkings.printText ){
                                                                 canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
-                                                                canvas._.font = parseFloat(backgroundTextStyle_size.match(/[0-9]*.[0-9]*/i)[0])*resolution/8 +'pt '+backgroundTextStyle_font;
+                                                                canvas._.font = backgroundTextStyle_size*resolution/8 +'pt '+backgroundTextStyle_font;
                                                                 canvas._.fillText(
                                                                     (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
                                                                     canvas.$(x+verticalMarkings.textPositionOffset.x),
@@ -13047,16 +13328,16 @@
                                 name='grapher_periodicWave_static',
                                 x, y, width=120, height=60, angle=0,
                             
-                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
+                                foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
                             
-                                backgroundStyle_colour='rgba(0,100,0,1)',
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_lineThickness=0.25,
+                                backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
                             
-                                backingStyle='rgba(50,50,50,1)',
+                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
                             ){
                                 var wave = {'sin':[],'cos':[]};
                                 var resolution = 100;
@@ -13069,7 +13350,7 @@
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                                             backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_thickness:backgroundStyle_thickness,
+                                            backgroundStyle_lineThickness:backgroundStyle_lineThickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -13148,19 +13429,20 @@
                                     {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
                                 ],
                                 foregroundTextStyles=[
-                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {colour:{r:1,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
-                                    {colour:{r:0.39,g:1,b:1,a:1}, size:0.75, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+                                    {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+                                    {colour:{r:0.39,g:1,b:1,a:1}, size:7.5, font:'Helvetica'},
                                 ],
                             
                                 backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_colour={r:0,g:0.59,b:0,a:1},
-                                backgroundTextStyle_size=1,
+                                backgroundStyle_lineThickness=0.25,
+                                backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
+                                backgroundTextStyle_size=7.5,
                                 backgroundTextStyle_font='Helvetica',
                             
                                 backingStyle={r:0.2,g:0.2,b:0.2,a:1},
                             ){
+                                var fontSizeMux = 0.75*(1/7.5);
                                 var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
                                 var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
                                 var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
@@ -13201,15 +13483,16 @@
                             
                                                     //add line and text to group
                                                         //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_thickness,colour:backgroundStyle_colour} );
+                                                            var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineThickness,colour:backgroundStyle_colour} );
                                                             backgroundGroup.append(path);
                                                         //text
                                                             if( horizontalMarkings.printText ){
                                                                 var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
-                                                                    x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size,
+                                                                    x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                                                     text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                                                    colour:backgroundTextStyle_colour,
-                                                                    width:backgroundTextStyle_size, height:backgroundTextStyle_size,
+                                                                    colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
+                                                                    width:(backgroundTextStyle_size*fontSizeMux)*0.75, height:backgroundTextStyle_size*fontSizeMux,
+                                                                    printingMode:{widthCalculation:'absolute'}
                                                                 } );
                                                                 backgroundGroup.append(text);
                                                             }
@@ -13229,16 +13512,17 @@
                             
                                                     //add line and text to group
                                                         //lines
-                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_thickness,height:height,colour:backgroundStyle_colour} );
+                                                            var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineThickness,height:height,colour:backgroundStyle_colour} );
                                                             backgroundGroup.append(path);
                                                     
                                                         //text
                                                             if( verticalMarkings.printText ){
                                                                 var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
-                                                                    x:x+verticalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size,
+                                                                    x:x+verticalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                                                     text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                                                    colour:backgroundTextStyle_colour,
-                                                                    width:backgroundTextStyle_size, height:backgroundTextStyle_size,
+                                                                    colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
+                                                                    width:(backgroundTextStyle_size*fontSizeMux)*0.75, height:backgroundTextStyle_size*fontSizeMux,
+                                                                    printingMode:{widthCalculation:'absolute'}
                                                                 } );
                                                                 backgroundGroup.append(text);
                                                             }
@@ -13334,6 +13618,7 @@
                                 markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
                                 markingStyle_font='Courier New',
                                 markingStyle_printingMode='absolute',
+                                markingStyle_size=2,
                             ){
                             
                                 //elements
@@ -13359,7 +13644,7 @@
                                             return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
                                         }
                                         function insertText(y,text){
-                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:1, width:1, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
+                                            return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size*0.75, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
                                         }
                             
                                         for(var a = 0; a < markings.length; a++){
@@ -13400,9 +13685,9 @@
                             this.sevenSegmentDisplay_static = function(
                                 name='sevenSegmentDisplay_static',
                                 x, y, width=20, height=30, angle=0, resolution=5, 
-                                backgroundStyle='rgba(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)',
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
                                 var margin = width/8;
                                 var division = width/8;
@@ -13525,7 +13810,7 @@
                             
                                 //graphics
                                     function clear(){
-                                        canvas._.fillStyle = backgroundStyle;
+                                        canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                         canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                         canvas.requestUpdate();
                                     };
@@ -13538,7 +13823,7 @@
                                                     canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
                                                 }
                                                 canvas._.closePath(); 
-                                                canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
+                                                canvas._.fillStyle = stamp[a] == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
                                                 canvas._.fill(); 
                                             }
                                             canvas.requestUpdate();
@@ -13587,10 +13872,10 @@
                                 x, y, width=120, height=60, angle=0,
                             
                                 foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
-                                foregroundTextStyle={fill:{r:0.39,g:1,b:0.39,a:1}, size:0.75, font:'Helvetica'},
+                                foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
                             
                                 backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_thickness=0.25,
+                                backgroundStyle_lineThickness=0.25,
                                 backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
@@ -13608,7 +13893,7 @@
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                                             backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_thickness:backgroundStyle_thickness,
+                                            backgroundStyle_lineThickness:backgroundStyle_lineThickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -13680,9 +13965,9 @@
                             this.sixteenSegmentDisplay_static = function(
                                 name='sixteenSegmentDisplay_static',
                                 x, y, width=20, height=30, angle=0, resolution=5, 
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)',
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
                                 var margin = width/8;
                                 var division = width/8;
@@ -13918,7 +14203,7 @@
                             
                                 //graphics
                                 function clear(){
-                                    canvas._.fillStyle = backgroundStyle;
+                                    canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
                                     canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
                                     canvas.requestUpdate();
                                 };
@@ -13930,7 +14215,7 @@
                                             canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
                                         }
                                         canvas._.closePath(); 
-                                        canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
+                                        canvas._.fillStyle = stamp[a] == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
                                         canvas._.fill(); 
                                     }
                                     canvas.requestUpdate();
@@ -14493,9 +14778,9 @@
                             this.readout_sixteenSegmentDisplay_static = function(
                                 name='readout_sixteenSegmentDisplay_static',
                                 x, y, width=100, height=30, count=5, angle=0, resolution=5, 
-                                backgroundStyle='rgb(0,0,0)',
-                                glowStyle='rgb(200,200,200)',
-                                dimStyle='rgb(20,20,20)'
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
                             ){
                                 //values
                                     var text = '';
@@ -14616,16 +14901,16 @@
                                 name='grapher_audioScope_static',
                                 x, y, width=120, height=60, angle=0,
                             
-                                foregroundStyle={colour:'rgba(0,255,0,1)', thickness:0.5},
-                                foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+                                foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
+                                foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
                             
-                                backgroundStyle_colour='rgba(0,100,0,1)',
-                                backgroundStyle_thickness=0.25,
-                                backgroundTextStyle_fill='rgba(0,150,0,1)',
+                                backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+                                backgroundStyle_lineThickness=0.25,
+                                backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
                             
-                                backingStyle='rgba(50,50,50,1)',
+                                backingStyle={r:0.2,g:0.2,b:0.2,a:1},
                             ){
                                 //attributes
                                     var attributes = {
@@ -14653,7 +14938,7 @@
                                             x:0, y:0, width:width, height:height,
                                             foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                                             backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_thickness:backgroundStyle_thickness,
+                                            backgroundStyle_lineThickness:backgroundStyle_lineThickness,
                                             backgroundTextStyle_fill:backgroundTextStyle_fill, 
                                             backgroundTextStyle_size:backgroundTextStyle_size,
                                             backgroundTextStyle_font:backgroundTextStyle_font,
@@ -15065,10 +15350,10 @@
                                 name='connectionNode_signal',
                                 x, y, angle=0, width=20, height=20,
                                 allowConnections=true, allowDisconnections=true,
-                                dimStyle={r:1,g:0.86,b:0.95,a:1}, // 'rgb(255, 220, 244)',
-                                glowStyle={r:1,g:0.95,b:0.95,a:1}, // 'rgb(255, 244, 244)',
-                                cable_dimStyle={r:0.96,g:0.32,b:0.57,a:1}, // 'rgb(247, 84, 146)',
-                                cable_glowStyle={r:0.96,g:0.76,b:0.84,a:1}, // 'rgb(247, 195, 215)',
+                                dimStyle={r:1,g:0.86,b:0.95,a:1},
+                                glowStyle={r:1,g:0.95,b:0.95,a:1},
+                                cable_dimStyle={r:0.96,g:0.32,b:0.57,a:1},
+                                cable_glowStyle={r:0.96,g:0.76,b:0.84,a:1},
                                 onchange=function(value){},
                                 onconnect=function(instigator){},
                                 ondisconnect=function(instigator){},
@@ -15126,6 +15411,7 @@
                                 case 'polygon': return this.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
                                 case 'polygonWithOutline': return this.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
                                 case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour );
+                                case 'circleWithOutline': return this.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
                                 case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
                                 case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
                                 case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode );
@@ -15162,11 +15448,11 @@
                                 );
                                 case 'meter_level': return this.collection.display.meter_level(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.markings,
-                                    data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
+                                    data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
                                 );
                                 case 'audio_meter_level': return this.collection.display.audio_meter_level(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
-                                    data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font, data.style.markingStyle_printingMode
+                                    data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
                                 );
                                 case 'rastorDisplay': return this.collection.display.rastorDisplay(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
@@ -15174,42 +15460,42 @@
                                 case 'grapher': return this.collection.display.grapher(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.background_colour, data.style.background_lineThickness,
                                     data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_static': return this.collection.display.grapher_static(
                                     name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.background_colour, data.style.background_lineThickness,
                                     data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_periodicWave': return this.collection.display.grapher_periodicWave(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.background_colour, data.style.background_lineThickness,
                                     data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_periodicWave_static': return this.collection.display.grapher_periodicWave_static(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.background_colour, data.style.background_lineThickness,
                                     data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_audioScope': return this.collection.display.grapher_audioScope(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.background_colour, data.style.background_lineThickness,
                                     data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
                                 case 'grapher_audioScope_static': return this.collection.display.grapher_audioScope_static(
                                     name, data.x, data.y, data.width, data.height, data.angle,
                                     data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_stroke, data.style.background_thickness,
+                                    data.style.background_colour, data.style.background_lineThickness,
                                     data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                     data.style.backing,
                                 );
@@ -15265,7 +15551,7 @@
                                         data.text_centre,
                                         data.active, data.hoverable, data.selectable, data.pressable,
                     
-                                        data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                                        data.style.text_font, data.style.text_size, data.style.text_colour,
                     
                                         data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                                         data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -15298,7 +15584,7 @@
                                         data.text_centre,
                                         data.active, data.hoverable, data.selectable, data.pressable,
                     
-                                        data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                                        data.style.text_font, data.style.text_size, data.style.text_colour,
                     
                                         data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                                         data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -15332,7 +15618,7 @@
                                         data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
                                         data.active, data.hoverable, data.selectable, data.pressable,
                     
-                                        data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                                        data.style.text_font, data.style.text_size, data.style.text_colour,
                     
                                         data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                                         data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -15435,7 +15721,7 @@
                                         data.spacingHeightMux,
                     
                                         data.style.backing, data.style.break,
-                                        data.style.text_font, data.style.text_textBaseline, data.style.text_size, data.style.text_colour,
+                                        data.style.text_font, data.style.text_size, data.style.text_colour,
                                         data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
                                         data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
                                         data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
@@ -15525,8 +15811,8 @@
                                     case 'grapher_waveWorkspace': return this.collection.control.grapher_waveWorkspace(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
                                         data.style.foregrounds, data.style.foregroundText,
-                                        data.style.background_stroke, data.style.background_lineWidth,
-                                        data.style.backgroundText_fill, data.style.backgroundText_font,
+                                        data.style.background_colour, data.style.background_lineThickness,
+                                        data.style.backgroundText_colour, data.style.backgroundText_font,
                                         data.style.backing,
                                         data.onchange, data.onrelease, data.selectionAreaToggle
                                     );
@@ -16222,9 +16508,10 @@
             
                     this.elements = new function(){
                         this.menubar = function(x,y,scale){
+                            scale = 1;
                             var vars = {
                                 width: _canvas_.control.viewport.width(),
-                                height: 10*scale,
+                                height: 20,
                                 selected: undefined,
                                 activedropdown: undefined,
                             };
@@ -17669,19 +17956,19 @@
                         availableTypes: [],
                     };
                     var style = {
-                        background: {fill:'rgba(200,200,200,1)'},
-                        h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-                        h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
                 
                         dial:{
-                            handle:{fill:'rgba(220,220,220,1)'},
-                            slot:{fill:'rgba(50,50,50,1)'},
-                            needle:{fill:'rgba(250,150,150,1)'},
+                            handle:{r:220/255,g:220/255,b:220/255,a:1},
+                            slot:{r:50/255,g:50/255,b:50/255,a:1},
+                            needle:{r:250/255,g:150/255,b:150/255,a:1},
                         },
                         button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         }
                     };
                     var design = {
@@ -17692,21 +17979,21 @@
                         space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
                 
                             {type:'connectionNode_audio', name:'audioIn', data:{ x: 102.5, y: 16, width: 10, height: 20 }},
                             {type:'connectionNode_audio', name:'audioOut', data:{ x: -10, y: 16, width: 10, height: 20, isAudioOutput:true }},
                             
-                            {type:'text', name:'outGain_0',   data:{x:8,    y:38, text:'0', style:style.h2}},
-                            {type:'text', name:'outGain_1/2', data:{x:16.5, y:11, text:'1/2', style:style.h2}},
-                            {type:'text', name:'outGain_1',   data:{x:29,   y:38, text:'1', style:style.h2}},
+                            {type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                            {type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                            {type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             {type:'dial_continuous',name:'outGain_dial',data:{
                                 x: 20, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, 
                                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                             }},
                 
-                            {type:'text', name:'wetdry_1/2', data:{x:66.5, y:39, text:'wet', style:style.h2}},
-                            {type:'text', name:'wetdry_1',   data:{x:91.5, y:39, text:'dry', style:style.h2}},
+                            {type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                            {type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             {type:'dial_continuous',name:'wetdry_dial',data:{
                                 x: 82.5, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI,
                                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
@@ -19224,15 +19511,14 @@
                 };
                 this.recorder = function(x,y,a){
                     var style = {
-                        background:{fill:'rgba(200,200,200,1)'},
-                        h1: {fill:'rgba(100,100,100,1)', font:'6pt Bookman'},
-                        h2: {fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
                         button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         },
-                        readout_sixteenSegmentDisplay_static:{background:'rgb(0,0,0)', glow:'rgb(200,200,200)',dim:'rgb(20,20,20)'},
                     };
                     var design = {
                         name: 'recorder',
@@ -19242,15 +19528,15 @@
                         space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], colour:style.background }},
                 
                             {type:'connectionNode_audio', name:'inRight', data: {x:175, y:2.5, width:10, height:15}},
                             {type:'connectionNode_audio', name:'inLeft', data: {x:175, y:22.5, width:10, height:15}},
                 
                 
                             //logo label
-                                {type:'rectangle', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, style:{fill:'rgb(230,230,230)'}}},
-                                {type:'text', name:'logo_label', data:{x:139, y:34.5, angle:-0.25, text:'REcorder', style:style.h1}},
+                                {type:'rectangle', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, colour:{r:230/255,g:230/255,b:230/255,a:1}}},
+                                {type:'text', name:'logo_label', data:{x:154, y:28, angle:-0.25, text:'REcorder', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
                 
                             //rec
                                 {type:'button_rectangle', name:'rec', data: {
@@ -19261,7 +19547,7 @@
                                         updateLights('rec');
                                     }
                                 }},
-                                {type:'text', name:'button_rectangle_text', data:{x:10.5, y:31.5, text:'rec', angle:0, style:style.h2}},
+                                {type:'text', name:'button_rectangle_text', data:{x:15, y:30, text:'rec', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             //pause/resume
                                 {type:'button_rectangle', name:'pause/resume', data: {
                                     x:27.5, y: 25, width:20, height:10, style:style.button,
@@ -19271,13 +19557,13 @@
                                         updateLights('pause/resume');
                                     }
                                 }},
-                                {type:'text', name:'button_pause/resume_text', data:{x:30, y:31.5, text:'pause', angle:0, style:style.h2}},
+                                {type:'text', name:'button_pause/resume_text', data:{x:37.7, y:30, text:'pause', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             //stop
                                 {type:'button_rectangle', name:'stop', data: {
                                     x:50, y: 25, width:20, height:10, style:style.button,
                                     onpress: function(){updateLights('stop');object.recorder.stop();}
                                 }},
-                                {type:'text', name:'button_stop_text', data:{x:54, y:31.5, text:'stop', angle:0, style:style.h2}},
+                                {type:'text', name:'button_stop_text', data:{x:60, y:30, text:'stop', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             //save
                                 {type:'button_rectangle', name:'save', data: {
                                     x:72.5, y: 25, width:20, height:10, style:style.button,
@@ -19286,32 +19572,30 @@
                                         if(state != 'empty'){ object.recorder.save(); }
                                     }
                                 }},
-                                {type:'text', name:'button_save_text', data:{x:76.5, y:31.5, text:'save', angle:0, style:style.h2}},
+                                {type:'text', name:'button_save_text', data:{x:82.5, y:30, text:'save', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             //clear
                                 {type:'button_rectangle', name:'clear', data: {
                                     x:95, y: 25, width:20, height:10, style:style.button,
                                     onpress: function(){updateLights('clear');object.recorder.clear();}
                                 }},
-                                {type:'text', name:'button_clear_text', data:{x:97.5, y:31.5, text:'clear', angle:0, style:style.h2}},
+                                {type:'text', name:'button_clear_text', data:{x:105, y:30, text:'clear', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                 
                             //time readout
-                                {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                                    x: 70, y: 5, angle:0, width:100, height:15, count:11, style:style.readout_sixteenSegmentDisplay_static
-                                }},
+                                {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 70, y: 5, angle:0, width:100, height:15, count:11 }},
                 
                             //activity lights
                                 //recording
-                                    {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:'rgb(255, 63, 63)', dim:'rgb(25, 6, 6)'}}},
-                                    {type:'text', name:'activityLight_recording_text', data:{x:8, y:14, text:'rec', angle:0, style:style.h2}},
+                                    {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:{r:255/255,g:63/255,b:63/255,a:1}, dim:{r:25/255,g:6/255,b:6/255,a:1}}}},
+                                    {type:'text', name:'activityLight_recording_text', data:{x:12.5, y:12.5, text:'rec', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                                 //paused
-                                    {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:'rgb(126, 186, 247)', dim:'rgb(12, 18, 24)'}}},
-                                    {type:'text', name:'activityLight_paused_text', data:{x:23, y:14, text:'pau', angle:0, style:style.h2}},
+                                    {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:{r:126/255,g:186/255,b:247/255,a:1}, dim:{r:12/255,g:18/255,b:24/255,a:1}}}},
+                                    {type:'text', name:'activityLight_paused_text', data:{x:27.5, y:12.5, text:'pau', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                                 //empty
-                                    {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:'rgb(199, 249, 244)', dim:'rgb(19, 24, 24)'}}},
-                                    {type:'text', name:'activityLight_empty_text', data:{x:38, y:14, text:'emp', angle:0, style:style.h2}},
+                                    {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:{r:199/255,g:249/255,b:244/255,a:1}, dim:{r:19/255,g:24/255,b:24/255,a:1}}}},
+                                    {type:'text', name:'activityLight_empty_text', data:{x:42.5, y:12.5, text:'emp', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                                 //ready to save
-                                    {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:'rgb(61, 224, 35)', dim:'rgb(6, 22, 3)'}}},
-                                    {type:'text', name:'activityLight_full_text', data:{x:53, y:14, text:'ful', angle:0, style:style.h2}},
+                                    {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:{r:61/255,g:224/255,b:35/255,a:1}, dim:{r:6/255,g:22/255,b:3/255,a:1}}}},
+                                    {type:'text', name:'activityLight_full_text', data:{x:57.5, y:12.5, text:'ful', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                         ]
                     };
                 
@@ -19368,23 +19652,22 @@
 
                 this.looper = function(x,y,a){
                     var style = {
-                        background: {fill:'rgba(200,200,200,1)'},
-                        markings: {fill:'rgba(150,150,150,1)'},
-                        strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
                         button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         },
                         fire_button:{
-                            background__up__fill:'rgba(175,195,175,1)', 
-                            background__hover__fill:'rgba(220,240,220,1)', 
-                            background__hover_press__fill:'rgba(150,170,150,1)',
+                            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
                         },
                         stop_button:{
-                            background__up__fill:'rgba(195,175,175,1)', 
-                            background__hover__fill:'rgba(240,220,220,1)', 
-                            background__hover_press__fill:'rgba(170,150,150,1)',
+                            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
                         },
                     };
                     var design = {
@@ -19395,7 +19678,7 @@
                         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
                 
                             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
                             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
@@ -19405,11 +19688,11 @@
                             }},
                 
                             //symbol
-                                {type:'circle', name:'symbol_outterCircle1', data:{ x:11.5, y:41, r:6, style:style.strokeMarkings }},
-                                {type:'circle', name:'symbol_outterCircle2', data:{ x:18.5, y:41, r:6, style:style.strokeMarkings }},
-                                {type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, style:style.background }},
-                                {type:'path', name:'symbol_upperarrow', data:{ points:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], style:style.strokeMarkings }},
-                                {type:'path', name:'symbol_lowerarrow', data:{ points:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], style:style.strokeMarkings }},
+                                {type:'circleWithOutline', name:'symbol_outterCircle1', data:{ x:11.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'circleWithOutline', name:'symbol_outterCircle2', data:{ x:18.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, colour:style.background }},
+                                {type:'path', name:'symbol_upperarrow', data:{ pointsAsXYArray:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'path', name:'symbol_lowerarrow', data:{ pointsAsXYArray:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], colour:style.markings.colour, thickness:style.markings.thickness }},
                 
                             {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                                 onpress: function(){
@@ -19506,23 +19789,22 @@
                 };
                 this.oneShot_single = function(x,y,a){
                     var style = {
-                        background: {fill:'rgba(200,200,200,1)'},
-                        markings: {fill:'rgba(150,150,150,1)'},
-                        strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
                         button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         },
                         fire_button:{
-                            background__up__fill:'rgba(175,195,175,1)', 
-                            background__hover__fill:'rgba(220,240,220,1)', 
-                            background__hover_press__fill:'rgba(150,170,150,1)',
+                            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
                         },
                         stop_button:{
-                            background__up__fill:'rgba(195,175,175,1)', 
-                            background__hover__fill:'rgba(240,220,220,1)', 
-                            background__hover_press__fill:'rgba(170,150,150,1)',
+                            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
                         },
                     };
                     var design = {
@@ -19533,7 +19815,7 @@
                         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
                 
                             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
                             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
@@ -19543,10 +19825,10 @@
                             }},
                 
                             //symbol
-                                {type:'path', name:'symbol_arrow', data:{ points:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
-                                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
-                                {type:'circle', name:'symbol_outerCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
-                                {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, style:style.markings }},
+                                {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
+                                {type:'circleWithOutline', name:'symbol_outerCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, colour:style.markings.colour }},
                 
                             {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                                 onpress: function(){
@@ -19633,26 +19915,25 @@
 
                 this.oneShot_multi = function(x,y,a){
                     var style = {
-                        background: {fill:'rgba(200,200,200,1)'},
-                        markings: {fill:'rgba(150,150,150,1)'},
-                        strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
                         button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         },
                         fire_button:{
-                            background__up__fill:'rgba(175,195,175,1)', 
-                            background__hover__fill:'rgba(220,240,220,1)', 
-                            background__hover_press__fill:'rgba(150,170,150,1)',
+                            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
                         },
                         stop_button:{
-                            background__up__fill:'rgba(195,175,175,1)', 
-                            background__hover__fill:'rgba(240,220,220,1)', 
-                            background__hover_press__fill:'rgba(170,150,150,1)',
+                            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
                         },
                         slide:{
-                            handle:'rgba(220,220,220,1)'
+                            handle:{r:220/255,g:220/255,b:220/255,a:1}
                         },
                     };
                     var design = {
@@ -19663,7 +19944,7 @@
                         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
                 
                             //connection nodes
                             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
@@ -19674,11 +19955,11 @@
                             }},
                 
                             //symbol
-                                {type:'path', name:'symbol_arrow', data:{ points:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
-                                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
-                                {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
-                                {type:'circle', name:'symbol_infCircle1', data:{ x:8.5, y:40, r:1.5, style:style.strokeMarkings }},
-                                {type:'circle', name:'symbol_infCircle2', data:{ x:11.5, y:40, r:1.5, style:style.strokeMarkings }},
+                                {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
+                                {type:'circleWithOutline', name:'symbol_outterCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'circleWithOutline', name:'symbol_infCircle1', data:{ x:8.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'circleWithOutline', name:'symbol_infCircle2', data:{ x:11.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
                 
                             //load/fire/panic buttons
                                 {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
@@ -19814,26 +20095,25 @@
                     var trackCount = 8;
                 
                     var style = {
-                        background: {fill:'rgba(200,200,200,1)'},
-                        markings: {fill:'rgba(150,150,150,1)'},
-                        strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
                         button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         },
                         fire_button:{
-                            background__up__fill:'rgba(175,195,175,1)', 
-                            background__hover__fill:'rgba(220,240,220,1)', 
-                            background__hover_press__fill:'rgba(150,170,150,1)',
+                            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
                         },
                         stop_button:{
-                            background__up__fill:'rgba(195,175,175,1)', 
-                            background__hover__fill:'rgba(240,220,220,1)', 
-                            background__hover_press__fill:'rgba(170,150,150,1)',
+                            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
                         },
                         slide:{
-                            handle:'rgba(220,220,220,1)'
+                            handle:{r:220/255,g:220/255,b:220/255,a:1}
                         },
                     };
                     var design = {
@@ -19844,7 +20124,7 @@
                         space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], colour:style.background }},
                 
                             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
                             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
@@ -19854,11 +20134,11 @@
                         for(var a = 0; a < trackCount; a++){
                             //symbols
                                 design.elements = design.elements.concat([
-                                    {type:'path', name:'symbol_'+a+'_arrow', data:{ points:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], style:style.strokeMarkings }},
-                                    {type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, style:style.markings }},
-                                    {type:'circle', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), r:5.5, style:style.strokeMarkings }},
-                                    {type:'circle', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
-                                    {type:'circle', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), r:1.5, style:style.strokeMarkings }},
+                                    {type:'path', name:'symbol_'+a+'_arrow', data:{ pointsAsXYArray:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                    {type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, colour:style.markings.colour }},
+                                    {type:'circleWithOutline', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                    {type:'circleWithOutline', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                    {type:'circleWithOutline', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
                                 ]);
                 
                             //rate adjust
@@ -20088,26 +20368,38 @@
                 };
                 this.player = function(x,y,a){
                     var style = {
-                        background:{fill:'rgba(200,200,200,1)'},
-                        h1: {fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-                        h2: {fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
-                        markings: {fill:'rgba(150,150,150,1)'},
-                        readout_sixteenSegmentDisplay_static:{background:'rgb(0,0,0)', glow:'rgb(200,200,200)',dim:'rgb(20,20,20)'},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
+                        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        readout_sixteenSegmentDisplay_static:{background:{r:0/255,g:0/255,b:0/255,a:1}, glow:{r:200/255,g:200/255,b:200/255,a:1},dim:{r:20/255,g:20/255,b:20/255,a:1}},
+                        button:{
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                        },
                         load_button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         },
                         start_button:{
-                            background__up__fill:'rgba(175,195,175,1)', 
-                            background__hover__fill:'rgba(220,240,220,1)', 
-                            background__hover_press__fill:'rgba(150,170,150,1)',
+                            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
                         },
                         stop_button:{
-                            background__up__fill:'rgba(195,175,175,1)', 
-                            background__hover__fill:'rgba(240,220,220,1)', 
-                            background__hover_press__fill:'rgba(170,150,150,1)',
+                            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
                         },
+                        slide:{
+                            handle:{r:220/255,g:220/255,b:220/255,a:1}
+                        },
+                
+                
+                
+                
                     };
                     var design = {
                         name: 'player',
@@ -20117,24 +20409,24 @@
                         space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], colour:style.background }},
                 
                             {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
                             {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
                 
                             //symbol
-                                {type:'rectangle', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, style:style.markings }},
-                                {type:'rectangle', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, style:style.markings }},
-                                {type:'rectangle', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, style:style.markings }},
-                                {type:'rectangle', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  style:style.markings }},
-                                {type:'rectangle', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  style:style.markings }},
+                                {type:'rectangle', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
+                                {type:'rectangle', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  colour:style.markings.colour }},
                                 
                             {type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, count:10, style:style.readout_sixteenSegmentDisplay_static }},
                             {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
@@ -20143,10 +20435,10 @@
                             {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
                             {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
                 
-                            {type:'text', name:'rate_label_name', data:{ x:8.5, y:79, text:'rate', style:style.h1 }},
-                            {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', style:style.h2 }},
-                            {type:'text', name:'rate_label_1', data:{ x:13.7, y:54, text:'1', style:style.h2 }},
-                            {type:'text', name:'rate_label_2', data:{ x:23, y:75, text:'2', style:style.h2 }},
+                            {type:'text', name:'rate_label_name', data:{ x:15, y:78, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                            {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                            {type:'text', name:'rate_label_1', data:{ x:15, y:51.5, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                            {type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             {type:'dial_continuous',name:'rate_dial',data:{ x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, resetValue:0.5 }},
                 
                             {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ object.player.loop({active:bool}); } }},
@@ -20158,9 +20450,9 @@
                 
                     //internal 
                         function loadProcess(data){
-                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw( object.player.waveformSegment() );                   
-                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.select(0);
-                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.area(-1,-1);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );                   
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
                         
                             object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
                             object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
@@ -20188,7 +20480,7 @@
                                     object.elements.readout_sixteenSegmentDisplay_static.time.print();
                 
                                 //wave box
-                                    object.elements.grapher_wave_canvas_.grapher_wave_canvas_.select(object.player.progress(),false);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(object.player.progress(),false);
                             }
                             setInterval(refresh,1000/30);
                     
@@ -20206,10 +20498,10 @@
                 
                     //wiring
                         object.elements.dial_continuous.rate_dial.onchange = function(data){ object.player.rate( 2*data ); };
-                        object.elements.grapher_wave_canvas_.grapher_wave_canvas_.onchange = function(needle,value){
+                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
                             if(needle == 'lead'){ object.player.jumpTo(value); }
                             else if(needle == 'selection_A' || needle == 'selection_B'){
-                                var temp = object.elements.grapher_wave_canvas_.grapher_wave_canvas_.area();
+                                var temp = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
                                 if(temp.A < temp.B){ object.player.loop({start:temp.A,end:temp.B}); }
                                 else{ object.player.loop({start:temp.B,end:temp.A}); }
                             }
@@ -20247,36 +20539,33 @@
                     };
                 
                     var style = {
-                        background:{fill:'rgba(200,200,200,1)'},
-                        markings: {
-                            fill:{fill:'rgba(150,150,150,1)'},
-                            stroke:{stroke:'rgba(150,150,150,1)', lineWidth:1}, 
-                        },
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
                         rangeslide:{
-                            handle:'rgba(240,240,240,1)',
-                            backing:'rgba(150,150,150,1)',
-                            slot:'rgba(50,50,50,1)',
-                            invisibleHandle:'rgba(0,0,0,0)',
-                            span:'rgba(220,220,220,1)',
+                            handle:{r:240/255,g:240/255,b:240/255,a:1},
+                            backing:{r:150/255,g:150/255,b:150/255,a:1},
+                            slot:{r:50/255,g:50/255,b:50/255,a:1},
+                            invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
+                            span:{r:220/255,g:220/255,b:220/255,a:1},
                         },
                         rangeslide_loop:{
-                            handle:'rgba(240,240,240,1)',
-                            backing:'rgba(150,150,150,1)',
-                            slot:'rgba(50,50,50,1)',
-                            span:'rgba(255,247,145,0.5)',
+                            handle:{r:240/255,g:240/255,b:240/255,a:1},
+                            backing:{r:150/255,g:150/255,b:150/255,a:1},
+                            slot:{r:50/255,g:50/255,b:50/255,a:1},
+                            span:{r:255/255,g:247/255,b:145/255,a:0.5},
                         },
                         button:{
-                            background__up__fill:'rgba(220,220,220,1)', 
-                            background__hover__fill:'rgba(240,240,240,1)', 
-                            background__hover_press__fill:'rgba(180,180,180,1)',
+                            background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                            background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
                         },
                         checkbox:{
-                            backing:'rgba(229, 229, 229,1)',
-                            check:'rgba(252,252,252,1)',
+                            backing:{r:229/255,g: 229/255,b: 229/255,a:1},
+                            check:{r:252/255,g:252/255,b:252/255,a:1},
                         },
                         checkbox_loop:{
-                            backing:'rgba(229, 221, 112,1)',
-                            check:'rgba(252,244,128,1)',
+                            backing:{r:229/255,g: 221/255,b: 112/255,a:1},
+                            check:{r:252/255,g:244/255,b:128/255,a:1},
                         },
                     };
                 
@@ -20288,7 +20577,7 @@
                         space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
                 
                             //main sequencer
                                 {type:'sequencer', name:'main', data:{ x:10, y:20, width:780, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
@@ -20319,7 +20608,7 @@
                                 {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
                                     onpress:function(){object.elements.sequencer.main.progress();},
                                 }},
-                                {type:'path', name:'progress_arrow', data:{ points:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+                                {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
                 
                             //reset
                                 {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
@@ -20328,8 +20617,8 @@
                                 {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
                                     onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
                                 }},
-                                {type:'path', name:'reset_arrow', data:{ points:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
-                                {type:'path', name:'reset_line', data:{ points:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                                {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
                         ]
                     };
                     //dynamic design
@@ -20347,7 +20636,7 @@
                         var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
                 
                     //wiring
-                        object.elements.rangeslide.viewselect.onchange = function(values){ 
+                        object.elements.rangeslide.viewselect.onchange = function(values){
                             object.elements.sequencer.main.viewarea({topLeft:{x:values.start, y:0}, bottomRight:{x:values.end, y:1}},false); 
                         };
                         object.elements.rangeslide.loopSelect.onchange = function(values){ 
@@ -20401,24 +20690,20 @@
                         xCount:8, yCount:8,
                     };
                     var style = {
-                        background:{fill:'rgba(200,200,200,1)'},
-                        h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                
                         button: {
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         },
                         grid: {
-                            backing: 'rgba(200,175,200,1)',
-                            check: 'rgba(150,125,150,1)',
-                            backingGlow: 'rgba(225,175,225,1)',
-                            checkGlow:'rgba(200,125,200,1)'
+                            backing:{r:200/255,g:175/255,b:200/255,a:1},
+                            check:{r:150/255,g:125/255,b:150/255,a:1},
+                            backingGlow:{r:225/255,g:175/255,b:225/255,a:1},
+                            checkGlow:{r:200/255,g:125/255,b:200/255,a:1}
                         },
-                        sevenSegmentDisplay:{
-                            background:'rgba(200,175,200,1)',
-                            glow:'rgba(225,225,225,1)',
-                            dim:'rgba(150,125,150,1',
-                        }
                     };
                     var design = {
                         name: 'launchpad',
@@ -20428,7 +20713,7 @@
                         space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], colour:style.background }},
                 
                             //input data
                                 {type:'connectionNode_data', name:'pulse_input', data:{ x: 125, y: 5, width: 5, height: 10 }},
@@ -20437,10 +20722,10 @@
                             //pulse
                                 {type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
                             //rastorgrid
-                                {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, style:{fill:style.grid.backing}}},
+                                {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, colour:style.grid.backing}},
                                 {type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
                             //page select
-                                {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5, style:style.button }},
+                                {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5}},
                                 {type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
                                 {type:'button_rectangle',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
                         ]
@@ -20649,36 +20934,33 @@
                         vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
                 
                     var style = {
-                        background:{fill:'rgba(200,200,200,1)'},
-                        markings: {
-                            fill:{fill:'rgba(150,150,150,1)'},
-                            stroke:{stroke:'rgba(150,150,150,1)', lineWidth:1}, 
-                        },
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
                         rangeslide:{
-                            handle:'rgba(240,240,240,1)',
-                            backing:'rgba(150,150,150,1)',
-                            slot:'rgba(50,50,50,1)',
-                            invisibleHandle:'rgba(0,0,0,0)',
-                            span:'rgba(220,220,220,1)',
+                            handle:{r:240/255,g:240/255,b:240/255,a:1},
+                            backing:{r:150/255,g:150/255,b:150/255,a:1},
+                            slot:{r:50/255,g:50/255,b:50/255,a:1},
+                            invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
+                            span:{r:220/255,g:220/255,b:220/255,a:1},
                         },
                         rangeslide_loop:{
-                            handle:'rgba(240,240,240,1)',
-                            backing:'rgba(150,150,150,1)',
-                            slot:'rgba(50,50,50,1)',
-                            span:'rgba(255,247,145,0.5)',
+                            handle:{r:240/255,g:240/255,b:240/255,a:1},
+                            backing:{r:150/255,g:150/255,b:150/255,a:1},
+                            slot:{r:50/255,g:50/255,b:50/255,a:1},
+                            span:{r:255/255,g:247/255,b:145/255,a:0.5},
                         },
                         button:{
-                            background__up__fill:'rgba(220,220,220,1)', 
-                            background__hover__fill:'rgba(240,240,240,1)', 
-                            background__hover_press__fill:'rgba(180,180,180,1)',
+                            background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                            background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
                         },
                         checkbox:{
-                            backing:'rgba(229, 229, 229,1)',
-                            check:'rgba(252,252,252,1)',
+                            backing:{r:229/255,g: 229/255,b: 229/255,a:1},
+                            check:{r:252/255,g:252/255,b:252/255,a:1},
                         },
                         checkbox_loop:{
-                            backing:'rgba(229, 221, 112,1)',
-                            check:'rgba(252,244,128,1)',
+                            backing:{r:229/255,g: 221/255,b: 112/255,a:1},
+                            check:{r:252/255,g:244/255,b:128/255,a:1},
                         },
                     };
                 
@@ -20690,7 +20972,7 @@
                         space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
                         // spaceOutline:true,
                         elements:[
-                            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], style:style.background }},
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
                 
                             //midi out
                                 {type:'connectionNode_data', name:'midiout', data:{ x: -5, y: 11.25, width: 5, height: 17.5 }},
@@ -20703,7 +20985,10 @@
                                             object.elements.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
                                         }
                                     },
-                                    onchangeviewarea:function(data){ object.elements.rangeslide.viewselect.set( {start:data.left, end:data.right}, false ); },
+                                    onpan:function(data){
+                                        object.elements.rangeslide.viewselect_y.set( {start:data.topLeft.y, end:data.bottomRight.y}, false );
+                                        object.elements.rangeslide.viewselect_x.set( {start:data.topLeft.x, end:data.bottomRight.x}, false );
+                                    },
                                 }},
                                 {type:'rangeslide', name:'viewselect_y', data:{ x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1, style:style.rangeslide }},
                                 {type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
@@ -20726,7 +21011,7 @@
                                 {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
                                     onpress:function(){object.elements.sequencer.main.progress();},
                                 }},
-                                {type:'path', name:'progress_arrow', data:{ points:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], style:style.markings.stroke }},
+                                {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
                 
                             //reset
                                 {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
@@ -20735,8 +21020,8 @@
                                 {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
                                     onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
                                 }},
-                                {type:'path', name:'reset_arrow', data:{ points:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], style:style.markings.stroke }},
-                                {type:'path', name:'reset_line', data:{ points:[{x:49, y:209},{x:49, y:216}], style:style.markings.stroke }},
+                                {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
                         ]
                     };
                 
@@ -20886,7 +21171,6 @@
             if( !_canvas_.control.interaction.devMode() ){ window.onbeforeunload = function(){ return "Unsaved work will be lost"; }; }
             _canvas_.control.gui.showMenubar();
             _canvas_.control.viewport.stopMouseScroll(true);
-            // _canvas_.control.scene.backgroundColour('rgb(0,0,0)');
             _canvas_.control.viewport.activeRender(true);
             
             _canvas_.control.scene.addUnit(20,10,0,'audio_duplicator');
@@ -20902,37 +21186,43 @@
             _canvas_.control.scene.addUnit(10,70,0,'audioSink');
             
             _canvas_.control.scene.addUnit(350,175,0,'musicalKeyboard');
-            _canvas_.control.scene.addUnit(10,340,0,'audioIn');
+            // _canvas_.control.scene.addUnit(10,340,0,'audioIn');
             
             _canvas_.control.scene.addUnit(225,85,0,'distortionUnit');
             _canvas_.control.scene.addUnit(225,185,0,'filterUnit');
             _canvas_.control.scene.addUnit(380,250,0,'multibandFilter');
-            // _canvas_.control.scene.addUnit(225,290,0,'reverbUnit');
+            _canvas_.control.scene.addUnit(225,290,0,'reverbUnit');
             
-            // _canvas_.control.scene.addUnit(610,10,0,'launchpad');
-            // _canvas_.control.scene.addUnit(750,250,0,'basicSequencer_midiOut');
-            // _canvas_.control.scene.addUnit(750,10,0,'basicSequencer');
+            _canvas_.control.scene.addUnit(610,10,0,'launchpad');
+            _canvas_.control.scene.addUnit(750,250,0,'basicSequencer_midiOut');
+            _canvas_.control.scene.addUnit(750,10,0,'basicSequencer');
             
-            // _canvas_.control.scene.addUnit(20,525,0,'looper');
-            // _canvas_.control.scene.addUnit(20,705,0,'oneShot_multi_multiTrack');
-            // _canvas_.control.scene.addUnit(20,645,0,'oneShot_multi');
-            // _canvas_.control.scene.addUnit(20,585,0,'oneShot_single');
-            // _canvas_.control.scene.addUnit(20,395,0,'player');
-            // _canvas_.control.scene.addUnit(20,480,0,'recorder');
-            
-            
-            //view positioning
-            _canvas_.core.viewport.scale(3.5);
-            _canvas_.core.viewport.position(-370*_canvas_.core.viewport.scale(),-240*_canvas_.core.viewport.scale());
+            _canvas_.control.scene.addUnit(20,525,0,'looper');
+            _canvas_.control.scene.addUnit(20,705,0,'oneShot_multi_multiTrack');
+            _canvas_.control.scene.addUnit(20,645,0,'oneShot_multi');
+            _canvas_.control.scene.addUnit(20,585,0,'oneShot_single');
+            _canvas_.control.scene.addUnit(20,395,0,'player');
+            _canvas_.control.scene.addUnit(20,480,0,'recorder');
             
             
+            // //view positioning
+            // _canvas_.core.viewport.scale(5);
+            // _canvas_.core.viewport.position(-5*_canvas_.core.viewport.scale(),-465*_canvas_.core.viewport.scale());
             
             
-            // console.log(_canvas_.core.stats.getReport());
+            
+            
+            
+            // _canvas_.core.stats.active(true);
+            // var averages = [];
+            // var rollingAverage = 0;
+            // var rollingAverageIndex = 1;
             // setInterval(function(){
-            //     console.log(_canvas_.core.stats.getReport());
+            //     var tmp = _canvas_.core.stats.getReport();
+            //     averages.push(tmp.framesPerSecond);
+            //     if(averages.length > 10){averages.shift();}
+            //     console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
             // },1000);
-            
 
 
 
