@@ -103,7 +103,6 @@ _canvas_.control = new function(){
     this.gui = new function(){
         var pane = _canvas_.system.pane.f;
         var menubar = undefined;
-        var scale = window.devicePixelRatio;
 
         this.refresh = function(){
             if(menubar != undefined){menubar.refresh();}
@@ -117,7 +116,7 @@ _canvas_.control = new function(){
                 }
 
             if(menubar != undefined){return;}
-            menubar = control.gui.elements.menubar(0,0,scale);
+            menubar = control.gui.elements.menubar(0,0);
             pane.append( menubar );
         };
         this.hideMenubar = function(){
@@ -143,7 +142,7 @@ _canvas_.control = new function(){
         this.position = function(x,y){ return _canvas_.core.viewport.position(x,y); };
         this.refresh = function(){ 
             _canvas_.core.viewport.refresh();
-            // control.gui.refresh();
+            control.gui.refresh();
         };
         this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
         this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };

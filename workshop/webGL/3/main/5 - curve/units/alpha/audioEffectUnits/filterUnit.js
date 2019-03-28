@@ -14,8 +14,8 @@ this.filterUnit = function(x,y,a){
             needle:{r:250/255,g:150/255,b:150/255,a:1},
         },
         graph:{
-            foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.}],
-            backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, thickness:0.25},
+            foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, lineThickness:0.25}],
+            backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, lineThickness:0.25},
             backgroundtext:{colour:{r:0/255,g:200/255,b:163/255,a:0.75}, font:'Helvetica'},
         }
     };
@@ -35,8 +35,8 @@ this.filterUnit = function(x,y,a){
             {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
                 style:{
                     foregrounds: style.graph.foregroundlines, 
-                    background_stroke: style.graph.backgroundlines.stroke, 
-                    background_thickness: style.graph.backgroundlines.lineWidth, 
+                    background_colour: style.graph.backgroundlines.colour, 
+                    background_lineThickness: style.graph.backgroundlines.lineThickness, 
                     backgroundText_colour: style.graph.backgroundtext.colour, 
                     backgroundText_font: style.graph.backgroundtext.font,
                 }}

@@ -153,7 +153,7 @@ this.needleOverlay = function(
                     controlObjects.markGroup.append( interfacePart.builder('rectangle',''+position,{
                         x:position*width, 
                         width:needleWidth*width, height:height,
-                        style:{ fill:needleStyles[0] },
+                        colour:needleStyles[0],
                     }));
                     return true;
                 }else{ 
@@ -197,10 +197,10 @@ this.needleOverlay = function(
 
     //interaction
         //generic onmousedown code for interaction
-            backing.onmousedown = function(x,y){
+            backing.onmousedown = function(event){
                 if(!interactable){return;}
                 if( _canvas_.system.keyboard.pressedKeys.shift ){
-                    var firstPosition = getRelativeX(x,y);
+                    var firstPosition = getRelativeX(event.x,event.y);
                     _canvas_.system.mouse.mouseInteractionHandler(
                         function(event){ 
                             var x = getRelativeX(event.x,event.y);
@@ -209,12 +209,12 @@ this.needleOverlay = function(
                         },    
                     );
                 }else{
-                    object.select(getRelativeX(x,y));
+                    object.select(getRelativeX(event.x,event.y));
                 }
             };
-            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(event){
                 if(!interactable){return;}
 
                 leadNeedle_grappled = true;
@@ -245,9 +245,9 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(event){
                 if(!interactable){return;}
 
                 selectionNeedleA_grappled = true;
@@ -278,9 +278,9 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(event){
                 if(!interactable){return;}
 
                 selectionNeedleB_grappled = true;
@@ -311,9 +311,9 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_area.onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('grab');};
-            controlObjects.selection_area.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.selection_area.onmousedown = function(x,y,event){
+            controlObjects.selection_area.onmouseenter = function(event){_canvas_.core.viewport.cursor('grab');};
+            controlObjects.selection_area.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_area.onmousedown = function(event){
                 if(!interactable){return;}
 
                 _canvas_.core.viewport.cursor('grabbing');
@@ -361,7 +361,7 @@ this.needleOverlay = function(
             };
 
         //doubleclick to destroy selection area
-            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ if(!interactable){return;} area(-1,-1); _canvas_.core.viewport.cursor('default'); };
+            controlObjects.selection_A.ondblclick = function(){ if(!interactable){return;} area(-1,-1); _canvas_.core.viewport.cursor('default'); };
             controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
             controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
     

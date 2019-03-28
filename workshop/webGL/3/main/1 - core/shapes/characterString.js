@@ -63,7 +63,7 @@ this.characterString = function(){
             clear();
             var tmpString = String(string).split('');
             var cumulativeWidth = 0;
-            var spacing = 0.1;
+            var spacing = 0.15;
 
             var mux = 0;
             tmpString.forEach(function(a){
@@ -80,11 +80,18 @@ this.characterString = function(){
             for(var a = 0; a < tmpString.length; a++){
                 if(tmpString[a] == ' '){ cumulativeWidth += characterWidth; continue; }
 
+
                 var tmp = _canvas_.core.shape.create('character');
                     tmp.name = ''+a;
                     tmp.stopAttributeStartedExtremityUpdate = true;
                     tmp.character(tmpString[a]);
-                    tmp.x(cumulativeWidth); 
+
+                    //calculate encroachment
+                    if( a > 0 && tmp.encroachUponList().includes(tmpString[a-1]) ){
+                        cumulativeWidth -= spacing*characterWidth;
+                    }
+
+                    tmp.x(cumulativeWidth);
                     tmp.y(height*tmp.offset().y - horizontalOffset);
                     tmp.width(characterWidth*tmp.ratio().x);
                     tmp.height(height*tmp.ratio().y);

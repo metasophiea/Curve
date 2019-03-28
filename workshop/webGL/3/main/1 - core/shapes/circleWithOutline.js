@@ -23,7 +23,7 @@ this.circleWithOutline = function(){
             var angle = 0;     this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             var radius = 10;   this.radius =    function(a){ if(a==undefined){return radius;}    radius = a;    if(this.devMode){console.log(this.getAddress()+'::radius');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var thickness = 2; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var thickness = 2; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
             var detail = 25;   this.detail =    function(a){ 
                                    if(a==undefined){return detail;} detail = a;
                                    if(this.devMode){console.log(this.getAddress()+'::detail');}

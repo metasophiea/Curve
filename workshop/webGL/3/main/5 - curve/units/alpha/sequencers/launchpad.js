@@ -86,16 +86,16 @@ this.launchpad = function(x,y,a){
         object.internalCircuits = new this.launchpad.sequencer(values.xCount, values.yCount);
         object.internalCircuits.commands = function(data){
             for(var a = 0; a < values.yCount; a++){
-                if(data[a]){ object.io['out_'+a].send('pulse'); }
+                if(data[a]){ object.io.data['out_'+a].send('pulse'); }
             }
         };
         object.internalCircuits.pageChange = pageChange;
 
     //wiring
-        object.elements.connectionNode_data.pulse_input.onreceive = function(){object.internalCircuits.inc();lightLine();};
-        object.elements.connectionNode_data.nextPage_input.onreceive = function(){object.internalCircuits.incPage();};
-        object.elements.connectionNode_data.prevPage_input.onreceive = function(){object.internalCircuits.decPage();};
-        object.elements.button_rectangle.pulse_button.onreceive = function(){object.internalCircuits.inc();lightLine();};
+        object.elements.connectionNode_data.pulse_input.onreceivedata = function(){object.internalCircuits.inc();lightLine();};
+        object.elements.connectionNode_data.nextPage_input.onreceivedata = function(){object.internalCircuits.incPage();};
+        object.elements.connectionNode_data.prevPage_input.onreceivedata = function(){object.internalCircuits.decPage();};
+        object.elements.button_rectangle.pulse_button.onpress = function(){object.internalCircuits.inc();lightLine();};
         object.elements.rastorgrid.rastorgrid.onchange = function(data){object.internalCircuits.importPage(data);};
         object.elements.button_rectangle.nextPage.onpress = function(){object.internalCircuits.incPage();};
         object.elements.button_rectangle.prevPage.onpress = function(){object.internalCircuits.decPage();};

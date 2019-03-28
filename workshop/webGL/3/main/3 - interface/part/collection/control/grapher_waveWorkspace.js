@@ -14,7 +14,7 @@ this.grapher_waveWorkspace = function(
     backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
     backgroundStyle_lineThickness=0.25,
     backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
-    backgroundTextStyle_size=7.5,
+    backgroundTextStyle_size=2*7.5,
     backgroundTextStyle_font='Helvetica',
 
     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
@@ -45,7 +45,6 @@ this.grapher_waveWorkspace = function(
         //needle overlay
             var overlay = interfacePart.builder('needleOverlay', 'overlay', {
                 width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                needleStyles:foregroundStyles.map(a => a.stroke),
             });
             object.append(overlay);
 

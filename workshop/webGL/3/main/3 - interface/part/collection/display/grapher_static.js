@@ -3,9 +3,9 @@ this.grapher_static = function(
     x, y, width=120, height=60, angle=0, resolution=5,
 
     foregroundStyles=[
-        {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
-        {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
-        {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
+        {colour:{r:0,g:1,b:0,a:1}, thickness:1},
+        {colour:{r:1,g:1,b:0,a:1}, thickness:1},
+        {colour:{r:0,g:1,b:1,a:1}, thickness:1},
     ],
     foregroundTextStyles=[
         {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
@@ -14,7 +14,7 @@ this.grapher_static = function(
     ],
 
     backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-    backgroundStyle_lineThickness=0.25,
+    backgroundStyle_lineThickness=0.5,
     backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
     backgroundTextStyle_size=7.5,
     backgroundTextStyle_font='Helvetica',

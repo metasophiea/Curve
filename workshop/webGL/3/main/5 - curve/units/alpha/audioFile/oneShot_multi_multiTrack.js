@@ -143,7 +143,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                                     needles[needleNumber].currentPosition += step;
     
                                     //add new mark
-                                    waveport.mark(needles[needleNumber].currentPosition);
+                                        waveport.mark(needles[needleNumber].currentPosition);
     
                                     //check for ending
                                         if( needles[needleNumber].currentPosition > needles[needleNumber].endPosition ){

@@ -72,7 +72,7 @@ this.button_rectangle = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup');
+            var subject = interfacePart.builder('group',name+'__subGroup');
         //backing
             var backing = interfacePart.builder('rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
             subject.append(backing);

@@ -50,14 +50,14 @@ this.oneShot_multi = function(x,y,a){
                 {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                     onpress: function(){
                         object.oneShot.load('file',function(data){
-                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw( object.oneShot.waveformSegment() );
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
                         });
                     }
                 }},
                 {type:'button_rectangle', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
                     onpress:function(){
                         var filePlayer = object.oneShot;
-                        var waveport = object.elements.grapher_wave_canvas_.grapher_waveWorkspace;
+                        var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
 
                         //no file = don't bother
                             if(filePlayer.duration() < 0){return;}
@@ -117,7 +117,7 @@ this.oneShot_multi = function(x,y,a){
                 {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
                     onpress:function(){
                         var filePlayer = object.oneShot;
-                        var waveport = object.elements.grapher_wave_canvas_.grapher_waveWorkspace;
+                        var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
 
                         filePlayer.panic();
 
@@ -159,12 +159,12 @@ this.oneShot_multi = function(x,y,a){
         object.i = {};
         object.i.loadURL = function(url, callback){
             object.oneShot.load('url', function(){
-                object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw(object.oneShot.waveformSegment());
+                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw(object.oneShot.waveformSegment());
                 if(callback != undefined){callback();}
             }, url);
         };
         object.i.area = function(a,b){
-            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.area(a,b);
+            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
         };
         
     return object;

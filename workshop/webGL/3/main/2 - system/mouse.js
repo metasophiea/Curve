@@ -32,8 +32,8 @@
 
 //connect callbacks to mouse function lists
     [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(function(callback){
-        _canvas_.core.callback[callback] = function(x,y,event,shapes){ 
-            if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
-            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); }
+        _canvas_.core.callback[callback] = function(event,shapes){
+            if(shapes.length > 0){ shapes[0][callback](event,shapes); }
+            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.x,y:event.y,event:event}); }
         }
     });

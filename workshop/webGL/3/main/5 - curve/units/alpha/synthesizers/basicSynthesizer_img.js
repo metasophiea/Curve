@@ -1,28 +1,26 @@
-this.basicSynthesizer_img = function(x,y,a){
+this.basicSynthesizer_img = function(x,y,angle){
     var attributes = {
         detuneLimits: {min:-100, max:100}
     };
     var style = {
-        background:'images/units/alpha/basicSynthesizer_2.png',
-        h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-        h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
+        background:'/docs/images/units/alpha/basicSynthesizer_2.png',
 
         dial:{
-            handle:'images/units/alpha/basicSynthesizer_2_dial_handle.png',
-            slot:'images/units/alpha/basicSynthesizer_2_dial_slot.png',
-            needle:'images/units/alpha/basicSynthesizer_2_dial_needle.png',
+            handle:'/docs/images/units/alpha/basicSynthesizer_2_dial_handle.png',
+            slot:'/docs/images/units/alpha/basicSynthesizer_2_dial_slot.png',
+            needle:'/docs/images/units/alpha/basicSynthesizer_2_dial_needle.png',
         },
         button:{
-            background__up__fill:'rgba(175,175,175,1)', 
-            background__hover__fill:'rgba(220,220,220,1)', 
-            background__hover_press__fill:'rgba(150,150,150,1)',
+            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
         }
     };
     var design = {
         name:'basicSynthesizer_img',
         category:'synthesizers',
         collection: 'alpha',
-        x:x, y:y, a:a,
+        x:x, y:y, angle:angle,
         space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
         // spaceOutline: true,
         elements:[

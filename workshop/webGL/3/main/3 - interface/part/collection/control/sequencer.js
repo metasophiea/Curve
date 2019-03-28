@@ -45,7 +45,8 @@ this.sequencer = function(
     onchangeviewarea=function(data){},
     event=function(events){},
 ){
-    var _t = this;
+    var self = this;
+    var devMode = false;
 
     //settings
         const viewport = {
@@ -107,16 +108,16 @@ this.sequencer = function(
                 backgroundDrawArea_vertical.stopAttributeStartedExtremityUpdate = true;
                 backgroundDrawArea.append(backgroundDrawArea_vertical);
             //interaction pane back
-                var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
+                var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:1,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_back);
-                interactionPlane_back.onwheel = function(x,y,event){};
+                interactionPlane_back.onwheel = function(event){};
             //signal block area
                 var signalPane = interfacePart.builder('group','signalPane');
                 workarea.append(signalPane);
             //interaction pane front
                 var interactionPlane_front = interfacePart.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_front);
-                interactionPlane_front.onwheel = function(x,y,event){};
+                interactionPlane_front.onwheel = function(event){};
     //internal
         object.__calculationAngle = angle;
         function currentMousePosition(event){
@@ -206,6 +207,8 @@ this.sequencer = function(
                 }
         }
         function adjustZoom(x,y){
+            if(devMode){console.log('\nsequencer::'+name+'::adjustZoom - start');}
+            
             if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
             var maxZoom = 0.01;
 
@@ -224,28 +227,26 @@ this.sequencer = function(
 
                 //update interactionPlane_back
                     interactionPlane_back.width( viewport.totalSize.width );
-                    interactionPlane_back.height( viewport.totalSize.width );
+                    interactionPlane_back.height( viewport.totalSize.height );
 
                 //update interactionPlane_front
                     interactionPlane_front.width( viewport.totalSize.width );
-                    interactionPlane_front.height( viewport.totalSize.width );
+                    interactionPlane_front.height( viewport.totalSize.height );
 
                 //update background strips
-                    for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
-                        backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
-                        backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
-                    }
-                    for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
-                        backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
-                        backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
-                    }
+                    backgroundDrawArea_vertical.children().forEach(function(item,index){
+                        item.x( index*(width/(xCount*zoomLevel_x)) );
+                        item.width( width/(xCount*zoomLevel_x) );
+                        item.height( viewport.totalSize.height );
+                    });
+                    backgroundDrawArea_horizontal.children().forEach(function(item,index){
+                        item.y( index*(height/(yCount*zoomLevel_y)) );
+                        item.height( height/(yCount*zoomLevel_y) );
+                        item.width( viewport.totalSize.width );
+                    });
 
                 //update signals
-                    for(var a = 0; a < signalPane.children().length; a++){
-                        signalPane.children()[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
-                    }
+                    signalPane.children().forEach( item => item.unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y)) );
 
                 //update playhead (if there is one)
                     if(playhead.present){
@@ -267,18 +268,14 @@ this.sequencer = function(
                     interactionPlane_front.width( viewport.totalSize.width );
 
                 //update background strips
-                    for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
-                        backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
-                    }
-                    for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
-                    }
+                    backgroundDrawArea_vertical.children().forEach(function(item,index){
+                        item.x( index*(width/(xCount*zoomLevel_x)) );
+                        item.width( width/(xCount*zoomLevel_x) );
+                    });
+                    backgroundDrawArea_horizontal.children().forEach( item => item.width( viewport.totalSize.width ) );
 
                 //update signals
-                    for(var a = 0; a < signalPane.children().length; a++){
-                        signalPane.children()[a].unit(width/(xCount*zoomLevel_x), undefined);
-                    }
+                    signalPane.children().forEach( item => item.unit(width/(xCount*zoomLevel_x), undefined) );
 
                 //update playhead (if there is one)
                     if(playhead.present){
@@ -293,23 +290,19 @@ this.sequencer = function(
                     viewport.totalSize.height = height/zoomLevel_y;
 
                 //update interactionPlane_back
-                    interactionPlane_back.height( viewport.totalSize.width );
+                    interactionPlane_back.height( viewport.totalSize.height );
                 //update interactionPlane_front
-                    interactionPlane_front.height( viewport.totalSize.width );
+                    interactionPlane_front.height( viewport.totalSize.height );
 
                 //update background strips
-                    for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
-                    }
-                    for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
-                        backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
-                    }
+                    backgroundDrawArea_vertical.children().forEach( item => item.height( viewport.totalSize.height ) );
+                    backgroundDrawArea_horizontal.children().forEach(function(item,index){
+                        item.y( index*(height/(yCount*zoomLevel_y)) );
+                        item.height( height/(yCount*zoomLevel_y) );
+                    });
 
                 //update signals
-                    for(var a = 0; a < signalPane.children().length; a++){
-                        signalPane.children()[a].unit(undefined, height/(yCount*zoomLevel_y));
-                    }
+                    signalPane.children().forEach( item => item.unit(undefined, height/(yCount*zoomLevel_y)) );
 
                 //update playhead (if there is one)
                     if(playhead.present){
@@ -317,6 +310,8 @@ this.sequencer = function(
                         workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
                     }
             }
+
+            if(devMode){console.log('sequencer::'+name+'::adjustZoom - end\n\n');}
         }
         function setViewArea(d,update=true){
             //clean off input
@@ -362,7 +357,7 @@ this.sequencer = function(
                 var approvedData = signals.signalRegistry.getSignal(newID);
 
             //create graphical signal with approved values and append it to the pane
-                var newSignalBlock = _t.sequencer.signalBlock(
+                var newSignalBlock = self.sequencer.signalBlock(
                     newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
                     approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
                     false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
@@ -388,19 +383,19 @@ this.sequencer = function(
                 };
 
             //add interactions to graphical signal block
-                newSignalBlock.ondblclick = function(x,y,event){
+                newSignalBlock.ondblclick = function(event){
                     if(!_canvas_.system.keyboard.pressedKeys.control && !_canvas_.system.keyboard.pressedKeys.command){return;}
                     for(var a = 0; a < signals.selectedSignals.length; a++){
                         signals.selectedSignals[a].strength(signals.defaultStrength);
                         signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
                     }
                 };
-                newSignalBlock.body.onmousedown = function(x,y,event){
+                newSignalBlock.body.onmousedown = function(event){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                         if(_canvas_.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(x,y,event); return;
+                            interactionPlane_back.onmousedown(event); return;
                         }
 
                     //if the shift key is not pressed and this signal is not already selected; deselect everything
@@ -486,7 +481,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.body.onmousemove = function(x,y,event){
+                newSignalBlock.body.onmousemove = function(event){
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'default';
@@ -495,29 +490,29 @@ this.sequencer = function(
 
                     _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.body.onkeydown = function(x,y,event){
+                newSignalBlock.body.onkeydown = function(event){
                     if(!interactable){return;}
 
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                     if(pressedKeys.alt){ _canvas_.core.viewport.cursor('copy'); }
                 };
-                newSignalBlock.body.onkeyup = function(x,y,event){
+                newSignalBlock.body.onkeyup = function(event){
                     if(!interactable){return;}
 
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                     if(!(pressedKeys.alt)){ _canvas_.core.viewport.cursor('default'); }
                 };
-                newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                newSignalBlock.leftHandle.onmousedown = function(event){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                         if(_canvas_.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(x,y,event); return;
+                            interactionPlane_back.onmousedown(event); return;
                         }
                         
                     //cloning situation
                         if(_canvas_.system.keyboard.pressedKeys.alt){
-                            newSignalBlock.body.onmousedown(x,y,event);
+                            newSignalBlock.body.onmousedown(event);
                             return;
                         }
 
@@ -562,7 +557,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.leftHandle.onmousemove = function(x,y,event){
+                newSignalBlock.leftHandle.onmousemove = function(event){
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'col-resize';
@@ -571,18 +566,18 @@ this.sequencer = function(
 
                     _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.leftHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-                newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
+                newSignalBlock.leftHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                newSignalBlock.rightHandle.onmousedown = function(event,ignoreCloning=false){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                         if(_canvas_.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(x,y,event); return;
+                            interactionPlane_back.onmousedown(event); return;
                         }
 
                     //cloning situation
                         if(!ignoreCloning && _canvas_.system.keyboard.pressedKeys.alt){
-                            newSignalBlock.body.onmousedown(x,y,event);
+                            newSignalBlock.body.onmousedown(event);
                             return;
                         }
 
@@ -622,7 +617,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.rightHandle.onmousemove = function(x,y,event){
+                newSignalBlock.rightHandle.onmousemove = function(event){
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'col-resize';
@@ -631,7 +626,7 @@ this.sequencer = function(
 
                     _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.rightHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                newSignalBlock.rightHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
 
             return {id:newID, signalBlock:newSignalBlock};
         }
@@ -838,7 +833,7 @@ this.sequencer = function(
             };
 
     //interaction
-        interactionPlane_back.onmousedown = function(x,y,event){
+        interactionPlane_back.onmousedown = function(event){
             if(!interactable){return;}
             
             var pressedKeys = _canvas_.system.keyboard.pressedKeys;
@@ -950,7 +945,7 @@ this.sequencer = function(
 
                 //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                     temp.signalBlock.select();
-                    temp.signalBlock.rightHandle.onmousedown(undefined,undefined,event,true);
+                    temp.signalBlock.rightHandle.onmousedown(event,true);
             }else if(pressedKeys.Space){//pan
                 _canvas_.core.viewport.cursor('grabbing');
 
@@ -986,7 +981,7 @@ this.sequencer = function(
                     }
             }
         };
-        interactionPlane_back.onmousemove = function(x,y,event){
+        interactionPlane_back.onmousemove = function(event){
             if(!interactable){return;}
 
             var pressedKeys = _canvas_.system.keyboard.pressedKeys;
@@ -994,21 +989,21 @@ this.sequencer = function(
             else if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
             else{ _canvas_.core.viewport.cursor('default'); }
         };
-        interactionPlane_front.onkeydown = function(x,y,event){
+        interactionPlane_front.onkeydown = function(event){
             if(!interactable){return;}
 
             var pressedKeys = _canvas_.system.keyboard.pressedKeys;
             if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
             if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
             if( pressedKeys.alt ){
-                if( signalPane.getElementsUnderPoint(x,y)[0] != undefined ){
+                if( signalPane.getElementsUnderPoint(event.x,event.y)[0] != undefined ){
                     _canvas_.core.viewport.cursor('copy');
                 }else{
                     _canvas_.core.viewport.cursor('crosshair');
                 }
             }
         };
-        interactionPlane_front.onkeyup = function(x,y,event){
+        interactionPlane_front.onkeyup = function(event){
             if(!interactable){return;}
 
             _canvas_.core.viewport.cursor('default');

@@ -38,13 +38,16 @@ _canvas_.control.scene.addUnit(20,480,0,'recorder');
 
 
 
-// _canvas_.core.stats.active(true);
-// var averages = [];
-// var rollingAverage = 0;
-// var rollingAverageIndex = 1;
-// setInterval(function(){
-//     var tmp = _canvas_.core.stats.getReport();
-//     averages.push(tmp.framesPerSecond);
-//     if(averages.length > 10){averages.shift();}
-//     console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
-// },1000);
+_canvas_.core.stats.active(true);
+var averages = [];
+var rollingAverage = 0;
+var rollingAverageIndex = 1;
+setInterval(function(){
+    var tmp = _canvas_.core.stats.getReport();
+    averages.push(tmp.framesPerSecond);
+    if(averages.length > 10){averages.shift();}
+    console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
+},1000);
+
+_canvas_.core.render.activeLimitToFrameRate(true);
+_canvas_.core.render.frameRateLimit(25);

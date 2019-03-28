@@ -1,6 +1,6 @@
 this.dial_discrete = function(
     name='dial_discrete',
-    x, y, radius=15, angle=0, interactable=true,
+    x, y, radius=10, angle=0, interactable=true,
     value=0, resetValue=0, optionCount=5,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
@@ -89,7 +89,7 @@ this.dial_discrete = function(
                 if(object.onrelease != undefined){object.onrelease(value);}
             }
         };
-        dial.getChildByName('handle').onmousedown = function(x,y,event){
+        dial.getChildByName('handle').onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
             var initialY = event.y;

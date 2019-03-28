@@ -8,7 +8,7 @@ this.cable = function(
         //main
             var object = interfacePart.builder('group',name);
         //cable shape
-            var path = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:2.5 });
+            var path = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             object.append(path);
     
     //controls

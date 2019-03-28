@@ -5,7 +5,7 @@ _canvas_.control.grapple = {
     declare:function(unit){
 
         function grappleFunctionRunner(list){
-            return function(x,y,event){
+            return function(event){
                 //ensure that it's the action button on the mouse
                     if(event.button != 0){return;}
 
@@ -13,7 +13,7 @@ _canvas_.control.grapple = {
                     _canvas_.control.grapple.tmpunit = this.unit;
                 
                 //run through function list, and activate functions where necessary
-                    _canvas_.library.structure.functionListRunner(list,_canvas_.system.keyboard.pressedKeys)({event:event,x:x,y:y});
+                    _canvas_.library.structure.functionListRunner(list,_canvas_.system.keyboard.pressedKeys)(event);
             };
         }
 
@@ -28,7 +28,7 @@ _canvas_.control.grapple = {
 _canvas_.control.grapple.functionList.onmousedown.push(
     {
         requiredKeys:[],
-        function:function(data){
+        function:function(event){
             var control = _canvas_.control;
 
             // if mousedown occurs over an unit that isn't selected
@@ -36,7 +36,7 @@ _canvas_.control.grapple.functionList.onmousedown.push(
             //   deselect everything
             //  now, select the unit we're working on if not selected
                 if( !control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
-                    if(!data.event.shiftKey){ control.selection.deselectEverything(); }
+                    if(!event.shiftKey){ control.selection.deselectEverything(); }
                     control.selection.selectUnit(control.grapple.tmpunit);
                 }
         },
@@ -46,11 +46,11 @@ _canvas_.control.grapple.functionList.onmousedown.push(
 _canvas_.control.grapple.functionList.onmousedown.push(
     {
         requiredKeys:[['shift','alt']],
-        function:function(data){
+        function:function(event){
             var control = _canvas_.control;
             
             //collect together information on the click position and the selected unit's positions and section area
-                control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                 control.grapple.tmpdata.oldUnitsPositions = [];
                 control.grapple.tmpdata.oldUnitsSelectionArea = [];
                 for(var a = 0; a < control.selection.selectedUnits.length; a++){
@@ -103,18 +103,18 @@ _canvas_.control.grapple.functionList.onmousedown.push(
 _canvas_.control.grapple.functionList.onmousedown.push(
     {
         requiredKeys:[['alt']],
-        function:function(data){ _canvas_.control.selection.duplicate(); },
+        function:function(){ _canvas_.control.selection.duplicate(); },
     }
 );
 //unit movement
 _canvas_.control.grapple.functionList.onmousedown.push(
     {
         requiredKeys:[],
-        function:function(data){
+        function:function(event){
             var control = _canvas_.control;
 
             //collect together information on the click position and the selected unit's positions and section area
-                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
+                control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                 control.grapple.tmpdata.oldUnitsPositions = [];
                 control.grapple.tmpdata.oldUnitsSelectionArea = [];
                 for(var a = 0; a < control.selection.selectedUnits.length; a++){
@@ -171,7 +171,7 @@ _canvas_.control.grapple.functionList.onmousedown.push(
 _canvas_.control.grapple.functionList.onmouseup.push(
     {
         requiredKeys:[],
-        function:function(data){
+        function:function(event){
             var control = _canvas_.control;
 
             //if mouse-up occurs over an unit that is selected
@@ -180,7 +180,7 @@ _canvas_.control.grapple.functionList.onmouseup.push(
             //  deselect the unit we're working on
             // now set the most recently selected reference to null
                 if( control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
-                    if( data.event.shiftKey && (control.selection.lastSelectedUnits != control.grapple.tmpunit) ){
+                    if( event.shiftKey && (control.selection.lastSelectedUnits != control.grapple.tmpunit) ){
                         control.selection.deselectUnit(control.grapple.tmpunit);
                     }
                     control.selection.lastSelectedUnits = null;

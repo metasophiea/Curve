@@ -73,11 +73,11 @@ this.button_polygon = function(
         //main
             var subject = interfacePart.builder('group',name+'subGroup');
         //backing
-            var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:points, colour:backing__off__colour});
+            var backing = interfacePart.builder('polygonWithOutline','backing',{pointsAsXYArray:points, colour:backing__off__colour, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
-        //outline
-            var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
-            subject.append(outline);
+        // //outline
+        //     var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
+        //     subject.append(outline);
         //text
              var avgPoint = _canvas_.library.math.averagePoint(points);
              var text_centre = interfacePart.builder('text','centre', {
@@ -116,8 +116,8 @@ this.button_polygon = function(
         object.activateGraphicalState = function(state){
             if(!active){ 
                 backing.colour = backing__off__colour;
-                outline.colour = backing__off__lineColour;
-                outline.thickness( backing__off__lineThickness );
+                backing.lineColour = backing__off__lineColour;
+                backing.thickness( backing__off__lineThickness );
                 return;
             }
 
@@ -145,8 +145,8 @@ this.button_polygon = function(
 
             var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
             backing.colour = styles[i].colour;
-            outline.colour = styles[i].lineColour;
-            outline.thickness( styles[i].lineThickness );
+            backing.lineColour = styles[i].lineColour;
+            backing.thickness( styles[i].lineThickness );
         };
         object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
 

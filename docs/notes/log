@@ -1,14 +1,102 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
- 2019-03-24
+2019-03-28
   - webGL experiment
-    - fixed that crossover thing (I was to do with stenciling, where the groups
+    - fixed up the ?, /, \, -,  1 and 3 characters and all of the lower-case
+      letters. Aswel as expanded spacing from 0.1 to 0.15
+    - adjusted waveWorkspace default size a little
+    - did a little work on character kemming by adding the "encroachUpon" list
+      to the vector list..it's doing most of the job.
+
+  future ideas
+  - image based text?
+
+  notes
+  - recorder buttons aren't straight-forward buttons, which means the text on
+    them doesn't line up perfectly. So that needs to be changed
+  - need to fix up the 'i' and 'j' characters
+
+
+2019-03-27
+  - webGL experiment
+    - launchpad is working again
+    - fixed sequencer issues
+      - the sequencer sometimes stops working. Like all mouse interaction is
+        ignored and passed through  
+      - doing a group selection in a sequencer, then trying to do a general one;
+        you instead are still doing a sequencer group select
+      somewhere along the way, I had the interaction panes' heights being set to
+      the width. An easy fix
+    - fixed the needle colour on the 8-track player thing
+    - added a frame-rate limiter to core rendering
+    - fixed little issue with click-selecting locations on the needleOverlay 
+      part
+    - fixed the styling in the static audio grapher
+    - fixed an issue with the slides (again related to that callback change I
+      made last time)
+
+  notes
+  - can't properly test the audioIn unit without getting a HTTPS connection, so,
+    that'll need a little more work. Things seem good otherwise
+  - need to redo that font. The capital letters are all pretty solid (except
+    Q and W), the lower case all need to be looked at, numbers are good (except
+    1 and 3, and 2 a little) alot of the extra characters need to be looked at
+    too
+
+
+2019-03-26
+  - webGL experiment
+    - doubled the thickness of cables
+    - fixed unit rotation
+    - changed up the data that core's callbacks returns, so now it will only
+      calculate the shapes under a point or get the workspace point when there's
+      arguments for those things. Lots of things changed becase of this and
+      required fixing, so, expect bugs related to it in future
+    - fixed pasting with the menubar (it wasn't placing in the correct
+      position)
+    - added basicSynthesizer_img back in
+    - ..issues with the new callback system go on. fixed up buttons. Will need 
+      to take a deeper look at how core.callback is working
+
+  notes
+  - its actually starting to look like this is ready for the prime time (bar
+    that silly font)
+
+
+2019-03-25
+  - webGL experiment
+    - menubar will now close all dropdowns when the window is resized
+    - changed the adjustZoom function in the sequencer part a little, to use 
+      'forEach' instead of a for loop. I figure it's probably a little faster
+      and nicer looking
+    - created new version of the group shape that calculates its extremities in
+      a more efficient (time wise and space wise) way. Things seem to have 
+      drastically improved in demo 1...I'm not really sure what the difference
+      was, but it was something to do with this.
+
+  notes
+  - now that the activly stenciling group automatically clears the stencil 
+    buffer when it's done; it's probably going to effect any other groups that
+    are doing stencil things too, like a parent of the group..perhaps its a
+    niche situaion, but still one to look out for.
+  - group's extremity methodology nees to be changed too. It's just saving all
+    the points of it's children, thus resulting in thousands of points being
+    stored. (one of the test scenes has a group with 50000 extremity points) I'm
+    thinking of only using the bounding box instead. The updateExtremities
+    already runs through all the children's point extremities to built itself, 
+    so I don't think it'll be a negative on performance...probably a boost
+    actually.
+
+
+2019-03-24
+  - webGL experiment
+    - fixed that crossover thing (it was to do with stenciling, where the groups
       weren't clearing the stencil buffer after they're all done)
     - fixed the sequencer zooming thing (classic case of trying to access the
       children of a group with '.children' instead of '.children()')
     - more issues with the GUI scaling fixed
 
 
- 2019-03-23
+2019-03-23
   - webGL experiment
     - midi sequencer unit mouse panning now updates the randeslides
     - fixed rangeSlide-sequencer control issue. Turned out, the sequencer was

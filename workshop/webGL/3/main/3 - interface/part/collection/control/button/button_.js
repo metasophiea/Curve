@@ -77,21 +77,21 @@ this.button_ = function(
 
 
     //interactivity
-        subject.cover.onmouseenter = function(x,y,event){
+        subject.cover.onmouseenter = function(event,s,p){
             object.state.hovering = true;  
             object.activateGraphicalState(object.state);
             if(object.onenter){object.onenter(event);}
             if(event.buttons == 1){subject.cover.onmousedown(event);} 
         };
-        subject.cover.onmouseleave = function(x,y,event){ 
+        subject.cover.onmouseleave = function(event){ 
             object.state.hovering = false; 
             object.release(event); 
             object.activateGraphicalState(object.state); 
             if(object.onleave){object.onleave(event);}
         };
-        subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
-        subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
-        subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
+        subject.cover.onmouseup = function(event){   if(!interactable){return;} object.release(event); };
+        subject.cover.onmousedown = function(event){ if(!interactable){return;} object.press(event); };
+        subject.cover.ondblclick = function(event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
         
 
 

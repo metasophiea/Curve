@@ -25,7 +25,7 @@ this.rectangleWithOutline = function(){
             var width = 10;         this.width =     function(a){ if(a==undefined){return width;}  width = a;          if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             var height = 10;        this.height =    function(a){ if(a==undefined){return height;} height = a;         if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}  scale = a;          if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
 
     //addressing
         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };

@@ -1,6 +1,6 @@
 this.dial_continuous_image = function(
     name='dial_continuous_image',
-    x, y, radius=15, angle=0, interactable=true,
+    x, y, radius=10, angle=0, interactable=true,
     value=0, resetValue=-1,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
@@ -86,7 +86,7 @@ this.dial_continuous_image = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onwheel = function(x,y,event){
+        handle.onwheel = function(event){
             if(!interactable){return;}
             if(grappled){return;}
             
@@ -96,7 +96,7 @@ this.dial_continuous_image = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onmousedown = function(x,y,event){
+        handle.onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
             var initialY = event.y;

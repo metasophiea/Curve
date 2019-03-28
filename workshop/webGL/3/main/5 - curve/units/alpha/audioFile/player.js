@@ -67,7 +67,7 @@ this.player = function(x,y,a){
             {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
             {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
 
-            {type:'text', name:'rate_label_name', data:{ x:15, y:78, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {type:'text', name:'rate_label_name', data:{ x:15, y:77.5, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
             {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
             {type:'text', name:'rate_label_1', data:{ x:15, y:51.5, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
             {type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},

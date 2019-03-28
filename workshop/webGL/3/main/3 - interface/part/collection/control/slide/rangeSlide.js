@@ -154,13 +154,13 @@ this.rangeslide = function(
                 span.onmousedown = function(){};
                 span.onclick = function(){};
                 
-            backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-            backingAndSlotCover.onclick = function(x,y,event){
+            backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
+            backingAndSlotCover.onclick = function(event){
                 if(!interactable){return;}
                 if(grappled){return;}
 
                 //calculate the distance the click is from the top of the slider (accounting for angle)
-                    var d = getPositionWithinFromMouse(x,y);
+                    var d = getPositionWithinFromMouse(event.x,event.y);
 
                 //use the distance to calculate the correct value to set the slide to
                 //taking into account the slide handle's size also
@@ -195,12 +195,12 @@ this.rangeslide = function(
             };
 
         //span panning - drag
-            span.onmousedown = function(x,y,event){
+            span.onmousedown = function(event){
                 if(!interactable){return;}
                 grappled = true;
 
                 var initialValue = values.start;
-                var initialPosition = getPositionWithinFromMouse(x,y);
+                var initialPosition = getPositionWithinFromMouse(event.x,event.y);
 
                 _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
@@ -218,12 +218,12 @@ this.rangeslide = function(
         //handle movement
             for(var a = 0; a < handleNames.length; a++){
                 handles[handleNames[a]].children()[1].onmousedown = (function(a){
-                    return function(x,y,event){
+                    return function(event){
                         if(!interactable){return;}
                         grappled = true;
             
                         var initialValue = values[handleNames[a]];
-                        var initialPosition = getPositionWithinFromMouse(x,y);
+                        var initialPosition = getPositionWithinFromMouse(event.x,event.y);
                         
                         _canvas_.system.mouse.mouseInteractionHandler(
                             function(event){

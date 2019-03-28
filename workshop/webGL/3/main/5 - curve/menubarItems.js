@@ -3,7 +3,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
     {
         text:'file',
         width:45,
-        listWidth:150,
+        listWidth:170,
         listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
@@ -30,8 +30,8 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
     },
     {
         text:'create',
-        width:65,
-        listWidth:250,
+        width:70,
+        listWidth:260,
         listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
@@ -49,7 +49,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
                         {
                             text_left: data.name,
                             function:function(design){return function(){
-                                var p = _canvas_.core.viewport.windowPoint2workspacePoint(30,30);
+                                var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
                                 _canvas_.control.scene.addUnit(p.x,p.y,0,design,'alpha');
                             }}(design),
                         }
@@ -70,12 +70,12 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
     {
         text:'help',
         width:50,
-        listWidth:150,
+        listWidth:160,
         listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
-        {text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); /*system.utility.misc.openURL(system.super.helpFolderLocation);*/ } },
+        {text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
         ]
     },
 ];

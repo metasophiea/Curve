@@ -4,7 +4,7 @@ this.dial_continuous = function(
     value=0, resetValue=-1,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
-    handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
+    handleStyle = {r:220/255, g:220/255, b:220/255, a:1},
     slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
     needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
 
@@ -78,7 +78,7 @@ this.dial_continuous = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onwheel = function(x,y,event){
+        handle.onwheel = function(event){
             if(!interactable){return;}
             if(grappled){return;}
             
@@ -88,7 +88,7 @@ this.dial_continuous = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onmousedown = function(x,y,event){
+        handle.onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
             var initialY = event.y;

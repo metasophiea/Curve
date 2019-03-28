@@ -196,6 +196,12 @@ this.render = new function(){
             this.refreshCoordinates();
         };this.refresh();
 
+    //frame rate control
+        var frameRateControl = { active:false, previousRenderTime:Date.now(), limit:30, interval:0 };
+        this.activeLimitToFrameRate = function(a){if(a==undefined){return frameRateControl.active;}frameRateControl.active=a};
+        this.frameRateLimit = function(a){if(a==undefined){return frameRateControl.limit;}frameRateControl.limit=a;frameRateControl.interval=1000/frameRateControl.limit;};
+        this.frameRateLimit(this.frameRateLimit());
+
     //actual render
         function renderFrame(){
             context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);
@@ -203,7 +209,15 @@ this.render = new function(){
         }
         function animate(timestamp){
             animationRequestId = requestAnimationFrame(animate);
-    
+
+            //limit frame rate
+                if(frameRateControl.active){
+                    var currentRenderTime = Date.now();
+                    var delta = currentRenderTime - frameRateControl.previousRenderTime;
+                    if(delta <= frameRateControl.interval){ return; }
+                    frameRateControl.previousRenderTime = currentRenderTime - delta%frameRateControl.interval;
+                }
+
             //attempt to render frame, if there is a failure; stop animation loop and report the error
                 try{
                     renderFrame();
@@ -403,7 +417,20 @@ this.callback = new function(){
         'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick',
         'onkeydown', 'onkeyup',
     ];
-    var mouseposition = {x:undefined,y:undefined};
+    function gatherDetails(event,callback,count){
+        var shapes = undefined;
+        if(count > 1){
+            //get the shapes under this point that have this callback, in order of front to back
+            shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
+        }
+        var point = undefined;
+        if(count > 2){
+            //calculate the workspace point
+            point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+        }
+
+        return {shapes:shapes, point:point};
+    }
 
     //default
         for(var a = 0; a < callbacks.length; a++){
@@ -411,12 +438,12 @@ this.callback = new function(){
                 return function(event){
                     //if core doesn't have this callback set up, just bail
                         if( !core.callback[callback] ){return;}
-            
-                    //get the shapes under this point that have this callback, in order of front to back
-                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
+
+                    //depending on how many arguments the  callback has, calculate more data for it
+                        var data = gatherDetails(event,callback,core.callback[callback].length);
             
                     //activate core's callback, providing the point, original event, and shapes
-                        core.callback[callback]( event.x, event.y, event, shapes );
+                        core.callback[callback]( event, data.shapes, data.point );
                 }
             }(callbacks[a]);
         }
@@ -436,22 +463,23 @@ this.callback = new function(){
             var shapeMouseoverList = [];
             _canvas_.onmousemove = function(event){
                 //update the stored mouse position
-                    mouseposition = {x:event.x,y:event.y};
                     core.viewport.mousePosition(event.x,event.y);
 
                 //check for onmouseenter / onmouseleave
                     //get all shapes under point that have onmouseenter or onmouseleave callbacks
                         var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onmouseenter!=undefined || a.onmouseleave!=undefined);
+                    //get point
+                        var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                     //go through this list, comparing to the shape transition list
                         //shapes only on shapes list; run onmouseenter and add to shapeMouseoverList
                         //shapes only on shapeMouseoverList; run onmouseleave and remove from shapeMouseoverList
                         var diff = _canvas_.library.math.getDifferenceOfArrays(shapeMouseoverList,shapes);
                         diff.b.forEach(function(a){
-                            if(a.onmouseenter){a.onmouseenter( event.x, event.y, event, shapes );}
+                            if(a.onmouseenter){a.onmouseenter( event, shapes, point );}
                             shapeMouseoverList.push(a);
                         });
                         diff.a.forEach(function(a){
-                            if(a.onmouseleave){a.onmouseleave( event.x, event.y, event, shapes );}
+                            if(a.onmouseleave){a.onmouseleave( event, shapes, point );}
                             shapeMouseoverList.splice(shapeMouseoverList.indexOf(a),1);
                         });
 
@@ -461,11 +489,11 @@ this.callback = new function(){
                     //if core doesn't have this callback set up, just bail
                         if( !core.callback[callback] ){return;}
             
-                    //get the shapes under this point that have this callback, in order of front to back
-                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
+                    //depending on how many arguments the  callback has, calculate more data for it
+                        var data = gatherDetails(event,callback,core.callback[callback].length);
             
                     //activate core's callback, providing the point, original event, and shapes
-                        core.callback[callback]( event.x, event.y, event, shapes );
+                        core.callback[callback]( event, data.shapes, data.point );
             };
 
         //onkeydown / onkeyup
@@ -476,11 +504,24 @@ this.callback = new function(){
                         //if core doesn't have this callback set up, just bail
                             if( !core.callback[callback] ){return;}
                     
-                        //get the shapes under this point that have this callback, in order of front to back
-                            var shapes = core.arrangement.getElementsUnderPoint(mouseposition.x,mouseposition.y).filter(a => a[callback]!=undefined);
-
+                        //depending on how many arguments the  callback has, calculate more data for it
+                            var shapes = undefined;
+                            if(core.callback[callback].length > 1){
+                                //get the shapes under this point that have this callback, in order of front to back
+                                var p = core.viewport.mousePosition();
+                                shapes = core.arrangement.getElementsUnderPoint(p.x,p.y).filter(a => a[callback]!=undefined);
+                            }
+                            var point = undefined;
+                            if(core.callback[callback].length > 2){
+                                //calculate the workspace point
+                                var p = core.viewport.mousePosition();
+                                point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(p.x,p.y);
+                            }
+                
                         //activate core's callback, providing the point, original event, and shapes
-                            core.callback[callback]( mouseposition.x, mouseposition.y, event, shapes );
+                            var p = core.viewport.mousePosition();
+                            event.x = p.x; event.y = p.y;
+                            core.callback[callback]( event, shapes, point );
                     }
                 }(tmp[a]);
             }
@@ -489,36 +530,47 @@ this.callback = new function(){
             var shapeMouseclickList = [];
             _canvas_.onclick = function(){};
             _canvas_.onmousedown = function(event){
+                var callback = 'onmousedown';
+                
                 //save current shapes for use in the onmouseup callback
                     shapeMouseclickList = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onclick!=undefined);
 
                 //perform regular onmousedown actions
-                    var callback = 'onmousedown';
-
                     //if core doesn't have this callback set up, just bail
                         if( !core.callback[callback] ){return;}
             
-                    //get the shapes under this point that have this callback, in order of front to back
-                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
-            
+                    //depending on how many arguments the  callback has, calculate more data for it
+                        var data = gatherDetails(event,callback,core.callback[callback].length);
+        
                     //activate core's callback, providing the point, original event, and shapes
-                        core.callback[callback]( event.x, event.y, event, shapes );
+                        core.callback[callback]( event, data.shapes, data.point );
             };
             _canvas_.onmouseup = function(event){
+                var callback = 'onmouseup';
+
+                //depending on how many arguments the callback has, calculate more data for it
+                    var shapes = undefined;
+                    var point = undefined;
+
                 //for the shapes under the mouse that are also on the shapeMouseclickList, activate their "onclick" callback
                     var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onclick!=undefined);
-                    shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ a.onclick(event.x, event.y, event, shapes); } });
+                    shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ 
+
+                        //depending on how many arguments the  callback has, calculate more data for it
+                            var data = gatherDetails(event,callback,core.callback[callback].length);
+
+                        //activate the callback, providing the point, original event, and shapes
+                            a.onclick( event, data.shapes, data.point );
+                    } });
 
                 //perform regular onmouseup actions
-                    var callback = 'onmouseup';
-
                     //if core doesn't have this callback set up, just bail
                         if( !core.callback[callback] ){return;}
-            
-                    //get the shapes under this point that have this callback, in order of front to back
-                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
-            
+
+                    //depending on how many arguments the  callback has, calculate more data for it
+                        var data = gatherDetails(event,callback,core.callback[callback].length);
+        
                     //activate core's callback, providing the point, original event, and shapes
-                        core.callback[callback]( event.x, event.y, event, shapes );
+                        core.callback[callback]( event, data.shapes, data.point );
             };
 };

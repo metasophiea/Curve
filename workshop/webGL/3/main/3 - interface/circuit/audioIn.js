@@ -25,7 +25,7 @@ this.audioIn = function(
             );
         };
         this.selectDevice = function(deviceId){
-            var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
+            var promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
             promise.then(
                 function(source){
                     audioDevice = source;

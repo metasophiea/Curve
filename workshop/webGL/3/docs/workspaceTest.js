@@ -27,6 +27,11 @@
                     
                         return result;
                     };
+                    this.largestValueFound = function(array){
+                        return array.reduce(function(max,current){
+                            return Math.abs(max) > Math.abs(current) ? max : current;
+                        });
+                    };
                     this.cartesianAngleAdjust = function(x,y,angle){
                         function cartesian2polar(x,y){
                             var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
@@ -2127,7 +2132,7 @@
                                     var width = 10;         this.width =     function(a){ if(a==undefined){return width;}  width = a;          if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var height = 10;        this.height =    function(a){ if(a==undefined){return height;} height = a;         if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var scale = 1;          this.scale =     function(a){ if(a==undefined){return scale;}  scale = a;          if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 0;      this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
                         
                             //addressing
                                 this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
@@ -2598,7 +2603,7 @@
                                     clear();
                                     var tmpString = String(string).split('');
                                     var cumulativeWidth = 0;
-                                    var spacing = 0.1;
+                                    var spacing = 0.15;
                         
                                     var mux = 0;
                                     tmpString.forEach(function(a){
@@ -2615,11 +2620,18 @@
                                     for(var a = 0; a < tmpString.length; a++){
                                         if(tmpString[a] == ' '){ cumulativeWidth += characterWidth; continue; }
                         
+                        
                                         var tmp = _canvas_.core.shape.create('character');
                                             tmp.name = ''+a;
                                             tmp.stopAttributeStartedExtremityUpdate = true;
                                             tmp.character(tmpString[a]);
-                                            tmp.x(cumulativeWidth); 
+                        
+                                            //calculate encroachment
+                                            if( a > 0 && tmp.encroachUponList().includes(tmpString[a-1]) ){
+                                                cumulativeWidth -= spacing*characterWidth;
+                                            }
+                        
+                                            tmp.x(cumulativeWidth);
                                             tmp.y(height*tmp.offset().y - horizontalOffset);
                                             tmp.width(characterWidth*tmp.ratio().x);
                                             tmp.height(height*tmp.ratio().y);
@@ -2833,8 +2845,8 @@
                                 //attributes pertinent to extremity calculation
                                     var pointsChanged = true; var generatedPathPolygon = [];
                                     var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;        generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                   if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2;   generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
+                                    var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                             if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     
                                     function loopedLineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }
                                     this.pointsAsXYArray = function(a){
@@ -3795,6 +3807,10 @@
                                         y:vectorLibrary[font][character].offset.y != undefined ? vectorLibrary[font][character].offset.y : 0,
                                     };
                                 };
+                                this.encroachUponList = function(){
+                                    if( vectorLibrary[font][character] == undefined || vectorLibrary[font][character].encroachUpon == undefined ){ return []; }
+                                    return vectorLibrary[font][character].encroachUpon;
+                                };
                         
                             //webGL rendering functions
                                 var points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
@@ -3997,36 +4013,40 @@
                         
                         
                             'a':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.7,0, 0.8,0.1/0.7, 0.8,0, 1,0, 1,0.7/0.7, 0.8,0.7/0.7, 0.8,0.6/0.7, 0.7,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.2/0.7, 0.2,0.3/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 0.6,1/0.7/2, 0.7,0.4/0.7, 0.7,0.3/0.7, 0.6,0.2/0.7, 0.3,0.2/0.7, 0.2,0.3/0.7, 0,0.2/0.7 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([  0.2/0.8,0.0/0.6, 0.5/0.8,0.0/0.6, 0.7/0.8,0.2/0.6, 0.7/0.8,0.5/0.6, 0.8/0.8,0.6/0.6, 0.5/0.8,0.6/0.6, 0.5/0.8,0.3/0.6, 0.4/0.8,0.2/0.6, 0.3/0.8,0.2/0.6, 0.2/0.8,0.3/0.6, 0.3/0.8,0.4/0.6, 0.5/0.8,0.4/0.6, 0.5/0.8,0.6/0.6, 0.2/0.8,0.6/0.6, 0.0/0.8,0.4/0.6, 0.0/0.8,0.2/0.6 ]),
+                                ratio:{x:0.8,y:0.6}, offset:{y:0.4},
+                                encroachUpon:['a','t'],
                             },
                             'b':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.8,0.3, 1,0.5, 1,0.8, 0.8,1, 0,1 ]),
-                                ratio:{x:2/3}
+                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2/0.7,0, 0.2/0.7,0.8, 0.4/0.7,0.8, 0.5/0.7,0.7, 0.4/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.7/0.7,0.6, 0.7/0.7,0.8, 0.5/0.7,1, 0,1 ]),
+                                ratio:{x:0.7}
                             },
                             'c':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.2/0.7, 0.3,0.2/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 1,1/0.7/2, 1,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.3/0.7 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.3/0.7,0.2/0.6, 0.2/0.7,0.3/0.6, 0.3/0.7,0.4/0.6, 0.7/0.7,0.4/0.6, 0.7/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
+                                encroachUpon:['a'],
                             },
                             'd':{
-                                vector:_canvas_.library.thirdparty.earcut([ 1,0, 0.8,0, 0.8,0.8, 0.3,0.8, 0.2,0.7, 0.2,0.6, 0.3,0.5, 0.8,0.5, 0.8,0.3, 0.2,0.3, 0,0.5, 0,0.8, 0.2,1, 1,1 ]),
-                                ratio:{x:2/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.6, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.5/0.7,0.6, 0.3/0.7,0.6, 0.2/0.7,0.7, 0.3/0.7,0.8, 0.5/0.7,0.8, 0.5/0.7,0.0, 0.7/0.7,0.0, 0.7/0.7,1.0, 0.2/0.7,1.0, 0.0/0.7,0.8 ]),
+                                ratio:{x:0.7},
+                                encroachUpon:['a'],
                             },
                             'e':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2/0.7, 1,0.4/0.7, 0.2,0.4/0.7, 0.2,1/0.7/4, 0.8,1/0.7/4, 0.7,0.15/0.7, 0.3,0.15/0.7, 0.2,0.3/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 1,1/0.7/2, 0.8,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.2/0.7 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0.0/0.8, 0.8,0.0/0.8, 1.0,0.2/0.8, 1.0,0.4/0.8, 0.9,0.5/0.8, 0.2,0.5/0.8, 0.2,0.3/0.8, 0.8,0.3/0.8, 0.7,0.2/0.8, 0.3,0.2/0.8, 0.2,0.3/0.8, 0.2,0.5/0.8, 0.3,0.6/0.8, 1.0,0.6/0.8, 0.8,0.8/0.8, 0.2,0.8/0.8, 0.0,0.6/0.8, 0.0,0.2/0.8 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
+                                encroachUpon:['t','x'],
                             },
                             'f':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 1,0, 0.9,0.2, 0.6,0.2, 0.6,0.3, 0.9,0.3, 0.9,0.5, 0.6,0.5, 0.6,1, 0.4,1, 0.4,0.5, 0.1,0.5, 0.1,0.3, 0.4,0.3]),
-                                ratio:{x:2/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.3/0.4,0.0, 0.4/0.4,0.0, 0.4/0.4,0.2, 0.3/0.4,0.3, 0.3/0.4,0.4, 0.4/0.4,0.4, 0.4/0.4,0.6, 0.3/0.4,0.6, 0.3/0.4,1.0, 0.1/0.4,1.0, 0.1/0.4,0.6, 0.0/0.4,0.6, 0.0/0.4,0.4, 0.1/0.4,0.4, 0.1/0.4,0.2 ]),
+                                ratio:{x:0.4}, 
                             },
                             'g':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0*(1/1.2), 0.7,0*(1/1.2), 0.8,0.1*(1/1.2), 0.8,0*(1/1.2), 1,0*(1/1.2), 1,1*(1/1.2), 0.8,1.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1*(1/1.2), 0,0.9*(1/1.2), 0.2,0.9*(1/1.2), 0.3,1*(1/1.2), 0.7,1*(1/1.2), 0.8,0.9*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.3,0.2*(1/1.2), 0.2,0.3*(1/1.2), 0.2,0.4*(1/1.2), 0.3,0.5*(1/1.2), 0.8,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0,0.5*(1/1.2), 0,0.2*(1/1.2) ]),
-                                ratio:{x:2/3,y:1.2}, offset:{y:0.3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0/1.1, 0.6/0.7,0.0/1.1, 0.7/0.7,0.1/1.1, 0.7/0.7,0.9/1.1, 0.5/0.7,1.1/1.1, 0.2/0.7,1.1/1.1, 0.0/0.7,0.9/1.1, 0.0/0.7,0.8/1.1, 0.2/0.7,0.8/1.1, 0.3/0.7,0.9/1.1, 0.4/0.7,0.9/1.1, 0.5/0.7,0.8/1.1, 0.5/0.7,0.2/1.1, 0.3/0.7,0.2/1.1, 0.2/0.7,0.3/1.1, 0.3/0.7,0.4/1.1, 0.5/0.7,0.4/1.1, 0.5/0.7,0.6/1.1, 0.2/0.7,0.6/1.1, 0.0/0.7,0.4/1.1, 0.0/0.7,0.2/1.1 ]),
+                                ratio:{x:0.7,y:1.1}, offset:{y:0.4},
                             },
                             'h':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 0.8,0.3, 1,0.5, 1,1, 0.8,1, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,1, 0,1 ]),
-                                ratio:{x:2/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0, 0.2/0.7,0.0, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.7/0.7,0.6, 0.7/0.7,1.0, 0.5/0.7,1.0, 0.5/0.7,0.7, 0.4/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,1.0, 0.0/0.7,1.0 ]),
+                                ratio:{x:0.7}
                             },
                             'i':{
                                 vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0,0.2, 0,0.3, 1,0.3, 1,1, 0,1 ]),
@@ -4034,77 +4054,83 @@
                             },
                             'j':{
                                 vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.2, 0.3,0.2, 0.3,0.3, 0.7,0.3, 0.7,0.7, 0.4,1, 0,1, 0,0.8, 0.2,0.8, 0.3,0.7 ]),
-                                ratio:{x:2/3},
+                                ratio:{x:0.5},
                             },
                             'k':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 1,0.4, 1,0.6, 0.7,0.6, 1,1, 0.75,1, 0.45,0.6, 0.2,0.6, 0.2,1, 0,1 ])
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.75,0.0, 0.2/0.75,0.0, 0.2/0.75,0.5, 0.5/0.75,0.3, 0.75/0.75,0.3, 0.35/0.75,0.6, 0.75/0.75,1.0, 0.5/0.75,1.0, 0.2/0.75,0.7, 0.2/0.75,1.0, 0.0/0.75,1.0 ]),
+                                ratio:{x:0.75}
                             },
                             'l':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.4,0, 0.4,0.7, 0.6,0.8, 1,0.8, 1,1, 0.4,1, 0,0.8 ]),
-                                ratio:{x:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.5,0.0, 0.2/0.5,0.0, 0.2/0.5,0.7, 0.3/0.5,0.8, 0.5/0.5,0.8, 0.5/0.5,1.0, 0.2/0.5,1.0, 0.0/0.5,0.8 ]),
+                                ratio:{x:0.5},
+                                encroachUpon:['a'],
                             },
                             'm':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1/0.7, 0.3,0, 0.5,0.1/0.7, 0.7,0, 1,0.1/0.7, 1,0.7/0.7, 0.8,0.7/0.7, 0.8,0.3/0.7, 0.7,0.2/0.7, 0.6,0.3/0.7, 0.6,0.7/0.7, 0.4,0.7/0.7, 0.4,0.3/0.7, 0.3,0.2/0.7, 0.2,0.3/0.7, 0.2,0.7/0.7, 0,0.7/0.7 ]),
-                                ratio:{y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/1.2,0.0/0.6, 1.0/1.2,0.0/0.6, 1.2/1.2,0.2/0.6, 1.2/1.2,0.6/0.6, 1.0/1.2,0.6/0.6, 1.0/1.2,0.3/0.6, 0.9/1.2,0.2/0.6, 0.7/1.2,0.2/0.6, 0.7/1.2,0.6/0.6, 0.5/1.2,0.6/0.6, 0.5/1.2,0.3/0.6, 0.4/1.2,0.2/0.6, 0.2/1.2,0.2/0.6, 0.2/1.2,0.6/0.6, 0.0/1.2,0.6/0.6 ]),
+                                ratio:{x:1.2,y:0.6}, offset:{y:0.4},
                             },
                             'n':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1/0.7, 0.5,0, 1,0.1/0.7, 1,0.7/0.7, 0.8,0.7/0.7, 0.8,1/0.7/4, 0.5,0.2/0.7, 0.2,0.3/0.7, 0.2,0.7/0.7, 0,0.7/0.7 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.5/0.7,0.3/0.6, 0.4/0.7,0.2/0.6, 0.2/0.7,0.2/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                             },
                             'o':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2/0.7, 1,1/0.7/2, 0.8,0.7/0.7, 0.5,0.7/0.7, 0.5,1/0.7/2, 0.7,1/0.7/2, 0.8,0.4/0.7, 0.8,0.3/0.7, 0.7,0.2/0.7, 0.3,0.2/0.7, 0.2,0.3/0.7, 0.2,0.4/0.7, 0.3,1/0.7/2, 0.5,1/0.7/2, 0.5,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0,0.2/0.7 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0/0.6, 0.4/0.6,0.0/0.6, 0.6/0.6,0.2/0.6, 0.6/0.6,0.4/0.6, 0.4/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6, 0.0/0.6,0.2/0.6, 0.2/0.6,0.3/0.6, 0.3/0.6,0.4/0.6, 0.4/0.6,0.3/0.6, 0.3/0.6,0.2/0.6, 0.2/0.6,0.3/0.6, 0.0/0.6,0.2/0.6 ]),
+                                ratio:{x:0.6,y:0.6}, offset:{y:0.4},
+                                encroachUpon:['t'],
                             },
                             'p':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.8,0*(1/1.2), 1,0.2*(1/1.2), 1,0.5*(1/1.2), 0.8,0.7*(1/1.2), 0.2,0.7*(1/1.2), 0.2,0.5*(1/1.2), 0.7,0.5*(1/1.2), 0.8,0.4*(1/1.2), 0.8,0.3*(1/1.2), 0.7,0.2*(1/1.2), 0.2,0.2*(1/1.2), 0.2,1.2*(1/1.2), 0,1.2*(1/1.2) ]),
-                                ratio:{x:2/3}, offset:{y:2/5},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0, 0.5/0.7,0.0, 0.7/0.7,0.2, 0.7/0.7,0.4, 0.5/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,0.4, 0.4/0.7,0.4, 0.5/0.7,0.3, 0.4/0.7,0.2, 0.2/0.7,0.2, 0.2/0.7,1.0, 0.0/0.7,1.0 ]),
+                                ratio:{x:0.7}, offset:{y:0.4},
                             },
                             'q':{
-                                vector:_canvas_.library.thirdparty.earcut([ 1,0*(1/1.2), 0.2,0*(1/1.2), 0,0.2*(1/1.2), 0,0.5*(1/1.2), 0.2,0.7*(1/1.2), 0.8,0.7*(1/1.2), 0.8,0.5*(1/1.2), 0.3,0.5*(1/1.2), 0.2,0.4*(1/1.2), 0.2,0.3*(1/1.2), 0.3,0.2*(1/1.2), 0.8,0.2*(1/1.2), 0.8,1.2*(1/1.2), 1,1.2*(1/1.2) ]),
-                                offset:{y:0.3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0, 0.7/0.7,0.0, 0.7/0.7,1.0, 0.5/0.7,1.0, 0.5/0.7,0.2, 0.3/0.7,0.2, 0.2/0.7,0.3, 0.3/0.7,0.4, 0.5/0.7,0.4, 0.5/0.7,0.6, 0.2/0.7,0.6, 0.0/0.7,0.4, 0.0/0.7,0.2 ]),
+                                ratio:{x:0.7}, offset:{y:0.4},
                             },
                             'r':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.1/0.7, 0.5,0, 1,0.1/0.7, 1,0.3/0.7, 0.5,0.2/0.7, 0.2,0.3/0.7, 0.2,0.7/0.7, 0,0.7/0.7 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.2/0.7,0.1/0.6, 0.4/0.7,0.0/0.6, 0.7/0.7,0.1/0.6, 0.7/0.7,0.3/0.6, 0.4/0.7,0.2/0.6, 0.2/0.7,0.3/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                             },
                             's':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2/0.7, 0.4,0.2/0.7, 1,0.4/0.7, 0.8,0.7/0.7, 0.2,0.7/0.7, 0,1/0.7/2, 0.6,1/0.7/2, 0,0.3/0.7 ]),
-                                ratio:{y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2/0.8,0.0/0.8, 0.7/0.8,0.0/0.8, 0.8/0.8,0.2/0.8, 0.3/0.8,0.2/0.8, 0.25/0.8,0.3/0.8, 0.7/0.8,0.3/0.8, 0.8/0.8,0.6/0.8, 0.6/0.8,0.8/0.8, 0.1/0.8,0.8/0.8, 0.0/0.8,0.6/0.8, 0.5/0.8,0.6/0.8, 0.55/0.8,0.5/0.8, 0.1/0.8,0.5/0.8, 0.0/0.8,0.2/0.8 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                             },
                             't':{
-                                vector:_canvas_.library.thirdparty.earcut([ 1/3,0, 2/3,0, 2/3,0.2, 1,0.2, 1,0.4, 2/3,0.4, 2/3,0.8, 1,1, 0.5,1, 1/3,0.9, 1/3,0.4, 0,0.4, 0,0.2, 1/3,0.2 ]),
-                                ratio:{x:2/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0, 0.4/0.6,0.0, 0.4/0.6,0.2, 0.6/0.6,0.2, 0.6/0.6,0.4, 0.4/0.6,0.4, 0.4/0.6,1.0, 0.2/0.6,1.0, 0.2/0.6,0.4, 0.0/0.6,0.4, 0.0/0.6,0.2, 0.2/0.6,0.2 ]),
+                                ratio:{x:0.6},
+                                encroachUpon:['a','l','n','o','p','r','s','u'],
                             },
                             'u':{
-                                vector:_canvas_.library.thirdparty.earcut([ 1,0.7/0.7, 0.8,0.7/0.7, 0.8,0.6/0.7, 0.5,0.7/0.7, 0,0.6/0.7, 0,0, 0.2,0, 0.2,0.45/0.7, 0.5,1/0.7/2, 0.8,0.4/0.7, 0.8,0, 1,0 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.2/0.7,0.3/0.6, 0.3/0.7,0.4/0.6, 0.5/0.7,0.4/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
+                                encroachUpon:['A'],
                             },
                             'v':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,1/0.7/2, 0.8,0, 1,0, 0.6,0.7/0.7, 0.4,0.7/0.7 ]),
-                                ratio:{x:2/3,y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.35/0.7,0.35/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.45/0.7,0.6/0.6, 0.25/0.7,0.6/0.6 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                             },
                             'w':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.3,0.4/0.7, 0.4,0.1/0.7, 0.6,0.1/0.7, 0.7,0.4/0.7, 0.8,0, 1,0, 0.8,0.7/0.7, 0.6,0.7/0.7, 0.5,0.4/0.7, 0.4,0.7/0.7, 0.2,0.7/0.7 ]),
-                                ratio:{x:1, y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/1.2,0.0/0.6, 0.2/1.2,0.0/0.6, 0.2/1.2,0.3/0.6, 0.3/1.2,0.4/0.6, 0.5/1.2,0.4/0.6, 0.5/1.2,0.0/0.6, 0.7/1.2,0.0/0.6, 0.7/1.2,0.3/0.6, 0.8/1.2,0.4/0.6, 1.0/1.2,0.4/0.6, 1.0/1.2,0.0/0.6, 1.2/1.2,0.0/0.6, 1.2/1.2,0.6/0.6, 0.2/1.2,0.6/0.6, 0.0/1.2,0.4/0.6 ]),
+                                ratio:{x:1.2,y:0.6}, offset:{y:0.4},
                             },
                             'x':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.3,0, 0.5,0.2/0.7, 0.7,0, 1,0, 0.65,0.35/0.7, 1,0.7/0.7, 0.7,0.7/0.7, 0.5,1/0.7/2, 0.3,0.7/0.7, 0,0.7/0.7, 0.35,0.35/0.7 ]),
-                                ratio:{y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.35/0.7,0.175/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.45/0.7,0.3/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.35/0.7,0.425/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6, 0.25/0.7,0.3/0.6 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                             },
                             'y':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0*(1/1.2), 0.3,0*(1/1.2), 0.5,0.35*(1/1.2), 0.7,0*(1/1.2), 1,0*(1/1.2), 0.3,1.2*(1/1.2), 0,1.2*(1/1.2), 0.35,0.55*(1/1.2) ]),
-                                ratio:{x:2/3,}, offset:{y:0.3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/1.1, 0.2/0.7,0.0/1.1, 0.2/0.7,0.3/1.1, 0.3/0.7,0.4/1.1, 0.5/0.7,0.4/1.1, 0.5/0.7,0.0/1.1, 0.7/0.7,0.0/1.1, 0.7/0.7,0.9/1.1, 0.5/0.7,1.1/1.1, 0.2/0.7,1.1/1.1, 0.0/0.7,0.9/1.1, 0.0/0.7,0.8/1.1, 0.2/0.7,0.8/1.1, 0.3/0.7,0.9/1.1, 0.4/0.7,0.9/1.1, 0.5/0.7,0.8/1.1, 0.5/0.7,0.6/1.1, 0.2/0.7,0.6/1.1, 0.0/0.7,0.4/1.1 ]),
+                                ratio:{x:0.7,y:1.1}, offset:{y:0.4},
+                                encroachUpon:['a'],
                             },
                             'z':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2/0.7, 0.4,0.2/0.7, 1,1/0.7/2, 1,0.7/0.7, 0,0.7/0.7, 0,1/0.7/2, 0.6,1/0.7/2, 0,0.2/0.7 ]),
-                                ratio:{y:2/3}, offset:{y:1/3},
+                                vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.35/0.7,0.2/0.6, 0.7/0.7,0.4/0.6, 0.7/0.7,0.6/0.6, 0.0/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.35/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
+                                ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                             },
                         
                         
-                            '0':{ vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 1,0.7, 0.8,1, 0.2,1, 0,0.7, 0,0.3, 0.2,0, 0.3,0.2, 0.2,0.4, 0.2,0.6, 0.3,0.8, 0.7,0.8, 0.8,0.6, 0.8,0.4, 0.7,0.2, 0.3,0.2 ]) },
-                            '1':{ vector:_canvas_.library.thirdparty.earcut([ 1/2,0, 2/3,0, 2/3,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 1/3,0.8, 1/3,0.3, 0,0.3, 0,0.2 ]) },
+                            '0':{ vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 1,0.7, 0.8,1, 0.2,1, 0,0.7, 0,0.3, 0.2,0, 0.3,0.2, 0.2,0.4, 0.2,0.6, 0.3,0.8, 0.7,0.8, 0.8,0.6, 0.8,0.4, 0.7,0.2, 0.3,0.2 ]), },
+                            '1':{ vector:_canvas_.library.thirdparty.earcut([ 1/2,0, 2/3,0, 2/3,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 1/3,0.8, 1/3,0.3, 0,0.3, 0,0.2 ]), ratio:{x:2/3} },
                             '2':{ vector:_canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.5, 0.4,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.8,0.4, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3 ]) },
-                            '3':{ vector:_canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.5,0.6, 0.5,0.4, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.2,0.4, 0,0.4 ]) },
+                            '3':{ vector:_canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.4,0.6, 0.4,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3 ]) },
                             '4':{ vector:_canvas_.library.thirdparty.earcut([ 0.6,0, 0.8,0, 0.8,0.6, 1,0.6, 1,0.8, 0.8,0.8, 0.8,1, 0.6,1, 0.6,0.3, 0.3,0.6, 0.6,0.6, 0.6,0.8, 0,0.8, 0,0.6 ]) },
                             '5':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 0.9,0.4, 1,0.5, 1,0.8, 0.8,1, 0.1,1, 0,0.9, 0,0.7, 0.2,0.7, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0,0.6 ]) },
                             '6':{ vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.2, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.2 ]) },
@@ -4130,7 +4156,9 @@
                                 ratio:{x:0.2, y:0.8}, offset:{y:0.1},
                             },
                             '?':{
-                                vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 0.6,0.5, 0.6,0.7, 0.4,0.7, 0.4,0.8, 0.6,0.8, 0.6,1, 0.4,1, 0.4,0.4, 0.7,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3, 0,0.2 ])
+                                vector:_canvas_.library.thirdparty.earcut([
+                                    0,0.4, 0,0.1, 0.1,0, 0.9,0, 1,0.1, 1,0.5, 0.9,0.6, 0.6,0.6, 0.6,0.7, 0.4,0.7, 0.4,0.8, 0.6,0.8, 0.6,1, 0.4,1, 0.4,0.8, 0.4,0.7, 0.4,0.5, 0.5,0.4, 0.8,0.4, 0.8,0.2, 0.2,0.2, 0.2,0.4
+                                ]),
                             },
                             '!':{
                                 vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.7, 0,0.7, 0,0.8, 1,0.8, 1,1, 0,1 ]),
@@ -4138,11 +4166,11 @@
                             },
                             '/':{
                                 vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 1,0, 0.7,1, 0,1 ]),
-                                ratio:{x:0.4},
+                                ratio:{x:1/4},
                             },
                            '\\':{
                                vector:_canvas_.library.thirdparty.earcut([ 0.7,0, 0,0, 0.3,1, 1,1 ]),
-                               ratio:{x:0.4},
+                               ratio:{x:1/4},
                             },
                             '(':{
                                 vector:_canvas_.library.thirdparty.earcut([ 0.6,0, 1,0, 0.6,0.2, 0.4,0.5, 0.6,0.8, 1,1, 0.6,1, 0.2,0.8, 0,0.5, 0.2,0.2 ]),
@@ -4165,7 +4193,7 @@
                             },
                             '-':{
                                 vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
-                                ratio:{x:0.8, y:0.2}, offset:{y:0.4},
+                                ratio:{x:0.5, y:0.2}, offset:{y:0.4},
                             },
                             '_':{
                                 vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
@@ -4389,6 +4417,310 @@
                                         if(self.dotFrame){drawDotFrame();}
                                 };
                         };
+                        // this.group = function(){
+                        //     var self = this;
+                        
+                        //     //attributes 
+                        //         //protected attributes
+                        //             const type = 'group'; this.getType = function(){return type;}
+                        
+                        //         //simple attributes
+                        //             this.name = '';
+                        //             this.parent = undefined;
+                        //             this.dotFrame = false;
+                        //             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
+                        //             this.ignored = false;
+                        //             this.heedCamera = false;
+                        //         //advanced use attributes
+                        //             this.devMode = false;
+                        //             this.stopAttributeStartedExtremityUpdate = false;
+                                
+                        //         //attributes pertinent to extremity calculation
+                        //             var x = 0;     this.x =     function(a){ if(a==undefined){return x;}     x = a;     if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                        //             var y = 0;     this.y =     function(a){ if(a==undefined){return y;}     y = a;     if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                        //             var angle = 0; this.angle = function(a){ if(a==undefined){return angle;} angle = a; if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                        //             var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                        
+                        //     //addressing
+                        //         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+                        
+                        //     //group functions
+                        //         var children = [];
+                        
+                        //         function getChildByName(name){ return children.find(a => a.name == name); }
+                        //         function checkForName(name){ return getChildByName(name) != undefined; }
+                        //         function checkForShape(shape){ return children.find(a => a == shape); }
+                        //         function isValidShape(shape){
+                        //             if( shape == undefined ){ return false; }
+                        //             if( shape.name.length == 0 ){
+                        //                 console.warn('group error: shape with no name being inserted into group "'+self.getAddress()+'", therefore; the shape will not be added');
+                        //                 return false;
+                        //             }
+                        //             if( checkForName(shape.name) ){
+                        //                 console.warn('group error: shape with name "'+shape.name+'" already exists in group "'+self.getAddress()+'", therefore; the shape will not be added');
+                        //                 return false;
+                        //             }
+                        
+                        //             return true;
+                        //         }
+                        
+                        //         this.children = function(){return children;};
+                        //         this.getChildByName = getChildByName;
+                        //         this.contains = checkForShape;
+                        //         this.append = function(shape){
+                        //             if(self.devMode){console.log(self.getAddress()+'::.append - type:'+shape.getType()+' - name:'+shape.name);}
+                        
+                        //             if( !isValidShape(shape) ){ return; }
+                        
+                        //             children.push(shape); 
+                        //             shape.parent = this;
+                        //             augmentExtremities_addChild(shape);
+                        //         };
+                        //         this.prepend = function(shape){
+                        //             if( !isValidShape(shape) ){ return; }
+                        
+                        //             children.unshift(shape); 
+                        //             shape.parent = this;
+                        //             augmentExtremities_addChild(shape);
+                        //         };
+                        //         this.remove = function(shape){ augmentExtremities_removeChild(shape); children.splice(children.indexOf(shape), 1); };
+                        //         this.clear = function(){ children = []; };
+                        //         this.getElementsUnderPoint = function(x,y){
+                        //             var returnList = [];
+                        
+                        //             //run though children backwords (thus, front to back)
+                        //             for(var a = children.length-1; a >= 0; a--){
+                        //                 //if child wants to be ignored, just move on to the next one
+                        //                     if( children[a].ignored ){ continue; }
+                        
+                        //                 //if the point is not within this child's bounding box, just move on to the next one
+                        //                     if( !_canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
+                        
+                        //                 //if the child is a group type; pass this point to it's "getElementsUnderPoint" function and collect the results, then move on to the next item
+                        //                     if( children[a].getType() == 'group' ){ returnList = returnList.concat( children[a].getElementsUnderPoint(x,y) ); continue; }
+                        
+                        //                 //if this point exists within the child; add it to the results list
+                        //                     if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, children[a].extremities.points ) ){ returnList = returnList.concat( children[a] ); }
+                        //             }
+                        
+                        //             return returnList;
+                        //         };
+                        //         this.getElementsUnderArea = function(points){
+                        //             var returnList = [];
+                        
+                        //             //run though children backwords (thus, front to back)
+                        //             for(var a = children.length-1; a >= 0; a--){
+                        //                 //if child wants to be ignored, just move on to the next one
+                        //                     if( children[a].ignored ){ continue; }
+                        
+                        //                 //if the area does not overlap with this child's bounding box, just move on to the next one
+                        //                     if( !_canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
+                        
+                        //                 //if the child is a group type; pass this area to it's "getElementsUnderArea" function and collect the results, then move on to the next item
+                        //                     if( children[a].getType() == 'group' ){ returnList = returnList.concat( item.getElementUnderArea(points) ); continue; }
+                        
+                        //                 //if this area overlaps with the child; add it to the results list
+                        //                     if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){ returnList = returnList.concat( children[a] ); }
+                        //             }
+                        
+                        //             return returnList;
+                        //         };
+                        //         this.getTree = function(){
+                        //             var result = {name:this.name,type:type,children:[]};
+                        
+                        //             children.forEach(function(a){
+                        //                 if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
+                        //                 else{ result.children.push({ type:a.getType(), name:a.name }); }
+                        //             });
+                        
+                        //             return result;
+                        //         };
+                        
+                        //     //clipping
+                        //         var clipping = { stencil:undefined, active:false };
+                        //         this.stencil = function(shape){
+                        //             if(shape == undefined){return clipping.stencil;}
+                        //             clipping.stencil = shape;
+                        //             clipping.stencil.parent = this;
+                        //             if(clipping.active){ computeExtremities(); }
+                        //         };
+                        //         this.clipActive = function(bool){
+                        //             if(bool == undefined){return clipping.active;}
+                        //             clipping.active = bool;
+                        //             computeExtremities();
+                        //         };
+                        
+                        //     //extremities
+                        //         function updateExtremities(informParent=true){
+                        //             if(self.devMode){console.log(self.getAddress()+'::updateExtremities');}
+                        
+                        //             //generate extremity points
+                        //                 self.extremities.points = [];
+                        
+                        //                 //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
+                        //                 //otherwise, gather extremities from children and calculate extremities here
+                        //                 if(clipping.active && clipping.stencil != undefined){
+                        //                     self.extremities.points = clipping.stencil.extremities.points.slice();
+                        //                 }else{
+                        //                     children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
+                        //                 }
+                        //                 if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
+                        
+                        //             //generate bounding box from points
+                        //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        
+                        //             //update parent
+                        //                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                        //         }
+                        //         function augmentExtremities(shape){
+                        //             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities');}
+                        
+                        //             //get offset from parent
+                        //                 var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                        //             //combine offset with group's position, angle and scale to produce new offset for children
+                        //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                        //                 var newOffset = { 
+                        //                     x: point.x*offset.scale + offset.x,
+                        //                     y: point.y*offset.scale + offset.y,
+                        //                     scale: offset.scale*scale,
+                        //                     angle: offset.angle + angle,
+                        //                 };
+                        //             //run computeExtremities on new child
+                        //                 shape.computeExtremities(false,newOffset);
+                        //         }
+                        //         function augmentExtremities_addChild(newShape){
+                        //             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
+                        
+                        //             //augment extremities, and bail if it was found that clipping is active
+                        //                 augmentExtremities(newShape);
+                        //             //add points to points list
+                        //                 self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
+                        //                 if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
+                        //             //recalculate bounding box
+                        //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        //             //inform parent of change
+                        //                 if(self.parent){self.parent.updateExtremities();}
+                        //         }
+                        //         function augmentExtremities_removeChild(departingShape){
+                        //             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_removeChild - type:'+departingShape.getType()+' - name:'+departingShape.name);}
+                        
+                        //             //augment extremities, and bail if it was found that clipping is active
+                        //                 augmentExtremities(departingShape);
+                        //             //remove matching points from points list
+                        //                 // var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
+                        //                 // if(index == undefined){console.error("core:: group shape: departing shape points not found. Bailing.."); return;}
+                        //                 // self.extremities.points.splice(index, index+departingShape.extremities.points.length);
+                        //                 var leftOvers = _canvas_.library.math.removeTheseElementsFromThatArray(self.extremities.points,departingShape.extremities.points,self.extremities.points);
+                        //                 if(leftOvers.length < 0){console.error('core:: group shape: not all of departing shape\'s points were found');console.error('left overs:',leftOvers);}
+                        //                 if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
+                        //             //recalculate bounding box
+                        //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                        //             //inform parent of change
+                        //                 if(self.parent){self.parent.updateExtremities();}
+                        //         }
+                        //         function computeExtremities(informParent=true,offset){
+                        //             if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                                    
+                        //             //get offset from parent, if one isn't provided
+                        //                 if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        //             //combine offset with group's position, angle and scale to produce new offset for chilren
+                        //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                        //                 var newOffset = { 
+                        //                     x: point.x*offset.scale + offset.x,
+                        //                     y: point.y*offset.scale + offset.y,
+                        //                     scale: offset.scale*scale,
+                        //                     angle: offset.angle + angle,
+                        //                 };
+                        //             //run computeExtremities on all children
+                        //                 children.forEach(a => a.computeExtremities(false,newOffset));
+                        //             //run computeExtremities on stencil (if applicable)
+                        //                 if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
+                        //             //update extremities
+                        //                 updateExtremities(informParent,offset);
+                        //         }
+                        
+                        //         this.getOffset = function(){
+                        //             if(this.parent){
+                        //                 var offset = this.parent.getOffset();
+                        //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                        //                 return { 
+                        //                     x: point.x*offset.scale + offset.x,
+                        //                     y: point.y*offset.scale + offset.y,
+                        //                     scale: offset.scale * scale,
+                        //                     angle: offset.angle + angle,
+                        //                 };
+                        //             }else{ return {x:x ,y:y ,scale:scale ,angle:angle}; }
+                        //         };
+                        //         this.computeExtremities = computeExtremities;
+                        //         this.updateExtremities = updateExtremities;
+                        
+                        //     //lead render
+                        //         function drawDotFrame(){
+                        //             //draw bounding box top left and bottom right points
+                        //             core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
+                        //             core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
+                        //         }
+                        //         this.render = function(context, offset){
+                        //             //combine offset with group's position, angle and scale to produce new offset for children
+                        //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                        //                 var newOffset = { 
+                        //                     x: point.x*offset.scale + offset.x,
+                        //                     y: point.y*offset.scale + offset.y,
+                        //                     scale: offset.scale*scale,
+                        //                     angle: offset.angle + angle,
+                        //                 };
+                        
+                        //             //activate clipping (if requested, and is possible)
+                        //                 if(clipping.active && clipping.stencil != undefined){
+                        //                     //active stencil drawing mode
+                        //                         context.enable(context.STENCIL_TEST);
+                        //                         context.colorMask(false,false,false,false);
+                        //                         context.stencilFunc(context.ALWAYS,1,0xFF);
+                        //                         context.stencilOp(context.KEEP,context.KEEP,context.REPLACE);
+                        //                         context.stencilMask(0xFF);
+                        //                     //draw stencil
+                        //                         clipping.stencil.render(context,newOffset);
+                        //                     //reactive regular rendering
+                        //                         context.colorMask(true,true,true,true);
+                        //                         context.stencilFunc(context.EQUAL,1,0xFF);
+                        //                 }
+                                    
+                        //             //render children
+                        //                 children.forEach(function(a){
+                        //                     if(
+                        //                         _canvas_.library.math.detectOverlap.boundingBoxes(
+                        //                             clipping.active ? self.extremities.boundingBox : core.viewport.getBoundingBox(),
+                        //                             a.extremities.boundingBox
+                        //                         )
+                        //                     ){ a.render(context,newOffset); }
+                        //                 });
+                        
+                        //             //deactivate clipping
+                        //                 if(clipping.active){ 
+                        //                     context.disable(context.STENCIL_TEST); 
+                        //                     context.clear(context.STENCIL_BUFFER_BIT);
+                        //                 }
+                        
+                        //             //if requested; draw dot frame
+                        //                 if(self.dotFrame){drawDotFrame();}
+                        //         };
+                        // };
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
                         this.group = function(){
                             var self = this;
                         
@@ -4446,7 +4778,7 @@
                         
                                     children.push(shape); 
                                     shape.parent = this;
-                                    augmentExtremities_addChild(shape); 
+                                    augmentExtremities_addChild(shape);
                                 };
                                 this.prepend = function(shape){
                                     if( !isValidShape(shape) ){ return; }
@@ -4523,6 +4855,18 @@
                                 };
                         
                             //extremities
+                                function calculateExtremitiesBox(){
+                                    var limits = {left:0,right:0,top:0,bottom:0};
+                                    children.forEach(function(child){
+                                        child.extremities.points.forEach(function(point){
+                                            if( point.x > limits.right ){ limits.right = point.x; }
+                                            else if( point.x < limits.left ){ limits.left = point.x; }
+                                            if( point.y > limits.top ){ limits.top = point.y; }
+                                            else if( point.y < limits.bottom ){ limits.bottom = point.y; }
+                                        });
+                                    });
+                                    self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
+                                }
                                 function updateExtremities(informParent=true){
                                     if(self.devMode){console.log(self.getAddress()+'::updateExtremities');}
                         
@@ -4534,8 +4878,9 @@
                                         if(clipping.active && clipping.stencil != undefined){
                                             self.extremities.points = clipping.stencil.extremities.points.slice();
                                         }else{
-                                            children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
+                                            calculateExtremitiesBox();
                                         }
+                                        if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
                         
                                     //generate bounding box from points
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
@@ -4563,25 +4908,24 @@
                                     if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
                         
                                     //augment extremities, and bail if it was found that clipping is active
-                                        if( augmentExtremities(newShape) ){ return; }
-                                    //add points to points list
-                                        self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
+                                        augmentExtremities(newShape);
+                                    //augment points list
+                                        // self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
+                                        calculateExtremitiesBox();
+                                        if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
                                     //recalculate bounding box
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
                                     //inform parent of change
                                         if(self.parent){self.parent.updateExtremities();}
                                 }
                                 function augmentExtremities_removeChild(departingShape){
-                                    if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_removeChild - type:'+newShape.getType()+' - name:'+newShape.name);}
+                                    if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_removeChild - type:'+departingShape.getType()+' - name:'+departingShape.name);}
                         
                                     //augment extremities, and bail if it was found that clipping is active
-                                        if( augmentExtremities(departingShape) ){ return; }
+                                        augmentExtremities(departingShape);
                                     //remove matching points from points list
-                                        // var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
-                                        // if(index == undefined){console.error("core:: group shape: departing shape points not found. Bailing.."); return;}
-                                        // self.extremities.points.splice(index, index+departingShape.extremities.points.length);
-                                        var leftOvers = _canvas_.library.math.removeTheseElementsFromThatArray(self.extremities.points,departingShape.extremities.points,self.extremities.points);
-                                        if(leftOvers.length < 0){console.error('core:: group shape: not all of departing shape\'s points were found');console.error('left overs:',leftOvers);}
+                                        calculateExtremitiesBox();
+                                        if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
                                     //recalculate bounding box
                                         self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
                                     //inform parent of change
@@ -4699,7 +5043,7 @@
                                     var angle = 0;     this.angle =     function(a){ if(a==undefined){return angle;}     angle = a;     if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var radius = 10;   this.radius =    function(a){ if(a==undefined){return radius;}    radius = a;    if(this.devMode){console.log(this.getAddress()+'::radius');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                     var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;}     scale = a;     if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                    var thickness = 2; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                    var thickness = 2; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
                                     var detail = 25;   this.detail =    function(a){ 
                                                            if(a==undefined){return detail;} detail = a;
                                                            if(this.devMode){console.log(this.getAddress()+'::detail');}
@@ -5242,6 +5586,12 @@
                             this.refreshCoordinates();
                         };this.refresh();
                 
+                    //frame rate control
+                        var frameRateControl = { active:false, previousRenderTime:Date.now(), limit:30, interval:0 };
+                        this.activeLimitToFrameRate = function(a){if(a==undefined){return frameRateControl.active;}frameRateControl.active=a};
+                        this.frameRateLimit = function(a){if(a==undefined){return frameRateControl.limit;}frameRateControl.limit=a;frameRateControl.interval=1000/frameRateControl.limit;};
+                        this.frameRateLimit(this.frameRateLimit());
+                
                     //actual render
                         function renderFrame(){
                             context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);
@@ -5249,7 +5599,15 @@
                         }
                         function animate(timestamp){
                             animationRequestId = requestAnimationFrame(animate);
-                    
+                
+                            //limit frame rate
+                                if(frameRateControl.active){
+                                    var currentRenderTime = Date.now();
+                                    var delta = currentRenderTime - frameRateControl.previousRenderTime;
+                                    if(delta <= frameRateControl.interval){ return; }
+                                    frameRateControl.previousRenderTime = currentRenderTime - delta%frameRateControl.interval;
+                                }
+                
                             //attempt to render frame, if there is a failure; stop animation loop and report the error
                                 try{
                                     renderFrame();
@@ -5449,7 +5807,20 @@
                         'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick',
                         'onkeydown', 'onkeyup',
                     ];
-                    var mouseposition = {x:undefined,y:undefined};
+                    function gatherDetails(event,callback,count){
+                        var shapes = undefined;
+                        if(count > 1){
+                            //get the shapes under this point that have this callback, in order of front to back
+                            shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
+                        }
+                        var point = undefined;
+                        if(count > 2){
+                            //calculate the workspace point
+                            point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+                        }
+                
+                        return {shapes:shapes, point:point};
+                    }
                 
                     //default
                         for(var a = 0; a < callbacks.length; a++){
@@ -5457,12 +5828,12 @@
                                 return function(event){
                                     //if core doesn't have this callback set up, just bail
                                         if( !core.callback[callback] ){return;}
-                            
-                                    //get the shapes under this point that have this callback, in order of front to back
-                                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
+                
+                                    //depending on how many arguments the  callback has, calculate more data for it
+                                        var data = gatherDetails(event,callback,core.callback[callback].length);
                             
                                     //activate core's callback, providing the point, original event, and shapes
-                                        core.callback[callback]( event.x, event.y, event, shapes );
+                                        core.callback[callback]( event, data.shapes, data.point );
                                 }
                             }(callbacks[a]);
                         }
@@ -5482,22 +5853,23 @@
                             var shapeMouseoverList = [];
                             _canvas_.onmousemove = function(event){
                                 //update the stored mouse position
-                                    mouseposition = {x:event.x,y:event.y};
                                     core.viewport.mousePosition(event.x,event.y);
                 
                                 //check for onmouseenter / onmouseleave
                                     //get all shapes under point that have onmouseenter or onmouseleave callbacks
                                         var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onmouseenter!=undefined || a.onmouseleave!=undefined);
+                                    //get point
+                                        var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                                     //go through this list, comparing to the shape transition list
                                         //shapes only on shapes list; run onmouseenter and add to shapeMouseoverList
                                         //shapes only on shapeMouseoverList; run onmouseleave and remove from shapeMouseoverList
                                         var diff = _canvas_.library.math.getDifferenceOfArrays(shapeMouseoverList,shapes);
                                         diff.b.forEach(function(a){
-                                            if(a.onmouseenter){a.onmouseenter( event.x, event.y, event, shapes );}
+                                            if(a.onmouseenter){a.onmouseenter( event, shapes, point );}
                                             shapeMouseoverList.push(a);
                                         });
                                         diff.a.forEach(function(a){
-                                            if(a.onmouseleave){a.onmouseleave( event.x, event.y, event, shapes );}
+                                            if(a.onmouseleave){a.onmouseleave( event, shapes, point );}
                                             shapeMouseoverList.splice(shapeMouseoverList.indexOf(a),1);
                                         });
                 
@@ -5507,11 +5879,11 @@
                                     //if core doesn't have this callback set up, just bail
                                         if( !core.callback[callback] ){return;}
                             
-                                    //get the shapes under this point that have this callback, in order of front to back
-                                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
+                                    //depending on how many arguments the  callback has, calculate more data for it
+                                        var data = gatherDetails(event,callback,core.callback[callback].length);
                             
                                     //activate core's callback, providing the point, original event, and shapes
-                                        core.callback[callback]( event.x, event.y, event, shapes );
+                                        core.callback[callback]( event, data.shapes, data.point );
                             };
                 
                         //onkeydown / onkeyup
@@ -5522,11 +5894,24 @@
                                         //if core doesn't have this callback set up, just bail
                                             if( !core.callback[callback] ){return;}
                                     
-                                        //get the shapes under this point that have this callback, in order of front to back
-                                            var shapes = core.arrangement.getElementsUnderPoint(mouseposition.x,mouseposition.y).filter(a => a[callback]!=undefined);
-                
+                                        //depending on how many arguments the  callback has, calculate more data for it
+                                            var shapes = undefined;
+                                            if(core.callback[callback].length > 1){
+                                                //get the shapes under this point that have this callback, in order of front to back
+                                                var p = core.viewport.mousePosition();
+                                                shapes = core.arrangement.getElementsUnderPoint(p.x,p.y).filter(a => a[callback]!=undefined);
+                                            }
+                                            var point = undefined;
+                                            if(core.callback[callback].length > 2){
+                                                //calculate the workspace point
+                                                var p = core.viewport.mousePosition();
+                                                point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(p.x,p.y);
+                                            }
+                                
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( mouseposition.x, mouseposition.y, event, shapes );
+                                            var p = core.viewport.mousePosition();
+                                            event.x = p.x; event.y = p.y;
+                                            core.callback[callback]( event, shapes, point );
                                     }
                                 }(tmp[a]);
                             }
@@ -5535,37 +5920,48 @@
                             var shapeMouseclickList = [];
                             _canvas_.onclick = function(){};
                             _canvas_.onmousedown = function(event){
+                                var callback = 'onmousedown';
+                                
                                 //save current shapes for use in the onmouseup callback
                                     shapeMouseclickList = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onclick!=undefined);
                 
                                 //perform regular onmousedown actions
-                                    var callback = 'onmousedown';
-                
                                     //if core doesn't have this callback set up, just bail
                                         if( !core.callback[callback] ){return;}
                             
-                                    //get the shapes under this point that have this callback, in order of front to back
-                                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
-                            
+                                    //depending on how many arguments the  callback has, calculate more data for it
+                                        var data = gatherDetails(event,callback,core.callback[callback].length);
+                        
                                     //activate core's callback, providing the point, original event, and shapes
-                                        core.callback[callback]( event.x, event.y, event, shapes );
+                                        core.callback[callback]( event, data.shapes, data.point );
                             };
                             _canvas_.onmouseup = function(event){
+                                var callback = 'onmouseup';
+                
+                                //depending on how many arguments the callback has, calculate more data for it
+                                    var shapes = undefined;
+                                    var point = undefined;
+                
                                 //for the shapes under the mouse that are also on the shapeMouseclickList, activate their "onclick" callback
                                     var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onclick!=undefined);
-                                    shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ a.onclick(event.x, event.y, event, shapes); } });
+                                    shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ 
+                
+                                        //depending on how many arguments the  callback has, calculate more data for it
+                                            var data = gatherDetails(event,callback,core.callback[callback].length);
+                
+                                        //activate the callback, providing the point, original event, and shapes
+                                            a.onclick( event, data.shapes, data.point );
+                                    } });
                 
                                 //perform regular onmouseup actions
-                                    var callback = 'onmouseup';
-                
                                     //if core doesn't have this callback set up, just bail
                                         if( !core.callback[callback] ){return;}
-                            
-                                    //get the shapes under this point that have this callback, in order of front to back
-                                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
-                            
+                
+                                    //depending on how many arguments the  callback has, calculate more data for it
+                                        var data = gatherDetails(event,callback,core.callback[callback].length);
+                        
                                     //activate core's callback, providing the point, original event, and shapes
-                                        core.callback[callback]( event.x, event.y, event, shapes );
+                                        core.callback[callback]( event, data.shapes, data.point );
                             };
                 };
             };
@@ -5605,9 +6001,9 @@
                 
                 //connect callbacks to mouse function lists
                     [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(function(callback){
-                        _canvas_.core.callback[callback] = function(x,y,event,shapes){ 
-                            if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
-                            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); }
+                        _canvas_.core.callback[callback] = function(event,shapes){
+                            if(shapes.length > 0){ shapes[0][callback](event,shapes); }
+                            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.x,y:event.y,event:event}); }
                         }
                     });
             };
@@ -5645,26 +6041,26 @@
                     }
                 
                 //connect callbacks to keyboard function lists
-                    _canvas_.core.callback.onkeydown = function(x,y,event,shapes){
+                    _canvas_.core.callback.onkeydown = function(event,shapes){        
                         //if key is already pressed, don't press it again
                             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                             _canvas_.system.keyboard.pressedKeys[event.code] = true;
                             customKeyInterpreter(event,true);
                         
                         //perform action
-                            if(shapes.length > 0){ shapes[0].onkeydown(x,y,event,shapes); }
-                            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); }
+                            if(shapes.length > 0){ shapes[0].onkeydown(event,shapes); }
+                            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.x,y:event.y,event:event}); }
                     };
                 
-                    _canvas_.core.callback.onkeyup = function(x,y,event,shapes){
+                    _canvas_.core.callback.onkeyup = function(event,shapes){
                         //if key isn't pressed, don't release it
                             if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
                             delete _canvas_.system.keyboard.pressedKeys[event.code];
                             customKeyInterpreter(event,false);
                         
                         //perform action
-                            if(shapes.length > 0){ shapes[0].onkeyup(x,y,event,shapes); }
-                            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:x,y:y,event:event}); }
+                            if(shapes.length > 0){ shapes[0].onkeyup(event,shapes); }
+                            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.x,y:event.y,event:event}); }
                     };
             };
             
@@ -5862,7 +6258,7 @@
                                 );
                             };
                             this.selectDevice = function(deviceId){
-                                var promise = navigator.mediaDevices.getUserMedia({audio: { deviceId: deviceId}});
+                                var promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
                                 promise.then(
                                     function(source){
                                         audioDevice = source;
@@ -7494,7 +7890,7 @@
                                                 controlObjects.markGroup.append( interfacePart.builder('rectangle',''+position,{
                                                     x:position*width, 
                                                     width:needleWidth*width, height:height,
-                                                    style:{ fill:needleStyles[0] },
+                                                    colour:needleStyles[0],
                                                 }));
                                                 return true;
                                             }else{ 
@@ -7538,10 +7934,10 @@
                             
                                 //interaction
                                     //generic onmousedown code for interaction
-                                        backing.onmousedown = function(x,y){
+                                        backing.onmousedown = function(event){
                                             if(!interactable){return;}
                                             if( _canvas_.system.keyboard.pressedKeys.shift ){
-                                                var firstPosition = getRelativeX(x,y);
+                                                var firstPosition = getRelativeX(event.x,event.y);
                                                 _canvas_.system.mouse.mouseInteractionHandler(
                                                     function(event){ 
                                                         var x = getRelativeX(event.x,event.y);
@@ -7550,12 +7946,12 @@
                                                     },    
                                                 );
                                             }else{
-                                                object.select(getRelativeX(x,y));
+                                                object.select(getRelativeX(event.x,event.y));
                                             }
                                         };
-                                        controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-                                        controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-                                        controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                        controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+                                        controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(event){
                                             if(!interactable){return;}
                             
                                             leadNeedle_grappled = true;
@@ -7586,9 +7982,9 @@
                                             );
                                         };
                             
-                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(event){
                                             if(!interactable){return;}
                             
                                             selectionNeedleA_grappled = true;
@@ -7619,9 +8015,9 @@
                                             );
                                         };
                             
-                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(event){
                                             if(!interactable){return;}
                             
                                             selectionNeedleB_grappled = true;
@@ -7652,9 +8048,9 @@
                                             );
                                         };
                             
-                                        controlObjects.selection_area.onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('grab');};
-                                        controlObjects.selection_area.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-                                        controlObjects.selection_area.onmousedown = function(x,y,event){
+                                        controlObjects.selection_area.onmouseenter = function(event){_canvas_.core.viewport.cursor('grab');};
+                                        controlObjects.selection_area.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                                        controlObjects.selection_area.onmousedown = function(event){
                                             if(!interactable){return;}
                             
                                             _canvas_.core.viewport.cursor('grabbing');
@@ -7702,7 +8098,7 @@
                                         };
                             
                                     //doubleclick to destroy selection area
-                                        controlObjects.selection_A.ondblclick = function(x,y,event,shape){ if(!interactable){return;} area(-1,-1); _canvas_.core.viewport.cursor('default'); };
+                                        controlObjects.selection_A.ondblclick = function(){ if(!interactable){return;} area(-1,-1); _canvas_.core.viewport.cursor('default'); };
                                         controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
                                         controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
                                 
@@ -7947,13 +8343,13 @@
                                             span.onmousedown = function(){};
                                             span.onclick = function(){};
                             
-                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                        backingAndSlotCover.onclick = function(x,y,event){
+                                        backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                             
                                             //calculate the distance the click is from the top of the slider (accounting for angle)
-                                                var d = getPositionWithinFromMouse(x,y);
+                                                var d = getPositionWithinFromMouse(event.x,event.y);
                             
                                             //use the distance to calculate the correct value to set the slide to
                                             //taking into account the slide handle's size also
@@ -7988,12 +8384,12 @@
                                         };
                             
                                     //span panning - drag
-                                        span.onmousedown = function(x,y,event){
+                                        span.onmousedown = function(event){
                                             if(!interactable){return;}
                                             grappled = true;
                             
                                             var initialValue = values.start;
-                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                                            var initialPosition = getPositionWithinFromMouse(event.x,event.y);
                             
                                             _canvas_.system.mouse.mouseInteractionHandler(
                                                 function(event){
@@ -8011,12 +8407,12 @@
                                     //handle movement
                                         for(var a = 0; a < handleNames.length; a++){
                                             handles[handleNames[a]].children()[1].onmousedown = (function(a){
-                                                return function(x,y,event){
+                                                return function(event){
                                                     if(!interactable){return;}
                                                     grappled = true;
                                         
                                                     var initialValue = values[handleNames[a]];
-                                                    var initialPosition = getPositionWithinFromMouse(x,y);
+                                                    var initialPosition = getPositionWithinFromMouse(event.x,event.y);
                                                     
                                                     _canvas_.system.mouse.mouseInteractionHandler(
                                                         function(event){
@@ -8141,16 +8537,16 @@
                                         set( value + move/(10*globalScale) );
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                    backingAndSlotCover.onclick = function(x,y,event){
+                                    backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
+                                    backingAndSlotCover.onclick = function(event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
-                                                x: x - (backingAndSlot.x()     + offset.x),
-                                                y: y - (backingAndSlot.y()     + offset.y),
+                                                x: event.x - (backingAndSlot.x() + offset.x),
+                                                y: event.y - (backingAndSlot.y() + offset.y),
                                                 a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
                                             var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
@@ -8162,7 +8558,7 @@
                                         set(value);
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    invisibleHandle.onmousedown = function(x,y,event){
+                                    invisibleHandle.onmousedown = function(event){
                                         if(!interactable){return;}
                                         grappled = true;
                             
@@ -8341,16 +8737,16 @@
                                         set( value + move/(10*globalScale) );
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                    backingAndSlotCover.onclick = function(x,y,event){
+                                    backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
+                                    backingAndSlotCover.onclick = function(event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
-                                                x: x - (backingAndSlot.x()     + offset.x),
-                                                y: y - (backingAndSlot.y()     + offset.y),
+                                                x: event.x - (backingAndSlot.x()+ offset.x),
+                                                y: event.y - (backingAndSlot.y()+ offset.y),
                                                 a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
                                             var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
@@ -8362,7 +8758,7 @@
                                         set(value);
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    invisibleHandle.onmousedown = function(x,y,event){
+                                    invisibleHandle.onmousedown = function(event){
                                         if(!interactable){return;}
                                         grappled = true;
                             
@@ -8552,13 +8948,13 @@
                                             span.onmousedown = function(){};
                                             span.onclick = function(){};
                                             
-                                        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-                                        backingAndSlotCover.onclick = function(x,y,event){
+                                        backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                             
                                             //calculate the distance the click is from the top of the slider (accounting for angle)
-                                                var d = getPositionWithinFromMouse(x,y);
+                                                var d = getPositionWithinFromMouse(event.x,event.y);
                             
                                             //use the distance to calculate the correct value to set the slide to
                                             //taking into account the slide handle's size also
@@ -8593,12 +8989,12 @@
                                         };
                             
                                     //span panning - drag
-                                        span.onmousedown = function(x,y,event){
+                                        span.onmousedown = function(event){
                                             if(!interactable){return;}
                                             grappled = true;
                             
                                             var initialValue = values.start;
-                                            var initialPosition = getPositionWithinFromMouse(x,y);
+                                            var initialPosition = getPositionWithinFromMouse(event.x,event.y);
                             
                                             _canvas_.system.mouse.mouseInteractionHandler(
                                                 function(event){
@@ -8616,12 +9012,12 @@
                                     //handle movement
                                         for(var a = 0; a < handleNames.length; a++){
                                             handles[handleNames[a]].children()[1].onmousedown = (function(a){
-                                                return function(x,y,event){
+                                                return function(event){
                                                     if(!interactable){return;}
                                                     grappled = true;
                                         
                                                     var initialValue = values[handleNames[a]];
-                                                    var initialPosition = getPositionWithinFromMouse(x,y);
+                                                    var initialPosition = getPositionWithinFromMouse(event.x,event.y);
                                                     
                                                     _canvas_.system.mouse.mouseInteractionHandler(
                                                         function(event){
@@ -8764,10 +9160,10 @@
                                 
                                         if(update&&this.onchange){ this.onchange(value); }
                                     };
-                                    object.light = function(state){
-                                        if(state == undefined){ return state.glowing; }
+                                    object.light = function(a){
+                                        if(a == undefined){ return state.glowing; }
                             
-                                        state.glowing = state;
+                                        state.glowing = a;
                             
                                         object.updateGraphics(state);
                                     };
@@ -8928,7 +9324,8 @@
                                 onchangeviewarea=function(data){},
                                 event=function(events){},
                             ){
-                                var _t = this;
+                                var self = this;
+                                var devMode = false;
                             
                                 //settings
                                     const viewport = {
@@ -8990,16 +9387,16 @@
                                             backgroundDrawArea_vertical.stopAttributeStartedExtremityUpdate = true;
                                             backgroundDrawArea.append(backgroundDrawArea_vertical);
                                         //interaction pane back
-                                            var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
+                                            var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:1,g:0,b:0,a:0}});
                                             workarea.append(interactionPlane_back);
-                                            interactionPlane_back.onwheel = function(x,y,event){};
+                                            interactionPlane_back.onwheel = function(event){};
                                         //signal block area
                                             var signalPane = interfacePart.builder('group','signalPane');
                                             workarea.append(signalPane);
                                         //interaction pane front
                                             var interactionPlane_front = interfacePart.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
                                             workarea.append(interactionPlane_front);
-                                            interactionPlane_front.onwheel = function(x,y,event){};
+                                            interactionPlane_front.onwheel = function(event){};
                                 //internal
                                     object.__calculationAngle = angle;
                                     function currentMousePosition(event){
@@ -9089,6 +9486,8 @@
                                             }
                                     }
                                     function adjustZoom(x,y){
+                                        if(devMode){console.log('\nsequencer::'+name+'::adjustZoom - start');}
+                                        
                                         if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
                                         var maxZoom = 0.01;
                             
@@ -9107,28 +9506,26 @@
                             
                                             //update interactionPlane_back
                                                 interactionPlane_back.width( viewport.totalSize.width );
-                                                interactionPlane_back.height( viewport.totalSize.width );
+                                                interactionPlane_back.height( viewport.totalSize.height );
                             
                                             //update interactionPlane_front
                                                 interactionPlane_front.width( viewport.totalSize.width );
-                                                interactionPlane_front.height( viewport.totalSize.width );
+                                                interactionPlane_front.height( viewport.totalSize.height );
                             
                                             //update background strips
-                                                for(var a = 0; a < xCount; a++){
-                                                    backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
-                                                    backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
-                                                    backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
-                                                }
-                                                for(var a = 0; a < yCount; a++){
-                                                    backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
-                                                    backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
-                                                    backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
-                                                }
+                                                backgroundDrawArea_vertical.children().forEach(function(item,index){
+                                                    item.x( index*(width/(xCount*zoomLevel_x)) );
+                                                    item.width( width/(xCount*zoomLevel_x) );
+                                                    item.height( viewport.totalSize.height );
+                                                });
+                                                backgroundDrawArea_horizontal.children().forEach(function(item,index){
+                                                    item.y( index*(height/(yCount*zoomLevel_y)) );
+                                                    item.height( height/(yCount*zoomLevel_y) );
+                                                    item.width( viewport.totalSize.width );
+                                                });
                             
                                             //update signals
-                                                for(var a = 0; a < signalPane.children().length; a++){
-                                                    signalPane.children()[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
-                                                }
+                                                signalPane.children().forEach( item => item.unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y)) );
                             
                                             //update playhead (if there is one)
                                                 if(playhead.present){
@@ -9150,18 +9547,14 @@
                                                 interactionPlane_front.width( viewport.totalSize.width );
                             
                                             //update background strips
-                                                for(var a = 0; a < xCount; a++){
-                                                    backgroundDrawArea_vertical.children()[a].x( a*(width/(xCount*zoomLevel_x)) );
-                                                    backgroundDrawArea_vertical.children()[a].width( width/(xCount*zoomLevel_x) );
-                                                }
-                                                for(var a = 0; a < yCount; a++){
-                                                    backgroundDrawArea_horizontal.children()[a].width( viewport.totalSize.width );
-                                                }
+                                                backgroundDrawArea_vertical.children().forEach(function(item,index){
+                                                    item.x( index*(width/(xCount*zoomLevel_x)) );
+                                                    item.width( width/(xCount*zoomLevel_x) );
+                                                });
+                                                backgroundDrawArea_horizontal.children().forEach( item => item.width( viewport.totalSize.width ) );
                             
                                             //update signals
-                                                for(var a = 0; a < signalPane.children().length; a++){
-                                                    signalPane.children()[a].unit(width/(xCount*zoomLevel_x), undefined);
-                                                }
+                                                signalPane.children().forEach( item => item.unit(width/(xCount*zoomLevel_x), undefined) );
                             
                                             //update playhead (if there is one)
                                                 if(playhead.present){
@@ -9176,23 +9569,19 @@
                                                 viewport.totalSize.height = height/zoomLevel_y;
                             
                                             //update interactionPlane_back
-                                                interactionPlane_back.height( viewport.totalSize.width );
+                                                interactionPlane_back.height( viewport.totalSize.height );
                                             //update interactionPlane_front
-                                                interactionPlane_front.height( viewport.totalSize.width );
+                                                interactionPlane_front.height( viewport.totalSize.height );
                             
                                             //update background strips
-                                                for(var a = 0; a < xCount; a++){
-                                                    backgroundDrawArea_vertical.children()[a].height( viewport.totalSize.height );
-                                                }
-                                                for(var a = 0; a < yCount; a++){
-                                                    backgroundDrawArea_horizontal.children()[a].y( a*(height/(yCount*zoomLevel_y)) );
-                                                    backgroundDrawArea_horizontal.children()[a].height( height/(yCount*zoomLevel_y) );
-                                                }
+                                                backgroundDrawArea_vertical.children().forEach( item => item.height( viewport.totalSize.height ) );
+                                                backgroundDrawArea_horizontal.children().forEach(function(item,index){
+                                                    item.y( index*(height/(yCount*zoomLevel_y)) );
+                                                    item.height( height/(yCount*zoomLevel_y) );
+                                                });
                             
                                             //update signals
-                                                for(var a = 0; a < signalPane.children().length; a++){
-                                                    signalPane.children()[a].unit(undefined, height/(yCount*zoomLevel_y));
-                                                }
+                                                signalPane.children().forEach( item => item.unit(undefined, height/(yCount*zoomLevel_y)) );
                             
                                             //update playhead (if there is one)
                                                 if(playhead.present){
@@ -9200,6 +9589,8 @@
                                                     workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
                                                 }
                                         }
+                            
+                                        if(devMode){console.log('sequencer::'+name+'::adjustZoom - end\n\n');}
                                     }
                                     function setViewArea(d,update=true){
                                         //clean off input
@@ -9245,7 +9636,7 @@
                                             var approvedData = signals.signalRegistry.getSignal(newID);
                             
                                         //create graphical signal with approved values and append it to the pane
-                                            var newSignalBlock = _t.sequencer.signalBlock(
+                                            var newSignalBlock = self.sequencer.signalBlock(
                                                 newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
                                                 approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
                                                 false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
@@ -9271,19 +9662,19 @@
                                             };
                             
                                         //add interactions to graphical signal block
-                                            newSignalBlock.ondblclick = function(x,y,event){
+                                            newSignalBlock.ondblclick = function(event){
                                                 if(!_canvas_.system.keyboard.pressedKeys.control && !_canvas_.system.keyboard.pressedKeys.command){return;}
                                                 for(var a = 0; a < signals.selectedSignals.length; a++){
                                                     signals.selectedSignals[a].strength(signals.defaultStrength);
                                                     signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
                                                 }
                                             };
-                                            newSignalBlock.body.onmousedown = function(x,y,event){
+                                            newSignalBlock.body.onmousedown = function(event){
                                                 if(!interactable){return;}
                             
                                                 //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                                                     if(_canvas_.system.keyboard.pressedKeys.Space){
-                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                        interactionPlane_back.onmousedown(event); return;
                                                     }
                             
                                                 //if the shift key is not pressed and this signal is not already selected; deselect everything
@@ -9369,7 +9760,7 @@
                                                         }
                                                     );
                                             };
-                                            newSignalBlock.body.onmousemove = function(x,y,event){
+                                            newSignalBlock.body.onmousemove = function(event){
                                                 var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                             
                                                 var cursor = 'default';
@@ -9378,29 +9769,29 @@
                             
                                                 _canvas_.core.viewport.cursor( cursor );
                                             };
-                                            newSignalBlock.body.onkeydown = function(x,y,event){
+                                            newSignalBlock.body.onkeydown = function(event){
                                                 if(!interactable){return;}
                             
                                                 var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                                                 if(pressedKeys.alt){ _canvas_.core.viewport.cursor('copy'); }
                                             };
-                                            newSignalBlock.body.onkeyup = function(x,y,event){
+                                            newSignalBlock.body.onkeyup = function(event){
                                                 if(!interactable){return;}
                             
                                                 var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                                                 if(!(pressedKeys.alt)){ _canvas_.core.viewport.cursor('default'); }
                                             };
-                                            newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                                            newSignalBlock.leftHandle.onmousedown = function(event){
                                                 if(!interactable){return;}
                             
                                                 //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                                                     if(_canvas_.system.keyboard.pressedKeys.Space){
-                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                        interactionPlane_back.onmousedown(event); return;
                                                     }
                                                     
                                                 //cloning situation
                                                     if(_canvas_.system.keyboard.pressedKeys.alt){
-                                                        newSignalBlock.body.onmousedown(x,y,event);
+                                                        newSignalBlock.body.onmousedown(event);
                                                         return;
                                                     }
                             
@@ -9445,7 +9836,7 @@
                                                         }
                                                     );
                                             };
-                                            newSignalBlock.leftHandle.onmousemove = function(x,y,event){
+                                            newSignalBlock.leftHandle.onmousemove = function(event){
                                                 var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                             
                                                 var cursor = 'col-resize';
@@ -9454,18 +9845,18 @@
                             
                                                 _canvas_.core.viewport.cursor( cursor );
                                             };
-                                            newSignalBlock.leftHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
-                                            newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
+                                            newSignalBlock.leftHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                                            newSignalBlock.rightHandle.onmousedown = function(event,ignoreCloning=false){
                                                 if(!interactable){return;}
                             
                                                 //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                                                     if(_canvas_.system.keyboard.pressedKeys.Space){
-                                                        interactionPlane_back.onmousedown(x,y,event); return;
+                                                        interactionPlane_back.onmousedown(event); return;
                                                     }
                             
                                                 //cloning situation
                                                     if(!ignoreCloning && _canvas_.system.keyboard.pressedKeys.alt){
-                                                        newSignalBlock.body.onmousedown(x,y,event);
+                                                        newSignalBlock.body.onmousedown(event);
                                                         return;
                                                     }
                             
@@ -9505,7 +9896,7 @@
                                                         }
                                                     );
                                             };
-                                            newSignalBlock.rightHandle.onmousemove = function(x,y,event){
+                                            newSignalBlock.rightHandle.onmousemove = function(event){
                                                 var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                             
                                                 var cursor = 'col-resize';
@@ -9514,7 +9905,7 @@
                             
                                                 _canvas_.core.viewport.cursor( cursor );
                                             };
-                                            newSignalBlock.rightHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+                                            newSignalBlock.rightHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
                             
                                         return {id:newID, signalBlock:newSignalBlock};
                                     }
@@ -9721,7 +10112,7 @@
                                         };
                             
                                 //interaction
-                                    interactionPlane_back.onmousedown = function(x,y,event){
+                                    interactionPlane_back.onmousedown = function(event){
                                         if(!interactable){return;}
                                         
                                         var pressedKeys = _canvas_.system.keyboard.pressedKeys;
@@ -9833,7 +10224,7 @@
                             
                                             //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                                                 temp.signalBlock.select();
-                                                temp.signalBlock.rightHandle.onmousedown(undefined,undefined,event,true);
+                                                temp.signalBlock.rightHandle.onmousedown(event,true);
                                         }else if(pressedKeys.Space){//pan
                                             _canvas_.core.viewport.cursor('grabbing');
                             
@@ -9869,7 +10260,7 @@
                                                 }
                                         }
                                     };
-                                    interactionPlane_back.onmousemove = function(x,y,event){
+                                    interactionPlane_back.onmousemove = function(event){
                                         if(!interactable){return;}
                             
                                         var pressedKeys = _canvas_.system.keyboard.pressedKeys;
@@ -9877,21 +10268,21 @@
                                         else if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
                                         else{ _canvas_.core.viewport.cursor('default'); }
                                     };
-                                    interactionPlane_front.onkeydown = function(x,y,event){
+                                    interactionPlane_front.onkeydown = function(event){
                                         if(!interactable){return;}
                             
                                         var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                                         if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
                                         if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
                                         if( pressedKeys.alt ){
-                                            if( signalPane.getElementsUnderPoint(x,y)[0] != undefined ){
+                                            if( signalPane.getElementsUnderPoint(event.x,event.y)[0] != undefined ){
                                                 _canvas_.core.viewport.cursor('copy');
                                             }else{
                                                 _canvas_.core.viewport.cursor('crosshair');
                                             }
                                         }
                                     };
-                                    interactionPlane_front.onkeyup = function(x,y,event){
+                                    interactionPlane_front.onkeyup = function(event){
                                         if(!interactable){return;}
                             
                                         _canvas_.core.viewport.cursor('default');
@@ -10049,7 +10440,7 @@
                             };
                             this.dial_continuous_image = function(
                                 name='dial_continuous_image',
-                                x, y, radius=15, angle=0, interactable=true,
+                                x, y, radius=10, angle=0, interactable=true,
                                 value=0, resetValue=-1,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
@@ -10135,7 +10526,7 @@
                             
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    handle.onwheel = function(x,y,event){
+                                    handle.onwheel = function(event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                                         
@@ -10145,7 +10536,7 @@
                             
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    handle.onmousedown = function(x,y,event){
+                                    handle.onmousedown = function(event){
                                         if(!interactable){return;}
                                         var initialValue = value;
                                         var initialY = event.y;
@@ -10183,7 +10574,7 @@
                                 value=0, resetValue=-1,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
-                                handleStyle = {r:200/255, g:200/255, b:200/255, a:1},
+                                handleStyle = {r:220/255, g:220/255, b:220/255, a:1},
                                 slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
                                 needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
                             
@@ -10257,7 +10648,7 @@
                             
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    handle.onwheel = function(x,y,event){
+                                    handle.onwheel = function(event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                                         
@@ -10267,7 +10658,7 @@
                             
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    handle.onmousedown = function(x,y,event){
+                                    handle.onmousedown = function(event){
                                         if(!interactable){return;}
                                         var initialValue = value;
                                         var initialY = event.y;
@@ -10301,7 +10692,7 @@
                             };
                             this.dial_discrete_image = function(
                                 name='dial_discrete_image',
-                                x, y, radius=15, angle=0, interactable=true,
+                                x, y, radius=10, angle=0, interactable=true,
                                 value=0, resetValue=0, optionCount=5,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
@@ -10375,7 +10766,7 @@
                             
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    dial.getChildByName('handle').onwheel = function(x,y,event){
+                                    dial.getChildByName('handle').onwheel = function(event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
@@ -10388,7 +10779,7 @@
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         }
                                     };
-                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                    dial.getChildByName('handle').onmousedown = function(event){
                                         if(!interactable){return;}
                                         var initialValue = value;
                                         var initialY = event.y;
@@ -10421,7 +10812,7 @@
                             };
                             this.dial_discrete = function(
                                 name='dial_discrete',
-                                x, y, radius=15, angle=0, interactable=true,
+                                x, y, radius=10, angle=0, interactable=true,
                                 value=0, resetValue=0, optionCount=5,
                                 startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
                             
@@ -10510,7 +10901,7 @@
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         }
                                     };
-                                    dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                    dial.getChildByName('handle').onmousedown = function(event){
                                         if(!interactable){return;}
                                         var initialValue = value;
                                         var initialY = event.y;
@@ -10616,11 +11007,8 @@
                                     //main
                                         var subject = interfacePart.builder('group',name+'subGroup',{});
                                     //backing
-                                        var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backing__off__colour});
+                                        var backing = interfacePart.builder('circleWithOutline','backing',{radius:radius, colour:backing__off__colour, colour:backing__off__colour, thickness:5 });
                                         subject.append(backing);
-                                    //outline
-                                        var outline = interfacePart.builder('path','outline',{ points:[0,radius, radius,0, 0,-radius, -radius,0, 0,radius], thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
-                                        subject.append(outline);
                                     //text
                                         var text_centre = interfacePart.builder('text','centre', {
                                             text:text_centre, 
@@ -10657,8 +11045,8 @@
                                     object.activateGraphicalState = function(state){
                                         if(!active){ 
                                             backing.colour = backing__off__colour;
-                                            outline.colour = backing__off__lineColour;
-                                            outline.thickness( backing__off__lineThickness );
+                                            backing.lineColour = backing__off__lineColour;
+                                            backing.thickness( backing__off__lineThickness );
                                             return;
                                         }
                             
@@ -10686,8 +11074,8 @@
                             
                                         var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
                                         backing.colour = styles[i].colour;
-                                        outline.colour = styles[i].lineColour;
-                                        outline.thickness( styles[i].lineThickness );
+                                        backing.lineColour = styles[i].lineColour;
+                                        backing.thickness( styles[i].lineThickness );
                                     };
                                     object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
                             
@@ -10767,7 +11155,7 @@
                             ){
                                 //adding on the specific shapes
                                     //main
-                                        var subject = interfacePart.builder('group',name+'subGroup');
+                                        var subject = interfacePart.builder('group',name+'__subGroup');
                                     //backing
                                         var backing = interfacePart.builder('rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
                                         subject.append(backing);
@@ -10946,21 +11334,21 @@
                             
                             
                                 //interactivity
-                                    subject.cover.onmouseenter = function(x,y,event){
+                                    subject.cover.onmouseenter = function(event,s,p){
                                         object.state.hovering = true;  
                                         object.activateGraphicalState(object.state);
                                         if(object.onenter){object.onenter(event);}
                                         if(event.buttons == 1){subject.cover.onmousedown(event);} 
                                     };
-                                    subject.cover.onmouseleave = function(x,y,event){ 
+                                    subject.cover.onmouseleave = function(event){ 
                                         object.state.hovering = false; 
                                         object.release(event); 
                                         object.activateGraphicalState(object.state); 
                                         if(object.onleave){object.onleave(event);}
                                     };
-                                    subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
-                                    subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
-                                    subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
+                                    subject.cover.onmouseup = function(event){   if(!interactable){return;} object.release(event); };
+                                    subject.cover.onmousedown = function(event){ if(!interactable){return;} object.press(event); };
+                                    subject.cover.ondblclick = function(event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
                                     
                             
                             
@@ -11051,11 +11439,11 @@
                                     //main
                                         var subject = interfacePart.builder('group',name+'subGroup');
                                     //backing
-                                        var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:points, colour:backing__off__colour});
+                                        var backing = interfacePart.builder('polygonWithOutline','backing',{pointsAsXYArray:points, colour:backing__off__colour, colour:backing__off__colour, thickness:5 });
                                         subject.append(backing);
-                                    //outline
-                                        var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
-                                        subject.append(outline);
+                                    // //outline
+                                    //     var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
+                                    //     subject.append(outline);
                                     //text
                                          var avgPoint = _canvas_.library.math.averagePoint(points);
                                          var text_centre = interfacePart.builder('text','centre', {
@@ -11094,8 +11482,8 @@
                                     object.activateGraphicalState = function(state){
                                         if(!active){ 
                                             backing.colour = backing__off__colour;
-                                            outline.colour = backing__off__lineColour;
-                                            outline.thickness( backing__off__lineThickness );
+                                            backing.lineColour = backing__off__lineColour;
+                                            backing.thickness( backing__off__lineThickness );
                                             return;
                                         }
                             
@@ -11123,8 +11511,8 @@
                             
                                         var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
                                         backing.colour = styles[i].colour;
-                                        outline.colour = styles[i].lineColour;
-                                        outline.thickness( styles[i].lineThickness );
+                                        backing.lineColour = styles[i].lineColour;
+                                        backing.thickness( styles[i].lineThickness );
                                     };
                                     object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
                             
@@ -11264,7 +11652,7 @@
                                 backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
                                 backgroundStyle_lineThickness=0.25,
                                 backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
-                                backgroundTextStyle_size=7.5,
+                                backgroundTextStyle_size=2*7.5,
                                 backgroundTextStyle_font='Helvetica',
                             
                                 backingStyle={r:0.2,g:0.2,b:0.2,a:1},
@@ -11295,7 +11683,6 @@
                                     //needle overlay
                                         var overlay = interfacePart.builder('needleOverlay', 'overlay', {
                                             width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                                            needleStyles:foregroundStyles.map(a => a.stroke),
                                         });
                                         object.append(overlay);
                             
@@ -11470,7 +11857,7 @@
                             
                             
                                 //interaction
-                                    cover.onwheel = function(x,y,event){
+                                    cover.onwheel = function(event){
                                         if(!interactable){return;}
                                         var move = event.deltaY/100;
                                         object.position( object.position() + move/10 );
@@ -11807,7 +12194,7 @@
                             
                             
                                 //interaction
-                                    cover.onwheel = function(x,y,event){
+                                    cover.onwheel = function(event){
                                         if(!interactable){return;}
                                         var move = event.deltaY/100;
                                         object.position( object.position() + move/10 );
@@ -13101,11 +13488,11 @@
                                 markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
                             
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
-                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
+                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.3,g:0.3,b:0.3,a:1}],
                                 markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
                                 markingStyle_font='Courier New',
                                 markingStyle_printingMode='absolute',
-                                markingStyle_size=2,
+                                markingStyle_size=1,
                             ){
                                 //elements
                                     //main
@@ -13142,9 +13529,9 @@
                                 x, y, width=120, height=60, angle=0, resolution=5,
                             
                                 foregroundStyles=[
-                                    {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
-                                    {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
-                                    {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
+                                    {colour:{r:0,g:1,b:0,a:1}, thickness:1},
+                                    {colour:{r:1,g:1,b:0,a:1}, thickness:1},
+                                    {colour:{r:0,g:1,b:1,a:1}, thickness:1},
                                 ],
                                 foregroundTextStyles=[
                                     {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
@@ -13153,7 +13540,7 @@
                                 ],
                             
                                 backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_lineThickness=0.25,
+                                backgroundStyle_lineThickness=0.5,
                                 backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
                                 backgroundTextStyle_size=7.5,
                                 backgroundTextStyle_font='Helvetica',
@@ -13614,7 +14001,7 @@
                                 markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
                             
                                 backingStyle={r:0.04,g:0.04,b:0.04,a:1},
-                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.39,g:0.39,b:0.39,a:1}],
+                                levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.3,g:0.3,b:0.3,a:1}],
                                 markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
                                 markingStyle_font='Courier New',
                                 markingStyle_printingMode='absolute',
@@ -14905,7 +15292,7 @@
                                 foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
                             
                                 backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
-                                backgroundStyle_lineThickness=0.25,
+                                backgroundStyle_lineThickness=0.5,
                                 backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
                                 backgroundTextStyle_size=0.1,
                                 backgroundTextStyle_font='Helvetica',
@@ -14936,13 +15323,15 @@
                                     //grapher
                                         var grapher = interfacePart.builder('grapher_static',name,{
                                             x:0, y:0, width:width, height:height,
-                                            foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                                            backgroundStyle_colour:backgroundStyle_colour, 
-                                            backgroundStyle_lineThickness:backgroundStyle_lineThickness,
-                                            backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                                            backgroundTextStyle_size:backgroundTextStyle_size,
-                                            backgroundTextStyle_font:backgroundTextStyle_font,
-                                            backingStyle:backingStyle,
+                                            style:{
+                                                foregrounds:[foregroundStyle], foregroundText:[foregroundTextStyle],
+                                                background_colour:backgroundStyle_colour, 
+                                                background_lineThickness:backgroundStyle_lineThickness,
+                                                backgroundText_fill:backgroundTextStyle_fill, 
+                                                backgroundText_size:backgroundTextStyle_size,
+                                                backgroundText_font:backgroundTextStyle_font,
+                                                backing:backingStyle,
+                                            }
                                         });
                                         object.append(grapher);
                             
@@ -15105,7 +15494,7 @@
                                     //main
                                         var object = interfacePart.builder('group',name);
                                     //cable shape
-                                        var path = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:2.5 });
+                                        var path = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
                                         object.append(path);
                                 
                                 //controls
@@ -16478,7 +16867,6 @@
                 this.gui = new function(){
                     var pane = _canvas_.system.pane.f;
                     var menubar = undefined;
-                    var scale = window.devicePixelRatio;
             
                     this.refresh = function(){
                         if(menubar != undefined){menubar.refresh();}
@@ -16492,7 +16880,7 @@
                             }
             
                         if(menubar != undefined){return;}
-                        menubar = control.gui.elements.menubar(0,0,scale);
+                        menubar = control.gui.elements.menubar(0,0);
                         pane.append( menubar );
                     };
                     this.hideMenubar = function(){
@@ -16507,8 +16895,8 @@
                     };
             
                     this.elements = new function(){
-                        this.menubar = function(x,y,scale){
-                            scale = 1;
+                        this.menubar = function(x,y){
+                            var self = this;
                             var vars = {
                                 width: _canvas_.control.viewport.width(),
                                 height: 20,
@@ -16543,11 +16931,52 @@
                                         object.append(bar);
                         
                                 //items
+                                    function createDropdown(a,x){
+                                        var dropdown = undefined;
+                        
+                                        //precalc
+                                            var height = 0;
+                                            for(var b = 0; b < self.menubar.dropdowns[a].itemList.length; b++){
+                                                switch(self.menubar.dropdowns[a].itemList[b]){
+                                                    case 'break': height += self.menubar.dropdowns[a].breakHeight; break;
+                                                    case 'space': height += self.menubar.dropdowns[a].spaceHeight; break;
+                                                    default: height += self.menubar.dropdowns[a].listItemHeight; break;
+                                                }
+                                            }
+                                            if(height > _canvas_.control.viewport.height()){
+                                                height = _canvas_.control.viewport.height() - vars.height;
+                                            }
+                        
+                                        //produce dropdown
+                                            dropdown = _canvas_.interface.part.builder( 'list', 'dropdown', {
+                                                x:x, y:vars.height, style:style.list,
+                                                width:self.menubar.dropdowns[a].listWidth, height:height,
+                        
+                                                multiSelect:false, selectable:false,
+                        
+                                                itemWidthMux:   1,
+                                                itemHeightMux:  (self.menubar.dropdowns[a].listItemHeight/height), 
+                                                breakHeightMux: (self.menubar.dropdowns[a].breakHeight/height),
+                                                spaceHeightMux: (self.menubar.dropdowns[a].spaceHeight/height),
+                                                itemSpacingMux: 0, 
+                        
+                                                list:self.menubar.dropdowns[a].itemList,
+                                            });
+                        
+                                        //upon selection of an item in a dropdown; close the dropdown and have nothing selected
+                                            dropdown.onrelease = function(){
+                                                object.getChildByName('dropdownButton_'+a).select(false); 
+                                                vars.selected = undefined;
+                                            };
+                        
+                                        return dropdown;
+                                    }
+                        
                                     var accWidth = 0;
                                     for(var a = 0; a < this.menubar.dropdowns.length; a++){
                                         var item = _canvas_.interface.part.builder( 'button_rectangle', 'dropdownButton_'+a, {
-                                            x:accWidth*scale, y:0, 
-                                            width:this.menubar.dropdowns[a].width*scale,
+                                            x:accWidth, y:0, 
+                                            width:this.menubar.dropdowns[a].width,
                                             height:vars.height, 
                                             hoverable:false, selectable:true,
                                             text_centre:this.menubar.dropdowns[a].text,
@@ -16572,46 +17001,13 @@
                                                 if(event.buttons == 0){ object.getChildByName('dropdownButton_'+vars.selected).select(true); }
                                             }
                                         }; }(a);
-                                        item.onselect = function(a,x,that){ return function(){
-                                            //precalc
-                                                var height = 0;
-                                                for(var b = 0; b < that.menubar.dropdowns[a].itemList.length; b++){
-                                                    switch(that.menubar.dropdowns[a].itemList[b]){
-                                                        case 'break': height += that.menubar.dropdowns[a].breakHeight*scale; break;
-                                                        case 'space': height += that.menubar.dropdowns[a].spaceHeight*scale; break;
-                                                        default: height += that.menubar.dropdowns[a].listItemHeight*scale; break;
-                                                    }
-                                                }
-                                                if(height > _canvas_.control.viewport.height()*scale){
-                                                    height = _canvas_.control.viewport.height()*scale;
-                                                }
-                        
-                                            //produce dropdown
-                                                vars.activedropdown = _canvas_.interface.part.builder( 'list', 'dropdown', {
-                                                    x:x*scale, y:vars.height, style:style.list,
-                                                    width:that.menubar.dropdowns[a].listWidth*scale, height:height,
-                        
-                                                    multiSelect:false, selectable:false,
-                        
-                                                    itemWidthMux: 1,
-                                                    itemHeightMux:  (that.menubar.dropdowns[a].listItemHeight/height)*scale, 
-                                                    breakHeightMux: (that.menubar.dropdowns[a].breakHeight/height)*scale,
-                                                    spaceHeightMux: (that.menubar.dropdowns[a].spaceHeight/height)*scale,
-                                                    itemSpacingMux: 0, 
-                        
-                                                    list:that.menubar.dropdowns[a].itemList,
-                                                });
-                        
-                                            //upon selection of an item in a dropdown; close the dropdown and have nothing selected
-                                                vars.activedropdown.onrelease = function(){
-                                                    object.getChildByName('dropdownButton_'+a).select(false); 
-                                                    vars.selected = undefined;
-                                                };
-                        
+                                        item.onselect = function(a,x){ return function(){
+                                            vars.activedropdown = createDropdown(a,x)
                                             object.append(vars.activedropdown);
-                                        } }(a,accWidth,this);
+                                        } }(a,accWidth);
                                         item.ondeselect = function(){ 
                                             object.remove(vars.activedropdown); 
+                                            vars.activedropdown = undefined;
                                         };
                         
                                         this.menubar.dropdowns[a].x = accWidth;
@@ -16628,6 +17024,7 @@
                             //refresh callback
                                 object.refresh = function(){
                                     bar.width( _canvas_.control.viewport.width() );
+                                    if(vars.activedropdown != undefined){ object.closeAllDropdowns(); }
                                 };
                                 object.refresh();
                         
@@ -16643,7 +17040,7 @@
                     this.position = function(x,y){ return _canvas_.core.viewport.position(x,y); };
                     this.refresh = function(){ 
                         _canvas_.core.viewport.refresh();
-                        // control.gui.refresh();
+                        control.gui.refresh();
                     };
                     this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
                     this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
@@ -17050,8 +17447,9 @@
                                 //if no position has been provided at all; calculate a new one from the mouse position
                                     if(position == undefined){
                                         position = _canvas_.core.viewport.mousePosition();
+                                        position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(position.x,position.y);
                                         if(position.x == undefined || position.y == undefined){
-                                            position = _canvas_.core.viewport.windowPoint2workspacePoint(0, 0);
+                                            position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(0, 0);
                                         }
                                     }
                     
@@ -17107,7 +17505,7 @@
                 declare:function(unit){
             
                     function grappleFunctionRunner(list){
-                        return function(x,y,event){
+                        return function(event){
                             //ensure that it's the action button on the mouse
                                 if(event.button != 0){return;}
             
@@ -17115,7 +17513,7 @@
                                 _canvas_.control.grapple.tmpunit = this.unit;
                             
                             //run through function list, and activate functions where necessary
-                                _canvas_.library.structure.functionListRunner(list,_canvas_.system.keyboard.pressedKeys)({event:event,x:x,y:y});
+                                _canvas_.library.structure.functionListRunner(list,_canvas_.system.keyboard.pressedKeys)(event);
                         };
                     }
             
@@ -17130,7 +17528,7 @@
             _canvas_.control.grapple.functionList.onmousedown.push(
                 {
                     requiredKeys:[],
-                    function:function(data){
+                    function:function(event){
                         var control = _canvas_.control;
             
                         // if mousedown occurs over an unit that isn't selected
@@ -17138,7 +17536,7 @@
                         //   deselect everything
                         //  now, select the unit we're working on if not selected
                             if( !control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
-                                if(!data.event.shiftKey){ control.selection.deselectEverything(); }
+                                if(!event.shiftKey){ control.selection.deselectEverything(); }
                                 control.selection.selectUnit(control.grapple.tmpunit);
                             }
                     },
@@ -17148,11 +17546,11 @@
             _canvas_.control.grapple.functionList.onmousedown.push(
                 {
                     requiredKeys:[['shift','alt']],
-                    function:function(data){
+                    function:function(event){
                         var control = _canvas_.control;
                         
                         //collect together information on the click position and the selected unit's positions and section area
-                            control.grapple.tmpdata.oldClickPosition = {x:data.x,y:data.y};
+                            control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                             control.grapple.tmpdata.oldUnitsPositions = [];
                             control.grapple.tmpdata.oldUnitsSelectionArea = [];
                             for(var a = 0; a < control.selection.selectedUnits.length; a++){
@@ -17205,18 +17603,18 @@
             _canvas_.control.grapple.functionList.onmousedown.push(
                 {
                     requiredKeys:[['alt']],
-                    function:function(data){ _canvas_.control.selection.duplicate(); },
+                    function:function(){ _canvas_.control.selection.duplicate(); },
                 }
             );
             //unit movement
             _canvas_.control.grapple.functionList.onmousedown.push(
                 {
                     requiredKeys:[],
-                    function:function(data){
+                    function:function(event){
                         var control = _canvas_.control;
             
                         //collect together information on the click position and the selected unit's positions and section area
-                            control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
+                            control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
                             control.grapple.tmpdata.oldUnitsPositions = [];
                             control.grapple.tmpdata.oldUnitsSelectionArea = [];
                             for(var a = 0; a < control.selection.selectedUnits.length; a++){
@@ -17273,7 +17671,7 @@
             _canvas_.control.grapple.functionList.onmouseup.push(
                 {
                     requiredKeys:[],
-                    function:function(data){
+                    function:function(event){
                         var control = _canvas_.control;
             
                         //if mouse-up occurs over an unit that is selected
@@ -17282,7 +17680,7 @@
                         //  deselect the unit we're working on
                         // now set the most recently selected reference to null
                             if( control.selection.selectedUnits.includes(control.grapple.tmpunit) ){
-                                if( data.event.shiftKey && (control.selection.lastSelectedUnits != control.grapple.tmpunit) ){
+                                if( event.shiftKey && (control.selection.lastSelectedUnits != control.grapple.tmpunit) ){
                                     control.selection.deselectUnit(control.grapple.tmpunit);
                                 }
                                 control.selection.lastSelectedUnits = null;
@@ -17802,8 +18200,8 @@
                             needle:{r:250/255,g:150/255,b:150/255,a:1},
                         },
                         graph:{
-                            foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.}],
-                            backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, thickness:0.25},
+                            foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, lineThickness:0.25}],
+                            backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, lineThickness:0.25},
                             backgroundtext:{colour:{r:0/255,g:200/255,b:163/255,a:0.75}, font:'Helvetica'},
                         }
                     };
@@ -17823,8 +18221,8 @@
                             {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
                                 style:{
                                     foregrounds: style.graph.foregroundlines, 
-                                    background_stroke: style.graph.backgroundlines.stroke, 
-                                    background_thickness: style.graph.backgroundlines.lineWidth, 
+                                    background_colour: style.graph.backgroundlines.colour, 
+                                    background_lineThickness: style.graph.backgroundlines.lineThickness, 
                                     backgroundText_colour: style.graph.backgroundtext.colour, 
                                     backgroundText_font: style.graph.backgroundtext.font,
                                 }}
@@ -18572,7 +18970,7 @@
                         background:{r:200/255,g:200/255,b:200/255,a:1},
                         level:{
                             backing:{r:10/255,g:10/255,b:10/255,a:1},
-                            levels:[{r:250/255,g:250/255,b:250/255,a:1},{r:200/255,g:200/255,b:200/255,a:1}],
+                            levels:[{r:250/255,g:250/255,b:250/255,a:1},{r:150/255,g:150/255,b:150/255,a:1}],
                             markingStyle_fill:{r:220/255,g:220/255,b:220/255,a:1},
                             markingStyle_font:'Courier New',
                         },
@@ -18985,31 +19383,29 @@
                     category:'synthesizer',
                     helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer/'
                 };
-                this.basicSynthesizer_img = function(x,y,a){
+                this.basicSynthesizer_img = function(x,y,angle){
                     var attributes = {
                         detuneLimits: {min:-100, max:100}
                     };
                     var style = {
-                        background:'images/units/alpha/basicSynthesizer_2.png',
-                        h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-                        h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
+                        background:'/docs/images/units/alpha/basicSynthesizer_2.png',
                 
                         dial:{
-                            handle:'images/units/alpha/basicSynthesizer_2_dial_handle.png',
-                            slot:'images/units/alpha/basicSynthesizer_2_dial_slot.png',
-                            needle:'images/units/alpha/basicSynthesizer_2_dial_needle.png',
+                            handle:'/docs/images/units/alpha/basicSynthesizer_2_dial_handle.png',
+                            slot:'/docs/images/units/alpha/basicSynthesizer_2_dial_slot.png',
+                            needle:'/docs/images/units/alpha/basicSynthesizer_2_dial_needle.png',
                         },
                         button:{
-                            background__up__fill:'rgba(175,175,175,1)', 
-                            background__hover__fill:'rgba(220,220,220,1)', 
-                            background__hover_press__fill:'rgba(150,150,150,1)',
+                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
                         }
                     };
                     var design = {
                         name:'basicSynthesizer_img',
                         category:'synthesizers',
                         collection: 'alpha',
-                        x:x, y:y, a:a,
+                        x:x, y:y, angle:angle,
                         space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
                         // spaceOutline: true,
                         elements:[
@@ -19697,7 +20093,7 @@
                             {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                                 onpress: function(){
                                     object.looper.load('file',function(data){
-                                        object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw( object.looper.waveformSegment() );
+                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.looper.waveformSegment() );
                                     });
                                 }
                             }},
@@ -19714,7 +20110,7 @@
                 
                                     //if there's already a needle; delete it
                                         if(needleExists){
-                                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                             clearTimeout(needleInterval);
                                         }
                 
@@ -19726,18 +20122,18 @@
                                         needleInterval = setInterval(function(){
                                             //remove previous mark
                                                 if(previousPosition != undefined){
-                                                    object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                                 }
                 
                                             previousPosition = currentPosition;
                                             currentPosition += step;
                 
                                             //add new mark
-                                                object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                 
                                             //check for ending
                                                 if( currentPosition > 1 ){
-                                                    object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                                     currentPosition = 0;
                                                     previousPosition = undefined;
                                                 }
@@ -19752,7 +20148,7 @@
                 
                                     //if there's a needle, remove it
                                         if(needleExists){
-                                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                             needleExists = false;
                                             currentPosition = undefined;
                                             clearTimeout(needleInterval);
@@ -19833,7 +20229,7 @@
                             {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                                 onpress: function(){
                                     object.oneShot.load('file',function(data){
-                                        object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw( object.oneShot.waveformSegment() );
+                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
                                     });
                                 }
                             }},
@@ -19850,7 +20246,7 @@
                 
                                     //if there's a playhead, remove it
                                         if(needleExists){
-                                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                             clearTimeout(needleInterval);
                                         }
                 
@@ -19863,18 +20259,18 @@
                                         needleInterval = setInterval(function(){
                                             //remove previous mark
                                                 if(previousPosition != undefined){
-                                                    object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                                 }
                 
                                             previousPosition = currentPosition;
                                             currentPosition += step;
                 
                                             //add new mark
-                                                object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                 
                                             //check for ending
                                                 if( currentPosition > 1 ){
-                                                    object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                                     currentPosition = 0;
                                                     previousPosition = undefined;
                                                     clearInterval(needleInterval);
@@ -19965,14 +20361,14 @@
                                 {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                                     onpress: function(){
                                         object.oneShot.load('file',function(data){
-                                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw( object.oneShot.waveformSegment() );
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
                                         });
                                     }
                                 }},
                                 {type:'button_rectangle', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
                                     onpress:function(){
                                         var filePlayer = object.oneShot;
-                                        var waveport = object.elements.grapher_wave_canvas_.grapher_waveWorkspace;
+                                        var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
                 
                                         //no file = don't bother
                                             if(filePlayer.duration() < 0){return;}
@@ -20032,7 +20428,7 @@
                                 {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
                                     onpress:function(){
                                         var filePlayer = object.oneShot;
-                                        var waveport = object.elements.grapher_wave_canvas_.grapher_waveWorkspace;
+                                        var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
                 
                                         filePlayer.panic();
                 
@@ -20074,12 +20470,12 @@
                         object.i = {};
                         object.i.loadURL = function(url, callback){
                             object.oneShot.load('url', function(){
-                                object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw(object.oneShot.waveformSegment());
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw(object.oneShot.waveformSegment());
                                 if(callback != undefined){callback();}
                             }, url);
                         };
                         object.i.area = function(a,b){
-                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.area(a,b);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
                         };
                         
                     return object;
@@ -20236,7 +20632,7 @@
                                                     needles[needleNumber].currentPosition += step;
                     
                                                     //add new mark
-                                                    waveport.mark(needles[needleNumber].currentPosition);
+                                                        waveport.mark(needles[needleNumber].currentPosition);
                     
                                                     //check for ending
                                                         if( needles[needleNumber].currentPosition > needles[needleNumber].endPosition ){
@@ -20435,7 +20831,7 @@
                             {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
                             {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
                 
-                            {type:'text', name:'rate_label_name', data:{ x:15, y:78, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                            {type:'text', name:'rate_label_name', data:{ x:15, y:77.5, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
                             {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             {type:'text', name:'rate_label_1', data:{ x:15, y:51.5, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
                             {type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
@@ -20773,16 +21169,16 @@
                         object.internalCircuits = new this.launchpad.sequencer(values.xCount, values.yCount);
                         object.internalCircuits.commands = function(data){
                             for(var a = 0; a < values.yCount; a++){
-                                if(data[a]){ object.io['out_'+a].send('pulse'); }
+                                if(data[a]){ object.io.data['out_'+a].send('pulse'); }
                             }
                         };
                         object.internalCircuits.pageChange = pageChange;
                 
                     //wiring
-                        object.elements.connectionNode_data.pulse_input.onreceive = function(){object.internalCircuits.inc();lightLine();};
-                        object.elements.connectionNode_data.nextPage_input.onreceive = function(){object.internalCircuits.incPage();};
-                        object.elements.connectionNode_data.prevPage_input.onreceive = function(){object.internalCircuits.decPage();};
-                        object.elements.button_rectangle.pulse_button.onreceive = function(){object.internalCircuits.inc();lightLine();};
+                        object.elements.connectionNode_data.pulse_input.onreceivedata = function(){object.internalCircuits.inc();lightLine();};
+                        object.elements.connectionNode_data.nextPage_input.onreceivedata = function(){object.internalCircuits.incPage();};
+                        object.elements.connectionNode_data.prevPage_input.onreceivedata = function(){object.internalCircuits.decPage();};
+                        object.elements.button_rectangle.pulse_button.onpress = function(){object.internalCircuits.inc();lightLine();};
                         object.elements.rastorgrid.rastorgrid.onchange = function(data){object.internalCircuits.importPage(data);};
                         object.elements.button_rectangle.nextPage.onpress = function(){object.internalCircuits.incPage();};
                         object.elements.button_rectangle.prevPage.onpress = function(){object.internalCircuits.decPage();};
@@ -21091,7 +21487,7 @@
                 {
                     text:'file',
                     width:45,
-                    listWidth:150,
+                    listWidth:170,
                     listItemHeight:22.5,
                     breakHeight: 0.5,
                     spaceHeight: 1,
@@ -21118,8 +21514,8 @@
                 },
                 {
                     text:'create',
-                    width:65,
-                    listWidth:250,
+                    width:70,
+                    listWidth:260,
                     listItemHeight:22.5,
                     breakHeight: 0.5,
                     spaceHeight: 1,
@@ -21137,7 +21533,7 @@
                                     {
                                         text_left: data.name,
                                         function:function(design){return function(){
-                                            var p = _canvas_.core.viewport.windowPoint2workspacePoint(30,30);
+                                            var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
                                             _canvas_.control.scene.addUnit(p.x,p.y,0,design,'alpha');
                                         }}(design),
                                     }
@@ -21158,12 +21554,12 @@
                 {
                     text:'help',
                     width:50,
-                    listWidth:150,
+                    listWidth:160,
                     listItemHeight:22.5,
                     breakHeight: 0.5,
                     spaceHeight: 1,
                     itemList:[
-                    {text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); /*system.utility.misc.openURL(system.super.helpFolderLocation);*/ } },
+                    {text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
                     ]
                 },
             ];
@@ -21172,6 +21568,7 @@
             _canvas_.control.gui.showMenubar();
             _canvas_.control.viewport.stopMouseScroll(true);
             _canvas_.control.viewport.activeRender(true);
+            _canvas_.core.render.activeLimitToFrameRate(true);
             
             _canvas_.control.scene.addUnit(20,10,0,'audio_duplicator');
             _canvas_.control.scene.addUnit(100,10,0,'basicMixer');
@@ -21213,17 +21610,19 @@
             
             
             
-            // _canvas_.core.stats.active(true);
-            // var averages = [];
-            // var rollingAverage = 0;
-            // var rollingAverageIndex = 1;
-            // setInterval(function(){
-            //     var tmp = _canvas_.core.stats.getReport();
-            //     averages.push(tmp.framesPerSecond);
-            //     if(averages.length > 10){averages.shift();}
-            //     console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
-            // },1000);
-
+            _canvas_.core.stats.active(true);
+            var averages = [];
+            var rollingAverage = 0;
+            var rollingAverageIndex = 1;
+            setInterval(function(){
+                var tmp = _canvas_.core.stats.getReport();
+                averages.push(tmp.framesPerSecond);
+                if(averages.length > 10){averages.shift();}
+                console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
+            },1000);
+            
+            _canvas_.core.render.activeLimitToFrameRate(true);
+            _canvas_.core.render.frameRateLimit(25);
 
 
         }

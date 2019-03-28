@@ -103,16 +103,16 @@ this.slide_image = function(
             set( value + move/(10*globalScale) );
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-        backingAndSlotCover.onclick = function(x,y,event){
+        backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
+        backingAndSlotCover.onclick = function(event){
             if(!interactable){return;}
             if(grappled){return;}
 
             //calculate the distance the click is from the top of the slider (accounting for angle)
                 var offset = backingAndSlot.getOffset();
                 var delta = {
-                    x: x - (backingAndSlot.x()     + offset.x),
-                    y: y - (backingAndSlot.y()     + offset.y),
+                    x: event.x - (backingAndSlot.x()+ offset.x),
+                    y: event.y - (backingAndSlot.y()+ offset.y),
                     a: 0 - (backingAndSlot.angle() + offset.angle),
                 };
                 var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
@@ -124,7 +124,7 @@ this.slide_image = function(
             set(value);
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        invisibleHandle.onmousedown = function(x,y,event){
+        invisibleHandle.onmousedown = function(event){
             if(!interactable){return;}
             grappled = true;
 

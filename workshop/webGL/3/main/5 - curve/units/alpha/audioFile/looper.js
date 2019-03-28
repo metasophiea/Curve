@@ -45,7 +45,7 @@ this.looper = function(x,y,a){
             {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                 onpress: function(){
                     object.looper.load('file',function(data){
-                        object.elements.grapher_wave_canvas_.grapher_wave_canvas_.draw( object.looper.waveformSegment() );
+                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.looper.waveformSegment() );
                     });
                 }
             }},
@@ -62,7 +62,7 @@ this.looper = function(x,y,a){
 
                     //if there's already a needle; delete it
                         if(needleExists){
-                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                             clearTimeout(needleInterval);
                         }
 
@@ -74,18 +74,18 @@ this.looper = function(x,y,a){
                         needleInterval = setInterval(function(){
                             //remove previous mark
                                 if(previousPosition != undefined){
-                                    object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                 }
 
                             previousPosition = currentPosition;
                             currentPosition += step;
 
                             //add new mark
-                                object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
 
                             //check for ending
                                 if( currentPosition > 1 ){
-                                    object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                     currentPosition = 0;
                                     previousPosition = undefined;
                                 }
@@ -100,7 +100,7 @@ this.looper = function(x,y,a){
 
                     //if there's a needle, remove it
                         if(needleExists){
-                            object.elements.grapher_wave_canvas_.grapher_wave_canvas_.mark(currentPosition);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                             needleExists = false;
                             currentPosition = undefined;
                             clearTimeout(needleInterval);

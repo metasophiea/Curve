@@ -29,10 +29,10 @@ this.checkbox_ = function(
     
             if(update&&this.onchange){ this.onchange(value); }
         };
-        object.light = function(state){
-            if(state == undefined){ return state.glowing; }
+        object.light = function(a){
+            if(a == undefined){ return state.glowing; }
 
-            state.glowing = state;
+            state.glowing = a;
 
             object.updateGraphics(state);
         };

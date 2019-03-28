@@ -15,6 +15,11 @@ this.seconds2time = function(seconds){
 
     return result;
 };
+this.largestValueFound = function(array){
+    return array.reduce(function(max,current){
+        return Math.abs(max) > Math.abs(current) ? max : current;
+    });
+};
 this.cartesianAngleAdjust = function(x,y,angle){
     function cartesian2polar(x,y){
         var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;

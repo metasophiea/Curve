@@ -73,11 +73,8 @@ this.button_circle = function(
         //main
             var subject = interfacePart.builder('group',name+'subGroup',{});
         //backing
-            var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backing__off__colour});
+            var backing = interfacePart.builder('circleWithOutline','backing',{radius:radius, colour:backing__off__colour, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
-        //outline
-            var outline = interfacePart.builder('path','outline',{ points:[0,radius, radius,0, 0,-radius, -radius,0, 0,radius], thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
-            subject.append(outline);
         //text
             var text_centre = interfacePart.builder('text','centre', {
                 text:text_centre, 
@@ -114,8 +111,8 @@ this.button_circle = function(
         object.activateGraphicalState = function(state){
             if(!active){ 
                 backing.colour = backing__off__colour;
-                outline.colour = backing__off__lineColour;
-                outline.thickness( backing__off__lineThickness );
+                backing.lineColour = backing__off__lineColour;
+                backing.thickness( backing__off__lineThickness );
                 return;
             }
 
@@ -143,8 +140,8 @@ this.button_circle = function(
 
             var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
             backing.colour = styles[i].colour;
-            outline.colour = styles[i].lineColour;
-            outline.thickness( styles[i].lineThickness );
+            backing.lineColour = styles[i].lineColour;
+            backing.thickness( styles[i].lineThickness );
         };
         object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
 
