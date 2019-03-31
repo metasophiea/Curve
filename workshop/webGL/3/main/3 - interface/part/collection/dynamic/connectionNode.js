@@ -72,7 +72,7 @@ this.connectionNode = function(
             _canvas_.system.mouse.mouseInteractionHandler(
                 undefined,
                 function(event){
-                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.x,event.y)[0];
+                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0];
                     if(element == undefined){return;}
                     
                     var node = element.parent;

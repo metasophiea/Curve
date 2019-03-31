@@ -160,7 +160,7 @@ this.rangeslide = function(
                 if(grappled){return;}
 
                 //calculate the distance the click is from the top of the slider (accounting for angle)
-                    var d = getPositionWithinFromMouse(event.x,event.y);
+                    var d = getPositionWithinFromMouse(event.X,event.Y);
 
                 //use the distance to calculate the correct value to set the slide to
                 //taking into account the slide handle's size also
@@ -200,11 +200,11 @@ this.rangeslide = function(
                 grappled = true;
 
                 var initialValue = values.start;
-                var initialPosition = getPositionWithinFromMouse(event.x,event.y);
+                var initialPosition = getPositionWithinFromMouse(event.X,event.Y);
 
                 _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
-                        var livePosition = getPositionWithinFromMouse(event.x,event.y);
+                        var livePosition = getPositionWithinFromMouse(event.X,event.Y);
                         pan( initialValue+(livePosition-initialPosition) )
                         object.onchange(values);
                     },
@@ -223,11 +223,11 @@ this.rangeslide = function(
                         grappled = true;
             
                         var initialValue = values[handleNames[a]];
-                        var initialPosition = getPositionWithinFromMouse(event.x,event.y);
+                        var initialPosition = getPositionWithinFromMouse(event.X,event.Y);
                         
                         _canvas_.system.mouse.mouseInteractionHandler(
                             function(event){
-                                var livePosition = getPositionWithinFromMouse(event.x,event.y);
+                                var livePosition = getPositionWithinFromMouse(event.X,event.Y);
                                 set( initialValue + (livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
                                 object.onchange(values);
                             },

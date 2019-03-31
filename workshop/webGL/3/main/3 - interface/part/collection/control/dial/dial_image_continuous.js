@@ -99,13 +99,13 @@ this.dial_continuous_image = function(
         handle.onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
-            var initialY = event.y;
+            var initialY = event.Y;
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
                 function(event){
                     var value = initialValue;
-                    var numerator = event.y - initialY;
+                    var numerator = event.Y - initialY;
                     var divider = _canvas_.core.viewport.scale();
                     set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                 },

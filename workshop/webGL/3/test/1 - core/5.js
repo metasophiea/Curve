@@ -85,7 +85,7 @@ _canvas_.core.arrangement.append(staticGroup);
 
 
 // document.getElementById("canvas").onmousedown = function(event){
-//     console.log( _canvas_.core.arrangement.getElementUnderPoint(event.x,event.y) );
+//     console.log( _canvas_.core.arrangement.getElementUnderPoint(event.X,event.Y) );
 // }
 
 // _canvas_.core.callback.onmousedown   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousedown(x,y,event,shapes)); }

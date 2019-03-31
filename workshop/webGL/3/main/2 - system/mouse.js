@@ -19,10 +19,18 @@
 
         //replace listener code
             //movement code
-                _canvas_.onmousemove = function(event){ if(moveCode!=undefined){moveCode(event);} };
+                _canvas_.onmousemove = function(event){ 
+                    if(moveCode!=undefined){
+                        event.X = event.offsetX; event.Y = event.offsetY;
+                        moveCode(event);
+                    }
+                };
             //stopping code
                 _canvas_.onmouseup = function(event){
-                    if(stopCode != undefined){ stopCode(event); }
+                    if(stopCode != undefined){ 
+                        event.X = event.offsetX; event.Y = event.offsetY;
+                        stopCode(event);
+                    }
                     _canvas_.onmousemove = _canvas_.system.mouse.tmp.onmousemove_old;
                     _canvas_.onmouseleave = _canvas_.system.mouse.tmp.onmouseleave_old;
                     _canvas_.onmouseup = _canvas_.system.mouse.tmp.onmouseup_old;
@@ -34,6 +42,6 @@
     [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(function(callback){
         _canvas_.core.callback[callback] = function(event,shapes){
             if(shapes.length > 0){ shapes[0][callback](event,shapes); }
-            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.x,y:event.y,event:event}); }
+            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
         }
     });

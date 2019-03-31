@@ -32,7 +32,7 @@ _canvas_.system.mouse.functionList.onmousedown.push(
                 _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
                         var start = _canvas_.system.mouse.tmp.start;
-                        var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+                        var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
 
                         _canvas_.system.mouse.tmp.selectionRectangle.width( end.x - start.x );
                         _canvas_.system.mouse.tmp.selectionRectangle.height( end.y - start.y );
@@ -41,7 +41,7 @@ _canvas_.system.mouse.functionList.onmousedown.push(
                         _canvas_.system.pane.mf.remove( _canvas_.system.mouse.tmp.selectionRectangle );
 
                         var start = _canvas_.system.mouse.tmp.start;
-                        var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+                        var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
 
                         _canvas_.control.selection.selectUnits(
                             _canvas_.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
@@ -74,8 +74,8 @@ _canvas_.system.mouse.functionList.onmousedown.push(
                     function(event){
                         //update the viewport position
                             _canvas_.core.viewport.position(
-                                _canvas_.system.mouse.tmp.oldPosition.x - ((_canvas_.system.mouse.tmp.clickPosition.x-event.x)),
-                                _canvas_.system.mouse.tmp.oldPosition.y - ((_canvas_.system.mouse.tmp.clickPosition.y-event.y)),
+                                _canvas_.system.mouse.tmp.oldPosition.x - ((_canvas_.system.mouse.tmp.clickPosition.x-event.X)),
+                                _canvas_.system.mouse.tmp.oldPosition.y - ((_canvas_.system.mouse.tmp.clickPosition.y-event.Y)),
                             );
                     },
                     function(event){},

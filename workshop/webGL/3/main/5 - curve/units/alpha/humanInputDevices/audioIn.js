@@ -56,7 +56,7 @@ this.audioIn = function(x,y,a,setupConnect=true){
         var object = _canvas_.interface.unit.builder(this.audioIn,design);
 
     //keycapture
-        object.onkeydown = function(x,y,event){
+        object.elements.polygon.backing.onkeydown = function(x,y,event){
             switch(event.key){
                 case 'ArrowUp':    object.elements.button_rectangle.up.press(); break;
                 case 'ArrowDown':  object.elements.button_rectangle.down.press(); break;

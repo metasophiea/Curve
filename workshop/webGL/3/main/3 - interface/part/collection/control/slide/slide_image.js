@@ -63,7 +63,7 @@ this.slide_image = function(
         }
         object.__calculationAngle = angle;
         function currentMousePosition(event){
-            return event.y*Math.cos(object.__calculationAngle) - event.x*Math.sin(object.__calculationAngle);
+            return event.Y*Math.cos(object.__calculationAngle) - event.X*Math.sin(object.__calculationAngle);
         }
 
 
@@ -111,8 +111,8 @@ this.slide_image = function(
             //calculate the distance the click is from the top of the slider (accounting for angle)
                 var offset = backingAndSlot.getOffset();
                 var delta = {
-                    x: event.x - (backingAndSlot.x()+ offset.x),
-                    y: event.y - (backingAndSlot.y()+ offset.y),
+                    x: event.X - (backingAndSlot.x()+ offset.x),
+                    y: event.Y - (backingAndSlot.y()+ offset.y),
                     a: 0 - (backingAndSlot.angle() + offset.angle),
                 };
                 var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();

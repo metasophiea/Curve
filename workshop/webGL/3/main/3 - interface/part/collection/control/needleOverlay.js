@@ -80,7 +80,7 @@ this.needleOverlay = function(
         var selectionNeedleA_grappled = false;
         var selectionNeedleB_grappled = false;
         function currentMousePosition_x(event){
-            return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
+            return event.X*Math.cos(object.__calculationAngle) - event.Y*Math.sin(object.__calculationAngle);
         }
         function getRelativeX(x,y){
             var offset = controlObjectsGroup.getOffset();
@@ -200,16 +200,16 @@ this.needleOverlay = function(
             backing.onmousedown = function(event){
                 if(!interactable){return;}
                 if( _canvas_.system.keyboard.pressedKeys.shift ){
-                    var firstPosition = getRelativeX(event.x,event.y);
+                    var firstPosition = getRelativeX(event.X,event.Y);
                     _canvas_.system.mouse.mouseInteractionHandler(
                         function(event){ 
-                            var x = getRelativeX(event.x,event.y);
+                            var x = getRelativeX(event.X,event.Y);
                             if(x < 0){x = 0;}else if(x > 1){x = 1;}
                             object.area(firstPosition,x);
                         },    
                     );
                 }else{
-                    object.select(getRelativeX(event.x,event.y));
+                    object.select(getRelativeX(event.X,event.Y));
                 }
             };
             controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};

@@ -123,8 +123,8 @@ this.sequencer = function(
         function currentMousePosition(event){
             var offset = object.getOffset();
             var delta = {
-                x: event.x - (backing.x()     + offset.x),
-                y: event.y - (backing.y()     + offset.y),
+                x: event.X - (backing.x()     + offset.x),
+                y: event.Y - (backing.y()     + offset.y),
                 a: 0 - (backing.angle() + offset.angle),
             };
             var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a );
@@ -996,7 +996,7 @@ this.sequencer = function(
             if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
             if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
             if( pressedKeys.alt ){
-                if( signalPane.getElementsUnderPoint(event.x,event.y)[0] != undefined ){
+                if( signalPane.getElementsUnderPoint(event.X,event.Y)[0] != undefined ){
                     _canvas_.core.viewport.cursor('copy');
                 }else{
                     _canvas_.core.viewport.cursor('crosshair');

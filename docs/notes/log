@@ -1,10 +1,47 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-03-31
+  - webGL experiment
+    - further work on "defaultThin" font (sooo many characters)
+
+
+2019-03-30
+  - webGL experiment
+    - further work on "defaultThin" font
+
+
+2019-03-29
+  - webGL experiment
+    - fixed up the i and j characters
+    - shifted the text in the recording unit a little (the button text isn't
+      perfectly aligned anyway. The characterString shape judges the 'middle'
+      as being the center of a capital letter)
+    - added { and } characters
+    - upgraded character encroachment, to allow more control
+    - turns out 'event.x' and 'event.y' are relative to the window, not the
+      element. So I've augmented the event object to have .X and .Y attributes
+      with the correct positoins (.offsetX and .offsetY), modified every 
+      callback to calculate these numbers, and changed every reference to .x
+      and .y to .X and .Y
+      ...another rather buggy addition. so, be warned.
+    - fixed musicalKeybaord's keyboard input
+    - began work on "defaultThin" font
+
+  future ideas
+  - need to make a thinner font I think
+
+  notes
+  - program is at 21592 lines right now. Its crazy really. The log starts in
+    april, but I'm pretty sure that this whole thing started over a year ago.
+    We've come so far
+  - you can't do multi screen with the test version
+
+
 2019-03-28
   - webGL experiment
     - fixed up the ?, /, \, -,  1 and 3 characters and all of the lower-case
       letters. Aswel as expanded spacing from 0.1 to 0.15
     - adjusted waveWorkspace default size a little
-    - did a little work on character kemming by adding the "encroachUpon" list
+    - did a little work on character keming by adding the "encroachUpon" list
       to the vector list..it's doing most of the job.
 
   future ideas

@@ -39,7 +39,7 @@
         
         //perform action
             if(shapes.length > 0){ shapes[0].onkeydown(event,shapes); }
-            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.x,y:event.y,event:event}); }
+            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
     };
 
     _canvas_.core.callback.onkeyup = function(event,shapes){
@@ -50,5 +50,5 @@
         
         //perform action
             if(shapes.length > 0){ shapes[0].onkeyup(event,shapes); }
-            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.x,y:event.y,event:event}); }
+            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
     };

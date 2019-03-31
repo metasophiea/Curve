@@ -214,7 +214,7 @@ this.render = new function(){
                 if(frameRateControl.active){
                     var currentRenderTime = Date.now();
                     var delta = currentRenderTime - frameRateControl.previousRenderTime;
-                    if(delta <= frameRateControl.interval){ return; }
+                    if(delta < frameRateControl.interval){ return; }
                     frameRateControl.previousRenderTime = currentRenderTime - delta%frameRateControl.interval;
                 }
 
@@ -421,16 +421,19 @@ this.callback = new function(){
         var shapes = undefined;
         if(count > 1){
             //get the shapes under this point that have this callback, in order of front to back
-            shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a[callback]!=undefined);
+            shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a[callback]!=undefined);
         }
         var point = undefined;
         if(count > 2){
             //calculate the workspace point
-            point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+            point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
         }
 
         return {shapes:shapes, point:point};
     }
+
+    var clickVisibility = false;
+    this.clickVisibility = function(a){ if(a==undefined){return clickVisibility;} clickVisibility=a; };
 
     //default
         for(var a = 0; a < callbacks.length; a++){
@@ -438,6 +441,9 @@ this.callback = new function(){
                 return function(event){
                     //if core doesn't have this callback set up, just bail
                         if( !core.callback[callback] ){return;}
+
+                    //generate rectified XY position
+                        event.X = event.offsetX; event.Y = event.offsetY;
 
                     //depending on how many arguments the  callback has, calculate more data for it
                         var data = gatherDetails(event,callback,core.callback[callback].length);
@@ -462,14 +468,17 @@ this.callback = new function(){
         //onmousemove / shape's onmouseenter / shape's onmouseleave
             var shapeMouseoverList = [];
             _canvas_.onmousemove = function(event){
+                //generate rectified XY position
+                    event.X = event.offsetX; event.Y = event.offsetY;
+
                 //update the stored mouse position
-                    core.viewport.mousePosition(event.x,event.y);
+                    core.viewport.mousePosition(event.X,event.Y);
 
                 //check for onmouseenter / onmouseleave
                     //get all shapes under point that have onmouseenter or onmouseleave callbacks
-                        var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onmouseenter!=undefined || a.onmouseleave!=undefined);
+                        var shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onmouseenter!=undefined || a.onmouseleave!=undefined);
                     //get point
-                        var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.x,event.y);
+                        var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                     //go through this list, comparing to the shape transition list
                         //shapes only on shapes list; run onmouseenter and add to shapeMouseoverList
                         //shapes only on shapeMouseoverList; run onmouseleave and remove from shapeMouseoverList
@@ -503,7 +512,10 @@ this.callback = new function(){
                     return function(event){
                         //if core doesn't have this callback set up, just bail
                             if( !core.callback[callback] ){return;}
-                    
+
+                        //generate rectified XY position
+                            event.X = event.offsetX; event.Y = event.offsetY;
+                                
                         //depending on how many arguments the  callback has, calculate more data for it
                             var shapes = undefined;
                             if(core.callback[callback].length > 1){
@@ -520,7 +532,7 @@ this.callback = new function(){
                 
                         //activate core's callback, providing the point, original event, and shapes
                             var p = core.viewport.mousePosition();
-                            event.x = p.x; event.y = p.y;
+                            event.X = p.x; event.Y = p.y;
                             core.callback[callback]( event, shapes, point );
                     }
                 }(tmp[a]);
@@ -530,10 +542,16 @@ this.callback = new function(){
             var shapeMouseclickList = [];
             _canvas_.onclick = function(){};
             _canvas_.onmousedown = function(event){
+                //generate rectified XY position
+                    event.X = event.offsetX; event.Y = event.offsetY;
+
+                //dev functions
+                    if(clickVisibility){ core.render.drawDot(event.X,event.Y); }
+
                 var callback = 'onmousedown';
                 
                 //save current shapes for use in the onmouseup callback
-                    shapeMouseclickList = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onclick!=undefined);
+                    shapeMouseclickList = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onclick!=undefined);
 
                 //perform regular onmousedown actions
                     //if core doesn't have this callback set up, just bail
@@ -546,14 +564,13 @@ this.callback = new function(){
                         core.callback[callback]( event, data.shapes, data.point );
             };
             _canvas_.onmouseup = function(event){
+                //generate rectified XY position
+                    event.X = event.offsetX; event.Y = event.offsetY;
+
                 var callback = 'onmouseup';
 
-                //depending on how many arguments the callback has, calculate more data for it
-                    var shapes = undefined;
-                    var point = undefined;
-
                 //for the shapes under the mouse that are also on the shapeMouseclickList, activate their "onclick" callback
-                    var shapes = core.arrangement.getElementsUnderPoint(event.x,event.y).filter(a => a.onclick!=undefined);
+                    var shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onclick!=undefined);
                     shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ 
 
                         //depending on how many arguments the  callback has, calculate more data for it

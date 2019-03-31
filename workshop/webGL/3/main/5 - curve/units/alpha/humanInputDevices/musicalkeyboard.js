@@ -105,12 +105,12 @@ this.musicalKeyboard = function(x,y,a){
         var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
 
     //keycapture
-        object.onkeydown = function(x,y,event){
+        object.elements.polygon.backing.onkeydown = function(event){
             if( glyphs.includes(event.key) ){
                 object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].press();
             }
         };
-        object.onkeyup = function(x,y,event){
+        object.elements.polygon.backing.onkeyup = function(event){
             if( glyphs.includes(event.key) ){
                 object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].release();
             }

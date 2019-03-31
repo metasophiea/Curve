@@ -92,12 +92,12 @@ this.dial_discrete = function(
         dial.getChildByName('handle').onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
-            var initialY = event.y;
+            var initialY = event.Y;
 
             grappled = true;
             _canvas_.system.mouse.mouseInteractionHandler(
                 function(event){
-                    var diff = Math.round( (event.y - initialY)/25 );
+                    var diff = Math.round( (event.Y - initialY)/25 );
                     set( initialValue - diff );
                     if(object.onchange != undefined){object.onchange(value);}
                 },
