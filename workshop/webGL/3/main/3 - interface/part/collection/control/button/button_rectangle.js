@@ -9,6 +9,7 @@ this.button_rectangle = function(
     text_font = 'Arial',
     text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+    text_spacing=0.1,
 
     backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
     backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
@@ -86,6 +87,7 @@ this.button_rectangle = function(
                 colour:text_colour,
                 font:text_font,
                 printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
+                spacing:text_spacing,
             });
             subject.append(text_centre);
             var text_left = interfacePart.builder('text','left', {
@@ -97,6 +99,7 @@ this.button_rectangle = function(
                 colour:text_colour,
                 font:text_font,
                 printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'middle'},
+                spacing:text_spacing,
             });
             subject.append(text_left);
             var text_right = interfacePart.builder('text','right',{
@@ -108,6 +111,7 @@ this.button_rectangle = function(
                 colour:text_colour,
                 font:text_font,
                 printingMode:{widthCalculation:'absolute',horizontal:'right',vertical:'middle'},
+                spacing:text_spacing,
             });
             subject.append(text_right);
         //cover

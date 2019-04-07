@@ -1,4 +1,4 @@
-this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, font='default', printingMode={widthCalculation:'filling',horizontal:'left',vertical:'top'} ){
+this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, font='default', printingMode={widthCalculation:'filling',horizontal:'left',vertical:'top'}, spacing=0.1 ){
     var temp = _canvas_.core.shape.create('characterString');
     temp.name = name;
     temp.ignored = ignored;
@@ -13,6 +13,7 @@ this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, an
     temp.height(height);
     temp.angle(angle);
     temp.string(text);
+    temp.spacing(spacing);
     temp.stopAttributeStartedExtremityUpdate = false;
     
     return temp;

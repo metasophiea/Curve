@@ -10,8 +10,9 @@ this.menubar = function(x,y){
         bar:{r:240/255,g:240/255,b:240/255,a:1}, 
         button:{
             text_colour:{r:0,g:0,b:0,a:1},
-            text_font:'Helvetica',
+            text_font:'defaultThin',
             text_size:11.25,
+            text_spacing:0.2,
             background__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
             background__press__colour:{r:240/255,g:240/255,b:240/255,a:1},
             background__select_press__colour:{r:229/255,g:167/255,b:255/255,a:1},
@@ -21,7 +22,8 @@ this.menubar = function(x,y){
         },
         list:{
             text_size:9,
-            text_font:'Helvetica',
+            text_font:'defaultThin',
+            text_spacing:0.2,
             item__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
             item__hover__colour:{r:229/255,g:167/255,b:255/255,a:1}, 
         },

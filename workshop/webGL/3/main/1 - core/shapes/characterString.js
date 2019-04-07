@@ -4,6 +4,7 @@ this.characterString = function(){
     //attributes 
         //protected attributes
             const type = 'characterString'; this.getType = function(){return type;}
+            const defaultFontName = 'defaultThick';
 
         //simple attributes
             this.name = '';
@@ -17,21 +18,22 @@ this.characterString = function(){
             this.stopAttributeStartedExtremityUpdate = false;
         
         //attributes pertinent to extremity calculation
-            var x = 0;               this.x =     function(a){           if(a==undefined){return x;}     x = a;       if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var y = 0;               this.y =     function(a){           if(a==undefined){return y;}     y = a;       if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var angle = 0;           this.angle = function(a){           if(a==undefined){return angle;} angle = a;   if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var width = 10;          this.width =  function(a){          if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var height = 10;         this.height = function(a){          if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var scale = 1;           this.scale = function(a){           if(a==undefined){return scale;} scale = a;   if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var string = '';         this.string = function(a){          if(a==undefined){return string;} string = a; if(this.devMode){console.log(this.getAddress()+'::string');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var font = 'default';    this.font =   function(a){ 
-                                        if(a==undefined){return font;}
-                                        font = a == undefined || a === '' || library.character.vectorLibrary[a] == undefined ? 'default' : a;
+            var x = 0;                     this.x =     function(a){           if(a==undefined){return x;}     x = a;         if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var y = 0;                     this.y =     function(a){           if(a==undefined){return y;}     y = a;         if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var angle = 0;                 this.angle = function(a){           if(a==undefined){return angle;} angle = a;     if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var width = 10;                this.width =  function(a){          if(a==undefined){return width;}  width = a;    if(this.devMode){console.log(this.getAddress()+'::width');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var height = 10;               this.height = function(a){          if(a==undefined){return height;} height = a;   if(this.devMode){console.log(this.getAddress()+'::height');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var scale = 1;                 this.scale = function(a){           if(a==undefined){return scale;} scale = a;     if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var string = '';               this.string = function(a){          if(a==undefined){return string;} string = a;   if(this.devMode){console.log(this.getAddress()+'::string');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var spacing = 0.1;             this.spacing = function(a){         if(a==undefined){return spacing;} spacing = a; if(this.devMode){console.log(this.getAddress()+'::spacing');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();}
+            var font = defaultFontName;    this.font =   function(a){ 
+                                             if(a==undefined){return font;}
+                                             font = a == undefined || a === '' || library.character.vectorLibrary[a] == undefined ? defaultFontName : a;
 
-                                        generateStringCharacters(); 
-                                        if(this.devMode){console.log(this.getAddress()+'::font');} 
-                                        computeExtremities(); 
-                                     };
+                                             generateStringCharacters(); 
+                                             if(this.devMode){console.log(this.getAddress()+'::font');} 
+                                             computeExtremities(); 
+                                          };
             var printingMode = {
                 widthCalculation:'filling', //filling / absolute
                 horizontal:'left',          //left    / middle   / right
@@ -63,7 +65,6 @@ this.characterString = function(){
             clear();
             var tmpString = String(string).split('');
             var cumulativeWidth = 0;
-            var spacing = 0.1;
 
             var mux = 0;
             tmpString.forEach(function(a){

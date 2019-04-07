@@ -1,7 +1,7 @@
 this.universalreadout = function(x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
-        text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
+        text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
     };
     var design = {
         name: 'universalreadout',

@@ -1,4 +1,44 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-04-05
+  notes
+  - more looking at the font thing...it's complicated, but I think it can be
+    done. Earcut does most of the heavy lifting, all I really need to do is
+    convert these paths to a series of points (figuring out where the holes are
+    and decoding the bézier curves) and hand that data to earcut, which will
+    return the triangles. It will need a new character shape (and probably a
+    new characterString shape)
+
+2019-04-04
+  notes
+  - I've done a little research on getting fonts. Found a post that talks about
+    (https://stackoverflow.com/questions/25956272/better-quality-text-in-webgl)
+    https://github.com/opentypejs/opentype.js which a program one can use to
+    extract point data from TrueType and OpenType font files. It then says to
+    use earcut to generate the polygon triangles. If we could get that system to
+    work, we would have access to a vast array of quality fonts, further 
+    reducing the visible difference between the canvas and webGL versions
+    I've began some experimentation
+
+
+2019-04-03
+  - webGL experiment
+    - finally finished "defaultThin" font
+    - added 'spacing' attribute to characterString, and associated attributes to
+      the buttons and list parts
+    - updated the way that the default font is selected (and set it to be the
+      new defaultThin)
+
+
+2019-04-02
+  - webGL experiment
+    - further work on "defaultThin" (only one left)
+
+
+2019-04-01
+  - webGL experiment
+    - further work on "defaultThin" 
+
+
 2019-03-31
   - webGL experiment
     - further work on "defaultThin" font (sooo many characters)
@@ -19,11 +59,11 @@
     - upgraded character encroachment, to allow more control
     - turns out 'event.x' and 'event.y' are relative to the window, not the
       element. So I've augmented the event object to have .X and .Y attributes
-      with the correct positoins (.offsetX and .offsetY), modified every 
+      with the correct positions (.offsetX and .offsetY), modified every 
       callback to calculate these numbers, and changed every reference to .x
       and .y to .X and .Y
       ...another rather buggy addition. so, be warned.
-    - fixed musicalKeybaord's keyboard input
+    - fixed musicalKeyboard's keyboard input
     - began work on "defaultThin" font
 
   future ideas
@@ -39,9 +79,9 @@
 2019-03-28
   - webGL experiment
     - fixed up the ?, /, \, -,  1 and 3 characters and all of the lower-case
-      letters. Aswel as expanded spacing from 0.1 to 0.15
+      letters. Along with expanded spacing from 0.1 to 0.15
     - adjusted waveWorkspace default size a little
-    - did a little work on character keming by adding the "encroachUpon" list
+    - did a little work on character kerning by adding the "encroachUpon" list
       to the vector list..it's doing most of the job.
 
   future ideas
@@ -111,11 +151,11 @@
       was, but it was something to do with this.
 
   notes
-  - now that the activly stenciling group automatically clears the stencil 
+  - now that the actively stenciling group automatically clears the stencil 
     buffer when it's done; it's probably going to effect any other groups that
     are doing stencil things too, like a parent of the group..perhaps its a
-    niche situaion, but still one to look out for.
-  - group's extremity methodology nees to be changed too. It's just saving all
+    niche situation, but still one to look out for.
+  - group's extremity methodology needs to be changed too. It's just saving all
     the points of it's children, thus resulting in thousands of points being
     stored. (one of the test scenes has a group with 50000 extremity points) I'm
     thinking of only using the bounding box instead. The updateExtremities
@@ -135,7 +175,7 @@
 
 2019-03-23
   - webGL experiment
-    - midi sequencer unit mouse panning now updates the randeslides
+    - midi sequencer unit mouse panning now updates the rangeslides
     - fixed rangeSlide-sequencer control issue. Turned out, the sequencer was
       doing too many update on an adjust (classic problem) using the fresh
       'stopAttributeStartedExtremityUpdate' attribute on shapes that don't need
@@ -152,7 +192,7 @@
 
   bugs
   - on the sequencer units, mouse panning on the sequencer doesn't update the
-    randeslides
+    rangeslides
 
 
 2019-03-20
@@ -220,7 +260,7 @@
 2019-03-13
   - webGL experiment
     - serious work on version 2 of the shapes. I'm paying special attention to
-      what enduces extremity calculations, and have hopefully kept things under
+      what induces extremity calculations, and have hopefully kept things under
       control. I'm almost done with them all, just some niggly bits of the
       characterString shape remain
     - also added the "polygonWithOutline" shape
@@ -228,7 +268,7 @@
 
 2019-03-12
   - webGL experiment
-    - fixed some issues surounding how long it takes extremities to be
+    - fixed some issues surrounding how long it takes extremities to be
       calculated, with calculations being redone needlessly. It's revealed a
       number of issues throughout the core system however..something I'l need to
       rewrite. Hopefully things will be fine but slow, thus allowing me to make
@@ -255,7 +295,7 @@
     - the display part "level" seemed to be taking a very very long time to
       update itself..at least, that's how it looks. Lots of recalculation going
       on. fixed by adding an advanced attribute to rectangle:
-      "__stopExtremityUpdate" which stops any entremity update from happenning.
+      "__stopExtremityUpdate" which stops any extremity update from happening.
       (Should perhaps look into doing something similar for the graphers? Though
       the sub-canvas kinda covers that ...really, there should be a canvas
       version of the level too)
@@ -304,7 +344,7 @@
       image' from way back in the Lavendel days)
     - added checkbox_image part
     - added rastorGrid part
-    - added core.viewport.cursor function for changing the cursor incon
+    - added core.viewport.cursor function for changing the cursor icon
     - added needleOverlay part
     - added grapher_waveWorkspace part
     - added sequencer part :: thus completes all that parts
@@ -327,7 +367,7 @@
     - finished up on "rectangle with outline" shape
     - cleaned up rectangle shape a little
     - added 'looped path' shape
-    - relaced button_rectangle's rectangle shape with the rectangleWithOutline
+    - replaced button_rectangle's rectangle shape with the rectangleWithOutline
       shape
 
 

@@ -8,6 +8,7 @@ this.button_circle = function(
     text_font = 'Arial',
     text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+    text_spacing=0.1,
 
     backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
     backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
@@ -83,6 +84,7 @@ this.button_circle = function(
                 colour:text_colour,
                 font:text_font,
                 printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
+                spacing:text_spacing,
             });
             subject.append(text_centre);
         //cover
