@@ -16,7 +16,7 @@ this.builder = function(type,name,data){
             case 'circleWithOutline': return this.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
             case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
             case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
-            case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing );
+            case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing );
     
         //display
             case 'glowbox_rect': return this.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
@@ -153,7 +153,7 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -186,7 +186,7 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -220,7 +220,7 @@ this.builder = function(type,name,data){
                     data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
 
                     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
                     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -323,7 +323,7 @@ this.builder = function(type,name,data){
                     data.spacingHeightMux,
 
                     data.style.backing, data.style.break,
-                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
                     data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
                     data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
                     data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,

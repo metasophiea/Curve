@@ -9,6 +9,7 @@ this.button_polygon = function(
     text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
     text_spacing=0.1,
+    text_interCharacterSpacing=0,
 
     backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
     backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
@@ -90,6 +91,7 @@ this.button_polygon = function(
                 font:text_font,
                 printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
                 spacing:text_spacing,
+                interCharacterSpacing:text_interCharacterSpacing,
             });
             subject.append(text_centre);
         //cover

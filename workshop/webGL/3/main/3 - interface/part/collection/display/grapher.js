@@ -21,7 +21,7 @@ this.grapher = function(
 
     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 ){
-    var fontSizeMux = 0.75*(1/7.5);
+    var fontSizeMux = 1/7;
     var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
     var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
     var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
@@ -70,8 +70,8 @@ this.grapher = function(
                                         x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                         text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
                                         colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
-                                        width:(backgroundTextStyle_size*fontSizeMux)*0.75, height:backgroundTextStyle_size*fontSizeMux,
-                                        printingMode:{widthCalculation:'absolute'}
+                                        width:backgroundTextStyle_size*fontSizeMux, height:backgroundTextStyle_size*fontSizeMux,
+                                        printingMode:{widthCalculation:'absolute',vertical:'top'}
                                     } );
                                     backgroundGroup.append(text);
                                 }
@@ -100,8 +100,8 @@ this.grapher = function(
                                         x:x+verticalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                         text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
                                         colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
-                                        width:(backgroundTextStyle_size*fontSizeMux)*0.75, height:backgroundTextStyle_size*fontSizeMux,
-                                        printingMode:{widthCalculation:'absolute'}
+                                        width:backgroundTextStyle_size*fontSizeMux, height:backgroundTextStyle_size*fontSizeMux,
+                                        printingMode:{widthCalculation:'absolute',vertical:'top'}
                                     } );
                                     backgroundGroup.append(text);
                                 }

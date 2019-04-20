@@ -107,3 +107,12 @@ this.printFile = function(filename,data){
     a.download = filename;
     a.click();
 };
+this.loadFileFromURL = function(URL,callback,responseType='blob'){
+    //responseType: text / arraybuffer / blob / document / json 
+
+    var xhttp = new XMLHttpRequest();
+    if(callback != null){ xhttp.onloadend = a => { callback(a.target.response); }; }
+    xhttp.open('get',URL,true);
+    xhttp.responseType = responseType;
+    xhttp.send();
+};

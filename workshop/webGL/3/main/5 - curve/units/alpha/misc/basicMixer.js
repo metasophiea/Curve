@@ -82,7 +82,7 @@ this.basicMixer = function(x,y,a){
                     object['splitter_'+a].inGain(value);
                 }
             }(a);
-            object.elements.dial_continuous['gain_'+a].onchange = function(a){
+            object.elements.dial_continuous['pan_'+a].onchange = function(a){
                 return function(value){
                     object['splitter_'+a].outGain(0,value);
                     object['splitter_'+a].outGain(1,1-value);

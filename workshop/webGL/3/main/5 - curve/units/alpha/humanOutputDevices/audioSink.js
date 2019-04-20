@@ -5,7 +5,8 @@ this.audioSink = function(x,y,a){
             backing:{r:10/255,g:10/255,b:10/255,a:1},
             levels:[{r:250/255,g:250/255,b:250/255,a:1},{r:150/255,g:150/255,b:150/255,a:1}],
             markingStyle_fill:{r:220/255,g:220/255,b:220/255,a:1},
-            markingStyle_font:'Courier New',
+            markingStyle_font:'defaultThin',
+            markingStyle_size:1,
         },
     };
     var design = {

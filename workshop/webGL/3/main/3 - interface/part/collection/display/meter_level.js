@@ -7,8 +7,8 @@ this.meter_level = function(
     backingStyle={r:0.04,g:0.04,b:0.04,a:1},
     levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.3,g:0.3,b:0.3,a:1}],
     markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
-    markingStyle_font='Courier New',
-    markingStyle_printingMode='absolute',
+    markingStyle_font='Roboto-Regular',
+    markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
     markingStyle_size=2,
 ){
 
@@ -35,7 +35,7 @@ this.meter_level = function(
                 return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
             }
             function insertText(y,text){
-                return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size*0.75, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
+                return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
             }
 
             for(var a = 0; a < markings.length; a++){

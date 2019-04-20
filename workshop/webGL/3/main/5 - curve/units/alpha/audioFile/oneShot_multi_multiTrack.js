@@ -128,30 +128,32 @@ this.oneShot_multi_multiTrack = function(x,y,a){
         
                             //perform graphical movements
                                 needles[needleNumber].previousPosition = undefined;
-                                needles[needleNumber].currentPosition = startTime/duration;
-                                needles[needleNumber].endPosition = startTime/duration + subduration/duration;
+                                needles[needleNumber].currentPosition = start;
+                                needles[needleNumber].endPosition = end;
 
                                 var desiredIntervalTime = 10;
-                                var step = desiredIntervalTime/(subduration*1000)
-                                needles[needleNumber].needleInterval = setInterval(function(){
+                                var step = (desiredIntervalTime*(end-start))/(subduration*1000);
+                                needles[needleNumber].needleInterval = setInterval(function(nN){
                                     //remove previous mark
-                                        if(needles[needleNumber].previousPosition != undefined){
-                                            waveport.mark(needles[needleNumber].currentPosition);
+                                        if(needles[nN].previousPosition != undefined){
+                                            waveport.mark(needles[nN].currentPosition);
                                         }
     
-                                    needles[needleNumber].previousPosition = needles[needleNumber].currentPosition;
-                                    needles[needleNumber].currentPosition += step;
+                                    //update position
+                                        needles[nN].previousPosition = needles[nN].currentPosition;
+                                        needles[nN].currentPosition += step;
     
                                     //add new mark
-                                        waveport.mark(needles[needleNumber].currentPosition);
+                                        waveport.mark(needles[nN].currentPosition);
     
                                     //check for ending
-                                        if( needles[needleNumber].currentPosition > needles[needleNumber].endPosition ){
-                                            waveport.mark(needles[needleNumber].currentPosition);
-                                            clearInterval(needles[needleNumber].needleInterval);
+                                        if( needles[nN].currentPosition > needles[nN].endPosition ){
+                                            waveport.mark(needles[nN].currentPosition);
+                                            clearInterval(needles[nN].needleInterval);
+                                            delete needles[nN];
                                         }
     
-                                },desiredIntervalTime);
+                                },desiredIntervalTime,needleNumber);
                             }
                         }(a)
                     }}

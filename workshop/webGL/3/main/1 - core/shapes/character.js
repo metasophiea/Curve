@@ -19,61 +19,90 @@ this.character = function(){
             this.stopAttributeStartedExtremityUpdate = false;
 
         //attributes pertinent to extremity calculation
-            var x = 0;                    this.x =      function(a){ if(a==undefined){return x;}      x = a;      if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var y = 0;                    this.y =      function(a){ if(a==undefined){return y;}      y = a;      if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var angle = 0;                this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var anchor = {x:0,y:0};       this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var width = 10;               this.width =  function(a){ if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var height = 10;              this.height = function(a){ if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var scale = 1;                this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var font = defaultFontName;   this.font =   function(a){
-                                                if(a==undefined){return font;}
-                                                font = a == undefined || a === '' || vectorLibrary[font] == undefined ? defaultFontName : a;
-                                                points = vectorLibrary[font][character] == undefined ? vectorLibrary[font][''].vector : vectorLibrary[font][character].vector;
-                                                pointsChanged = true;
-                        
-                                                if(this.devMode){console.log(this.getAddress()+'::font');} 
-                                                computeExtremities(); 
-                                            };
-            var character = '';         this.character = function(a){
-                                            if(a==undefined){return character;} 
-                                            character = a; 
-                                            points = vectorLibrary[font][a] == undefined ? vectorLibrary[font][''].vector : vectorLibrary[font][a].vector;
-                                            pointsChanged = true;
+            var x = 0;                  this.x =      function(a){ if(a==undefined){return x;}      x = a;      if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var y = 0;                  this.y =      function(a){ if(a==undefined){return y;}      y = a;      if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var angle = 0;              this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var anchor = {x:0,y:0};     this.anchor = function(a){ if(a==undefined){return anchor;} anchor = a; if(this.devMode){console.log(this.getAddress()+'::anchor');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var width = 10;             this.width =  function(a){ if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var height = 10;            this.height = function(a){ if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var scale = 1;              this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+            var font = defaultFontName;
+                this.font = function(a){
+                    if(a==undefined){return font;}
+                    if(this.devMode){console.log(this.getAddress()+'::font');} 
 
-                                            if(this.devMode){console.log(this.getAddress()+'::character - '+a);}
-                                            if(this.stopAttributeStartedExtremityUpdate){return;} 
-                                            computeExtremities(); 
-                                        };
+                    font = vectorLibrary[a] == undefined ? defaultFontName : a;
+
+                    if(this.devMode){console.log(this.getAddress()+'::font - isLoaded:',vectorLibrary[font].isLoaded);} 
+                    if(!vectorLibrary[font].isLoaded){ setTimeout(function(){ self.font(font); },100,font); }
+
+                    producePoints();
+
+                    if(this.stopAttributeStartedExtremityUpdate){return;} 
+                    computeExtremities(); 
+                };
+            var character = '';
+                this.character = function(a){
+                    if(a==undefined){return character;} 
+                    if(this.devMode){console.log(this.getAddress()+'::character - '+a);}
+
+                    character = a; 
+                    producePoints();
+
+                    if(this.stopAttributeStartedExtremityUpdate){return;} 
+                    computeExtremities(); 
+                };
+            var printingMode = {
+                horizontal:'left', //left / middle / right
+                vertical:'bottom', //top  / middle / bottom
+            };
+                this.printingMode = function(a){
+                    if(a==undefined){return printingMode;} 
+                    printingMode = {
+                        horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
+                        vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
+                    };
+
+                    producePoints();
+
+                    if(this.stopAttributeStartedExtremityUpdate){return;} 
+                    computeExtremities(); 
+                };
 
     //addressing
         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
 
     //character data
-        this.ratio = function(){
-            if( vectorLibrary[font][character] == undefined || vectorLibrary[font][character].ratio == undefined ){ return {x:1,y:1}; }
-            return {
-                x:vectorLibrary[font][character].ratio.x != undefined ? vectorLibrary[font][character].ratio.x : 1,
-                y:vectorLibrary[font][character].ratio.y != undefined ? vectorLibrary[font][character].ratio.y : 1,
-            };
-        };
-        this.offset = function(){
-            if( vectorLibrary[font][character] == undefined || vectorLibrary[font][character].offset == undefined ){ return {x:0,y:0}; }
-            return {
-                x:vectorLibrary[font][character].offset.x != undefined ? vectorLibrary[font][character].offset.x : 0,
-                y:vectorLibrary[font][character].offset.y != undefined ? vectorLibrary[font][character].offset.y : 0,
-            };
-        };
-        this.encroach = function(a){
-            if( 
-                vectorLibrary[font][character] == undefined || 
-                vectorLibrary[font][character].encroach == undefined ||
-                vectorLibrary[font][character].encroach[a] == undefined
-            ){ return 0; }
-            return vectorLibrary[font][character].encroach[a];
-        };
+        this.top = function(){ return vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].top; };
+        this.bottom = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].bottom; };
+        this.left = function(){ return vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].left; };
+        this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
+        function producePoints(){            
+            points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
+
+            //adjust for vertical printingMode
+                var horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;
+                if(printingMode.horizontal == 'middle'){ horizontalAdjust = horizontalAdjust/2; }
+                if(printingMode.horizontal != 'left'){
+                    for(var a = 0; a < points.length; a+=2){
+                        points[a] = points[a] - horizontalAdjust;
+                    }
+                }
+
+            //adjust for horizontal printingMode
+                var verticalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].top;
+                if(printingMode.vertical == 'middle'){ verticalAdjust = verticalAdjust/2; }
+                if(printingMode.vertical != 'bottom'){
+                    for(var a = 0; a < points.length; a+=2){
+                        points[a+1] = points[a+1] - verticalAdjust;
+                    }
+                }
+
+            pointsChanged = true;
+        }
 
     //webGL rendering functions
+        var pointsChanged = true;
         var points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
         var vertexShaderSource = 
             _canvas_.library.gsls.geometry + `
@@ -224,21 +253,3 @@ this.character = function(){
                 if(self.dotFrame){drawDotFrame();}
         };
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-this.character.vectorLibrary = {};
-{{include:characterFonts/*}} /**/

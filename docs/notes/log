@@ -1,4 +1,74 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-04-20
+  - fixed basic mixer (was using the wrong name for something)
+  - fixed issue with One Shot (Multi) and One Shot (Multi)(8-Track) where the
+    playhead didn't line up with what was heard when the region was
+    set. Fixed it by replacing the math used to calculate the step size of the
+    play head (changed some other things along the way, little things like
+    removing pointless math and adding comments)
+  - removed old character and characterString code
+  - removed old characterFonts and renamed advancedFonts to characterFonts
+
+  bugs
+  - cables don't line up over the connection nodes when the nodes are rotated
+
+
+2019-04-19
+  - updated "extractGlyphs" to do a little normalization on the glyphs as a font
+    is loaded
+  - added some Helvetica fonts
+  - added Arial font
+  - added ability to adjust inter character spacing
+  - updated layers to use the new font system (pretty nice so far)
+
+  notes
+  - I've just no idea what the data returned from opentype is about when it
+    comes to kerning, so I'm leaving it for now. It's only really visible in the
+    more flamboyant fonts
+
+  bugs
+  - I don't think the basic mixer is doing its job correctly
+
+
+2019-04-18
+  - things are looking pretty good on the whole font front. I have new library
+    code for converting the files into usable data (in a new section of the
+    library called library.font) There's also new character and characterString
+    shapes which use them (which are a little better than the old ones, I think)
+  - expanding the system's ability to accept new fonts, I tried out something
+    called "Cute Font" which mostly works..a couple of the letters seem to be
+    inverted. Lobster is working great though :D
+  - also expanded one of the core test, so one can easily look through all the
+    different characters of a font
+  - changed "getTrianglesFromGlyphPath" to now reorder the glyph paths to sort
+    them by size, before determining which is a hole. Which means "Cute Font"
+    is working now
+
+
+2019-04-17
+  - gonna lose your mind in detroit; font city (working on core shapes)
+
+
+2019-04-16
+  - even more font work
+ 
+
+2019-04-15
+  - font work continued (rolling things together into nicer chunks)
+
+
+2019-04-10
+  - font work continued
+
+
+2019-04-09
+  - more font work
+
+
+2019-04-08
+  - font work
+
+
 2019-04-05
   notes
   - more looking at the font thing...it's complicated, but I think it can be
@@ -7,6 +77,7 @@
     and decoding the bézier curves) and hand that data to earcut, which will
     return the triangles. It will need a new character shape (and probably a
     new characterString shape)
+
 
 2019-04-04
   notes

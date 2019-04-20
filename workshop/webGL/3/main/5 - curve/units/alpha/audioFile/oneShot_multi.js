@@ -32,12 +32,12 @@ this.oneShot_multi = function(x,y,a){
             {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
 
             //connection nodes
-            {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_data', name:'trigger', data:{
-                x:220, y:17.5, width:10, height:20,
-                onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
-            }},
+                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                {type:'connectionNode_data', name:'trigger', data:{
+                    x:220, y:17.5, width:10, height:20,
+                    onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
+                }},
 
             //symbol
                 {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour, thickness:style.markings.thickness }},
@@ -65,6 +65,7 @@ this.oneShot_multi = function(x,y,a){
                         //determine start, end and duration values
                             var start = waveport.area().A != undefined ? waveport.area().A : 0;
                             var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                            if(start > end){var tmp = start; start = end; end = tmp;} //the 'ol switcheroo
                             var duration = filePlayer.duration();
 
                             var startTime = start*duration;
@@ -80,38 +81,35 @@ this.oneShot_multi = function(x,y,a){
 
                         //flash light
                             object.elements.glowbox_rect.glowbox_rect.on();
-                            setTimeout(
-                                function(){
-                                    object.elements.glowbox_rect.glowbox_rect.off();
-                                }
-                            ,100);
+                            setTimeout(object.elements.glowbox_rect.glowbox_rect.off, 100);
 
                         //perform graphical movements
                             needles[needleNumber].previousPosition = undefined;
-                            needles[needleNumber].currentPosition = startTime/duration;
-                            needles[needleNumber].endPosition = startTime/duration + subduration/duration;
+                            needles[needleNumber].currentPosition = start;
+                            needles[needleNumber].endPosition = end;
 
                             var desiredIntervalTime = 10;
-                            var step = desiredIntervalTime/(subduration*1000)
-                            needles[needleNumber].needleInterval = setInterval(function(){
+                            var step = (desiredIntervalTime*(end-start))/(subduration*1000);
+                            needles[needleNumber].needleInterval = setInterval(function(nN){
                                 //remove previous mark
-                                    if(needles[needleNumber].previousPosition != undefined){
-                                        waveport.mark(needles[needleNumber].currentPosition);
+                                    if(needles[nN].previousPosition != undefined){
+                                        waveport.mark(needles[nN].currentPosition);
                                     }
 
-                                needles[needleNumber].previousPosition = needles[needleNumber].currentPosition;
-                                needles[needleNumber].currentPosition += step;
+                                //update position
+                                    needles[nN].previousPosition = needles[nN].currentPosition;
+                                    needles[nN].currentPosition += step;
 
                                 //add new mark
-                                waveport.mark(needles[needleNumber].currentPosition);
+                                    waveport.mark(needles[nN].currentPosition);
 
                                 //check for ending
-                                    if( needles[needleNumber].currentPosition > needles[needleNumber].endPosition ){
-                                        waveport.mark(needles[needleNumber].currentPosition);
-                                        clearInterval(needles[needleNumber].needleInterval);
+                                    if( needles[nN].currentPosition > needles[nN].endPosition ){
+                                        waveport.mark(needles[nN].currentPosition);
+                                        clearInterval(needles[nN].needleInterval);
+                                        delete needles[nN];
                                     }
-
-                            },desiredIntervalTime);
+                            },desiredIntervalTime,needleNumber);
                     },
                 }},
                 {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,

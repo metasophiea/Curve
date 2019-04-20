@@ -13,6 +13,9 @@ _canvas_.library = new function(){
     this.audio = new function(){
         {{include:audio.js}}
     };
+    this.font = new function(){
+        {{include:font.js}}
+    };
     this.misc = new function(){
         {{include:misc.js}}
     };

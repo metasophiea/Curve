@@ -7,9 +7,9 @@ this.audio_meter_level = function(
     backingStyle={r:0.04,g:0.04,b:0.04,a:1},
     levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.3,g:0.3,b:0.3,a:1}],
     markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
-    markingStyle_font='Courier New',
-    markingStyle_printingMode='absolute',
-    markingStyle_size=1,
+    markingStyle_font='Roboto-Regular',
+    markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
+    markingStyle_size=2,
 ){
     //elements
         //main

@@ -14,7 +14,8 @@ this.list = function(
     text_font = 'Arial',
     text_size=2.5,
     text_colour = {r:0/255,g:0/255,b:0/255,a:1},
-    text_spacing=0.1,
+    text_spacing=0.1, 
+    text_interCharacterSpacing=0,
 
     item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
     item__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
@@ -137,6 +138,7 @@ this.list = function(
                                     text_size:text_size,
                                     text_colour:text_colour,
                                     text_spacing:text_spacing,
+                                    text_interCharacterSpacing:text_interCharacterSpacing,
 
                                     background__off__colour:                            item__off__colour,
                                     background__off__lineColour:                        item__off__lineColour,

@@ -1,4 +1,6 @@
 this.character.vectorLibrary.defaultThick = {
+    isLoaded:true,
+    'default':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ]) },
     '':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ]) },
 
 
@@ -276,3 +278,39 @@ this.character.vectorLibrary.defaultThick = {
         ratio:{x:0.45},
     },
 };
+
+//correct font to be compatible with the new way of fonting
+reducedGlyphSet.forEach(key => {
+    //generate limits
+        this.character.vectorLibrary.defaultThick[key].top = this.character.vectorLibrary.defaultThick[key].ratio != undefined && this.character.vectorLibrary.defaultThick[key].ratio.y != undefined ? -this.character.vectorLibrary.defaultThick[key].ratio.y : -1;
+        this.character.vectorLibrary.defaultThick[key].right = this.character.vectorLibrary.defaultThick[key].ratio != undefined && this.character.vectorLibrary.defaultThick[key].ratio.x != undefined ? this.character.vectorLibrary.defaultThick[key].ratio.x + 0.1 : 1.1;
+        this.character.vectorLibrary.defaultThick[key].bottom = 0;
+        this.character.vectorLibrary.defaultThick[key].left = 0;
+
+    //adjust for ratio and offset
+        for(var a = 0; a < this.character.vectorLibrary.defaultThick[key].vector.length; a+=2){
+            //ratio correction
+                if( this.character.vectorLibrary.defaultThick[key].ratio != undefined ){
+                    if(this.character.vectorLibrary.defaultThick[key].ratio.x != undefined){
+                        this.character.vectorLibrary.defaultThick[key].vector[a] *= this.character.vectorLibrary.defaultThick[key].ratio.x;
+                    }
+                    if(this.character.vectorLibrary.defaultThick[key].ratio.y != undefined){
+                        this.character.vectorLibrary.defaultThick[key].vector[a+1] *= this.character.vectorLibrary.defaultThick[key].ratio.y;
+                    }
+                }
+            //offset correction
+                if( this.character.vectorLibrary.defaultThick[key].offset != undefined ){
+                    if(this.character.vectorLibrary.defaultThick[key].offset.x != undefined){
+                        this.character.vectorLibrary.defaultThick[key].vector[a] += this.character.vectorLibrary.defaultThick[key].offset.x;
+                    }
+                    if(this.character.vectorLibrary.defaultThick[key].offset.y != undefined){
+                        this.character.vectorLibrary.defaultThick[key].vector[a+1] += this.character.vectorLibrary.defaultThick[key].offset.y;
+                    }
+                }
+        }
+
+    //flip y axis
+        for(var a = 0; a < this.character.vectorLibrary.defaultThick[key].vector.length; a+=2){
+            this.character.vectorLibrary.defaultThick[key].vector[a+1] -= 1;
+        }
+});

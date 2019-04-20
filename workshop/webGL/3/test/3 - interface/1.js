@@ -4,9 +4,9 @@ _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
 // //view positioning
-// _canvas_.core.viewport.scale(0.5);
-// var x = 500;
-// var y = -400;
+// _canvas_.core.viewport.scale(5);
+// var x = 550;
+// var y = 280;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // // _canvas_.core.viewport.angle(-0.1);
 

@@ -2,10 +2,12 @@ var core = this;
 
 _canvas_.setAttribute('tabIndex',1);
 
+this.devMode = false;
+
 this.shape = new function(){
     this.library = new function(){
         const library = this;
-        {{include:shapes/*}} */
+        {{include:shapes/main.js}}
     };
 
     this.checkShape = function(name,shape){
