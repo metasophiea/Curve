@@ -275,20 +275,19 @@ this.getUnitsWithinPoly = function(points){
 };
 
 this.rectifyUnitPosition = function(unit){
-    return false;
-    // //control switch
-    //     if(!_canvas_.control.interaction.enableUnitCollision()){return;}
+    //control switch
+        if(!_canvas_.control.interaction.enableUnitCollision()){return;}
 
-    // //discover if there's an overlap; if not skip all this
-    //     var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit).map(a => { return a.space; });
-    //     if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
+    //discover if there's an overlap; if not skip all this
+        var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit).map(a => { return a.space; });
+        if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
 
-    // //get the offset which will allow this unit to fit
-    //     var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits );
+    //get the offset which will allow this unit to fit
+        var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits );
         
-    // //apply offset
-    //     unit.parameter.x( unit.parameter.x() + offset.x);
-    //     unit.parameter.y( unit.parameter.y() + offset.y);
+    //apply offset
+        unit.x(unit.x() + offset.x);
+        unit.y(unit.y() + offset.y);
     
-    // return true; //false: no change was made - true: a change was made
+    return true; //false: no change was made - true: a change was made
 };

@@ -1,5 +1,12 @@
+// var ar_1 = [1,9,5,3];
+// var ar_2 = [1,2,3,4,5,6,7,8,9,10];
+// console.log( _canvas_.library.math.removeTheseElementsFromThatArray(ar_1,ar_2) );
+// console.log(ar_1,ar_2);
+
+
+
 console.log('library.misc tests');
 
-console.log('loadFileFromURL');
+// console.log('loadFileFromURL');
 // console.log( _canvas_.library.misc.loadFileFromURL('http://0.0.0.0:8000/docs/notes/log',console.log) );
 // console.log( _canvas_.library.misc.loadFileFromURL('http://0.0.0.0:8000/docs/images/waveforms.png',console.log) );

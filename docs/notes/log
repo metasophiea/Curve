@@ -1,4 +1,16 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-04-21
+  - started putting the old library tests back in
+  - put the old system tests in
+  - put 'fitPolyIn' back into the library, and re activated unit collision
+    (still needs a little work, but that's outside the reactivation)
+
+  ideas
+  - auto kerning? It wouldn't be able to do intersecting (like with lobster) but
+    it could do alot anyway
+  - need to fill out the tests
+
+
 2019-04-20
   - fixed basic mixer (was using the wrong name for something)
   - fixed issue with One Shot (Multi) and One Shot (Multi)(8-Track) where the

@@ -62,7 +62,7 @@ _canvas_.control = new function(){
                 enableUnitInteractable = bool;
                 control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
             };
-            var enableUnitCollision = !true;
+            var enableUnitCollision = true;
             this.enableUnitCollision = function(bool){
                 if(bool==undefined){return enableUnitCollision;}
                 if(devMode){return;}

@@ -1,4 +1,4 @@
-// {{include:tester.js}}
+{{include:tester.js}}
 
 // -- Only one test per time -- //
 // {{include:0 - library/main.js}}

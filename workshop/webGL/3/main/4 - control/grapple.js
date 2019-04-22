@@ -141,8 +141,8 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                                 unit.x(newUnitPosition.x);
                                 unit.y(newUnitPosition.y);
 
-                            // //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                            //     _canvas_.control.scene.rectifyUnitPosition(unit);
+                            //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                                _canvas_.control.scene.rectifyUnitPosition(unit);
 
                             //perform all redraws and updates for unit
                                 if( unit.onmove ){unit.onmove();}
