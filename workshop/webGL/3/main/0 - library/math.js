@@ -116,7 +116,7 @@ this.curveGenerator = new function(){
             outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
         }
 
-        outputArray = system.utility.math.normalizeStretchArray(outputArray);
+        outputArray = library.math.normalizeStretchArray(outputArray);
 
         var mux = end-start;
         for(var a = 0 ; a < outputArray.length; a++){

@@ -5,8 +5,8 @@ _canvas_.core.render.active(true);
 
 // //view positioning
 // _canvas_.core.viewport.scale(5);
-// var x = 550;
-// var y = 280;
+// var x = 10;
+// var y = 550;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // // _canvas_.core.viewport.angle(-0.1);
 
@@ -305,3 +305,7 @@ _canvas_.core.render.active(true);
     cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
     cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
     cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
+
+    var cn_reg_4 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode5', { x:50,  y:150, angle:Math.PI*0.25 } ); dynamicGroup.append( cn_reg_4 );
+    var cn_reg_5 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode6', { x:100, y:150, angle:Math.PI*0.25 } ); dynamicGroup.append( cn_reg_5 );
+    cn_reg_4.connectTo(cn_reg_5);

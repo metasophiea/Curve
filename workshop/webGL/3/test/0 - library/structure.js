@@ -244,3 +244,5 @@ console.log('%cTesting - library.structure.signalRegistry', 'font-size:15px; fon
             signalRegistry.update(0,{position:100,length:100});
             tester(signalRegistry.getAllSignals(), [{line:0, position:64, length:0, strength:1}]);
             tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 64, strength: 1},{signalID: 0, line: 0, position: 64, strength: 0}]);
+
+console.log('');

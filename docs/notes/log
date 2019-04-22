@@ -1,14 +1,18 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
-2019-04-21
+2019-04-22
   - started putting the old library tests back in
   - put the old system tests in
   - put 'fitPolyIn' back into the library, and re activated unit collision
     (still needs a little work, but that's outside the reactivation)
+  - tried to fix the connection node rotation thing
 
   ideas
   - auto kerning? It wouldn't be able to do intersecting (like with lobster) but
     it could do alot anyway
   - need to fill out the tests
+
+  bugs
+  - rotating units and unit collision doesn't play well together
 
 
 2019-04-20

@@ -1,4 +1,4 @@
-console.log('%cTesting - system.library.math.fitPolyIn', 'font-size:15px; font-weight:bold;');
+console.log('%cTesting - library.math.fitPolyIn', 'font-size:15px; font-weight:bold;');
 {{include:../../main/1 - core/main.js}}
 
 
@@ -122,3 +122,5 @@ var sceneValues = {
 
 //actual render
     _canvas_.core.render.frame();
+
+console.log('');

@@ -110,8 +110,12 @@ this.connectionNode = function(
             cable = undefined;
         };
         object.getCablePoint = function(){
-            var offset = object.getOffset();
-            return _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x + (width*offset.scale)/2, offset.y + (height*offset.scale)/2 );
+            var offset = object.getOffset(); 
+
+            var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
+            var collectedAngle = angle + Math.atan( height/width );
+
+            return _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x+(diagonalLength*Math.cos(collectedAngle)), offset.y+(diagonalLength*Math.sin(collectedAngle)) );
         };
         object.draw = function(){
             if( cable == undefined ){return;}
