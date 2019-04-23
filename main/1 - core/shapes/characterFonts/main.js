@@ -1,6 +1,6 @@
 this.character.vectorLibrary = {};
 const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%'.split('');
-const fontFilesLocation = 'http://0.0.0.0:8000/workshop/webGL/3/main/1%20-%20core/shapes/characterFonts/';
+const fontFilesLocation = 'https://0.0.0.0:8000/workshop/webGL/3/main/1%20-%20core/shapes/characterFonts/';
 const fontFileNames = [
     'Roboto/Roboto-Regular.ttf',
     'Roboto/Roboto-Italic.ttf',
