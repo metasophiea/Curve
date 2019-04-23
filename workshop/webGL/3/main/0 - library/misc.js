@@ -111,7 +111,10 @@ this.loadFileFromURL = function(URL,callback,responseType='blob'){
     //responseType: text / arraybuffer / blob / document / json 
 
     var xhttp = new XMLHttpRequest();
-    if(callback != null){ xhttp.onloadend = a => { callback(a.target.response); }; }
+    if(callback != null){ xhttp.onloadend = a => { 
+        if(a.target.status == 200){ callback(a.target.response); }
+        else{ console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL); }
+    }; }
     xhttp.open('get',URL,true);
     xhttp.responseType = responseType;
     xhttp.send();

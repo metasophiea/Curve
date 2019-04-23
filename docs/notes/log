@@ -1,4 +1,12 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-04-23
+  - fixed rotated unit collision (the way it was calculating the unit space was
+    wrong)
+  - fixed the connectionNode angle thing (I was using the wrong 'angle' value)
+  - slightly improved the needleOverlay selection area resizing mouse situation
+  - i think it's time...
+
+
 2019-04-22
   - started putting the old library tests back in
   - put the old system tests in

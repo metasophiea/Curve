@@ -5,8 +5,8 @@ _canvas_.core.render.active(true);
 
 // //view positioning
 // _canvas_.core.viewport.scale(5);
-// var x = 10;
-// var y = 550;
+// var x = 832.5;
+// var y = 300;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // // _canvas_.core.viewport.angle(-0.1);
 
@@ -248,17 +248,17 @@ _canvas_.core.render.active(true);
             uncheckURL:'http://0.0.0.0:8000/workshop/webGL/testImages/Dore-munchausen-illustration.jpg',
             checkURL:'http://0.0.0.0:8000/workshop/webGL/testImages/mikeandbrian.jpg',
         } ); controlGroup.append(ci_1);
-        var ras_1 = _canvas_.interface.part.builder( 'rastorgrid', 'test_rastorgrid1', {x:740,y:0} ); controlGroup.append(ras_1);
-        var no = _canvas_.interface.part.builder( 'needleOverlay', 'test_needleOverlay1', {x:822.5,y:0} );
-            controlGroup.append( no );
-            no.select(0.25);
-            no.area(0.5,0.75);
-            no.mark(0.1);
-            no.mark(0.1);
-        var gww = _canvas_.interface.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:945,y:0} );
-            controlGroup.append( gww );
-            gww.select(0.2);
-            gww.area(0.5,0.7);
+    var ras_1 = _canvas_.interface.part.builder( 'rastorgrid', 'test_rastorgrid1', {x:740,y:0} ); controlGroup.append(ras_1);
+    var no = _canvas_.interface.part.builder( 'needleOverlay', 'test_needleOverlay1', {x:822.5,y:0} );
+        controlGroup.append( no );
+        no.select(0.25);
+        no.area(0.5,0.75);
+        no.mark(0.1);
+        no.mark(0.1);
+    var gww = _canvas_.interface.part.builder( 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:945,y:0} );
+        controlGroup.append( gww );
+        gww.select(0.2);
+        gww.area(0.5,0.7);
     var seq = _canvas_.interface.part.builder( 'sequencer', 'test_sequencer1', {x:1067.5,y:0,zoomLevel_x:1/2} );
         controlGroup.append( seq );
         seq.addSignal( 0,0,  10,0.0 );
@@ -306,6 +306,6 @@ _canvas_.core.render.active(true);
     cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
     cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
 
-    var cn_reg_4 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode5', { x:50,  y:150, angle:Math.PI*0.25 } ); dynamicGroup.append( cn_reg_4 );
+    var cn_reg_4 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode5', { x:50,  y:150, angle:Math.PI*0.15 } ); dynamicGroup.append( cn_reg_4 );
     var cn_reg_5 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode6', { x:100, y:150, angle:Math.PI*0.25 } ); dynamicGroup.append( cn_reg_5 );
     cn_reg_4.connectTo(cn_reg_5);

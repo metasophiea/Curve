@@ -1338,7 +1338,10 @@
                             //responseType: text / arraybuffer / blob / document / json 
                         
                             var xhttp = new XMLHttpRequest();
-                            if(callback != null){ xhttp.onloadend = a => { callback(a.target.response); }; }
+                            if(callback != null){ xhttp.onloadend = a => { 
+                                if(a.target.status == 200){ callback(a.target.response); }
+                                else{ console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL); }
+                            }; }
                             xhttp.open('get',URL,true);
                             xhttp.responseType = responseType;
                             xhttp.send();
@@ -22518,7 +22521,7 @@
                                 };
                                 this.needleOverlay = function(
                                     name='needleOverlay',
-                                    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9), selectNeedle=true, selectionArea=true,
+                                    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9-1), selectNeedle=true, selectionArea=true,
                                     needleStyles=[
                                         {r:0.94,g:0.94,b:0.94,a:1},
                                         {r:1,g:0.9,b:0.44,a:1},
@@ -22764,6 +22767,7 @@
                                             };
                                 
                                             controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+                                            controlObjects.selection_A.getChildByName('invisibleHandle').onmousemove = function(event){_canvas_.core.viewport.cursor('col-resize');};
                                             controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
                                             controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(event){
                                                 if(!interactable){return;}
@@ -22797,6 +22801,7 @@
                                             };
                                 
                                             controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+                                            controlObjects.selection_B.getChildByName('invisibleHandle').onmousemove = function(event){_canvas_.core.viewport.cursor('col-resize');};
                                             controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
                                             controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(event){
                                                 if(!interactable){return;}
@@ -22830,6 +22835,7 @@
                                             };
                                 
                                             controlObjects.selection_area.onmouseenter = function(event){_canvas_.core.viewport.cursor('grab');};
+                                            controlObjects.selection_area.onmousemove = function(event){_canvas_.core.viewport.cursor('grab');};
                                             controlObjects.selection_area.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
                                             controlObjects.selection_area.onmousedown = function(event){
                                                 if(!interactable){return;}
@@ -30511,7 +30517,7 @@
                                             var offset = object.getOffset(); 
                                 
                                             var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
-                                            var collectedAngle = angle + Math.atan( height/width );
+                                            var collectedAngle = offset.angle + Math.atan( height/width );
                                 
                                             return _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x+(diagonalLength*Math.cos(collectedAngle)), offset.y+(diagonalLength*Math.sin(collectedAngle)) );
                                         };
@@ -31336,7 +31342,12 @@
                                 unit.space = {};
                                 unit.space.originalPoints = design.space;
                                 function generatePersonalSpace(){
-                                    unit.space.points = design.space.map(a => _canvas_.library.math.cartesianAngleAdjust(a.x+design.x,a.y+design.y,unit.angle()) );
+                                    unit.space.points = design.space.map(a => {
+                                        var tmp = _canvas_.library.math.cartesianAngleAdjust(a.x,a.y,unit.angle())
+                                        tmp.x += design.x;
+                                        tmp.y += design.y;
+                                        return tmp;
+                                    } );
                                     unit.space.boundingBox = _canvas_.library.math.boundingBoxFromPoints(unit.space.points);
                         
                                     //create invisible space shape
@@ -31352,7 +31363,7 @@
                         
                                 //if requested, add an outline shape
                                     if( design.spaceOutline ){
-                                        unit.append( _canvas_.interface.part.builder( 'polygonWithOutline', spaceName+'Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
+                                        unit.append( _canvas_.interface.part.builder( 'polygonWithOutline', 'unit.space.shape'+'_Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
                                     }
                         
                             //augment unit x, y and angle adjustment methods

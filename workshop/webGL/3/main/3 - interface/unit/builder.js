@@ -93,7 +93,12 @@ this.builder = function(creatorMethod,design){
         unit.space = {};
         unit.space.originalPoints = design.space;
         function generatePersonalSpace(){
-            unit.space.points = design.space.map(a => _canvas_.library.math.cartesianAngleAdjust(a.x+design.x,a.y+design.y,unit.angle()) );
+            unit.space.points = design.space.map(a => {
+                var tmp = _canvas_.library.math.cartesianAngleAdjust(a.x,a.y,unit.angle())
+                tmp.x += design.x;
+                tmp.y += design.y;
+                return tmp;
+            } );
             unit.space.boundingBox = _canvas_.library.math.boundingBoxFromPoints(unit.space.points);
 
             //create invisible space shape
@@ -109,7 +114,7 @@ this.builder = function(creatorMethod,design){
 
         //if requested, add an outline shape
             if( design.spaceOutline ){
-                unit.append( _canvas_.interface.part.builder( 'polygonWithOutline', spaceName+'Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
+                unit.append( _canvas_.interface.part.builder( 'polygonWithOutline', 'unit.space.shape'+'_Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
             }
 
     //augment unit x, y and angle adjustment methods
