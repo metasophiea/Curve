@@ -2,21 +2,21 @@ this.grapher_audioScope_static = function(
     name='grapher_audioScope_static',
     x, y, width=120, height=60, angle=0,
 
-    foregroundStyle={stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-    foregroundTextStyle={fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
+    foregroundStyle={colour:{r:0,g:1,b:0,a:1}, thickness:0.5},
+    foregroundTextStyle={colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
 
-    backgroundStyle_stroke='rgba(0,100,0,1)',
-    backgroundStyle_lineWidth=0.25,
-    backgroundTextStyle_fill='rgba(0,150,0,1)',
+    backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+    backgroundStyle_lineThickness=0.5,
+    backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
     backgroundTextStyle_size=0.1,
     backgroundTextStyle_font='Helvetica',
 
-    backingStyle='rgba(50,50,50,1)',
+    backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 ){
     //attributes
         var attributes = {
             analyser:{
-                analyserNode: workspace.library.audio.context.createAnalyser(),
+                analyserNode: _canvas_.library.audio.context.createAnalyser(),
                 timeDomainDataArray: null,
                 frequencyData: null,
                 refreshRate: 10,
@@ -37,13 +37,15 @@ this.grapher_audioScope_static = function(
         //grapher
             var grapher = interfacePart.builder('grapher_static',name,{
                 x:0, y:0, width:width, height:height,
-                foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
-                backgroundStyle_stroke:backgroundStyle_stroke, 
-                backgroundStyle_lineWidth:backgroundStyle_lineWidth,
-                backgroundTextStyle_fill:backgroundTextStyle_fill, 
-                backgroundTextStyle_size:backgroundTextStyle_size,
-                backgroundTextStyle_font:backgroundTextStyle_font,
-                backingStyle:backingStyle,
+                style:{
+                    foregrounds:[foregroundStyle], foregroundText:[foregroundTextStyle],
+                    background_colour:backgroundStyle_colour, 
+                    background_lineThickness:backgroundStyle_lineThickness,
+                    backgroundText_fill:backgroundTextStyle_fill, 
+                    backgroundText_size:backgroundTextStyle_size,
+                    backgroundText_font:backgroundTextStyle_font,
+                    backing:backingStyle,
+                }
             });
             object.append(grapher);
 

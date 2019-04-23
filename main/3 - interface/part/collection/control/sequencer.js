@@ -5,47 +5,48 @@ this.sequencer = function(
     xCount=64, yCount=16,
     zoomLevel_x=1/1, zoomLevel_y=1/1,
 
-    backingStyle='rgba(20,20,20,1)',
-    selectionAreaStyle='rgba(209, 189, 222, 0.5)',
+    backingStyle={r:20/255,g:20/255,b:20/255,a:1},
+    selectionAreaStyle={r:209/255,g:189/255,b:222/255,a:0.5},
 
     signalStyle_body=[
-        {fill:'rgba(138,138,138,0.6)', stroke:'rgba(175,175,175,0.95)', lineWidth:0.5},
-        {fill:'rgba(130,199,208,0.6)', stroke:'rgba(130,199,208,0.95)', lineWidth:0.5},
-        {fill:'rgba(129,209,173,0.6)', stroke:'rgba(129,209,173,0.95)', lineWidth:0.5},
-        {fill:'rgba(234,238,110,0.6)', stroke:'rgba(234,238,110,0.95)', lineWidth:0.5},
-        {fill:'rgba(249,178,103,0.6)', stroke:'rgba(249,178,103,0.95)', lineWidth:0.5},
-        {fill:'rgba(255, 69, 69,0.6)', stroke:'rgba(255, 69, 69,0.95)', lineWidth:0.5},
+        {colour:{r:138/255,g:138/255,b:138/255,a:0.6}, lineColour:{r:175,g:175/255,b:175/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:130/255,g:199/255,b:208/255,a:0.6}, lineColour:{r:130,g:199/255,b:208/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:129/255,g:209/255,b:173/255,a:0.6}, lineColour:{r:129,g:209/255,b:173/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:234/255,g:238/255,b:110/255,a:0.6}, lineColour:{r:234,g:238/255,b:110/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:249/255,g:178/255,b:103/255,a:0.6}, lineColour:{r:249,g:178/255,b:103/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:255/255,g: 69/255,b: 69/255,a:0.6}, lineColour:{r:255,g: 69/255,b: 69/255,a:0.95}, lineThickness:0.5},
     ],
     signalStyle_bodyGlow=[
-        {fill:'rgba(138,138,138,0.8)', stroke:'rgba(175,175,175,1)', lineWidth:0.5},
-        {fill:'rgba(130,199,208,0.8)', stroke:'rgba(130,199,208,1)', lineWidth:0.5},
-        {fill:'rgba(129,209,173,0.8)', stroke:'rgba(129,209,173,1)', lineWidth:0.5},
-        {fill:'rgba(234,238,110,0.8)', stroke:'rgba(234,238,110,1)', lineWidth:0.5},
-        {fill:'rgba(249,178,103,0.8)', stroke:'rgba(249,178,103,1)', lineWidth:0.5},
-        {fill:'rgba(255, 69, 69,0.8)', stroke:'rgba(255, 69, 69,1)', lineWidth:0.5},
+        {colour:{r:138/255,g:138/255,b:138/255,a:0.8}, lineColour:{r:175/255,g:175/255,b:175/255,a:1}, lineThickness:0.5},
+        {colour:{r:130/255,g:199/255,b:208/255,a:0.8}, lineColour:{r:130/255,g:199/255,b:208/255,a:1}, lineThickness:0.5},
+        {colour:{r:129/255,g:209/255,b:173/255,a:0.8}, lineColour:{r:129/255,g:209/255,b:173/255,a:1}, lineThickness:0.5},
+        {colour:{r:234/255,g:238/255,b:110/255,a:0.8}, lineColour:{r:234/255,g:238/255,b:110/255,a:1}, lineThickness:0.5},
+        {colour:{r:249/255,g:178/255,b:103/255,a:0.8}, lineColour:{r:249/255,g:178/255,b:103/255,a:1}, lineThickness:0.5},
+        {colour:{r:255/255,g: 69/255,b: 69/255,a:0.8}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:1}, lineThickness:0.5},
     ],    
-    signalStyle_handle='rgba(200,0,0,0)',
+    signalStyle_handle={r:200/255,g:0/255,b:0/255,a:0},
     signalStyle_handleWidth=3,
 
     horizontalStripStyle_pattern=[0,1],
-    horizontalStripStyle_glow={fill:'rgba(120,120,120,0.8)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
+    horizontalStripStyle_glow={colour:{r:120/255,g:120/255,b:120/255,a:0.8}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
     horizontalStripStyle_styles=[
-        {fill:'rgba(120,120,120,0.5)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
-        {fill:'rgba(100,100,100,  0)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
+        {colour:{r:120/255,g:120/255,b:120/255,a:0.5}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
+        {colour:{r:100/255,g:100/255,b:100/255,a:0.0}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
     ],
     verticalStripStyle_pattern=[0],
-    verticalStripStyle_glow={fill:'rgba(229, 221, 112,0.25)', stroke:'rgba(252,244,128,0.5)', lineWidth:0.5},
+    verticalStripStyle_glow={colour:{r:229/255,g: 221/255,b: 112/255,a:0.25}, lineColour:{r:252/255,g:244/255,b:128/255,a:0.5}, lineThickness:0.5},
     verticalStripStyle_styles=[
-        {fill:'rgba(30,30,30,0.5)', stroke:'rgba(120,120,120,1)', lineWidth:0.5},
+        {colour:{r:30/255,g:30/255,b:30/255,a:0.5}, lineColour:{r:120/255,g:120/255,b:120/255,a:1}, lineThickness:0.5},
     ],
 
-    playheadStyle='rgb(240, 240, 240)',
+    playheadStyle={r:240/255,g: 240/255,b: 240/255, a:1},
 
     onpan=function(data){},
     onchangeviewarea=function(data){},
     event=function(events){},
 ){
-    var _t = this;
+    var self = this;
+    var devMode = false;
 
     //settings
         const viewport = {
@@ -65,7 +66,7 @@ this.sequencer = function(
             defaultStrength: 0.5,
             selectedSignals: [],
             activeSignals: [],
-            signalRegistry: new workspace.library.structure.signalRegistry(xCount,yCount),
+            signalRegistry: new _canvas_.library.structure.signalRegistry(xCount,yCount),
         };
         const loop = {
             active:false, 
@@ -87,12 +88,12 @@ this.sequencer = function(
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //static backing
-            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
             object.append(backing);
         //viewport stencil
             var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
             object.stencil(stencil);
-            object.clip(true);
+            object.clipActive(true);
 
         //workarea
             var workarea = interfacePart.builder('group','workarea');
@@ -101,35 +102,37 @@ this.sequencer = function(
                 var backgroundDrawArea = interfacePart.builder('group','backgroundDrawArea');
                 workarea.append(backgroundDrawArea);
                 var backgroundDrawArea_horizontal = interfacePart.builder('group','backgroundDrawArea_horizontal');
+                backgroundDrawArea_horizontal.stopAttributeStartedExtremityUpdate = true;
                 backgroundDrawArea.append(backgroundDrawArea_horizontal);
                 var backgroundDrawArea_vertical = interfacePart.builder('group','backgroundDrawArea_vertical');
+                backgroundDrawArea_vertical.stopAttributeStartedExtremityUpdate = true;
                 backgroundDrawArea.append(backgroundDrawArea_vertical);
             //interaction pane back
-                var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
+                var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:1,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_back);
-                interactionPlane_back.onwheel = function(x,y,event){};
+                interactionPlane_back.onwheel = function(event){};
             //signal block area
                 var signalPane = interfacePart.builder('group','signalPane');
                 workarea.append(signalPane);
             //interaction pane front
-                var interactionPlane_front = interfacePart.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, style:{fill:'rgba(0,0,0,0)'}});
+                var interactionPlane_front = interfacePart.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_front);
-                interactionPlane_front.onwheel = function(x,y,event){};
+                interactionPlane_front.onwheel = function(event){};
     //internal
         object.__calculationAngle = angle;
         function currentMousePosition(event){
-            var workspacePoint = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-            var point = {
-                x: workspacePoint.x - backing.extremities.points[0].x, 
-                y: workspacePoint.y - backing.extremities.points[0].y,
+            var offset = object.getOffset();
+            var delta = {
+                x: event.X - (backing.x()     + offset.x),
+                y: event.Y - (backing.y()     + offset.y),
+                a: 0 - (backing.angle() + offset.angle),
             };
-            return {
-                x: (point.x*Math.cos(object.__calculationAngle) - point.y*Math.sin(object.__calculationAngle)) / width,
-                y: (point.y*Math.cos(object.__calculationAngle) - point.x*Math.sin(object.__calculationAngle)) / height,
-            };
+            var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a );
+
+            return { x:d.x/backing.width(), y:d.y/backing.height() };
         }
         function viewportPosition2internalPosition(xy){
-            return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y };
+            return {x: viewport.viewArea.topLeft.x + xy.x*zoomLevel_x, y:viewport.viewArea.topLeft.y + xy.y*zoomLevel_y};
         }
         function visible2coordinates(xy){
             return {
@@ -151,30 +154,30 @@ this.sequencer = function(
                 backgroundDrawArea_horizontal.clear();
                 for(var a = 0; a < yCount; a++){
                     var style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                    backgroundDrawArea_horizontal.append(
-                        interfacePart.builder( 'rectangle', 'strip_horizontal_'+a,
-                            {
-                                x:0, y:a*(height/(yCount*zoomLevel_y)),
-                                width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
-                                style:{ fill:style.fill, stroke:style.stroke, lineWidth:style.lineWidth }
-                            }
-                        )
+                    var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_horizontal_'+a,
+                        {
+                            x:0, y:a*(height/(yCount*zoomLevel_y)),
+                            width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
+                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                        }
                     );
+                    tmp.stopAttributeStartedExtremityUpdate = true;
+                    backgroundDrawArea_horizontal.append(tmp);
                 }
 
             //vertical strips
                 backgroundDrawArea_vertical.clear();
                 for(var a = 0; a < xCount; a++){
                     var style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                    backgroundDrawArea_vertical.append(
-                        interfacePart.builder( 'rectangle', 'strip_vertical_'+a,
-                            {
-                                x:a*(width/(xCount*zoomLevel_x)), y:0,
-                                width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
-                                style:{ fill:style.fill, stroke:style.stroke, lineWidth:style.lineWidth }
-                            }
-                        )
+                    var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_vertical_'+a,
+                        {
+                            x:a*(width/(xCount*zoomLevel_x)), y:0,
+                            width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
+                            colour:style.colour, lineColour:style.lineColour, thickness:style.lineThickness,
+                        }
                     );
+                    tmp.stopAttributeStartedExtremityUpdate = true;
+                    backgroundDrawArea_vertical.append(tmp);
                 }
         }
         function setViewposition(x,y,update=true){
@@ -189,16 +192,23 @@ this.sequencer = function(
             //perform transform
                 viewport.viewposition.x = x;
                 viewport.viewposition.y = y;
-                workarea.parameter.x( -viewport.viewposition.x*(viewport.totalSize.width - width) );
-                workarea.parameter.y( -viewport.viewposition.y*(viewport.totalSize.height - height) );
+                workarea.x( -viewport.viewposition.x*(viewport.totalSize.width - width) );
+                workarea.y( -viewport.viewposition.y*(viewport.totalSize.height - height) );
 
             //update viewport.viewArea
                 viewport.viewArea = {
                     topLeft:     { x:x - zoomLevel_x*x,     y:y - zoomLevel_y*y     },
                     bottomRight: { x:x + zoomLevel_x*(1-x), y:y + zoomLevel_y*(1-y) },
                 };
+
+            //callback
+                if(update){
+                    object.onpan(viewport.viewArea);
+                }
         }
         function adjustZoom(x,y){
+            if(devMode){console.log('\nsequencer::'+name+'::adjustZoom - start');}
+            
             if(x == undefined && y == undefined){return {x:zoomLevel_x, y:zoomLevel_y};}
             var maxZoom = 0.01;
 
@@ -216,35 +226,33 @@ this.sequencer = function(
                     viewport.totalSize.height = height/zoomLevel_y;
 
                 //update interactionPlane_back
-                    interactionPlane_back.parameter.width( viewport.totalSize.width );
-                    interactionPlane_back.parameter.height( viewport.totalSize.width );
+                    interactionPlane_back.width( viewport.totalSize.width );
+                    interactionPlane_back.height( viewport.totalSize.height );
 
                 //update interactionPlane_front
-                    interactionPlane_front.parameter.width( viewport.totalSize.width );
-                    interactionPlane_front.parameter.height( viewport.totalSize.width );
+                    interactionPlane_front.width( viewport.totalSize.width );
+                    interactionPlane_front.height( viewport.totalSize.height );
 
                 //update background strips
-                    for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
-                        backgroundDrawArea_vertical.children[a].parameter.width( width/(xCount*zoomLevel_x) );
-                        backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
-                    }
-                    for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children[a].parameter.y( a*(height/(yCount*zoomLevel_y)) );
-                        backgroundDrawArea_horizontal.children[a].parameter.height( height/(yCount*zoomLevel_y) );
-                        backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
-                    }
+                    backgroundDrawArea_vertical.children().forEach(function(item,index){
+                        item.x( index*(width/(xCount*zoomLevel_x)) );
+                        item.width( width/(xCount*zoomLevel_x) );
+                        item.height( viewport.totalSize.height );
+                    });
+                    backgroundDrawArea_horizontal.children().forEach(function(item,index){
+                        item.y( index*(height/(yCount*zoomLevel_y)) );
+                        item.height( height/(yCount*zoomLevel_y) );
+                        item.width( viewport.totalSize.width );
+                    });
 
                 //update signals
-                    for(var a = 0; a < signalPane.children.length; a++){
-                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y));
-                    }
+                    signalPane.children().forEach( item => item.unit(width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y)) );
 
                 //update playhead (if there is one)
                     if(playhead.present){
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].parameter.height(viewport.totalSize.height);
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].parameter.height(viewport.totalSize.height);
-                        workarea.getElementsWithName('playhead')[0].parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
+                        workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
                 }
             }else if( x != undefined && x != zoomLevel_x ){
                 //make sure things are between maxZoom and 1
@@ -255,27 +263,23 @@ this.sequencer = function(
                     viewport.totalSize.width = width/zoomLevel_x;
 
                 //update interactionPlane_back
-                    interactionPlane_back.parameter.width( viewport.totalSize.width );
+                    interactionPlane_back.width( viewport.totalSize.width );
                 //update interactionPlane_front
-                    interactionPlane_front.parameter.width( viewport.totalSize.width );
+                    interactionPlane_front.width( viewport.totalSize.width );
 
                 //update background strips
-                    for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children[a].parameter.x( a*(width/(xCount*zoomLevel_x)) );
-                        backgroundDrawArea_vertical.children[a].parameter.width( width/(xCount*zoomLevel_x) );
-                    }
-                    for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children[a].parameter.width( viewport.totalSize.width );
-                    }
+                    backgroundDrawArea_vertical.children().forEach(function(item,index){
+                        item.x( index*(width/(xCount*zoomLevel_x)) );
+                        item.width( width/(xCount*zoomLevel_x) );
+                    });
+                    backgroundDrawArea_horizontal.children().forEach( item => item.width( viewport.totalSize.width ) );
 
                 //update signals
-                    for(var a = 0; a < signalPane.children.length; a++){
-                        signalPane.children[a].unit(width/(xCount*zoomLevel_x), undefined);
-                    }
+                    signalPane.children().forEach( item => item.unit(width/(xCount*zoomLevel_x), undefined) );
 
                 //update playhead (if there is one)
                     if(playhead.present){
-                        workarea.getElementsWithName('playhead')[0].parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
+                        workarea.getChildByName('playhead').x( playhead.position*(viewport.totalSize.width/xCount) );
                     }
             }else if( y != undefined && y != zoomLevel_y ){
                 //make sure things are between maxZoom and 1
@@ -286,30 +290,28 @@ this.sequencer = function(
                     viewport.totalSize.height = height/zoomLevel_y;
 
                 //update interactionPlane_back
-                    interactionPlane_back.parameter.height( viewport.totalSize.width );
+                    interactionPlane_back.height( viewport.totalSize.height );
                 //update interactionPlane_front
-                    interactionPlane_front.parameter.height( viewport.totalSize.width );
+                    interactionPlane_front.height( viewport.totalSize.height );
 
                 //update background strips
-                    for(var a = 0; a < xCount; a++){
-                        backgroundDrawArea_vertical.children[a].parameter.height( viewport.totalSize.height );
-                    }
-                    for(var a = 0; a < yCount; a++){
-                        backgroundDrawArea_horizontal.children[a].parameter.y( a*(height/(yCount*zoomLevel_y)) );
-                        backgroundDrawArea_horizontal.children[a].parameter.height( height/(yCount*zoomLevel_y) );
-                    }
+                    backgroundDrawArea_vertical.children().forEach( item => item.height( viewport.totalSize.height ) );
+                    backgroundDrawArea_horizontal.children().forEach(function(item,index){
+                        item.y( index*(height/(yCount*zoomLevel_y)) );
+                        item.height( height/(yCount*zoomLevel_y) );
+                    });
 
                 //update signals
-                    for(var a = 0; a < signalPane.children.length; a++){
-                        signalPane.children[a].unit(undefined, height/(yCount*zoomLevel_y));
-                    }
+                    signalPane.children().forEach( item => item.unit(undefined, height/(yCount*zoomLevel_y)) );
 
                 //update playhead (if there is one)
                     if(playhead.present){
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('main')[0].parameter.height(viewport.totalSize.height);
-                        workarea.getElementsWithName('playhead')[0].getElementsWithName('invisibleHandle')[0].parameter.height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').getChildByName('main').height(viewport.totalSize.height);
+                        workarea.getChildByName('playhead').getChildByName('invisibleHandle').height(viewport.totalSize.height);
                     }
             }
+
+            if(devMode){console.log('sequencer::'+name+'::adjustZoom - end\n\n');}
         }
         function setViewArea(d,update=true){
             //clean off input
@@ -343,6 +345,11 @@ this.sequencer = function(
 
             //update state
                 viewport.viewArea = Object.assign(d,{});
+
+            //callback
+                if(update){
+                    object.onchangeviewarea(viewport.viewArea);
+                }
         }
         function makeSignal(line, position, length, strength=signals.defaultStrength){
             //register signal and get new id. From the registry, get the approved signal values
@@ -350,7 +357,7 @@ this.sequencer = function(
                 var approvedData = signals.signalRegistry.getSignal(newID);
 
             //create graphical signal with approved values and append it to the pane
-                var newSignalBlock = _t.sequencer.signalBlock(
+                var newSignalBlock = self.sequencer.signalBlock(
                     newID, width/(xCount*zoomLevel_x), height/(yCount*zoomLevel_y), 
                     approvedData.line, approvedData.position, approvedData.length, approvedData.strength, 
                     false, signalStyle_body, signalStyle_bodyGlow, signalStyle_handle, signalStyle_handleWidth
@@ -376,23 +383,23 @@ this.sequencer = function(
                 };
 
             //add interactions to graphical signal block
-                newSignalBlock.ondblclick = function(x,y,event){
-                    if(!workspace.system.keyboard.pressedKeys.control && !workspace.system.keyboard.pressedKeys.command){return;}
+                newSignalBlock.ondblclick = function(event){
+                    if(!_canvas_.system.keyboard.pressedKeys.control && !_canvas_.system.keyboard.pressedKeys.command){return;}
                     for(var a = 0; a < signals.selectedSignals.length; a++){
                         signals.selectedSignals[a].strength(signals.defaultStrength);
                         signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
                     }
                 };
-                newSignalBlock.body.onmousedown = function(x,y,event){
+                newSignalBlock.body.onmousedown = function(event){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                        if(workspace.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(x,y,event); return;
+                        if(_canvas_.system.keyboard.pressedKeys.Space){
+                            interactionPlane_back.onmousedown(event); return;
                         }
 
                     //if the shift key is not pressed and this signal is not already selected; deselect everything
-                        if(!workspace.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                        if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                             while(signals.selectedSignals.length > 0){
                                 signals.selectedSignals[0].deselect();
                             }
@@ -412,18 +419,18 @@ this.sequencer = function(
                         }
 
                     //if control/command key is pressed; this is a strength-change operation
-                        if(workspace.system.keyboard.pressedKeys.control || workspace.system.keyboard.pressedKeys.command){
+                        if(_canvas_.system.keyboard.pressedKeys.control || _canvas_.system.keyboard.pressedKeys.command){
                             var mux = 4;
                             var initialStrengths = activeBlocks.map(a => a.block.strength());
                             var initial = event.offsetY;
-                            workspace.system.mouse.mouseInteractionHandler(
+                            _canvas_.system.mouse.mouseInteractionHandler(
                                 function(event){
                                     //check if ctrl/command is still pressed
-                                        if( !workspace.system.keyboard.pressedKeys.ControlLeft && !workspace.system.keyboard.pressedKeys.ControlRight && !workspace.system.keyboard.pressedKeys.command ){ 
-                                            workspace.system.mouse.forceMouseUp();
+                                        if( !_canvas_.system.keyboard.pressedKeys.ControlLeft && !_canvas_.system.keyboard.pressedKeys.ControlRight && !_canvas_.system.keyboard.pressedKeys.command ){ 
+                                            _canvas_.system.mouse.forceMouseUp();
                                         }
 
-                                    var diff = (initial - event.offsetY)/(workspace.core.viewport.scale()*height*mux);
+                                    var diff = (initial - event.offsetY)/(_canvas_.core.viewport.scale()*height*mux);
                                     for(var a = 0; a < activeBlocks.length; a++){
                                         activeBlocks[a].block.strength(initialStrengths[a] + diff);
                                         signals.signalRegistry.update(activeBlocks[a].name, { strength: initialStrengths[a] + diff });
@@ -439,7 +446,7 @@ this.sequencer = function(
                         var cloned = false;
                         function cloneFunc(){
                             if(cloned){return;} cloned = true;
-                            if(workspace.system.keyboard.pressedKeys.alt){
+                            if(_canvas_.system.keyboard.pressedKeys.alt){
                                 for(var a = 0; a < signals.selectedSignals.length; a++){
                                     var temp = signals.signalRegistry.getSignal(parseInt(signals.selectedSignals[a].name));
                                     makeSignal(temp.line, temp.position, temp.length, temp.strength);
@@ -449,7 +456,7 @@ this.sequencer = function(
 
                     //block movement
                         var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                        workspace.system.mouse.mouseInteractionHandler(
+                        _canvas_.system.mouse.mouseInteractionHandler(
                             function(event){
                                 //clone that block (maybe)
                                     cloneFunc();
@@ -474,43 +481,43 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.body.onmousemove = function(x,y,event){
-                    var pressedKeys = workspace.system.keyboard.pressedKeys;
+                newSignalBlock.body.onmousemove = function(event){
+                    var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'default';
                     if( pressedKeys.alt ){ cursor = 'copy'; }
                     else if( pressedKeys.Space ){ cursor = 'grab'; }
 
-                    workspace.core.viewport.cursor( cursor );
+                    _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.body.onkeydown = function(x,y,event){
+                newSignalBlock.body.onkeydown = function(event){
                     if(!interactable){return;}
 
-                    var pressedKeys = workspace.system.keyboard.pressedKeys;
-                    if(pressedKeys.alt){ workspace.core.viewport.cursor('copy'); }
+                    var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                    if(pressedKeys.alt){ _canvas_.core.viewport.cursor('copy'); }
                 };
-                newSignalBlock.body.onkeyup = function(x,y,event){
+                newSignalBlock.body.onkeyup = function(event){
                     if(!interactable){return;}
 
-                    var pressedKeys = workspace.system.keyboard.pressedKeys;
-                    if(!(pressedKeys.alt)){ workspace.core.viewport.cursor('default'); }
+                    var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                    if(!(pressedKeys.alt)){ _canvas_.core.viewport.cursor('default'); }
                 };
-                newSignalBlock.leftHandle.onmousedown = function(x,y,event){
+                newSignalBlock.leftHandle.onmousedown = function(event){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                        if(workspace.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(x,y,event); return;
+                        if(_canvas_.system.keyboard.pressedKeys.Space){
+                            interactionPlane_back.onmousedown(event); return;
                         }
                         
                     //cloning situation
-                        if(workspace.system.keyboard.pressedKeys.alt){
-                            newSignalBlock.body.onmousedown(x,y,event);
+                        if(_canvas_.system.keyboard.pressedKeys.alt){
+                            newSignalBlock.body.onmousedown(event);
                             return;
                         }
 
                     //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
-                        if(!workspace.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                        if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                             while(signals.selectedSignals.length > 0){
                                 signals.selectedSignals[0].deselect();
                             }
@@ -531,7 +538,7 @@ this.sequencer = function(
                     
                     //perform block length adjustment 
                         var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                        workspace.system.mouse.mouseInteractionHandler(
+                        _canvas_.system.mouse.mouseInteractionHandler(
                             function(event){
                                 var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
                                 var diff = {position: initialPosition.position-livePosition.position};
@@ -550,32 +557,32 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.leftHandle.onmousemove = function(x,y,event){
-                    var pressedKeys = workspace.system.keyboard.pressedKeys;
+                newSignalBlock.leftHandle.onmousemove = function(event){
+                    var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'col-resize';
                     if( pressedKeys.alt ){ cursor = 'copy'; }
                     else if( pressedKeys.Space ){ cursor = 'grab'; }
 
-                    workspace.core.viewport.cursor( cursor );
+                    _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.leftHandle.onmouseleave = function(x,y,event){workspace.core.viewport.cursor('default');};
-                newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
+                newSignalBlock.leftHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                newSignalBlock.rightHandle.onmousedown = function(event,ignoreCloning=false){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
-                        if(workspace.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(x,y,event); return;
+                        if(_canvas_.system.keyboard.pressedKeys.Space){
+                            interactionPlane_back.onmousedown(event); return;
                         }
 
                     //cloning situation
-                        if(!ignoreCloning && workspace.system.keyboard.pressedKeys.alt){
-                            newSignalBlock.body.onmousedown(x,y,event);
+                        if(!ignoreCloning && _canvas_.system.keyboard.pressedKeys.alt){
+                            newSignalBlock.body.onmousedown(event);
                             return;
                         }
 
                     //if the shift key is not pressed and this block wasn't selected; deselect everything and select this one
-                        if(!workspace.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
+                        if(!_canvas_.system.keyboard.pressedKeys.shift && !newSignalBlock.selected()){
                             while(signals.selectedSignals.length > 0){
                                 signals.selectedSignals[0].deselect();
                             }
@@ -596,7 +603,7 @@ this.sequencer = function(
 
                     //perform block length adjustment 
                         var initialPosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
-                        workspace.system.mouse.mouseInteractionHandler(
+                        _canvas_.system.mouse.mouseInteractionHandler(
                             function(event){
                                 var livePosition = coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event)));
                                 var diff = {position: livePosition.position - initialPosition.position};
@@ -610,16 +617,16 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.rightHandle.onmousemove = function(x,y,event){
-                    var pressedKeys = workspace.system.keyboard.pressedKeys;
+                newSignalBlock.rightHandle.onmousemove = function(event){
+                    var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'col-resize';
                     if( pressedKeys.alt ){ cursor = 'copy'; }
                     else if( pressedKeys.Space ){ cursor = 'grab'; }
 
-                    workspace.core.viewport.cursor( cursor );
+                    _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.rightHandle.onmouseleave = function(x,y,event){workspace.core.viewport.cursor('default');};
+                newSignalBlock.rightHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
 
             return {id:newID, signalBlock:newSignalBlock};
         }
@@ -636,7 +643,7 @@ this.sequencer = function(
                 x: -playhead.width/2,
                 width:playhead.width,
                 height:viewport.totalSize.height,
-                style:{ fill:playheadStyle },
+                colour:playheadStyle
             });
             newPlayhead.append(newPlayhead.main);
 
@@ -644,7 +651,7 @@ this.sequencer = function(
                 x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
                 width: playhead.width*playhead.invisibleHandleMux,
                 height:viewport.totalSize.height,
-                style:{ fill:'rgba(255,0,0,0)' },
+                colour:{r:1,g:0,b:0,a:0}
             })
             newPlayhead.append(newPlayhead.invisibleHandle);
 
@@ -652,15 +659,15 @@ this.sequencer = function(
                 if(!interactable){return;}
 
                 playhead.held = true;
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){ object.playheadPosition(coordinates2lineposition(viewportPosition2internalPosition(currentMousePosition(event))).position); },
                     function(){playhead.held = false;}
                 );
             };
 
-            newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){workspace.core.viewport.cursor('col-resize');};
-            newPlayhead.invisibleHandle.onmousemove = function(x,y,event){workspace.core.viewport.cursor('col-resize');};
-            newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){workspace.core.viewport.cursor('default');};
+            newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
+            newPlayhead.invisibleHandle.onmousemove = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
+            newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
 
             playhead.present = true;
 
@@ -685,9 +692,9 @@ this.sequencer = function(
 
                 for(var a = start; a <= end; a++){
                     var tmp = state ? horizontalStripStyle_glow : horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                    backgroundDrawArea_horizontal.children[a].style.fill = tmp.fill;
-                    backgroundDrawArea_horizontal.children[a].style.stroke = tmp.stroke;
-                    backgroundDrawArea_horizontal.children[a].style.lineWidth = tmp.lineWidth;
+                    backgroundDrawArea_horizontal.children()[a].colour = tmp.colour;
+                    backgroundDrawArea_horizontal.children()[a].lineColour = tmp.lineColour;
+                    backgroundDrawArea_horizontal.children()[a].thickness = tmp.thickness;
                 }
             };
             object.glowVertical = function(state,start,end){
@@ -695,9 +702,9 @@ this.sequencer = function(
 
                 for(var a = start; a < end; a++){
                     var tmp = state ? verticalStripStyle_glow : verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                    backgroundDrawArea_vertical.children[a].style.fill = tmp.fill;
-                    backgroundDrawArea_vertical.children[a].style.stroke = tmp.stroke;
-                    backgroundDrawArea_vertical.children[a].style.lineWidth = tmp.lineWidth;
+                    backgroundDrawArea_vertical.children()[a].colour = tmp.colour;
+                    backgroundDrawArea_vertical.children()[a].lineColour = tmp.lineColour;
+                    backgroundDrawArea_vertical.children()[a].thickness = tmp.thickness;
                 }
             };
         
@@ -764,14 +771,14 @@ this.sequencer = function(
                     }
     
                 //reposition graphical playhead
-                    var playheadObject = workarea.getElementsWithName('playhead')[0];
+                    var playheadObject = workarea.getChildByName('playhead');
                     if(playhead.position < 0 || playhead.position > xCount){
                         //outside viable bounds, so remove
                             if( playheadObject != undefined ){ playheadObject.parent.remove(playheadObject); }
                     }else{ 
                         //within viable bounds, so either create or adjust
                             if( playheadObject == undefined ){ playheadObject = makePlayhead(); }
-                            playheadObject.parameter.x( playhead.position*(viewport.totalSize.width/xCount) );
+                            playheadObject.x( playhead.position*(viewport.totalSize.width/xCount) );
                         //if the new position is beyond the view in the viewport, adjust the viewport (putting the playhead on the leftmost side)
                         //(assuming automoveViewposition is set)
                             if(playhead.automoveViewposition){
@@ -826,10 +833,10 @@ this.sequencer = function(
             };
 
     //interaction
-        interactionPlane_back.onmousedown = function(x,y,event){
+        interactionPlane_back.onmousedown = function(event){
             if(!interactable){return;}
             
-            var pressedKeys = workspace.system.keyboard.pressedKeys;
+            var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
             if( pressedKeys.alt && pressedKeys.Space ){return;}
 
@@ -840,11 +847,12 @@ this.sequencer = function(
                 var selectionArea = interfacePart.builder('rectangle','selectionArea',{
                     x:initialPositionData.x*width, y:initialPositionData.y*height,
                     width:0, height:0,
-                    style:{fill:selectionAreaStyle}
+                    colour:selectionAreaStyle,
                 });
                 object.append(selectionArea);
+                selectionArea.computeExtremities();
     
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
                         //get live position, and correct it so it's definitely within in the relevant area
                             livePositionData = currentMousePosition(event);
@@ -868,11 +876,11 @@ this.sequencer = function(
                             if(diff.x < 0){ transform.width = -1;  transform.x += diff.x; }
                             if(diff.y < 0){ transform.height = -1; transform.y += diff.y; }
     
-                        //update rectangle 
-                            selectionArea.parameter.x(transform.x*width);
-                            selectionArea.parameter.y(transform.y*height);
-                            selectionArea.parameter.width(  transform.width  * diff.x*width  );
-                            selectionArea.parameter.height( transform.height * diff.y*height );
+                        //update rectangle
+                            selectionArea.x(transform.x*width);
+                            selectionArea.y(transform.y*height);
+                            selectionArea.width(  transform.width  * diff.x*width  );
+                            selectionArea.height( transform.height * diff.y*height );
                     },
                     function(event){
                         //remove selection box
@@ -908,8 +916,9 @@ this.sequencer = function(
                             }
     
                         //select the signals that overlap with the selection area
-                            for(var a = 0; a < signalPane.children.length; a++){
-                                var temp = signals.signalRegistry.getSignal(parseInt(signalPane.children[a].name));
+                            var children = signalPane.children();
+                            for(var a = 0; a < children.length; a++){
+                                var temp = signals.signalRegistry.getSignal(parseInt(children[a].name));
                                 var block = { 
                                         topLeft:{
                                             x:temp.position * (viewport.totalSize.width/xCount), 
@@ -920,7 +929,7 @@ this.sequencer = function(
                                         },
                                 };
     
-                                if( workspace.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){signalPane.children[a].select(true);}
+                                if( _canvas_.library.math.detectOverlap.boundingBoxes( block, selectionBox ) ){children[a].select(true);}
                             }
                     },
                 );
@@ -936,14 +945,14 @@ this.sequencer = function(
 
                 //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                     temp.signalBlock.select();
-                    temp.signalBlock.rightHandle.onmousedown(undefined,undefined,event,true);
+                    temp.signalBlock.rightHandle.onmousedown(event,true);
             }else if(pressedKeys.Space){//pan
-                workspace.core.viewport.cursor('grabbing');
+                _canvas_.core.viewport.cursor('grabbing');
 
                 var initialPosition = currentMousePosition(event);
                 var old_viewport = {x:viewport.viewposition.x, y:viewport.viewposition.y};
 
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
                         var livePosition = currentMousePosition(event);
                         var diffPosition = {x:initialPosition.x-livePosition.x, y:initialPosition.y-livePosition.y};
@@ -954,14 +963,14 @@ this.sequencer = function(
                     },
                     function(event){
                         if( 
-                            workspace.library.math.detectOverlap.pointWithinBoundingBox( 
+                            _canvas_.library.math.detectOverlap.pointWithinBoundingBox( 
                                 viewportPosition2internalPosition(currentMousePosition(event)), 
                                 viewport.viewArea 
-                            ) && workspace.system.keyboard.pressedKeys.Space
+                            ) && _canvas_.system.keyboard.pressedKeys.Space
                         ){
-                            workspace.core.viewport.cursor('grab');
+                            _canvas_.core.viewport.cursor('grab');
                         }else{
-                            workspace.core.viewport.cursor('default');
+                            _canvas_.core.viewport.cursor('default');
                         }
                     },
                 );
@@ -972,32 +981,32 @@ this.sequencer = function(
                     }
             }
         };
-        interactionPlane_back.onmousemove = function(x,y,event){
+        interactionPlane_back.onmousemove = function(event){
             if(!interactable){return;}
 
-            var pressedKeys = workspace.system.keyboard.pressedKeys;
-            if( pressedKeys.alt ){ workspace.core.viewport.cursor('crosshair'); }
-            else if( pressedKeys.Space ){ workspace.core.viewport.cursor('grab'); }
-            else{ workspace.core.viewport.cursor('default'); }
+            var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+            if( pressedKeys.alt ){ _canvas_.core.viewport.cursor('crosshair'); }
+            else if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
+            else{ _canvas_.core.viewport.cursor('default'); }
         };
-        interactionPlane_front.onkeydown = function(x,y,event){
+        interactionPlane_front.onkeydown = function(event){
             if(!interactable){return;}
 
-            var pressedKeys = workspace.system.keyboard.pressedKeys;
+            var pressedKeys = _canvas_.system.keyboard.pressedKeys;
             if( pressedKeys.Backspace || pressedKeys.Delete ){ deleteSelectedSignals(); }
-            if( pressedKeys.Space ){ workspace.core.viewport.cursor('grab'); }
+            if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
             if( pressedKeys.alt ){
-                if( signalPane.getElementUnderPoint(x,y) != undefined ){
-                    workspace.core.viewport.cursor('copy');
+                if( signalPane.getElementsUnderPoint(event.X,event.Y)[0] != undefined ){
+                    _canvas_.core.viewport.cursor('copy');
                 }else{
-                    workspace.core.viewport.cursor('crosshair');
+                    _canvas_.core.viewport.cursor('crosshair');
                 }
             }
         };
-        interactionPlane_front.onkeyup = function(x,y,event){
+        interactionPlane_front.onkeyup = function(event){
             if(!interactable){return;}
 
-            workspace.core.viewport.cursor('default');
+            _canvas_.core.viewport.cursor('default');
         };
 
     //callbacks
@@ -1022,22 +1031,22 @@ this.sequencer.signalBlock = function(
     name, unit_x, unit_y,
     line, position, length, strength=1, glow=false, 
     bodyStyle=[
-        {fill:'rgba(138,138,138,0.6)',stroke:'rgba(175,175,175,0.8)', lineWidth:0.5},
-        {fill:'rgba(130,199,208,0.6)',stroke:'rgba(130,199,208,0.8)', lineWidth:0.5},
-        {fill:'rgba(129,209,173,0.6)',stroke:'rgba(129,209,173,0.8)', lineWidth:0.5},
-        {fill:'rgba(234,238,110,0.6)',stroke:'rgba(234,238,110,0.8)', lineWidth:0.5},
-        {fill:'rgba(249,178,103,0.6)',stroke:'rgba(249,178,103,0.8)', lineWidth:0.5},
-        {fill:'rgba(255, 69, 69,0.6)',stroke:'rgba(255, 69, 69,0.8)', lineWidth:0.5},
+        {colour:{r:138/255,g:138/255,b:138/255,a:0.6}, lineColour:{r:175,g:175/255,b:175/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:130/255,g:199/255,b:208/255,a:0.6}, lineColour:{r:130,g:199/255,b:208/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:129/255,g:209/255,b:173/255,a:0.6}, lineColour:{r:129,g:209/255,b:173/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:234/255,g:238/255,b:110/255,a:0.6}, lineColour:{r:234,g:238/255,b:110/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:249/255,g:178/255,b:103/255,a:0.6}, lineColour:{r:249,g:178/255,b:103/255,a:0.95}, lineThickness:0.5},
+        {colour:{r:255/255,g: 69/255,b: 69/255,a:0.6}, lineColour:{r:255,g: 69/255,b: 69/255,a:0.95}, lineThickness:0.5},
     ],
     bodyGlowStyle=[
-        {fill:'rgba(138,138,138,0.8)',stroke:'rgba(175,175,175,1)',lineWidth:0.5},
-        {fill:'rgba(130,199,208,0.8)',stroke:'rgba(130,199,208,1)',lineWidth:0.5},
-        {fill:'rgba(129,209,173,0.8)',stroke:'rgba(129,209,173,1)',lineWidth:0.5},
-        {fill:'rgba(234,238,110,0.8)',stroke:'rgba(234,238,110,1)',lineWidth:0.5},
-        {fill:'rgba(249,178,103,0.8)',stroke:'rgba(249,178,103,1)',lineWidth:0.5},
-        {fill:'rgba(255, 69, 69,0.8)',stroke:'rgba(255, 69, 69,1)',lineWidth:0.5},
+        {colour:{r:138/255,g:138/255,b:138/255,a:0.8}, lineColour:{r:175/255,g:175/255,b:175/255,a:1}, lineThickness:0.5},
+        {colour:{r:130/255,g:199/255,b:208/255,a:0.8}, lineColour:{r:130/255,g:199/255,b:208/255,a:1}, lineThickness:0.5},
+        {colour:{r:129/255,g:209/255,b:173/255,a:0.8}, lineColour:{r:129/255,g:209/255,b:173/255,a:1}, lineThickness:0.5},
+        {colour:{r:234/255,g:238/255,b:110/255,a:0.8}, lineColour:{r:234/255,g:238/255,b:110/255,a:1}, lineThickness:0.5},
+        {colour:{r:249/255,g:178/255,b:103/255,a:0.8}, lineColour:{r:249/255,g:178/255,b:103/255,a:1}, lineThickness:0.5},
+        {colour:{r:255/255,g: 69/255,b: 69/255,a:0.8}, lineColour:{r:255/255,g: 69/255,b: 69/255,a:1}, lineThickness:0.5},
     ],
-    handleStyle='rgba(255,0,255,0)',
+    handleStyle={r:1,g:1,b:0,a:1},
     handleWidth=5,
 ){
     var selected = false;
@@ -1049,38 +1058,38 @@ this.sequencer.signalBlock = function(
     
     //elements
         var object = interfacePart.builder('group',String(name),{x:position*unit_x, y:line*unit_y});
-        object.body = interfacePart.builder('rectangle','body',{width:length*unit_x, height:unit_y, style:{fill:currentStyles.body.fill, stroke:currentStyles.body.stroke, lineWidth:currentStyles.body.lineWidth}});
-        object.leftHandle = interfacePart.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
-        object.rightHandle = interfacePart.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, style:{fill:handleStyle}});
+        object.body = interfacePart.builder('rectangleWithOutline','body',{width:length*unit_x, height:unit_y, colour:currentStyles.body.colour, lineColour:currentStyles.body.lineColour, lineThickness:currentStyles.body.lineThickness});
+        object.leftHandle = interfacePart.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
+        object.rightHandle = interfacePart.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
         object.append(object.body);
         object.append(object.leftHandle);
         object.append(object.rightHandle);
 
     //internal functions
         function updateHeight(){
-            object.body.parameter.height(unit_y);
-            object.leftHandle.parameter.height(unit_y);
-            object.rightHandle.parameter.height(unit_y);
+            object.body.height(unit_y);
+            object.leftHandle.height(unit_y);
+            object.rightHandle.height(unit_y);
         }
         function updateLength(){
-            object.body.parameter.width(length*unit_x);
-            object.rightHandle.parameter.x(length*unit_x-handleWidth/2);
+            object.body.width(length*unit_x);
+            object.rightHandle.x(length*unit_x-handleWidth/2);
         }
         function updateLineAndPosition(){ updateLine(); updatePosition(); }
         function updateLengthAndHeight(){ updateLength(); updateHeight(); }
-        function updateLine(){ object.parameter.y(line*unit_y); }
-        function updatePosition(){ object.parameter.x(position*unit_x); }
+        function updateLine(){ object.y(line*unit_y); }
+        function updatePosition(){ object.x(position*unit_x); }
         function getBlendedColour(swatch,ratio){
             var outputStyle = Object.assign({},swatch[0]);
 
-            //if there's a fill attribute; blend it and add it to the output 
-                if( swatch[0].hasOwnProperty('fill') ){
-                    outputStyle.fill = workspace.library.misc.multiBlendColours(swatch.map(a => a.fill),ratio);
+            //if there's a colour attribute; blend it and add it to the output 
+                if( swatch[0].hasOwnProperty('colour') ){
+                    outputStyle.colour = _canvas_.library.math.multiBlendColours(swatch.map(a => a.colour),ratio);
                 }
 
-            //if there's a stroke attribute; blend it and add it to the output
-                if( swatch[0].hasOwnProperty('stroke') ){
-                    outputStyle.stroke = workspace.library.misc.multiBlendColours(swatch.map(a => a.stroke),ratio);
+            //if there's a lineColour attribute; blend it and add it to the output
+                if( swatch[0].hasOwnProperty('lineColour') ){
+                    outputStyle.lineColour = _canvas_.library.math.multiBlendColours(swatch.map(a => a.lineColour),ratio);
                 }
 
             return outputStyle;
@@ -1134,13 +1143,13 @@ this.sequencer.signalBlock = function(
             if(a == undefined){return glow;}
             glow = a;
             if(glow){ 
-                object.body.style.fill = currentStyles.glow.fill;
-                object.body.style.stroke = currentStyles.glow.stroke;
-                object.body.style.lineWidth = currentStyles.glow.lineWidth;
+                object.body.colour = currentStyles.glow.colour;
+                object.body.lineColour = currentStyles.glow.lineColour;
+                object.body.thickness = currentStyles.glow.thickness;
             }else{    
-                object.body.style.fill = currentStyles.body.fill;
-                object.body.style.stroke = currentStyles.body.stroke;
-                object.body.style.lineWidth = currentStyles.body.lineWidth;
+                object.body.colour = currentStyles.body.colour;
+                object.body.lineColour = currentStyles.body.lineColour;
+                object.body.thickness = currentStyles.body.thickness;
             }            
         };
         object.selected = function(a){

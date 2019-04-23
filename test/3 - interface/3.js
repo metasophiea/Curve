@@ -1,10 +1,13 @@
 //test of unit defined somewhere else
 
-var testUnit = workspace.interface.unit.collection.test.testUnit_1(10,10);
-workspace.system.pane.mm.append( testUnit );
-workspace.core.render.active(true);
-workspace.core.viewport.stopMouseScroll(true);
+var testUnit = _canvas_.interface.unit.collection.test.testUnit_1(10,10);
+_canvas_.system.pane.mm.append( testUnit );
+_canvas_.core.viewport.stopMouseScroll(true);
 
-console.log( testUnit.interactable() );
-testUnit.allowIOConnections(false);
-testUnit.allowIODisconnections(false);
+testUnit.interactable();
+// testUnit.allowIOConnections(false);
+// testUnit.allowIODisconnections(false);
+
+
+_canvas_.core.render.active(true);
+// _canvas_.core.render.frame();

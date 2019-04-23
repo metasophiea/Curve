@@ -2,8 +2,8 @@ this.level = function(
     name='level',
     x, y, angle=0,
     width=20, height=60,
-    backingStyle='rgb(10,10,10)',
-    levelStyles=['rgb(250,250,250)','rgb(200,200,200)']
+    backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+    levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.78,g:0.78,b:0.78,a:1}]
 ){
     var values = [];
 
@@ -11,7 +11,7 @@ this.level = function(
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
                 object.append(rect);
         //levels
             var levels = interfacePart.builder('group','levels');
@@ -20,11 +20,14 @@ this.level = function(
             var level = [];
             for(var a = 0; a < levelStyles.length; a++){
                 values.push(0);
-                level.push( interfacePart.builder('rectangle','movingRect_'+a,{
+                var tmp = interfacePart.builder('rectangle','movingRect_'+a,{
                     y:height,
                     width:width, height:0,
-                    style:{fill:levelStyles[a]},
-                }) );
+                    colour:levelStyles[a],
+                });
+                tmp.stopAttributeStartedExtremityUpdate = true;
+
+                level.push( tmp );
                 levels.prepend(level[a]);
             }
 
@@ -41,8 +44,8 @@ this.level = function(
 
                 values[layer] = value;
 
-                level[layer].parameter.height( height*value );
-                level[layer].parameter.y( height - height*value );
+                level[layer].height( height*value );
+                level[layer].y( height - height*value );
             };
 
     return object;

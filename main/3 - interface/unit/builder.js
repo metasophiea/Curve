@@ -3,14 +3,13 @@
     {
         name: 'name of unit (unique to collection)',
         collection: 'name of the collection to which this unit belongs',
-        x: 0, y: 0,
+        x: 0, y: 0, angle: 0,
         space: [{x:0,y:0}, ...], //a collection of points, used to determine the unit's selection/collision area
-        spaceOutline: true/false, //a helper graphic, which when set to true, will draw an outline of the space
+        spaceOutline: true/false, //a helper graphic, which when set to true will draw an outline of the space
         elements:[ //a list of all the parts
             {
                 type:'part type name',
                 name:'a unique name',
-                grapple: true/false, //declare that this shape part should be used as an unit grapple
                 data:{}, //data relevant to this part type
             }
         ] 
@@ -19,8 +18,13 @@
 this.builder = function(creatorMethod,design){
     if(!creatorMethod){console.error("workspace unit builder:: creatorMethod missing");return;}
 
+    //input check
+        if(design.x == undefined){ design.x = 0; }
+        if(design.y == undefined){ design.y = 0; }
+        if(design.angle == undefined){ design.angle = 0; }
+
     //main group
-        var unit = workspace.interface.part.builder('group',design.name,{x:design.x, y:design.y, angle:design.a});
+        var unit = _canvas_.interface.part.builder('group',design.name,{x:design.x, y:design.y, angle:design.angle});
         unit.model = design.name;
         unit.collection = design.collection;
         unit.creatorMethod = creatorMethod;
@@ -35,7 +39,7 @@ this.builder = function(creatorMethod,design){
                 }    
 
             //produce and append part
-                var newPart = workspace.interface.part.builder( design.elements[a].type, design.elements[a].name, design.elements[a].data );
+                var newPart = _canvas_.interface.part.builder( design.elements[a].type, design.elements[a].name, design.elements[a].data );
                 unit.append(newPart);
 
             //add part to element tree
@@ -86,47 +90,49 @@ this.builder = function(creatorMethod,design){
         };
 
     //generate unit's personal space
+        unit.space = {};
+        unit.space.originalPoints = design.space;
         function generatePersonalSpace(){
-            unit.space = {
-                points: design.space.map(a => {
-                    var tmp = workspace.library.math.cartesianAngleAdjust(a.x,a.y,unit.parameter.angle());
-                    return { x:design.x+tmp.x, y:design.y+tmp.y };
-                }),
-            };
-            unit.space.boundingBox = workspace.library.math.boundingBoxFromPoints(unit.space.points);
+            unit.space.points = design.space.map(a => {
+                var tmp = _canvas_.library.math.cartesianAngleAdjust(a.x,a.y,unit.angle())
+                tmp.x += design.x;
+                tmp.y += design.y;
+                return tmp;
+            } );
+            unit.space.boundingBox = _canvas_.library.math.boundingBoxFromPoints(unit.space.points);
+
+            //create invisible space shape
+            if( unit.space.shape != undefined ){
+                unit.space.shape.pointsAsXYArray(unit.space.originalPoints);
+            }else{
+                unit.space.shape = _canvas_.interface.part.builder( 'polygon', 'unit.space.shape', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
+                unit.space.shape.unit = unit;
+                unit.prepend( unit.space.shape );
+            }
         }
         generatePersonalSpace();
 
-        //create invisible shape
-            //create name for the space shape that won't interfere with other names 
-                var spaceName = 'spaceShape';
-                while( unit.getChildByName(spaceName) != undefined ){ spaceName = spaceName + Math.floor(Math.random()*10); } //add random digits until it's unique
-            //create invisible backing shape (with callbacks)
-                var invisibleShape = workspace.interface.part.builder( 'polygon', spaceName, {points:design.space, style:{ fill:'rgba(0,0,0,0)' } } );
-                unit.prepend(invisibleShape);
-
         //if requested, add an outline shape
             if( design.spaceOutline ){
-                unit.append( workspace.interface.part.builder( 'polygon', spaceName+'Outline', {points:design.space, style:{ fill:'rgba(0,0,0,0)', stroke:'rgba(0,0,0,1)' } } ) );
+                unit.append( _canvas_.interface.part.builder( 'polygonWithOutline', 'unit.space.shape'+'_Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
             }
 
-    //update unit x and y adjustment methods
-        unit._parameter = {};
-        unit._parameter.x = unit.parameter.x;
-        unit._parameter.y = unit.parameter.y;
-        unit._parameter.angle = unit.parameter.angle;
-        unit.parameter.x = function(newX){
-            if( unit._parameter.x(newX) != undefined ){ return unit.x; }
+    //augment unit x, y and angle adjustment methods
+        unit._x = unit.x;
+        unit._y = unit.y;
+        unit._angle = unit.angle;
+        unit.x = function(newX){
+            if( unit._x(newX) != undefined ){ return design.x; }
             design.x = newX;
             generatePersonalSpace();
         };
-        unit.parameter.y = function(newY){
-            if( unit._parameter.y(newY) != undefined ){ return unit.y; }
+        unit.y = function(newY){
+            if( unit._y(newY) != undefined ){ return design.y; }
             design.y = newY;
             generatePersonalSpace();
         };
-        unit.parameter.angle = function(newAngle){
-            if( unit._parameter.angle(newAngle) != undefined ){ return unit.angle; }
+        unit.angle = function(newAngle){
+            if( unit._angle(newAngle) != undefined ){ return design.angle; }
             design.angle = newAngle;
             generatePersonalSpace();
         };
@@ -143,7 +149,6 @@ this.builder = function(creatorMethod,design){
                 }
             }
         };
-
 
     return unit;
 };

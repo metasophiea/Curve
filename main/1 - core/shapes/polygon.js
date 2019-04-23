@@ -1,162 +1,152 @@
 this.polygon = function(){
+    var self = this;
 
-    this.type = 'polygon';
+    //attributes 
+        //protected attributes
+            const type = 'polygon'; this.getType = function(){return type;}
 
-    this.name = '';
-    this.ignored = false;
-    this.static = false;
-    this.parent = undefined;
-    this.dotFrame = false;
-    this.extremities = {
-        points:[],
-        boundingBox:{},
-    };
+        //simple attributes
+            this.name = '';
+            this.parent = undefined;
+            this.dotFrame = false;
+            this.extremities = { points:[], boundingBox:{} };
+            this.ignored = false;
+            this.colour = {r:1,g:0,b:0,a:1};
+        //advanced use attributes
+            this.devMode = false;
+            this.stopAttributeStartedExtremityUpdate = false;
 
-    this.points = [];
+        //attributes pertinent to extremity calculation
+            var pointsChanged = true;
+            var points = []; this.points = function(a){ if(a==undefined){return points;} points = a; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); pointsChanged = true; };
+            var scale = 1;   this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');}  if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
 
-    this.style = {
-        fill:'rgba(100,255,255,1)',
-        stroke:'rgba(0,0,0,0)',
-        lineWidth:1,
-        lineJoin:'round',
-        miterLimit:2,
-    };
+            this.pointsAsXYArray = function(a){
+                if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
 
-    
-    this.parameter = {};
-    this.parameter.points = function(shape){ return function(a){if(a==undefined){return shape.points;} shape.points = a; shape.computeExtremities();} }(this);
-
-
-
-
-    this.getAddress = function(){
-        var address = '';
-        var tmp = this;
-        do{
-            address = tmp.name + '/' + address;
-        }while((tmp = tmp.parent) != undefined)
-
-        return '/'+address;
-    };
-    
-    this.computeExtremities = function(offset){
-        //discover if this shape should be static
-            var isStatic = this.static;
-            var tmp = this;
-            while((tmp = tmp.parent) != undefined && !isStatic){
-                isStatic = isStatic || tmp.static;
-            }
-            this.static = isStatic;
-
-        //if the offset isn't set; that means that this is the element that got the request for extremity recomputation
-        //in which case; gather the offset of all parents. Otherwise just use what was provided
-            offset = offset == undefined ? gatherParentOffset(this) : offset;
-
-        //reset variables
-            this.extremities = {
-                points:[],
-                boundingBox:{},
-            };
-
-        //calculate points
-            this.extremities.points = this.points.map(function(point){
-                point = workspace.library.math.cartesianAngleAdjust(point.x,point.y,offset.a);
-                point.x += offset.x;
-                point.y += offset.y;
-                return point;
-            });
-
-        //calculate boundingBox
-            this.extremities.boundingBox = workspace.library.math.boundingBoxFromPoints( this.extremities.points );
-
-        //update the points and bounding box of the parent
-            if(this.parent != undefined){
-                this.parent.computeExtremities();
-            }
-    };
-
-    function isPointWithinBoundingBox(x,y,shape){
-        if( shape.extremities.boundingBox == undefined ){console.warn('the shape',shape,'has no bounding box'); return false;}
-        return workspace.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, shape.extremities.boundingBox );
-    }
-    function isPointWithinHitBox(x,y,shape){
-        if( shape.extremities.points == undefined ){console.warn('the shape',shape,'has no points'); return false;}
-        return workspace.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, shape.extremities.points );
-    }
-    this.isPointWithin = function(x,y){
-        if( isPointWithinBoundingBox(x,y,this) ){
-            return isPointWithinHitBox(x,y,this);
-        }
-        return false;
-    };
-
-    function shouldRender(shape){ 
-        //if this shape is static, always render
-            if(shape.static){return true;}
-            
-        //dertermine if this shape's bounding box overlaps with the viewport's bounding box. If so; render
-            return workspace.library.math.detectOverlap.boundingBoxes(core.viewport.getBoundingBox(), shape.extremities.boundingBox);
-    };
-    this.render = function(context,offset={x:0,y:0,a:0},static=false,isClipper=false){
-        //if this shape shouldn't be rendered (according to the shapes 'shouldRender' method) just bail on the whole thing
-            if(!shouldRender(this)){return;}
-        
-        //collect and consolidate shape values into a neat package
-            var shapeValue = {
-                points: this.points.map( function(a){
-                    a = workspace.library.math.cartesianAngleAdjust(a.x,a.y,offset.a);
-                    return { x:a.x+offset.x, y:a.y+offset.y };
-                } ),
-                lineWidth: this.style.lineWidth,
-            };
-        
-        //adapt values
-            if(!static){
-                shapeValue.points = shapeValue.points.map( function(a){ return adapter.workspacePoint2windowPoint(a.x, a.y); } );
-                shapeValue.lineWidth = adapter.length(shapeValue.lineWidth);
-            }
-
-        //clipping
-            if(isClipper){
-                var region = new Path2D();
-                region.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-                for(var a = 1; a < shapeValue.points.length; a++){
-                    region.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+                if(a==undefined){
+                    var output = [];
+                    for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
+                    return output;
                 }
-                context.clip(region);
-                return;
+
+                this.points( a.map(function(a){
+                    if( isNaN(a.x) || isNaN(a.y) ){ console.error('ploygon::'+self.getAddress()+'::pointsAsXYArray:: points entered contain NAN values'); }
+                    return [a.x,a.y];
+                }).flat() );
+            };
+    
+    //addressing
+        this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+
+    //webGL rendering functions
+        var points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
+        var vertexShaderSource = 
+            _canvas_.library.gsls.geometry + `
+            //variables
+                struct location{
+                    vec2 xy;
+                    float scale;
+                    float angle;
+                };
+                uniform location offset;
+
+                attribute vec2 point;
+                uniform vec2 resolution;
+
+            void main(){    
+                //adjust point by offset
+                    vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
+
+                //convert from unit space to clipspace
+                    gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
             }
-
-        //paint this shape as requested
-            context.fillStyle = this.style.fill;
-            context.strokeStyle = this.style.stroke;
-            context.lineWidth = shapeValue.lineWidth;
-            context.lineJoin = this.style.lineJoin;
-            context.miterLimit = this.style.miterLimit;
-
-            context.beginPath(); 
-            context.moveTo(shapeValue.points[0].x,shapeValue.points[0].y);
-            for(var a = 1; a < shapeValue.points.length; a++){
-                context.lineTo(shapeValue.points[a].x,shapeValue.points[a].y);
+        `;
+        var fragmentShaderSource = `  
+            precision mediump float;
+            uniform vec4 colour;
+                                                                        
+            void main(){
+                gl_FragColor = colour;
             }
-            context.closePath(); 
-
-            context.fill(); 
-            context.stroke();
-
-        //if dotFrame is set, draw in dots fot the points and bounding box extremities
-            if(this.dotFrame){
+        `;
+        var point = { buffer:undefined, attributeLocation:undefined };
+        var drawingPoints = [];
+        var uniformLocations;
+        function updateGLAttributes(context,offset){
+            //buffers
                 //points
-                    for(var a = 0; a < this.extremities.points.length; a++){
-                        var temp = adapter.workspacePoint2windowPoint(this.extremities.points[a].x,this.extremities.points[a].y);
-                        core.render.drawDot( temp.x, temp.y, 4, 'rgba(50,50,50,1)' );
+                    if(point.buffer == undefined || pointsChanged){
+                        point.attributeLocation = context.getAttribLocation(program, "point");
+                        point.buffer = context.createBuffer();
+                        context.enableVertexAttribArray(point.attributeLocation);
+                        context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
+                        pointsChanged = false;
+                    }else{
+                        context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                        context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
                     }
-                //boudning box
-                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.topLeft.x,this.extremities.boundingBox.topLeft.y);
-                    core.render.drawDot( temp.x, temp.y );
-                    var temp = adapter.workspacePoint2windowPoint(this.extremities.boundingBox.bottomRight.x,this.extremities.boundingBox.bottomRight.y);
-                    core.render.drawDot( temp.x, temp.y );
-            }
-    };
 
+            //uniforms
+                if( uniformLocations == undefined ){
+                    uniformLocations = {
+                        "offset.xy": context.getUniformLocation(program, "offset.xy"),
+                        "offset.scale": context.getUniformLocation(program, "offset.scale"),
+                        "offset.angle": context.getUniformLocation(program, "offset.angle"),
+                        "resolution": context.getUniformLocation(program, "resolution"),
+                        "colour": context.getUniformLocation(program, "colour"),
+                    };
+                }
+
+                context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
+                context.uniform1f(uniformLocations["offset.scale"], offset.scale);
+                context.uniform1f(uniformLocations["offset.angle"], offset.angle);
+                context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+        }
+        var program;
+        function activateGLRender(context,adjust){
+            if(program == undefined){ program = core.render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+
+            context.useProgram(program);
+            updateGLAttributes(context,adjust);
+
+            context.drawArrays(context.TRIANGLES, 0, drawingPoints.length/2);
+        }
+
+    //extremities
+        function computeExtremities(informParent=true,offset){
+            if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+
+            //get offset from parent, if one isn't provided
+                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+            //calculate points based on the offset
+                self.extremities.points = [];
+                for(var a = 0; a < points.length; a+=2){
+                    var P = _canvas_.library.math.cartesianAngleAdjust(points[a]*offset.scale,points[a+1]*offset.scale, offset.angle);
+                    self.extremities.points.push({ x:P.x+offset.x, y:P.y+offset.y });
+                }
+                self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+            //if told to do so, inform parent (if there is one) that extremities have changed
+                if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+        }
+        this.computeExtremities = computeExtremities;
+
+    //lead render
+        function drawDotFrame(){
+            //draw shape extremity points
+                self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
+            //draw bounding box top left and bottom right points
+                core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
+        }
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+            //activate shape render code
+                activateGLRender(context,offset);
+
+            //if requested; draw dot frame
+                if(self.dotFrame){drawDotFrame();}
+        };
 };

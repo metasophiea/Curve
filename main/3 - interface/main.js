@@ -1,4 +1,4 @@
-workspace.interface = new function(){
+_canvas_.interface = new function(){
     var interface = this;
 
     this.circuit = new function(){

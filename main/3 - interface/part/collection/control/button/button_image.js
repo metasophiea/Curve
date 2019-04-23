@@ -62,7 +62,7 @@ this.button_image = function(
             var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
             subject.append(backing);
         //cover
-            subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+            subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic button part
@@ -86,16 +86,14 @@ this.button_image = function(
     //graphical state adjust
         object.activateGraphicalState = function(state){
             if(!active){ 
-                backing.style.fill = backing__off__fill;
-                backing.style.stroke = backing__off__stroke;
-                backing.style.lineWidth = backing__off__lineWidth;
+                backing.imageURL(backingURL__off);
                 return;
             }
 
             if(!hoverable && state.hovering ){ state.hovering = false; }
             if(!selectable && state.selected ){ state.selected = false; }
 
-            backing.url = [
+            backing.imageURL([
                 backingURL__up,                     
                 backingURL__press,                  
                 backingURL__select,                 
@@ -112,7 +110,7 @@ this.button_image = function(
                 backingURL__hover_glow_press,       
                 backingURL__hover_glow_select,      
                 backingURL__hover_glow_select_press,
-            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ];
+            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]);
         };
         object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
 

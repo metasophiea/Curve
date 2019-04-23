@@ -57,7 +57,7 @@ this.oneShot_multi = function(context){
         };
         this.load = function(type,callback,url){
             state.fileLoaded = false;
-            workspace.library.audio.loadAudioFile(
+            _canvas_.library.audio.loadAudioFile(
                 function(data){
                     state.itself.loadRaw(data);
                     if(callback != undefined){ callback(data); }
@@ -74,7 +74,7 @@ this.oneShot_multi = function(context){
                 //check if we should play at all (the file must be loaded)
                     if(!state.fileLoaded){return;}
                 //load buffer, add onend code, enter rate setting, start and add to the array
-                    var temp = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
+                    var temp = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(){
                         flow.bufferSourceArray.splice(flow.bufferSourceArray.indexOf(this),1);
                     });
                     temp.playbackRate.value = state.rate;
@@ -105,6 +105,6 @@ this.oneShot_multi = function(context){
         this.waveformSegment = function(data={start:0,end:1}){
             if(data==undefined){return [];}
             if(!state.fileLoaded){return [];}
-            return workspace.library.audio.waveformSegment(flow.track.buffer,data);
+            return _canvas_.library.audio.waveformSegment(flow.track.buffer,data);
         };
 };

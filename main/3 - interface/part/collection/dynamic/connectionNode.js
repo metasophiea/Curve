@@ -2,10 +2,10 @@ this.connectionNode = function(
     name='connectionNode2',
     x, y, angle=0, width=20, height=20, type='none', direction='',
     allowConnections=true, allowDisconnections=true,
-    dimStyle='rgb(220, 220, 220)',
-    glowStyle='rgb(244, 244, 244)',
-    cable_dimStyle='rgb(146, 146, 146)',
-    cable_glowStyle='rgb(215, 215, 215)',
+    dimStyle={r:0.86,g:0.86,b:0.86,a:1},
+    glowStyle={r:0.95,g:0.95,b:0.95,a:1},
+    cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
+    cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
     onconnect=function(instigator){},
     ondisconnect=function(instigator){},
 ){
@@ -16,7 +16,7 @@ this.connectionNode = function(
             object._type = type;
             object._direction = direction;
         //node
-            var rectangle = interfacePart.builder('rectangle','node',{ width:width, height:height, style:{fill:dimStyle} });
+            var rectangle = interfacePart.builder('rectangle','node',{ width:width, height:height, colour:dimStyle });
                 object.append(rectangle);
 
     //network functions
@@ -32,7 +32,7 @@ this.connectionNode = function(
             if(bool == undefined){return allowDisconnections;}
             allowDisconnections = bool;
         };
-        object.connectTo = function(new_foreignNode){
+        object.connectTo = function(new_foreignNode){ 
             if( new_foreignNode == undefined){ return; }
             if( new_foreignNode == this ){ return; }
             if( new_foreignNode._type != this._type ){ return; }
@@ -69,15 +69,14 @@ this.connectionNode = function(
 
     //mouse interaction
         rectangle.onmousedown = function(x,y,event){
-            workspace.system.mouse.mouseInteractionHandler(
+            _canvas_.system.mouse.mouseInteractionHandler(
                 undefined,
                 function(event){
-                    var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                    var element = workspace.core.arrangement.getElementUnderPoint(point.x,point.y);
+                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0];
                     if(element == undefined){return;}
                     
                     var node = element.parent;
-                    if( node._connectionNode ){
+                    if( node._connectionNode ){ 
                         if( node.isConnected() && !node.canDisconnect() ){return;}
                         if( object.isConnected() && !object.canDisconnect() ){return;}
                         if( allowConnections && node.allowConnections() ){ object.connectTo(node); }
@@ -94,9 +93,9 @@ this.connectionNode = function(
         var cable;
 
         object._addCable = function(){
-            cable = interfacePart.builder('cable','cable-'+this.getAddress(),{ x1:0,y1:0,x2:100,y2:100, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+            cable = interfacePart.builder('cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
             foreignNode._receiveCable(cable);
-            workspace.system.pane.getMiddlegroundPane(this).append(cable);
+            _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
             this.draw();
         }
         object._receiveCable = function(new_cable){
@@ -111,11 +110,12 @@ this.connectionNode = function(
             cable = undefined;
         };
         object.getCablePoint = function(){
-            var offset = this.getOffset();
-            var point = workspace.library.math.cartesianAngleAdjust(x+width/2,y+height/2,offset.a);
-            point.x += offset.x;
-            point.y += offset.y;
-            return point;
+            var offset = object.getOffset(); 
+
+            var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
+            var collectedAngle = offset.angle + Math.atan( height/width );
+
+            return _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x+(diagonalLength*Math.cos(collectedAngle)), offset.y+(diagonalLength*Math.sin(collectedAngle)) );
         };
         object.draw = function(){
             if( cable == undefined ){return;}
@@ -128,11 +128,11 @@ this.connectionNode = function(
 
     //graphical
         object.activate = function(){ 
-            rectangle.style.fill = glowStyle;
+            rectangle.colour = glowStyle;
             if(cable!=undefined){ cable.activate(); }
         }
         object.deactivate = function(){ 
-            rectangle.style.fill = dimStyle;
+            rectangle.colour = dimStyle;
             if(cable!=undefined){ cable.deactivate(); }
         }
 

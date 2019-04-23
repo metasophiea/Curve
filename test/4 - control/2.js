@@ -1,4 +1,4 @@
-workspace.control.gui.elements.menubar.dropdowns = [
+_canvas_.control.gui.elements.menubar.dropdowns = [
     {
         text:'file',
         width:45,
@@ -34,13 +34,9 @@ workspace.control.gui.elements.menubar.dropdowns = [
         listItemHeight:22.5,
         breakHeight: 0.5,
         spaceHeight: 1,
-        itemList:[
-            {text_left:'Item 1', text_right:'1', function:function(){ console.log('1'); }},
-            {text_left:'Item 2', text_right:'2', function:function(){ console.log('2'); }},
-            {text_left:'Item 3', text_right:'3', function:function(){ console.log('3'); }},
-            {text_left:'Item 4', text_right:'4', function:function(){ console.log('4'); }},
-            {text_left:'Item 5', text_right:'5', function:function(){ console.log('5'); }},
-        ],
+        itemList:Array.apply(null, {length:22}).map(Number.call, Number).map(function(a){
+            return {text_left:'Item '+a, text_right:''+a, function:function(){ console.log(''+a); }};
+        }),
     },
     {
         text:'help',
@@ -57,6 +53,6 @@ workspace.control.gui.elements.menubar.dropdowns = [
 
 
 
-workspace.control.gui.showMenubar();
-workspace.control.viewport.activeRender(true);
-workspace.control.viewport.stopMouseScroll(true);
+_canvas_.control.gui.showMenubar();
+_canvas_.control.viewport.activeRender(true);
+_canvas_.control.viewport.stopMouseScroll(true);

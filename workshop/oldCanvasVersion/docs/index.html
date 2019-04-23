@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                width:100%; height:100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id='workspaceCanvas' workspace workspaceWidth='100%' workspaceHeight='100%' style='display: block;'></canvas>
+    </body>
+
+</html>
+
+<!-- <script type='text/javascript' src='js/curve.js'></script> -->
+<script type='text/javascript' src='js/curve.min.js'></script>
+
+<script>
+    //detect demo request
+    if(Number.isInteger(parseInt((new URL(window.location.href)).searchParams.get("demo")))){
+        document.getElementById('workspaceCanvas').control.scene.load('https://curve.metasophiea.com/demos/'+parseInt((new URL(window.location.href)).searchParams.get("demo"))+'.crv');
+    }
+</script>

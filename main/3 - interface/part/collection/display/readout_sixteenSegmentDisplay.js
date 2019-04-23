@@ -1,9 +1,9 @@
 this.readout_sixteenSegmentDisplay = function(
     name='readout_sixteenSegmentDisplay',
     x, y, width=100, height=30, count=5, angle=0,
-    backgroundStyle='rgb(0,0,0)',
-    glowStyle='rgb(200,200,200)',
-    dimStyle='rgb(20,20,20)'
+    backgroundStyle={r:0,g:0,b:0,a:1},
+    glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+    dimStyle={r:0.1,g:0.1,b:0.1,a:1},
 ){
     //values
         var text = '';

@@ -4,10 +4,12 @@ this.audio_meter_level = function(
     width=20, height=60,
     markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
 
-    backingStyle='rgb(10,10,10)',
-    levelStyles=['rgba(250,250,250,1)','rgb(100,100,100)'],
-    markingStyle_fill='rgba(220,220,220,1)',
-    markingStyle_font='1pt Courier New',
+    backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+    levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.3,g:0.3,b:0.3,a:1}],
+    markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
+    markingStyle_font='Roboto-Regular',
+    markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
+    markingStyle_size=2,
 ){
     //elements
         //main
@@ -20,6 +22,8 @@ this.audio_meter_level = function(
                     levels:levelStyles,
                     markingStyle_fill:markingStyle_fill,
                     markingStyle_font:markingStyle_font,
+                    markingStyle_printingMode:markingStyle_printingMode,
+                    markingStyle_size:markingStyle_size,
                 },
             });
             object.append(meter);

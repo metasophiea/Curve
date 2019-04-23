@@ -20,49 +20,48 @@ this.multibandFilter = function(x,y,a){
         }
     };
     var style = {
-        background:{fill:'rgba(200,200,200,1)'},
-
-        h1:{fill:'rgba(0,0,0,1)', font:'6pt Courier New'},
-        h2:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-        h3:{fill:'rgba(0,0,0,1)', font:'2pt Courier New'},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
 
         panels:[
-            {fill:'rgba(0,200,163,  0.5)'},
-            {fill:'rgba(100,235,131,0.5)'},
-            {fill:'rgba(228,255,26, 0.5)'},
-            {fill:'rgba(232,170,20, 0.5)'},
-            {fill:'rgba(255,87,20,  0.5)'},
-            {fill:'rgba(0,191,255,  0.5)'},
-            {fill:'rgba(249,99,202, 0.5)'},
-            {fill:'rgba(255,255,255,0.5)'},
+            {r:0/255,g:200/255,b:163/255,  a:0.5},
+            {r:100/255,g:235/255,b:131/255,a:0.5},
+            {r:228/255,g:255/255,b:26/255, a:0.5},
+            {r:232/255,g:170/255,b:20/255, a:0.5},
+            {r:255/255,g:87/255,b:20/255,  a:0.5},
+            {r:0/255,g:191/255,b:255/255,  a:0.5},
+            {r:249/255,g:99/255,b:202/255, a:0.5},
+            {r:255/255,g:255/255,b:255/255,a:0.5},
         ],
 
         slide:{
-            handle:'rgba(240,240,240,1)',
-            backing:'rgba(200,200,200,0.5)',
-            slot:'rgba(50,50,50,1)',
+            handle:{r:240/255,g:240/255,b:240/255,a:1},
+            backing:{r:200/255,g:200/255,b:200/255,a:0.5},
+            slot:{r:50/255,g:50/255,b:50/255,a:1},
         },
         dial:{
-            handle:{fill:'rgba(220,220,220,1)'},
-            slot:{fill:'rgba(50,50,50,1)'},
-            needle:{fill:'rgba(250,150,150,1)'},
+            handle:{r:220/255,g:220/255,b:220/255,a:1},
+            slot:{r:50/255,g:50/255,b:50/255,a:1},
+            needle:{r:250/255,g:150/255,b:150/255,a:1},
         },
 
         graph:{
             foregrounds: [
-                {stroke:'rgba(0,200,163,1)', lineWidth:0.5, lineJoin:'round'},
-                {stroke:'rgba(100,235,131,1)', lineWidth:0.5, lineJoin:'round'},
-                {stroke:'rgba(228,255,26,1)', lineWidth:0.5, lineJoin:'round'},
-                {stroke:'rgba(232,170,20,1)', lineWidth:0.5, lineJoin:'round'},
-                {stroke:'rgba(255,87,20,1)', lineWidth:0.5, lineJoin:'round'},
-                {stroke:'rgba(0,191,255,1)', lineWidth:0.5, lineJoin:'round'},
-                {stroke:'rgba(249,99,202,1)', lineWidth:0.5, lineJoin:'round'},
-                {stroke:'rgba(255,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+                {colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.5},
+                {colour:{r:100/255,g:235/255,b:131/255,a:1}, thickness:0.5},
+                {colour:{r:228/255,g:255/255,b:26/255,a:1}, thickness:0.5},
+                {colour:{r:232/255,g:170/255,b:20/255,a:1}, thickness:0.5},
+                {colour:{r:255/255,g:87/255,b:20/255,a:1}, thickness:0.5},
+                {colour:{r:0/255,g:191/255,b:255/255,a:1}, thickness:0.5},
+                {colour:{r:249/255,g:99/255,b:202/255,a:1}, thickness:0.5},
+                {colour:{r:255/255,g:255/255,b:255/255,a:1}, thickness:0.5},
             ], 
-            background_stroke: 'rgba(0,200,163,0.25)', 
-            background_lineWidth: 0.25, 
-            backgroundText_fill: 'rgba(0,200,163,0.75)', 
-            backgroundText_font: '8pt Helvetica',
+            background_colour: {r:0/255,g:200/255,b:163/255,a:0.25}, 
+            background_thickness: 0.25, 
+            backgroundText_colour: {r:0/255,g:200/255,b:163/255,a:0.75}, 
+            backgroundText_size: '10pt',
+            backgroundText_font: 'Helvetica',
         },
     };
     var width = 195;
@@ -71,7 +70,7 @@ this.multibandFilter = function(x,y,a){
         name: 'multibandFilter',
         category: 'audioEffectUnits',
         collection: 'alpha',
-        x:x, y:y, a:a,
+        x:x, y:y, angle:a,
         space:[
             { x:0,        y:10         }, { x:10,       y:0          },
             { x:width-10, y:0          }, { x:width,    y:10         },
@@ -81,39 +80,39 @@ this.multibandFilter = function(x,y,a){
         ],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[ { x:0,        y:10         }, { x:10,       y:0          },
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ { x:0,        y:10         }, { x:10,       y:0          },
                 { x:width-10, y:0          }, { x:width,    y:10         },
                 { x:width,    y:height-10  }, { x:width-10, y:height     },
                 { x:10,       y:height     }, { x:0,        y:height-10  },
                 { x:0, y:75 }, { x:-25, y:65 }, { x:-25, y:10 }
-            ], style:style.background }},
+            ], colour:style.background }},
 
             {type:'connectionNode_audio', name:'audioIn_0', data:{x:195, y:15, width:10, height:20}},
             {type:'connectionNode_audio', name:'audioIn_1', data:{x:195, y:40, width:10, height:20}},
             {type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
             {type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
-            {type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, r:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
-            {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:5 }},
+            {type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, radius:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
+            {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:15 }},
         ]
     };
     //dynamic design
     for(var a = 0; a < vars.channelCount; a++){
         design.elements.push(
             //channel strip backing
-                {type:'rectangle', name:'backing_'+a, data:{ x:13.75+a*22, y:87.5, width:12.5, height:157.5, style:style.panels[a] }},
+                {type:'rectangle', name:'backing_'+a, data:{ x:13.75+a*22, y:87.5, width:12.5, height:157.5, colour:style.panels[a] }},
             //gain
                 {type:'slide', name:'gainSlide_'+a, data:{ x:15+a*22, y:90, width: 10, height: 80, angle:0, handleHeight:0.05, resetValue:0.5, style:style.slide }},
             //Q
-                {type:'dial_continuous', name:'qDial_'+a, data:{ x:20+a*22, y:180, r:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
+                {type:'dial_continuous', name:'qDial_'+a, data:{ x:20+a*22, y:180, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
             //frequency
-                {type:'dial_continuous', name:'frequencyDial_'+a, data:{ x:20+a*22, y:200, r:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
+                {type:'dial_continuous', name:'frequencyDial_'+a, data:{ x:20+a*22, y:200, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
             //frequency readout
                 {type:'readout_sixteenSegmentDisplay_static', name:'frequencyReadout_'+a, data:{ x:25+a*22, y:212.5, width:30, height:10, count:8, angle:Math.PI/2, resolution:10 }},
         );
     }
 
     //main object
-        var object = workspace.interface.unit.builder(this.multibandFilter,design);
+        var object = _canvas_.interface.unit.builder(this.multibandFilter,design);
 
     //import/export
         object.exportData = function(){
@@ -129,8 +128,8 @@ this.multibandFilter = function(x,y,a){
         object.importData = function(data){};
 
     //circuitry
-        object.filterCircuit_0 = new workspace.interface.circuit.multibandFilter(workspace.library.audio.context, vars.channelCount, true);
-        object.filterCircuit_1 = new workspace.interface.circuit.multibandFilter(workspace.library.audio.context, vars.channelCount, true);
+        object.filterCircuit_0 = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, vars.channelCount, true);
+        object.filterCircuit_1 = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, vars.channelCount, true);
         object.elements.connectionNode_audio.audioIn_0.out().connect( object.filterCircuit_0.in() );
         object.elements.connectionNode_audio.audioIn_1.out().connect( object.filterCircuit_1.in() );
         object.filterCircuit_0.out().connect( object.elements.connectionNode_audio.audioOut_0.in() );
@@ -147,7 +146,7 @@ this.multibandFilter = function(x,y,a){
                     frequencyArray.push( Math.pow(10,a)*(b/10) );
                 }
             }
-            return {frequency:frequencyArray, location:workspace.library.math.normalizeStretchArray(locationArray)};
+            return {frequency:frequencyArray, location:_canvas_.library.math.normalizeStretchArray(locationArray)};
         }
         function updateGraph(specificBand){
             if(!vars.allowUpdate){return;}
@@ -184,18 +183,18 @@ this.multibandFilter = function(x,y,a){
             object.elements.dial_continuous['qDial_'+a].onchange = function(a){
                 return function(value){
                     vars.Q[a] = value;
-                    object.filterCircuit_0.Q(a, workspace.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
-                    object.filterCircuit_1.Q(a, workspace.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
+                    object.filterCircuit_0.Q(a, _canvas_.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
+                    object.filterCircuit_1.Q(a, _canvas_.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
                     updateGraph(a);
                 }
             }(a);
             object.elements.dial_continuous['frequencyDial_'+a].onchange = function(a){
                 return function(value){
                     vars.frequency[a] = value;
-                    object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].text( workspace.library.misc.padString( workspace.library.math.curvePoint.exponential(value,0,20000,vars.curvePointExponentialSharpness).toFixed(2), 8) );
+                    object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].text( _canvas_.library.misc.padString( _canvas_.library.math.curvePoint.exponential(value,0,20000,vars.curvePointExponentialSharpness).toFixed(2), 8) );
                     object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].print('smart');
-                    object.filterCircuit_0.frequency(a, workspace.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
-                    object.filterCircuit_1.frequency(a, workspace.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
+                    object.filterCircuit_0.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
+                    object.filterCircuit_1.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
                     updateGraph(a);
                 }
             }(a);

@@ -12,12 +12,12 @@ this.channelMultiplier = function(
         //in
             flow.in.gain = 1;
             flow.in.node = context.createGain();    
-            workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
 
         //outs
             for(var a = 0; a < outputCount; a++){
                 var temp = { gain:0.5, node:context.createGain() };
-                workspace.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
+                _canvas_.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
                 flow.outs.push(temp);
                 flow.in.node.connect(temp.node);
             }
@@ -30,12 +30,12 @@ this.channelMultiplier = function(
         this.inGain = function(a){
             if(a == undefined){return flow.in.gain;}
             flow.in.gain = a;
-            workspace.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
         };
         this.outGain = function(a,value){
             if(value == undefined){ return flow.outs[a].gain; }
             flow.outs[a].gain = value;
-            workspace.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
         };
 };
     

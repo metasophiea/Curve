@@ -4,21 +4,21 @@ this.audioIn = function(x,y,a,setupConnect=true){
         currentSelection: 0
     };
     var style = {
-        background: {fill:'rgba(200,200,200,1)'},
-        marking:{stroke:'rgb(160,160,160)', lineWidth:1},
-        h1:{fill:'rgba(0,0,0,1)', font:'5pt Courier New'},
-        h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        marking:{stroke:{r:160/255,g:160/255,b:160/255,a:1}, lineWidth:1},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
 
         readout:{ background:'rgb(0,0,0)', glow:'rgb(200,200,200)', dim:'rgb(20,20,20)' },
         button:{
-            background__up__fill:'rgba(220,220,220,1)', 
-            background__hover__fill:'rgba(230,230,230,1)', 
-            background__hover_press__fill:'rgba(180,180,180,1)',
+            background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+            background__hover__colour:{r:230/255,g:230/255,b:230/255,a:1}, 
+            background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
         },
         dial:{
-            handle:'rgba(220,220,220,1)',
-            slot:'rgba(50,50,50,1)',
-            needle:'rgba(250,150,150,1)',
+            handle:{r:220/255,g:220/255,b:220/255,a:1},
+            slot:{r:50/255,g:50/255,b:50/255,a:1},
+            needle:{r:250/255,g:150/255,b:150/255,a:1},
         },
     };
     var design = {
@@ -32,31 +32,31 @@ this.audioIn = function(x,y,a,setupConnect=true){
         ],
         // spaceOutline: true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
                 {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
                 {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
-            ], style:style.background }},
+            ], colour:style.background }},
             {type:'connectionNode_audio', name:'audioOut', data:{x: -10, y: 15, width: 10, height: 20, isAudioOutput:true }},
             {type:'readout_sixteenSegmentDisplay_static', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
             {type:'readout_sixteenSegmentDisplay_static', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
             {type:'button_rectangle', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
             {type:'button_rectangle', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
-            {type:'text', name:'gainLabel_name', data:{x:21.25, y:44, text:'gain', style:style.h1, angle:0}},
-            {type:'text', name:'gainLabel_0',    data:{x:17,    y:39, text:'0', style:style.h2, angle:0}},
-            {type:'text', name:'gainLabel_1',    data:{x:28.75, y:10, text:'1', style:style.h2, angle:0}},
-            {type:'text', name:'gainLabel_2',    data:{x:40.5,  y:39, text:'2', style:style.h2, angle:0}},
-            {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, style:style.dial, resetValue:0.5 }},
-            {type:'path', name:'upArrow',   data:{points:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], style:style.marking}},
-            {type:'path', name:'downArrow', data:{points:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], style:style.marking}},
+            {type:'text', name:'gainLabel_name', data:{x:30, y:42, text:'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {type:'text', name:'gainLabel_0',    data:{x:18, y:38, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {type:'text', name:'gainLabel_1',    data:{x:30, y:8, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {type:'text', name:'gainLabel_2',    data:{x:41, y:38, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, style:style.dial, resetValue:0.5 }},
+            {type:'path', name:'upArrow',   data:{pointsAsXYArray:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
+            {type:'path', name:'downArrow', data:{pointsAsXYArray:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
             {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
         ]
     };
 
     //main object
-        var object = workspace.interface.unit.builder(this.audioIn,design);
+        var object = _canvas_.interface.unit.builder(this.audioIn,design);
 
     //keycapture
-        object.onkeydown = function(x,y,event){
+        object.elements.polygon.backing.onkeydown = function(x,y,event){
             switch(event.key){
                 case 'ArrowUp':    object.elements.button_rectangle.up.press(); break;
                 case 'ArrowDown':  object.elements.button_rectangle.down.press(); break;
@@ -67,7 +67,7 @@ this.audioIn = function(x,y,a,setupConnect=true){
 
     //circuitry
         object.circuitry = {
-            unit: new workspace.interface.circuit.audioIn(workspace.library.audio.context,setupConnect)
+            unit: new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect)
         };
         object.circuitry.unit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
         object.circuitry.unit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );

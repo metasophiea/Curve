@@ -1,9 +1,9 @@
 this.sixteenSegmentDisplay_static = function(
     name='sixteenSegmentDisplay_static',
     x, y, width=20, height=30, angle=0, resolution=5, 
-    backgroundStyle='rgb(0,0,0)',
-    glowStyle='rgb(200,200,200)',
-    dimStyle='rgb(20,20,20)',
+    backgroundStyle={r:0,g:0,b:0,a:1},
+    glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+    dimStyle={r:0.1,g:0.1,b:0.1,a:1},
 ){
     var margin = width/8;
     var division = width/8;
@@ -239,8 +239,9 @@ this.sixteenSegmentDisplay_static = function(
 
     //graphics
     function clear(){
-        canvas._.fillStyle = backgroundStyle;
+        canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
         canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+        canvas.requestUpdate();
     };
     function drawChar(){
         for(var a = 0; a < points.length; a++){
@@ -250,9 +251,10 @@ this.sixteenSegmentDisplay_static = function(
                 canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
             }
             canvas._.closePath(); 
-            canvas._.fillStyle = stamp[a] == 0 ? dimStyle : glowStyle;
+            canvas._.fillStyle = stamp[a] == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
             canvas._.fill(); 
         }
+        canvas.requestUpdate();
     }
 
 

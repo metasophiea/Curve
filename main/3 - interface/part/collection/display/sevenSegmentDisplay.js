@@ -1,9 +1,9 @@
 this.sevenSegmentDisplay = function(
     name='sevenSegmentDisplay',
     x, y, width=20, height=30, angle=0,
-    backgroundStyle='rgb(0,0,0)',
-    glowStyle='rgb(200,200,200)',
-    dimStyle='rgb(20,20,20)'
+    backgroundStyle={r:0,g:0,b:0,a:1},
+    glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+    dimStyle={r:0.1,g:0.1,b:0.1,a:1},
 ){
     var margin = width/8;
     var division = width/8;
@@ -60,10 +60,10 @@ this.sevenSegmentDisplay = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y});
+            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
 
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backgroundStyle} });
+            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backgroundStyle });
                 object.append(rect);
 
         //segments
@@ -128,7 +128,7 @@ this.sevenSegmentDisplay = function(
             ];
             for(var a = 0; a < points.length; a++){
                 var temp = {
-                    segment: interfacePart.builder('polygon','segment_'+a,{points:points[a], style:{fill:dimStyle}}),
+                    segment: interfacePart.builder('polygon','segment_'+a,{pointsAsXYArray:points[a], colour:dimStyle}),
                     state: false
                 };
                 segments.push( temp );
@@ -138,8 +138,8 @@ this.sevenSegmentDisplay = function(
     //methods
         object.set = function(segment,state){
             segments[segment].state = state;
-            if(state){ segments[segment].segment.style.fill = glowStyle; }
-            else{ segments[segment].segment.style.fill = dimStyle; }
+            if(state){ segments[segment].segment.colour = glowStyle; }
+            else{ segments[segment].segment.colour = dimStyle; }
         };
         object.get = function(segment){ return segments[segment].state; };
         object.clear = function(){
@@ -161,7 +161,7 @@ this.sevenSegmentDisplay = function(
                 case 7: case '7': stamp = [1,0,1,0,0,1,0]; break;
                 case 8: case '8': stamp = [1,1,1,1,1,1,1]; break;
                 case 9: case '9': stamp = [1,1,1,1,0,1,1]; break;
-                default:  stamp = [0,0,0,0,0,0,0]; break;
+                default: stamp = [0,0,0,0,0,0,0]; break;
             }
 
             for(var a = 0; a < stamp.length; a++){

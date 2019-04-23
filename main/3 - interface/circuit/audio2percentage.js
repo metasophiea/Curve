@@ -8,7 +8,7 @@ this.audio2percentage = function(){
             returnedValueLimits: {min:0, max: 256, halfdiff:128},
             resolution: 128
         };
-        analyser.analyserNode = workspace.library.audio.context.createAnalyser();
+        analyser.analyserNode = _canvas_.library.audio.context.createAnalyser();
         analyser.analyserNode.fftSize = analyser.resolution;
         analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
         analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);

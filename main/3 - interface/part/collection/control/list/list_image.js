@@ -68,7 +68,7 @@ this.list_image = function(
                             var temp = interfacePart.builder( 'rectangle', ''+a, {
                                 x:0, y:accumulativeHeight,
                                 width:width, height:height*spacingHeightMux,
-                                style:{fill:'rgba(255,0,0,0)'}
+                                colour:{r:0,g:0,b:0,a:0}
                             });
 
                             accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
@@ -131,16 +131,16 @@ this.list_image = function(
             }
             calculatedListHeight = refreshList();
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
         //stencil
-            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.stencil(stencil);
-            object.clip(true);
+            object.clipActive(true);
 
 
     //interaction
-        cover.onwheel = function(x,y,event){
+        cover.onwheel = function(event){
             if(!interactable){return;}
             var move = event.deltaY/100;
             object.position( object.position() + move/10 );
@@ -158,7 +158,7 @@ this.list_image = function(
 
             if( calculatedListHeight < height ){return;}
             var movementSpace = calculatedListHeight - height;
-            itemCollection.parameter.y( -a*movementSpace );
+            itemCollection.y( -a*movementSpace );
             
             if(update&&this.onpositionchange){this.onpositionchange(a);}
         };

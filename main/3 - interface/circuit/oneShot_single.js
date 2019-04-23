@@ -37,7 +37,7 @@ this.oneShot_single = function(context){
     //controls
         this.load = function(type,callback,url=''){
             state.fileLoaded = false;
-            workspace.library.audio.loadAudioFile(
+            _canvas_.library.audio.loadAudioFile(
                 function(data){
                     state.itself.stop();
                     flow.track = data;
@@ -55,7 +55,7 @@ this.oneShot_single = function(context){
                     flow.bufferSource.onended = function(){};
                     flow.bufferSource.stop(0);
                 }
-                flow.bufferSource = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                flow.bufferSource = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
                 flow.bufferSource.playbackRate.value = state.rate;
                 flow.bufferSource.start(0,0);
                 flow.bufferSource.onended = function(){flow.bufferSource = null;};
@@ -81,6 +81,6 @@ this.oneShot_single = function(context){
         this.waveformSegment = function(data={start:0,end:1}){
             if(data==undefined){return [];}
             if(!state.fileLoaded){return [];}
-            return workspace.library.audio.waveformSegment(flow.track.buffer,data);
+            return _canvas_.library.audio.waveformSegment(flow.track.buffer,data);
         };
 };

@@ -1,11 +1,12 @@
 this.audioSink = function(x,y,a){
     var style = {
-        background:{fill:'rgba(200,200,200,1)'},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
         level:{
-            backing:'rgba(10,10,10,1)',
-            levels:['rgb(250,250,250)','rgb(200,200,200)'],
-            markingStyle_fill:'rgba(220,220,220,1)',
-            markingStyle_font:'1pt Courier New',
+            backing:{r:10/255,g:10/255,b:10/255,a:1},
+            levels:[{r:250/255,g:250/255,b:250/255,a:1},{r:150/255,g:150/255,b:150/255,a:1}],
+            markingStyle_fill:{r:220/255,g:220/255,b:220/255,a:1},
+            markingStyle_font:'defaultThin',
+            markingStyle_size:1,
         },
     };
     var design = {
@@ -16,7 +17,7 @@ this.audioSink = function(x,y,a){
         space:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}], colour:style.background }},
 
             {type:'connectionNode_audio', name:'audioInput_right', data:{ x:30, y:5, width:10, height:20 }},
             {type:'connectionNode_audio', name:'audioInput_left', data:{ x:30, y:30, width:10, height:20 }},
@@ -26,7 +27,7 @@ this.audioSink = function(x,y,a){
     };
  
     //main object
-        var object = workspace.interface.unit.builder(this.audioSink,design);
+        var object = _canvas_.interface.unit.builder(this.audioSink,design);
 
     //circuitry
         var flow = {
@@ -35,10 +36,10 @@ this.audioSink = function(x,y,a){
             pan_left:null, pan_right:null,
         };
         //destination
-            flow._destination = workspace.library.audio.destination;
+            flow._destination = _canvas_.library.audio.destination;
 
         //stereo channel combiner
-            flow.stereoCombiner = new ChannelMergerNode(workspace.library.audio.context, {numberOfInputs:2});
+            flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
 
         //audio connections
             //inputs to meters

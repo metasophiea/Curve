@@ -1,15 +1,15 @@
 this.basicMixer = function(x,y,a){
     var connectionCount = 8;
     var style = {
-        background:{fill:'rgba(200,200,200,1)'},
-        markings: {fill:'rgba(150,150,150,1)'},
-        h1: {fill:'rgba(0,0,0,1)', font:'8pt Courier New'},
-        h2: {fill:'rgb(150,150,150)', font:'5pt Courier New'},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        markings:{r:150/255,g:150/255,b:150/255,a:1},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:8, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
 
         dial:{
-            handle: {fill:'rgba(220,220,220,1)'},
-            slot: {fill:'rgba(50,50,50,1)'},
-            needle: {fill:'rgba(250,150,150,1)'},
+            handle:{r:220/255,g:220/255,b:220/255,a:1},
+            slot:{r:50/255,g:50/255,b:50/255,a:1},
+            needle:{r:250/255,g:150/255,b:150/255,a:1},
         }
     };
     var design = {
@@ -23,16 +23,16 @@ this.basicMixer = function(x,y,a){
             {type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
             {type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
 
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], colour:style.background }},
 
-            {type:'text', name:'gain', data:{ x:77.5, y:8, text:'gain', style:style.h2 } }, 
-            {type:'text', name:'pan', data:{  x:54,   y:8, text:'pan', style:style.h2 } }, 
+            {type:'text', name:'gain', data:{ x:85, y:5, text:'gain', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
+            {type:'text', name:'pan', data:{  x:60, y:5, text:'pan', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
             
-            {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, style:style.markings }},
-            {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, style:style.markings }},
-            {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, style:style.markings }},
-            {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, style:style.markings }},
-            {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, style:style.markings }},
+            {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, colour:style.markings }},
+            {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, colour:style.markings }},
+            {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, colour:style.markings }},
+            {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, colour:style.markings }},
+            {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, colour:style.markings }},
         ],
     };
 
@@ -47,32 +47,32 @@ this.basicMixer = function(x,y,a){
         design.elements.push(
             {type:'rectangle', name:'line_'+a, data:{
                 x:23, y:19.1+a*25, width:75, height:2, 
-                style:style.markings,
+                colour:style.markings,
             }}
         );
 
         design.elements.push(
             {type:'dial_continuous',name:'gain_'+a,data:{
-                x:85, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                x:85, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }}
         );
         design.elements.push(
             {type:'dial_continuous',name:'pan_'+a,data:{
-                x:60, y:20+a*25, r:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                x:60, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }}
         );
     }
 
     //main object
-        var object = workspace.interface.unit.builder(this.basicMixer,design);
+        var object = _canvas_.interface.unit.builder(this.basicMixer,design);
 
     
 
     //internal circuitry
         for(var a = 0; a < connectionCount; a++){
-            object['splitter_'+a] = new workspace.interface.circuit.channelMultiplier(workspace.library.audio.context,2);
+            object['splitter_'+a] = new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2);
             object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
             object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_0'].in() );
             object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_1'].in() );
@@ -82,7 +82,7 @@ this.basicMixer = function(x,y,a){
                     object['splitter_'+a].inGain(value);
                 }
             }(a);
-            object.elements.dial_continuous['gain_'+a].onchange = function(a){
+            object.elements.dial_continuous['pan_'+a].onchange = function(a){
                 return function(value){
                     object['splitter_'+a].outGain(0,value);
                     object['splitter_'+a].outGain(1,1-value);

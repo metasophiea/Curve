@@ -1,3 +1,4 @@
+console.log('%cTesting - library.math.fitPolyIn', 'font-size:15px; font-weight:bold;');
 {{include:../../main/1 - core/main.js}}
 
 
@@ -5,7 +6,7 @@
 
 var sceneValues = {
     environment: 1,
-    testPoly: 2,
+    testPoly: 0,
 };
 
 
@@ -26,15 +27,15 @@ var sceneValues = {
     ][sceneValues.environment];
 
     environmentPolys.forEach(a => {
-        var temp = workspace.core.arrangement.createElement('polygon');
+        var temp = _canvas_.core.shape.create('polygon');
         temp.name = JSON.stringify(a);
-        temp.points = a;
-        temp.style.fill = "rgb("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+")";
-        workspace.core.arrangement.append(temp);
+        temp.pointsAsXYArray(a);
+        temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+        _canvas_.core.arrangement.append(temp);
     });
 
     environmentPolys = environmentPolys.map(a => {
-        return { points: a, boundingBox: workspace.library.math.boundingBoxFromPoints(a) };
+        return { points: a, boundingBox: _canvas_.library.math.boundingBoxFromPoints(a) };
     });
 
 
@@ -56,17 +57,17 @@ var sceneValues = {
             {x:110.07110595703125,y:121.05989776916923},
         ],
     ][sceneValues.testPoly];
-        var temp = workspace.core.arrangement.createElement('polygon');
+    var temp = _canvas_.core.shape.create('polygonWithOutline');
         temp.name = 'testPoly';
-        temp.points = testPoly.map(a => a)
-        temp.style.fill = "rgba("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+",0)";
-        temp.style.stroke = 'rgb(0,0,0)';
-        temp.style.lineWidth = '2';
-        workspace.core.arrangement.append(temp);
+        temp.pointsAsXYArray(testPoly.map(a => a));
+        temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
+        temp.lineColour = {r:0,g:0,b:0,a:1};
+        temp.thickness(2);
+        _canvas_.core.arrangement.append(temp);
 
     testPoly = {
         points: testPoly,
-        boundingBox: workspace.library.math.boundingBoxFromPoints(testPoly),
+        boundingBox: _canvas_.library.math.boundingBoxFromPoints(testPoly),
     };
 
 
@@ -78,12 +79,12 @@ var sceneValues = {
 
 //correct polygon location
     //perform calculation
-        console.time('workspace.library.math.fitPolyIn');
-        var data = workspace.library.math.fitPolyIn(testPoly,environmentPolys,true);
-        console.timeEnd('workspace.library.math.fitPolyIn');
+        console.time('_canvas_.library.math.fitPolyIn');
+        var data = _canvas_.library.math.fitPolyIn(testPoly,environmentPolys,true);
+        console.timeEnd('_canvas_.library.math.fitPolyIn');
     //adjust
-        testPoly.points = workspace.library.math.applyOffsetToPoints( data.offset, testPoly.points );
-        testPoly.boundingBox = workspace.library.math.boundingBoxFromPoints(testPoly.points);
+        testPoly.points = testPoly.points.map(a => { return{x:a.x+data.offset.x,y:a.y+data.offset.y} } );
+        testPoly.boundingBox = _canvas_.library.math.boundingBoxFromPoints(testPoly.points);
 
 
 
@@ -92,24 +93,24 @@ var sceneValues = {
 
 
 //draw new position
-    var temp = workspace.core.arrangement.createElement('polygon');
+    var temp = _canvas_.core.shape.create('polygonWithOutline');
     temp.name = 'testPoly_adjusted';
-    temp.points = testPoly.points.map(a => a)
-    temp.style.fill = "rgba("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+",0.5)";
-    temp.style.stroke = 'rgb(0,0,0)';
-    temp.style.lineWidth = '2';
-    workspace.core.arrangement.append(temp);
+    temp.pointsAsXYArray(testPoly.points.map(a => a));
+    temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.2};
+    temp.lineColour = {r:0,g:0,b:0,a:1};
+    temp.thickness(2);
+    _canvas_.core.arrangement.append(temp);
 
 //draw in calculation paths
     for(var a = 0; a < data.paths.length; a++){
         if(data.paths[a].length == 0){continue;}
 
-        var temp = workspace.core.arrangement.createElement('path');
+        var temp = _canvas_.core.shape.create('path');
         temp.name = 'testPath_'+a;
-        temp.points = data.paths[a];
-        temp.style.stroke = "rgba("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+",1)";
-        temp.style.lineWidth = 2;
-        workspace.core.arrangement.append(temp);
+        temp.pointsAsXYArray(data.paths[a]);
+        temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+        temp.thickness(2);
+        _canvas_.core.arrangement.append(temp);
     }
 
 
@@ -120,4 +121,6 @@ var sceneValues = {
 
 
 //actual render
-    workspace.core.render.frame();
+    _canvas_.core.render.frame();
+
+console.log('');

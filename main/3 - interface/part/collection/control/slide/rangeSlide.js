@@ -2,11 +2,11 @@ this.rangeslide = function(
     name='rangeslide', 
     x, y, width=10, height=95, angle=0, interactable=true,
     handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
-    handleStyle = 'rgba(200,200,200,1)',
-    backingStyle = 'rgba(150,150,150,1)',
-    slotStyle = 'rgba(50,50,50,1)',
-    invisibleHandleStyle = 'rgba(255,0,0,0)',
-    spanStyle='rgba(200,0,200,0.5)',
+    handleStyle={r:0.78,g:0.78,b:0.78,a:1},
+    backingStyle={r:0.58,g:0.58,b:0.58,a:1},
+    slotStyle={r:0.2,g:0.2,b:0.2,a:1},
+    invisibleHandleStyle={r:1,g:0,b:0,a:0},
+    spanStyle={r:0.78,g:0,b:0.78,a:0.5},
     onchange=function(){},
     onrelease=function(){},
 ){
@@ -18,20 +18,19 @@ this.rangeslide = function(
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //backing and slot group
             var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
-            // backingAndSlot.dotFrame = true;
             object.append(backingAndSlot);
             //backing
-                var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:backingStyle}});
+                var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
                 backingAndSlot.append(backing);
             //slot
-                var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), style:{fill:slotStyle}});
+                var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
                 backingAndSlot.append(slot);
             //backing and slot cover
-                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
 
         //span
-            var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, style:{fill:spanStyle} });
+            var span = interfacePart.builder('rectangle','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, colour:spanStyle });
             object.append(span);
 
         //handles
@@ -41,16 +40,16 @@ this.rangeslide = function(
                     handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
                     object.append(handles[handleNames[a]]);
                 //handle
-                    var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, style:{fill:handleStyle}});
+                    var handle = interfacePart.builder('rectangle','handle',{width:width,height:height*handleHeight, colour:handleStyle});
                     handles[handleNames[a]].append(handle);
                 //invisible handle
                     var invisibleHandleHeight = height*handleHeight + height*0.01;
-                    var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, style:{fill:invisibleHandleStyle}});
+                    var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
                     handles[handleNames[a]].append(invisibleHandle);
             }
 
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
 
 
@@ -93,12 +92,12 @@ this.rangeslide = function(
                 values[handle] = a;
 
             //adjust y positions
-                handles.start.parameter.y( values.start*height*(1-handleHeight) );
-                handles.end.parameter.y( values.end*height*(1-handleHeight) );
+                handles.start.y( values.start*height*(1-handleHeight) );
+                handles.end.y( values.end*height*(1-handleHeight) );
 
             //adjust span height (with a little bit of padding so the span is under the handles a little)
-                span.parameter.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
-                span.parameter.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
+                span.y( height*(handleHeight + values.start - handleHeight*(values.start + 0.1)) );
+                span.height( height*( values.end - values.start + handleHeight*(values.start - values.end - 1 + 0.2) ) );
 
             if(update && object.onchange){object.onchange(values);}
         }
@@ -142,12 +141,12 @@ this.rangeslide = function(
             //calculate the distance the click is from the top of the slider (accounting for angle)
                 var offset = backingAndSlot.getOffset();
                 var delta = {
-                    x: x - (backingAndSlot.x     + offset.x),
-                    y: y - (backingAndSlot.y     + offset.y),
-                    a: 0 - (backingAndSlot.angle + offset.a),
+                    x: x - (backingAndSlot.x()     + offset.x),
+                    y: y - (backingAndSlot.y()     + offset.y),
+                    a: 0 - (backingAndSlot.angle() + offset.angle),
                 };
 
-            return workspace.library.math.cartesianAngleAdjust( delta.x, delta.y, delta.a ).y / backingAndSlotCover.height;
+            return _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
         }
 
         //background click
@@ -155,13 +154,13 @@ this.rangeslide = function(
                 span.onmousedown = function(){};
                 span.onclick = function(){};
                 
-            backingAndSlotCover.onmousedown = function(x,y,event){};//to stop unit selection
-            backingAndSlotCover.onclick = function(x,y,event){
+            backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
+            backingAndSlotCover.onclick = function(event){
                 if(!interactable){return;}
                 if(grappled){return;}
 
                 //calculate the distance the click is from the top of the slider (accounting for angle)
-                    var d = getPositionWithinFromMouse(x,y);
+                    var d = getPositionWithinFromMouse(event.X,event.Y);
 
                 //use the distance to calculate the correct value to set the slide to
                 //taking into account the slide handle's size also
@@ -188,7 +187,7 @@ this.rangeslide = function(
                 if(grappled){return;}
 
                 var move = event.deltaY/100;
-                var globalScale = workspace.core.viewport.scale();
+                var globalScale = _canvas_.core.viewport.scale();
                 var val = move/(10*globalScale);
 
                 set(values.start-val,'start');
@@ -196,17 +195,16 @@ this.rangeslide = function(
             };
 
         //span panning - drag
-            span.onmousedown = function(x,y,event){
+            span.onmousedown = function(event){
                 if(!interactable){return;}
                 grappled = true;
 
                 var initialValue = values.start;
-                var initialPosition = getPositionWithinFromMouse(x,y);
+                var initialPosition = getPositionWithinFromMouse(event.X,event.Y);
 
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
-                        var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                        var livePosition = getPositionWithinFromMouse(point.x,point.y);
+                        var livePosition = getPositionWithinFromMouse(event.X,event.Y);
                         pan( initialValue+(livePosition-initialPosition) )
                         object.onchange(values);
                     },
@@ -219,19 +217,18 @@ this.rangeslide = function(
 
         //handle movement
             for(var a = 0; a < handleNames.length; a++){
-                handles[handleNames[a]].children[1].onmousedown = (function(a){
-                    return function(x,y,event){
+                handles[handleNames[a]].children()[1].onmousedown = (function(a){
+                    return function(event){
                         if(!interactable){return;}
                         grappled = true;
             
                         var initialValue = values[handleNames[a]];
-                        var initialPosition = getPositionWithinFromMouse(x,y);
+                        var initialPosition = getPositionWithinFromMouse(event.X,event.Y);
                         
-                        workspace.system.mouse.mouseInteractionHandler(
+                        _canvas_.system.mouse.mouseInteractionHandler(
                             function(event){
-                                var point = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-                                var livePosition = getPositionWithinFromMouse(point.x,point.y);
-                                set( initialValue+(livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
+                                var livePosition = getPositionWithinFromMouse(event.X,event.Y);
+                                set( initialValue + (livePosition-initialPosition)/(1-handleHeight), handleNames[a] );
                                 object.onchange(values);
                             },
                             function(event){

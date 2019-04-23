@@ -1,7 +1,7 @@
 this.universalreadout = function(x,y,a){
     var style = {
-        background:{fill:'rgba(200,200,200,1)'},
-        text:{fill:'rgba(0,0,0,1)', size:0.75, font:'Courier New'},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
     };
     var design = {
         name: 'universalreadout',
@@ -24,7 +24,7 @@ this.universalreadout = function(x,y,a){
         // spaceOutline: true,
         elements:[
             {type:'circle', name:'base', data:{
-                x:10, y:10, r:20, style:style.background,
+                x:10, y:10, radius:20, colour:style.background,
             }},
             {type:'connectionNode_data', name:'in', data:{
                 x: 0, y: 0, width: 20, height: 20,
@@ -34,7 +34,7 @@ this.universalreadout = function(x,y,a){
     };
 
     //main object
-        var object = workspace.interface.unit.builder(this.universalreadout,design);
+        var object = _canvas_.interface.unit.builder(this.universalreadout,design);
 
     //internal functions
         var lines = [];
@@ -55,7 +55,7 @@ this.universalreadout = function(x,y,a){
 
             //write in the new list
             for(var a = 0; a < lines.length; a++){
-                lineElements[a] = workspace.interface.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, size:style.text.size, text:lines[a], style:style.text })
+                lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
                 object.append( lineElements[a] );
             }
         }

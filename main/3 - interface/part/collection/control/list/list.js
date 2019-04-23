@@ -9,65 +9,65 @@ this.list = function(
     itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
     breakHeightMux=0.0025, breakWidthMux=0.9, 
     spacingHeightMux=0.005,
-    backing_style='rgba(230,230,230,1)', break_style='rgba(195,195,195,1)',
+    backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
 
-    text_font = '5pt Arial',
-    text_textBaseline = 'alphabetic',
-    text_fill = 'rgba(0,0,0,1)',
-    text_stroke = 'rgba(0,0,0,0)',
-    text_lineWidth = 1,
+    text_font = 'Arial',
+    text_size=2.5,
+    text_colour = {r:0/255,g:0/255,b:0/255,a:1},
+    text_spacing=0.1, 
+    text_interCharacterSpacing=0,
 
-    item__off__fill=                          'rgba(180,180,180,1)',
-    item__off__stroke=                        'rgba(0,0,0,0)',
-    item__off__lineWidth=                     0,
-    item__up__fill=                           'rgba(200,200,200,1)',
-    item__up__stroke=                         'rgba(0,0,0,0)',
-    item__up__lineWidth=                      0,
-    item__press__fill=                        'rgba(230,230,230,1)',
-    item__press__stroke=                      'rgba(0,0,0,0)',
-    item__press__lineWidth=                   0,
-    item__select__fill=                       'rgba(200,200,200,1)',
-    item__select__stroke=                     'rgba(120,120,120,1)',
-    item__select__lineWidth=                  2,
-    item__select_press__fill=                 'rgba(230,230,230,1)',
-    item__select_press__stroke=               'rgba(120,120,120,1)',
-    item__select_press__lineWidth=            2,
-    item__glow__fill=                         'rgba(220,220,220,1)',
-    item__glow__stroke=                       'rgba(0,0,0,0)',
-    item__glow__lineWidth=                    0,
-    item__glow_press__fill=                   'rgba(250,250,250,1)',
-    item__glow_press__stroke=                 'rgba(0,0,0,0)',
-    item__glow_press__lineWidth=              0,
-    item__glow_select__fill=                  'rgba(220,220,220,1)',
-    item__glow_select__stroke=                'rgba(120,120,120,1)',
-    item__glow_select__lineWidth=             2,
-    item__glow_select_press__fill=            'rgba(250,250,250,1)',
-    item__glow_select_press__stroke=          'rgba(120,120,120,1)',
-    item__glow_select_press__lineWidth=       2,
-    item__hover__fill=                        'rgba(220,220,220,1)',
-    item__hover__stroke=                      'rgba(0,0,0,0)',
-    item__hover__lineWidth=                   0,
-    item__hover_press__fill=                  'rgba(240,240,240,1)',
-    item__hover_press__stroke=                'rgba(0,0,0,0)',
-    item__hover_press__lineWidth=             0,
-    item__hover_select__fill=                 'rgba(220,220,220,1)',
-    item__hover_select__stroke=               'rgba(120,120,120,1)',
-    item__hover_select__lineWidth=            2,
-    item__hover_select_press__fill=           'rgba(240,240,240,1)',
-    item__hover_select_press__stroke=         'rgba(120,120,120,1)',
-    item__hover_select_press__lineWidth=      2,
-    item__hover_glow__fill=                   'rgba(240,240,240,1)',
-    item__hover_glow__stroke=                 'rgba(0,0,0,0)',
-    item__hover_glow__lineWidth=              0,
-    item__hover_glow_press__fill=             'rgba(250,250,250,1)',
-    item__hover_glow_press__stroke=           'rgba(0,0,0,0)',
-    item__hover_glow_press__lineWidth=        0,
-    item__hover_glow_select__fill=            'rgba(240,240,240,1)',
-    item__hover_glow_select__stroke=          'rgba(120,120,120,1)',
-    item__hover_glow_select__lineWidth=       2,
-    item__hover_glow_select_press__fill=      'rgba(250,250,250,1)',
-    item__hover_glow_select_press__stroke=    'rgba(120,120,120,1)',
-    item__hover_glow_select_press__lineWidth= 2,
+    item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
+    item__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
+    item__off__lineThickness=                     0,
+    item__up__colour=                             {r:200/255,g:200/255,b:200/255,a:1},
+    item__up__lineColour=                         {r:0/255,g:0/255,b:0/255,a:0},
+    item__up__lineThickness=                      0,
+    item__press__colour=                          {r:230/255,g:230/255,b:230/255,a:1},
+    item__press__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+    item__press__lineThickness=                   0,
+    item__select__colour=                         {r:200/255,g:200/255,b:200/255,a:1},
+    item__select__lineColour=                     {r:120/255,g:120/255,b:120/255,a:1},
+    item__select__lineThickness=                  0.75,
+    item__select_press__colour=                   {r:230/255,g:230/255,b:230/255,a:1},
+    item__select_press__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+    item__select_press__lineThickness=            0.75,
+    item__glow__colour=                           {r:220/255,g:220/255,b:220/255,a:1},
+    item__glow__lineColour=                       {r:0/255,g:0/255,b:0/255,a:0},
+    item__glow__lineThickness=                    0,
+    item__glow_press__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
+    item__glow_press__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+    item__glow_press__lineThickness=              0,
+    item__glow_select__colour=                    {r:220/255,g:220/255,b:220/255,a:1},
+    item__glow_select__lineColour=                {r:120/255,g:120/255,b:120/255,a:1},
+    item__glow_select__lineThickness=             0.75,
+    item__glow_select_press__colour=              {r:250/255,g:250/255,b:250/255,a:1},
+    item__glow_select_press__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+    item__glow_select_press__lineThickness=       0.75,
+    item__hover__colour=                          {r:220/255,g:220/255,b:220/255,a:1},
+    item__hover__lineColour=                      {r:0/255,g:0/255,b:0/255,a:0},
+    item__hover__lineThickness=                   0,
+    item__hover_press__colour=                    {r:240/255,g:240/255,b:240/255,a:1},
+    item__hover_press__lineColour=                {r:0/255,g:0/255,b:0/255,a:0},
+    item__hover_press__lineThickness=             0,
+    item__hover_select__colour=                   {r:220/255,g:220/255,b:220/255,a:1},
+    item__hover_select__lineColour=               {r:120/255,g:120/255,b:120/255,a:1},
+    item__hover_select__lineThickness=            0.75,
+    item__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
+    item__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
+    item__hover_select_press__lineThickness=      0.75,
+    item__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+    item__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
+    item__hover_glow__lineThickness=              0,
+    item__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
+    item__hover_glow_press__lineColour=           {r:0/255,g:0/255,b:0/255,a:0},
+    item__hover_glow_press__lineThickness=        0,
+    item__hover_glow_select__colour=              {r:240/255,g:240/255,b:240/255,a:1},
+    item__hover_glow_select__lineColour=          {r:120/255,g:120/255,b:120/255,a:1},
+    item__hover_glow_select__lineThickness=       0.75,
+    item__hover_glow_select_press__colour=        {r:250/255,g:250/255,b:250/255,a:1},
+    item__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
+    item__hover_glow_select_press__lineThickness= 0.75,
 
     onenter=function(){},
     onleave=function(){},
@@ -88,9 +88,7 @@ this.list = function(
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //backing
-            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{
-                fill:backing_style,
-            }});
+            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backing_style});
             object.append(backing);
         //item collection
             var itemCollection = interfacePart.builder('group','itemCollection');
@@ -110,7 +108,7 @@ this.list = function(
                             var temp = interfacePart.builder( 'rectangle', ''+a, {
                                 x:0, y:accumulativeHeight,
                                 width:width, height:height*spacingHeightMux,
-                                style:{fill:'rgba(255,0,0,0)'}
+                                colour:{r:1,g:0,b:0,a:0},
                             });
 
                             accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
@@ -119,7 +117,7 @@ this.list = function(
                             var temp = interfacePart.builder( 'rectangle', ''+a, {
                                 x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
                                 width:width*breakWidthMux, height:height*breakHeightMux,
-                                style:{fill:break_style}
+                                colour:break_style
                             });
 
                             accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
@@ -137,62 +135,62 @@ this.list = function(
 
                                 style:{
                                     text_font:text_font,
-                                    text_textBaseline:text_textBaseline,
-                                    text_fill:text_fill,
-                                    text_stroke:text_stroke,
-                                    text_lineWidth:text_lineWidth,
+                                    text_size:text_size,
+                                    text_colour:text_colour,
+                                    text_spacing:text_spacing,
+                                    text_interCharacterSpacing:text_interCharacterSpacing,
 
-                                    background__off__fill:                            item__off__fill,
-                                    background__off__stroke:                          item__off__stroke,
-                                    background__off__lineWidth:                       item__off__lineWidth,
-                                    background__up__fill:                             item__up__fill,
-                                    background__up__stroke:                           item__up__stroke,
-                                    background__up__lineWidth:                        item__up__lineWidth,
-                                    background__press__fill:                          item__press__fill,
-                                    background__press__stroke:                        item__press__stroke,
-                                    background__press__lineWidth:                     item__press__lineWidth,
-                                    background__select__fill:                         item__select__fill,
-                                    background__select__stroke:                       item__select__stroke,
-                                    background__select__lineWidth:                    item__select__lineWidth,
-                                    background__select_press__fill:                   item__select_press__fill,
-                                    background__select_press__stroke:                 item__select_press__stroke,
-                                    background__select_press__lineWidth:              item__select_press__lineWidth,
-                                    background__glow__fill:                           item__glow__fill,
-                                    background__glow__stroke:                         item__glow__stroke,
-                                    background__glow__lineWidth:                      item__glow__lineWidth,
-                                    background__glow_press__fill:                     item__glow_press__fill,
-                                    background__glow_press__stroke:                   item__glow_press__stroke,
-                                    background__glow_press__lineWidth:                item__glow_press__lineWidth,
-                                    background__glow_select__fill:                    item__glow_select__fill,
-                                    background__glow_select__stroke:                  item__glow_select__stroke,
-                                    background__glow_select__lineWidth:               item__glow_select__lineWidth,
-                                    background__glow_select_press__fill:              item__glow_select_press__fill,
-                                    background__glow_select_press__stroke:            item__glow_select_press__stroke,
-                                    background__glow_select_press__lineWidth:         item__glow_select_press__lineWidth,
-                                    background__hover__fill:                          item__hover__fill,
-                                    background__hover__stroke:                        item__hover__stroke,
-                                    background__hover__lineWidth:                     item__hover__lineWidth,
-                                    background__hover_press__fill:                    item__hover_press__fill,
-                                    background__hover_press__stroke:                  item__hover_press__stroke,
-                                    background__hover_press__lineWidth:               item__hover_press__lineWidth,
-                                    background__hover_select__fill:                   item__hover_select__fill,
-                                    background__hover_select__stroke:                 item__hover_select__stroke,
-                                    background__hover_select__lineWidth:              item__hover_select__lineWidth,
-                                    background__hover_select_press__fill:             item__hover_select_press__fill,
-                                    background__hover_select_press__stroke:           item__hover_select_press__stroke,
-                                    background__hover_select_press__lineWidth:        item__hover_select_press__lineWidth,
-                                    background__hover_glow__fill:                     item__hover_glow__fill,
-                                    background__hover_glow__stroke:                   item__hover_glow__stroke,
-                                    background__hover_glow__lineWidth:                item__hover_glow__lineWidth,
-                                    background__hover_glow_press__fill:               item__hover_glow_press__fill,
-                                    background__hover_glow_press__stroke:             item__hover_glow_press__stroke,
-                                    background__hover_glow_press__lineWidth:          item__hover_glow_press__lineWidth,
-                                    background__hover_glow_select__fill:              item__hover_glow_select__fill,
-                                    background__hover_glow_select__stroke:            item__hover_glow_select__stroke,
-                                    background__hover_glow_select__lineWidth:         item__hover_glow_select__lineWidth,
-                                    background__hover_glow_select_press__fill:        item__hover_glow_select_press__fill,
-                                    background__hover_glow_select_press__stroke:      item__hover_glow_select_press__stroke,
-                                    background__hover_glow_select_press__lineWidth:   item__hover_glow_select_press__lineWidth,
+                                    background__off__colour:                            item__off__colour,
+                                    background__off__lineColour:                        item__off__lineColour,
+                                    background__off__lineThickness:                     item__off__lineThickness,
+                                    background__up__colour:                             item__up__colour,
+                                    background__up__lineColour:                         item__up__lineColour,
+                                    background__up__lineThickness:                      item__up__lineThickness,
+                                    background__press__colour:                          item__press__colour,
+                                    background__press__lineColour:                      item__press__lineColour,
+                                    background__press__lineThickness:                   item__press__lineThickness,
+                                    background__select__colour:                         item__select__colour,
+                                    background__select__lineColour:                     item__select__lineColour,
+                                    background__select__lineThickness:                  item__select__lineThickness,
+                                    background__select_press__colour:                   item__select_press__colour,
+                                    background__select_press__lineColour:               item__select_press__lineColour,
+                                    background__select_press__lineThickness:            item__select_press__lineThickness,
+                                    background__glow__colour:                           item__glow__colour,
+                                    background__glow__lineColour:                       item__glow__lineColour,
+                                    background__glow__lineThickness:                    item__glow__lineThickness,
+                                    background__glow_press__colour:                     item__glow_press__colour,
+                                    background__glow_press__lineColour:                 item__glow_press__lineColour,
+                                    background__glow_press__lineThickness:              item__glow_press__lineThickness,
+                                    background__glow_select__colour:                    item__glow_select__colour,
+                                    background__glow_select__lineColour:                item__glow_select__lineColour,
+                                    background__glow_select__lineThickness:             item__glow_select__lineThickness,
+                                    background__glow_select_press__colour:              item__glow_select_press__colour,
+                                    background__glow_select_press__lineColour:          item__glow_select_press__lineColour,
+                                    background__glow_select_press__lineThickness:       item__glow_select_press__lineThickness,
+                                    background__hover__colour:                          item__hover__colour,
+                                    background__hover__lineColour:                      item__hover__lineColour,
+                                    background__hover__lineThickness:                   item__hover__lineThickness,
+                                    background__hover_press__colour:                    item__hover_press__colour,
+                                    background__hover_press__lineColour:                item__hover_press__lineColour,
+                                    background__hover_press__lineThickness:             item__hover_press__lineThickness,
+                                    background__hover_select__colour:                   item__hover_select__colour,
+                                    background__hover_select__lineColour:               item__hover_select__lineColour,
+                                    background__hover_select__lineThickness:            item__hover_select__lineThickness,
+                                    background__hover_select_press__colour:             item__hover_select_press__colour,
+                                    background__hover_select_press__lineColour:         item__hover_select_press__lineColour,
+                                    background__hover_select_press__lineThickness:      item__hover_select_press__lineThickness,
+                                    background__hover_glow__colour:                     item__hover_glow__colour,
+                                    background__hover_glow__lineColour:                 item__hover_glow__lineColour,
+                                    background__hover_glow__lineThickness:              item__hover_glow__lineThickness,
+                                    background__hover_glow_press__colour:               item__hover_glow_press__colour,
+                                    background__hover_glow_press__lineColour:           item__hover_glow_press__lineColour,
+                                    background__hover_glow_press__lineThickness:        item__hover_glow_press__lineThickness,
+                                    background__hover_glow_select__colour:              item__hover_glow_select__colour,
+                                    background__hover_glow_select__lineColour:          item__hover_glow_select__lineColour,
+                                    background__hover_glow_select__lineThickness:       item__hover_glow_select__lineThickness,
+                                    background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
+                                    background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
+                                    background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
                                 }
                             });
 
@@ -219,16 +217,16 @@ this.list = function(
             }
             calculatedListHeight = refreshList();
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
         //stencil
-            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, style:{ fill:'rgba(0,0,0,0)' }});
+            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
             object.stencil(stencil);
-            object.clip(true);
+            object.clipActive(true);
 
 
     //interaction
-        cover.onwheel = function(x,y,event){
+        cover.onwheel = function(event){
             if(!interactable){return;}
             var move = event.deltaY/100;
             object.position( object.position() + move/10 );
@@ -246,7 +244,7 @@ this.list = function(
 
             if( calculatedListHeight < height ){return;}
             var movementSpace = calculatedListHeight - height;
-            itemCollection.parameter.y( -a*movementSpace );
+            itemCollection.y( -a*movementSpace );
             
             if(update&&this.onpositionchange){this.onpositionchange(a);}
         };

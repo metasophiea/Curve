@@ -3,24 +3,20 @@ this.launchpad = function(x,y,a){
         xCount:8, yCount:8,
     };
     var style = {
-        background:{fill:'rgba(200,200,200,1)'},
-        h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+
         button: {
-            background__up__fill:'rgba(175,175,175,1)', 
-            background__hover__fill:'rgba(220,220,220,1)', 
-            background__hover_press__fill:'rgba(150,150,150,1)',
+            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
         },
         grid: {
-            backing: 'rgba(200,175,200,1)',
-            check: 'rgba(150,125,150,1)',
-            backingGlow: 'rgba(225,175,225,1)',
-            checkGlow:'rgba(200,125,200,1)'
+            backing:{r:200/255,g:175/255,b:200/255,a:1},
+            check:{r:150/255,g:125/255,b:150/255,a:1},
+            backingGlow:{r:225/255,g:175/255,b:225/255,a:1},
+            checkGlow:{r:200/255,g:125/255,b:200/255,a:1}
         },
-        sevenSegmentDisplay:{
-            background:'rgba(200,175,200,1)',
-            glow:'rgba(225,225,225,1)',
-            dim:'rgba(150,125,150,1',
-        }
     };
     var design = {
         name: 'launchpad',
@@ -30,7 +26,7 @@ this.launchpad = function(x,y,a){
         space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], colour:style.background }},
 
             //input data
                 {type:'connectionNode_data', name:'pulse_input', data:{ x: 125, y: 5, width: 5, height: 10 }},
@@ -39,10 +35,10 @@ this.launchpad = function(x,y,a){
             //pulse
                 {type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
             //rastorgrid
-                {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, style:{fill:style.grid.backing}}},
+                {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, colour:style.grid.backing}},
                 {type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
             //page select
-                {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5, style:style.button }},
+                {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5}},
                 {type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
                 {type:'button_rectangle',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
         ]
@@ -54,7 +50,7 @@ this.launchpad = function(x,y,a){
 
 
     //main object
-        var object = workspace.interface.unit.builder(this.launchpad,design);
+        var object = _canvas_.interface.unit.builder(this.launchpad,design);
 
     //import/export
         object.exportData = function(){
@@ -90,16 +86,16 @@ this.launchpad = function(x,y,a){
         object.internalCircuits = new this.launchpad.sequencer(values.xCount, values.yCount);
         object.internalCircuits.commands = function(data){
             for(var a = 0; a < values.yCount; a++){
-                if(data[a]){ object.io['out_'+a].send('pulse'); }
+                if(data[a]){ object.io.data['out_'+a].send('pulse'); }
             }
         };
         object.internalCircuits.pageChange = pageChange;
 
     //wiring
-        object.elements.connectionNode_data.pulse_input.onreceive = function(){object.internalCircuits.inc();lightLine();};
-        object.elements.connectionNode_data.nextPage_input.onreceive = function(){object.internalCircuits.incPage();};
-        object.elements.connectionNode_data.prevPage_input.onreceive = function(){object.internalCircuits.decPage();};
-        object.elements.button_rectangle.pulse_button.onreceive = function(){object.internalCircuits.inc();lightLine();};
+        object.elements.connectionNode_data.pulse_input.onreceivedata = function(){object.internalCircuits.inc();lightLine();};
+        object.elements.connectionNode_data.nextPage_input.onreceivedata = function(){object.internalCircuits.incPage();};
+        object.elements.connectionNode_data.prevPage_input.onreceivedata = function(){object.internalCircuits.decPage();};
+        object.elements.button_rectangle.pulse_button.onpress = function(){object.internalCircuits.inc();lightLine();};
         object.elements.rastorgrid.rastorgrid.onchange = function(data){object.internalCircuits.importPage(data);};
         object.elements.button_rectangle.nextPage.onpress = function(){object.internalCircuits.incPage();};
         object.elements.button_rectangle.prevPage.onpress = function(){object.internalCircuits.decPage();};

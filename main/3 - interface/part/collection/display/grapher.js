@@ -3,23 +3,25 @@ this.grapher = function(
     x, y, width=120, height=60, angle=0,
 
     foregroundStyles=[
-        {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-        {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-        {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+        {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+        {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
+        {colour:{r:0,g:1,b:1,a:1}, thickness:0.25},
     ],
     foregroundTextStyles=[
-        {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-        {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-        {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+        {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:1,a:1}, size:7.5, font:'Helvetica'},
     ],
 
-    backgroundStyle_stroke='rgba(0,100,0,1)',
-    backgroundStyle_lineWidth=0.25,
-    backgroundTextStyle_fill='rgba(0,150,0,1)',
-    backgroundTextStyle_font='1.5pt Helvetica',
+    backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+    backgroundStyle_lineThickness=0.25,
+    backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
+    backgroundTextStyle_size=7.5,
+    backgroundTextStyle_font='Helvetica',
 
-    backingStyle='rgba(50,50,50,1)',
+    backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 ){
+    var fontSizeMux = 1/7;
     var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
     var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
     var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
@@ -29,7 +31,7 @@ this.grapher = function(
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backingStyle} });
+            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
             object.append(rect);
         //background group
             var backgroundGroup = interfacePart.builder( 'group', 'background' );
@@ -40,7 +42,7 @@ this.grapher = function(
         //stencil
             var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
             object.stencil(stencil);
-            object.clip(true);
+            object.clipActive(true);
 
     //graphics
         function drawBackground(){
@@ -48,7 +50,7 @@ this.grapher = function(
 
             //horizontal lines
                 //calculate the x value for all parts of this section
-                    var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
+                    var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
 
                 //add all horizontal markings
                     for(var a = 0; a < horizontalMarkings.points.length; a++){
@@ -56,21 +58,20 @@ this.grapher = function(
                             if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
         
                         //calculate the y value for this section
-                            var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                            var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
 
                         //add line and text to group
                             //lines
-                                var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineWidth,style:{fill:backgroundStyle_stroke}} );
+                                var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineThickness,colour:backgroundStyle_colour} );
                                 backgroundGroup.append(path);
                             //text
                                 if( horizontalMarkings.printText ){
                                     var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
-                                        x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y,
+                                        x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                         text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
-                                        style:{
-                                            fill:backgroundTextStyle_fill,
-                                            font:backgroundTextStyle_font
-                                        }
+                                        colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
+                                        width:backgroundTextStyle_size*fontSizeMux, height:backgroundTextStyle_size*fontSizeMux,
+                                        printingMode:{widthCalculation:'absolute',vertical:'top'}
                                     } );
                                     backgroundGroup.append(text);
                                 }
@@ -78,7 +79,7 @@ this.grapher = function(
 
             //vertical lines
                 //calculate the y value for all parts of this section
-                    var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                    var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
 
                 //add all vertical markings
                     for(var a = 0; a < verticalMarkings.points.length; a++){
@@ -86,25 +87,24 @@ this.grapher = function(
                             if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
 
                         //calculate the x value for this section
-                            var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                            var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
 
                         //add line and text to group
                             //lines
-                                var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineWidth,height:height,style:{fill:backgroundStyle_stroke}} );
+                                var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineThickness,height:height,colour:backgroundStyle_colour} );
                                 backgroundGroup.append(path);
                         
                             //text
                                 if( verticalMarkings.printText ){
                                     var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
-                                        x:x+verticalMarkings.textPositionOffset.x, y:y+verticalMarkings.textPositionOffset.y,
+                                        x:x+verticalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                         text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
-                                        style:{
-                                            fill:backgroundTextStyle_fill,
-                                            font:backgroundTextStyle_font
-                                        }
+                                        colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
+                                        width:backgroundTextStyle_size*fontSizeMux, height:backgroundTextStyle_size*fontSizeMux,
+                                        printingMode:{widthCalculation:'absolute',vertical:'top'}
                                     } );
                                     backgroundGroup.append(text);
-                            }
+                                }
                     }
         }
         function drawForeground(y,x,layer=0){
@@ -135,28 +135,24 @@ this.grapher = function(
                             for(var a = 0; a < layer.y.length; a++){ 
                                 points.push( {
                                     x: a*(width/(layer.y.length-1)), 
-                                    y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                    y: height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
                                 } );
                             }
                         }else if( layer.y.length == layer.x.length ){ //straight print
                             for(var a = 0; a < layer.y.length; a++){ 
                                 points.push( {
-                                    x:          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
-                                    y: height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
+                                    x:          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true), 
+                                    y: height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true),
                                 } );
                             }
-                        }else{console.error('grapher::'+name,':layers are of differnt length:',layer.y,layer.x);}
+                        }else{console.error('grapher::'+name,':layers are of different length:',layer.y,layer.x);}
 
                     //create path shape and add it to the group
                         foregroundGroup.append(
                             interfacePart.builder( 'path', 'layer_'+L, { 
-                                points:points, 
-                                style:{
-                                    stroke: foregroundStyles[L].stroke,
-                                    lineWidth: foregroundStyles[L].lineWidth,
-                                    lineJoin: foregroundStyles[L].lineJoin,
-                                    lineCap: foregroundStyles[L].lineJoin,
-                                }
+                                pointsAsXYArray:points, 
+                                colour:foregroundStyles[L].colour,
+                                thickness:foregroundStyles[L].thickness,
                             })
                         );
                 }

@@ -1,6 +1,6 @@
 this.dial_discrete_image = function(
     name='dial_discrete_image',
-    x, y, r=15, angle=0, interactable=true,
+    x, y, radius=10, angle=0, interactable=true,
     value=0, resetValue=0, optionCount=5,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
@@ -15,7 +15,7 @@ this.dial_discrete_image = function(
         
         //dial
             var dial = interfacePart.builder('dial_continuous_image',name,{
-                x:0, y:0, r:r, angle:0, interactable:interactable,
+                x:0, y:0, radius:radius, angle:0, interactable:interactable,
                 startAngle:startAngle, maxAngle:maxAngle,
                 handleURL:handleURL, slotURL:slotURL, needleURL:needleURL,
             });
@@ -74,7 +74,7 @@ this.dial_discrete_image = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        dial.getChildByName('handle').onwheel = function(x,y,event){
+        dial.getChildByName('handle').onwheel = function(event){
             if(!interactable){return;}
             if(grappled){return;}
 
@@ -87,15 +87,15 @@ this.dial_discrete_image = function(
                 if(object.onrelease != undefined){object.onrelease(value);}
             }
         };
-        dial.getChildByName('handle').onmousedown = function(x,y,event){
+        dial.getChildByName('handle').onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
-            var initialY = event.y;
+            var initialY = event.Y;
 
             grappled = true;
-            workspace.system.mouse.mouseInteractionHandler(
+            _canvas_.system.mouse.mouseInteractionHandler(
                 function(event){
-                    var diff = Math.round( (event.y - initialY)/25 );
+                    var diff = Math.round( (event.Y - initialY)/25 );
                     set( initialValue - diff );
                     if(object.onchange != undefined){object.onchange(value);}
                 },

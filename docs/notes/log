@@ -4,7 +4,9 @@
     wrong)
   - fixed the connectionNode angle thing (I was using the wrong 'angle' value)
   - slightly improved the needleOverlay selection area resizing mouse situation
-  - i think it's time...
+  - replaced the canvas version with the new webGL version (putting all the old
+    code into the workshop) Things are going pretty smooth, except the core.html
+    demo code, which needs a little fixing up
 
 
 2019-04-22

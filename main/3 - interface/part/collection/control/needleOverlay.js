@@ -1,9 +1,9 @@
 this.needleOverlay = function(
     name='needleOverlay',
-    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/512, selectNeedle=true, selectionArea=true,
+    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9-1), selectNeedle=true, selectionArea=true,
     needleStyles=[
-        'rgba(240, 240, 240, 1)',
-        'rgba(255, 231, 114, 1)'
+        {r:0.94,g:0.94,b:0.94,a:1},
+        {r:1,g:0.9,b:0.44,a:1},
     ],
     onchange=function(needle,value){}, 
     onrelease=function(needle,value){}, 
@@ -15,7 +15,7 @@ this.needleOverlay = function(
         //main
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         //backing
-            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, style:{fill:'rgba(0,0,0,0)'}});
+            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(backing);
         //control objects
             var controlObjectsGroup = interfacePart.builder('group','controlObjectsGroup');
@@ -32,42 +32,42 @@ this.needleOverlay = function(
                 controlObjects.lead.append( interfacePart.builder('rectangle','handle',{
                     width:needleWidth*width,
                     height:height,
-                    style:{ fill:needleStyles[0] },
+                    colour:needleStyles[0],
                 }));
                 controlObjects.lead.append( interfacePart.builder('rectangle','invisibleHandle',{
                     x:(width*needleWidth - invisibleHandleWidth)/2, 
                     width:invisibleHandleWidth,
                     height:height,
-                    style:{ fill:'rgba(255,0,0,0)' },
+                    colour:{r:1,g:0,b:0,a:0},
                 }));
             //selection_A
                 controlObjects.selection_A = interfacePart.builder('group','selection_A');
                 controlObjects.selection_A.append( interfacePart.builder('rectangle','handle',{
                     width:needleWidth*width,
                     height:height,
-                    style:{fill:needleStyles[1]},
+                    colour:needleStyles[1],
                 }));
                 controlObjects.selection_A.append( interfacePart.builder('rectangle','invisibleHandle',{
                     x:(width*needleWidth - invisibleHandleWidth)/2, 
                     width:invisibleHandleWidth,height:height,
-                    style:{fill:'rgba(255,0,0,0)'},
+                    colour:{r:1,g:0,b:0,a:0},
                 }));
             //selection_B
                 controlObjects.selection_B = interfacePart.builder('group','selection_B');
                 controlObjects.selection_B.append( interfacePart.builder('rectangle','handle',{
                     width:needleWidth*width,
                     height:height,
-                    style:{fill:needleStyles[1]},
+                    colour:needleStyles[1],
                 }));
                 controlObjects.selection_B.append( interfacePart.builder('rectangle','invisibleHandle',{
                     x:(width*needleWidth - invisibleHandleWidth)/2, 
                     width:invisibleHandleWidth,height:height,
-                    style:{fill:'rgba(255,0,0,0)'},
+                    colour:{r:1,g:0,b:0,a:0},
                 }));
             //selection_area
                 controlObjects.selection_area = interfacePart.builder('rectangle','selection_area',{
                     height:height,
-                    style:{fill:workspace.library.misc.blendColours(needleStyles[1],'rgba(0,0,0,0)',0.5)},
+                    colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5),
                 });
             //marks
                 controlObjects.markGroup = interfacePart.builder('group','markGroup');
@@ -80,18 +80,18 @@ this.needleOverlay = function(
         var selectionNeedleA_grappled = false;
         var selectionNeedleB_grappled = false;
         function currentMousePosition_x(event){
-            return event.x*Math.cos(object.__calculationAngle) - event.y*Math.sin(object.__calculationAngle);
+            return event.X*Math.cos(object.__calculationAngle) - event.Y*Math.sin(object.__calculationAngle);
         }
-        function getRelativeX(event){
-            var workspacePoint = workspace.core.viewport.windowPoint2workspacePoint(event.x,event.y);
-            var point = {
-                x: workspacePoint.x - backing.extremities.points[0].x, 
-                y: workspacePoint.y - backing.extremities.points[0].y,
+        function getRelativeX(x,y){
+            var offset = controlObjectsGroup.getOffset();
+            var delta = {
+                x: x - (controlObjectsGroup.x()     + offset.x),
+                y: y - (controlObjectsGroup.y()     + offset.y),
+                a: 0 - (controlObjectsGroup.angle() + offset.angle),
             };
-            return {
-                x: (point.x*Math.cos(object.__calculationAngle) - point.y*Math.sin(object.__calculationAngle)) / width,
-                y: (point.y*Math.cos(object.__calculationAngle) - point.x*Math.sin(object.__calculationAngle)) / height,
-            };
+            var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a );
+
+            return d.x/backing.width();
         }
         function needleJumpTo(needle,location){
             var group = needle == 'lead' ? controlObjectsGroup_front : controlObjectsGroup_back;
@@ -109,14 +109,14 @@ this.needleOverlay = function(
                 }
 
             //actually set the location of the needle (adjusting for the size of needle)
-                controlObjects[needle].parameter.x( location*width - width*needleWidth*location );
+                controlObjects[needle].x( location*width - width*needleWidth*location );
             //save this value
                 needleData[needle] = location;
         }
         function computeSelectionArea(){
-            //if the selection needles' data are missing (or they are the same position) remove the area element and return
+            //if the selection needles' data are missing (or they are the same position) remove the area element (if it exists) and return
                 if(needleData.selection_A == undefined || needleData.selection_B == undefined || needleData.selection_A == needleData.selection_B){
-                    controlObjectsGroup_back.remove(controlObjects.selection_area);
+                    if(controlObjectsGroup_back.contains(controlObjects.selection_area)){ controlObjectsGroup_back.remove(controlObjects.selection_area); }
                     if(object.selectionAreaToggle){object.selectionAreaToggle(false);}
                     delete needleData.selection_area;
                     return;
@@ -140,8 +140,8 @@ this.needleOverlay = function(
                 var area = B - needleWidth*B - start; 
                 if(area < 0){area = 0}
 
-                controlObjects.selection_area.parameter.x(width*start);
-                controlObjects.selection_area.parameter.width(width*area);
+                controlObjects.selection_area.x(width*start);
+                controlObjects.selection_area.width(width*area);
         }
         function mark(position){
             //the name of the mark to be added, is the position it is at
@@ -153,7 +153,7 @@ this.needleOverlay = function(
                     controlObjects.markGroup.append( interfacePart.builder('rectangle',''+position,{
                         x:position*width, 
                         width:needleWidth*width, height:height,
-                        style:{ fill:needleStyles[0] },
+                        colour:needleStyles[0],
                     }));
                     return true;
                 }else{ 
@@ -197,32 +197,36 @@ this.needleOverlay = function(
 
     //interaction
         //generic onmousedown code for interaction
-            backing.onmousedown = function(x,y,event){
+            backing.onmousedown = function(event){
                 if(!interactable){return;}
-                if( workspace.system.keyboard.pressedKeys.shift ){
-                    var firstPosition = getRelativeX(event).x;
-                    workspace.system.mouse.mouseInteractionHandler(
-                        function(event){ object.area(firstPosition,getRelativeX(event).x); },    
+                if( _canvas_.system.keyboard.pressedKeys.shift ){
+                    var firstPosition = getRelativeX(event.X,event.Y);
+                    _canvas_.system.mouse.mouseInteractionHandler(
+                        function(event){ 
+                            var x = getRelativeX(event.X,event.Y);
+                            if(x < 0){x = 0;}else if(x > 1){x = 1;}
+                            object.area(firstPosition,x);
+                        },    
                     );
                 }else{
-                    object.select(getRelativeX(event).x);
+                    object.select(getRelativeX(event.X,event.Y));
                 }
             };
-            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){workspace.core.viewport.cursor('col-resize');};
-            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){workspace.core.viewport.cursor('default');};
-            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(event){
                 if(!interactable){return;}
 
                 leadNeedle_grappled = true;
 
                 var initialValue = needleData.lead;
                 var initialX = currentMousePosition_x(event);
-                var mux = (width - width*needleWidth);// / 2;
+                var mux = (width - width*needleWidth);
 
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
                         var numerator = initialX - currentMousePosition_x(event);
-                        var divider = workspace.core.viewport.scale();
+                        var divider = _canvas_.core.viewport.scale();
                         var location = initialValue - numerator/(divider*mux);
                         location = location < 0 ? 0 : location;
                         location = location > 1 ? 1 : location;
@@ -230,7 +234,7 @@ this.needleOverlay = function(
                     },
                     function(event){
                         var numerator = initialX - currentMousePosition_x(event);
-                        var divider = workspace.core.viewport.scale();
+                        var divider = _canvas_.core.viewport.scale();
                         var location = initialValue - numerator/(divider*mux);
                         location = location < 0 ? 0 : location;
                         location = location > 1 ? 1 : location;
@@ -241,9 +245,10 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){workspace.core.viewport.cursor('col-resize');};
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){workspace.core.viewport.cursor('default');};
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmousemove = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(event){
                 if(!interactable){return;}
 
                 selectionNeedleA_grappled = true;
@@ -252,10 +257,10 @@ this.needleOverlay = function(
                 var initialX = currentMousePosition_x(event);
                 var mux = (width - width*needleWidth);// / 2;
 
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
                         var numerator = initialX - currentMousePosition_x(event);
-                        var divider = workspace.core.viewport.scale();
+                        var divider = _canvas_.core.viewport.scale();
                         var location = initialValue - numerator/(divider*mux);
                         location = location < 0 ? 0 : location;
                         location = location > 1 ? 1 : location;
@@ -263,7 +268,7 @@ this.needleOverlay = function(
                     },
                     function(event){
                         var numerator = initialX - currentMousePosition_x(event);
-                        var divider = workspace.core.viewport.scale();
+                        var divider = _canvas_.core.viewport.scale();
                         var location = initialValue - numerator/(divider*mux);
                         location = location < 0 ? 0 : location;
                         location = location > 1 ? 1 : location;
@@ -274,9 +279,10 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(x,y,event){workspace.core.viewport.cursor('col-resize');};
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(x,y,event){workspace.core.viewport.cursor('default');};
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmousemove = function(event){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(event){
                 if(!interactable){return;}
 
                 selectionNeedleB_grappled = true;
@@ -285,10 +291,10 @@ this.needleOverlay = function(
                 var initialX = currentMousePosition_x(event);
                 var mux = (width - width*needleWidth);// / 2;
 
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
                         var numerator = initialX - currentMousePosition_x(event);
-                        var divider = workspace.core.viewport.scale();
+                        var divider = _canvas_.core.viewport.scale();
                         var location = initialValue - numerator/(divider*mux);
                         location = location < 0 ? 0 : location;
                         location = location > 1 ? 1 : location;
@@ -296,7 +302,7 @@ this.needleOverlay = function(
                     },
                     function(event){
                         var numerator = initialX - currentMousePosition_x(event);
-                        var divider = workspace.core.viewport.scale();
+                        var divider = _canvas_.core.viewport.scale();
                         var location = initialValue - numerator/(divider*mux);
                         location = location < 0 ? 0 : location;
                         location = location > 1 ? 1 : location;
@@ -307,12 +313,13 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_area.onmouseenter = function(x,y,event){workspace.core.viewport.cursor('grab');};
-            controlObjects.selection_area.onmouseleave = function(x,y,event){workspace.core.viewport.cursor('default');};
-            controlObjects.selection_area.onmousedown = function(x,y,event){
+            controlObjects.selection_area.onmouseenter = function(event){_canvas_.core.viewport.cursor('grab');};
+            controlObjects.selection_area.onmousemove = function(event){_canvas_.core.viewport.cursor('grab');};
+            controlObjects.selection_area.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_area.onmousedown = function(event){
                 if(!interactable){return;}
 
-                workspace.core.viewport.cursor('grabbing');
+                _canvas_.core.viewport.cursor('grabbing');
                 selectionArea_grappled = true;
 
                 var areaSize = needleData.selection_B - needleData.selection_A;
@@ -322,7 +329,7 @@ this.needleOverlay = function(
 
                 function calculate(event){
                     var numerator = initialX - currentMousePosition_x(event);
-                    var divider = workspace.core.viewport.scale();
+                    var divider = _canvas_.core.viewport.scale();
 
                     var location = {
                         A: initialValues.A - numerator/(divider*mux),
@@ -336,13 +343,13 @@ this.needleOverlay = function(
 
                     return location;
                 }
-                workspace.system.mouse.mouseInteractionHandler(
+                _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
                         var location = calculate(event);
                         area(location.A,location.B);
                     },
                     function(event){
-                        workspace.core.viewport.cursor('grab');
+                        _canvas_.core.viewport.cursor('grab');
 
                         var location = calculate(event);
 
@@ -357,7 +364,7 @@ this.needleOverlay = function(
             };
 
         //doubleclick to destroy selection area
-            controlObjects.selection_A.ondblclick = function(x,y,event,shape){ if(!interactable){return;} area(-1,-1); workspace.core.viewport.cursor('default'); };
+            controlObjects.selection_A.ondblclick = function(){ if(!interactable){return;} area(-1,-1); _canvas_.core.viewport.cursor('default'); };
             controlObjects.selection_B.ondblclick = controlObjects.selection_A.ondblclick;
             controlObjects.selection_area.ondblclick = controlObjects.selection_A.ondblclick;
     

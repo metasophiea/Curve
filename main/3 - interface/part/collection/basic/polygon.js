@@ -1,43 +1,13 @@
-this.polygon = function(
-    name=null, 
-    points=[], 
-    ignored=false,
-    fillStyle='rgba(255,100,255,1)', 
-    strokeStyle='rgba(0,0,0,0)', 
-    lineWidth=1,
-    lineJoin='round',
-    miterLimit=2,
-){
-    var temp = workspace.core.arrangement.createElement('polygon');
+this.polygon = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1} ){
+    var temp = _canvas_.core.shape.create('polygon');
     temp.name = name;
-    temp.points = points;
     temp.ignored = ignored;
-    temp.style.fill = fillStyle;
-    temp.style.stroke = strokeStyle;
-    temp.style.lineWidth = lineWidth;
-    temp.style.lineJoin = lineJoin;
-    temp.style.miterLimit = miterLimit;
+    temp.colour = colour;
+    
+    temp.stopAttributeStartedExtremityUpdate = true;
+    if(points.length != 0){ temp.points(points); }
+    else{ temp.pointsAsXYArray(pointsAsXYArray); }
+    temp.stopAttributeStartedExtremityUpdate = false;
 
     return temp;
-};
-
-// this.advancedPolygon = function(
-//     name=null, 
-//     points=[], 
-//     fillStyle='rgba(255,100,255,1)', 
-//     strokeStyle='rgba(0,0,0,1)', 
-//     lineWidth=1,
-//     lineJoin='round',
-//     miterLimit=2,
-// ){
-//     var temp = workspace.core.arrangement.createElement('advancedPolygon');
-//     temp.name = name;
-//     temp.points = points;
-//     temp.style.fill = fillStyle;
-//     temp.style.stroke = strokeStyle;
-//     temp.style.lineWidth = lineWidth;
-//     temp.style.lineJoin = lineJoin;
-//     temp.style.miterLimit = miterLimit;
-
-//     return temp;
-// };
+}

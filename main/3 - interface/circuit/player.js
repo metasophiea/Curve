@@ -107,7 +107,7 @@ this.player = function(context){
         };
         this.load = function(type,callback,url=''){
             state.fileLoaded = false;
-            workspace.library.audio.loadAudioFile(
+            _canvas_.library.audio.loadAudioFile(
                 function(data){
                     state.itself.stop();
                     flow.track = data;
@@ -122,7 +122,7 @@ this.player = function(context){
             //(player must be stopped and file must be loaded)
                 if(state.playing || !state.fileLoaded){return;}
             //load buffer, enter settings and start from playhead position
-                flow.bufferSource = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(a){state.itself.stop();});
+                flow.bufferSource = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, function(a){state.itself.stop();});
                 flow.bufferSource.loop = state.loop.active;
                 flow.bufferSource.loopStart = state.loop.start;
                 flow.bufferSource.loopEnd = state.loop.end;
@@ -195,6 +195,6 @@ this.player = function(context){
         this.progress = function(){return this.currentTime()/this.duration()};
         this.waveformSegment = function(data={start:0,end:1},resolution){
             if(data==undefined || !state.fileLoaded){return [];}
-            return workspace.library.audio.waveformSegment(flow.track.buffer, data, resolution);
+            return _canvas_.library.audio.waveformSegment(flow.track.buffer, data, resolution);
         };
 };

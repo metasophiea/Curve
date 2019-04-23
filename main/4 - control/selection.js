@@ -2,26 +2,26 @@ this.selectedUnits = [];
 this.lastSelectedUnits = null;
 this.clipboard = [];
 
-this.selectUnit = function(unit,shiftToFront=true){
+this.selectUnit = function(unit,shiftToFront=true){ 
     //control switch
-        if(!workspace.control.interaction.enableUnitSelection()){return;}
+        if(!_canvas_.control.interaction.enableUnitSelection()){return;}
 
     //check if object is already selected
         if( this.selectedUnits.indexOf(unit) != -1 ){return;}
 
     //shift object to front of view, (within it's particular pane)
         if(shiftToFront){
-            var pane = workspace.system.pane.getMiddlegroundPane(unit);
+            var pane = _canvas_.system.pane.getMiddlegroundPane(unit);
             pane.remove(unit);
             pane.append(unit);
         }
 
     //colourize space
-        var tmp = workspace.interface.part.builder( 
-            'polygon', 'selectionGlow-'+unit.getAddress(), 
-            { 
-                points:unit.space.points.map(a => { return workspace.library.math.cartesianAngleAdjust( a.x - unit.x, a.y - unit.y, -unit.parameter.angle() ); }), 
-                style:{ fill:'rgba(244, 226, 66, 0.25)', stroke:'rgba(244, 226, 66, 1)' } 
+        var tmp = _canvas_.interface.part.builder( 
+            'polygonWithOutline', 'selectionGlow-'+unit.getAddress(), 
+            {
+                pointsAsXYArray:unit.space.originalPoints, 
+                colour:{r:244/255,g:226/255,b:66/255,a:0.25}, lineColour:{r:244/255,g:226/255,b:66/255,a:1}
             } 
         );
         unit.append(tmp);
@@ -37,8 +37,6 @@ this.selectUnits = function(unitList){
     }
 };
 this.deselectUnit = function(unit){
-    // console.log('deselecting unit',unit);
-
     //decolourize space
         unit.remove( unit.getChildByName('selectionGlow-'+unit.getAddress()) );
     
@@ -47,18 +45,14 @@ this.deselectUnit = function(unit){
         if(unit.ondeselect){unit.ondeselect();}
 };
 this.selectEverything = function(){
-    // console.log('selecting everything');
-    
     this.deselectEverything();
-    for(var a = 0; a < workspace.system.pane.mm.children.length; a++){
-        if( !workspace.system.pane.mm.children[a]._isCable ){
-            this.selectUnit(workspace.system.pane.mm.children[a],false);
+    for(var a = 0; a < _canvas_.system.pane.mm.children().length; a++){
+        if( !_canvas_.system.pane.mm.children()[a]._isCable ){
+            this.selectUnit(_canvas_.system.pane.mm.children()[a],false);
         }
     }
 };
 this.deselectEverything = function(){
-    // console.log('deselecting everything');
-
     while(this.selectedUnits.length > 0){
         this.deselectUnit( this.selectedUnits[0] );
     }
@@ -66,7 +60,7 @@ this.deselectEverything = function(){
 
 this.cut = function(){
     //control switch
-        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
+        if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
         
@@ -75,15 +69,15 @@ this.cut = function(){
 };
 this.copy = function(){
     //control switch
-        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
+        if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
-    this.clipboard = workspace.control.scene.documentUnits(this.selectedUnits);
+    this.clipboard = _canvas_.control.scene.documentUnits(this.selectedUnits);
 };
 this.paste = function(position){
     //control switch
-        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
+        if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -101,13 +95,14 @@ this.paste = function(position){
                 this.clipboard.forEach( element => points.push(element.position) );
 
             //get the bounding box of this selection, and then the top left point of that
-                var topLeft = workspace.library.math.boundingBoxFromPoints(points).topLeft;
+                var topLeft = _canvas_.library.math.boundingBoxFromPoints(points).topLeft;
 
             //if no position has been provided at all; calculate a new one from the mouse position
                 if(position == undefined){
-                    position = workspace.core.viewport.mousePosition();
+                    position = _canvas_.core.viewport.mousePosition();
+                    position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(position.x,position.y);
                     if(position.x == undefined || position.y == undefined){
-                        position = workspace.core.viewport.windowPoint2workspacePoint(0, 0);
+                        position = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(0, 0);
                     }
                 }
 
@@ -120,12 +115,12 @@ this.paste = function(position){
         }
 
     //unit printing
-        workspace.control.scene.printUnits( this.clipboard );
+        _canvas_.control.scene.printUnits( this.clipboard );
 
 };
 this.duplicate = function(){
     //control switch
-        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
+        if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -135,7 +130,7 @@ this.duplicate = function(){
 };
 this.delete = function(){
     //control switch
-        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
+        if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -147,7 +142,7 @@ this.delete = function(){
             //run disconnect on every connection node of this unit
                 unit.disconnectEverything();
             //remove the object from the pane it's in
-                workspace.system.pane.getMiddlegroundPane(unit).remove(unit);
+                _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
         //remove object from selected array
             this.selectedUnits.shift();
     }

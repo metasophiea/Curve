@@ -24,10 +24,10 @@ var design = {
         {type:'connectionNode_audio', name:'connectionNode_audio2', data:{ x:220, y:80, isAudioOutput:false }},
     ],
 };
-var newUnit = workspace.interface.unit.test.builder(function(){console.log('make new unit!');},design);
-workspace.system.pane.mm.append( newUnit );
+var newUnit = _canvas_.interface.unit.builder(function(){console.log('make new unit!');},design);
+_canvas_.system.pane.mm.append( newUnit );
 
 console.log( newUnit.io );
 
-workspace.core.render.active(true);
-workspace.core.viewport.stopMouseScroll(true);
+_canvas_.core.render.active(true);
+_canvas_.core.viewport.stopMouseScroll(true);

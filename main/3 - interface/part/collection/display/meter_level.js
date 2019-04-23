@@ -4,10 +4,12 @@ this.meter_level = function(
     width=20, height=60,
     markings=[0.125,0.25,0.375,0.5,0.625,0.75,0.875],
 
-    backingStyle='rgb(10,10,10)',
-    levelStyles=['rgba(250,250,250,1)','fill:rgb(100,100,100)'],
-    markingStyle_fill='rgba(220,220,220,1)',
-    markingStyle_font='1pt Courier New',
+    backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+    levelStyles=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.3,g:0.3,b:0.3,a:1}],
+    markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
+    markingStyle_font='Roboto-Regular',
+    markingStyle_printingMode={widthCalculation:'absolute', horizontal:'left', vertical:'top'},
+    markingStyle_size=2,
 ){
 
     //elements
@@ -30,10 +32,10 @@ this.meter_level = function(
             function makeMark(y){
                 var markThickness = 0.2;
                 var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                return interfacePart.builder('polygon', 'mark_'+y, {points:path, style:{fill:markingStyle_fill}});
+                return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
             }
             function insertText(y,text){
-                return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y+0.3, text:text, style:{fill:markingStyle_fill,font:markingStyle_font}});
+                return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
             }
 
             for(var a = 0; a < markings.length; a++){

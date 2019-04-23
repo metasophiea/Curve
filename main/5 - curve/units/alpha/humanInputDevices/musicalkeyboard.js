@@ -3,26 +3,26 @@ this.musicalKeyboard = function(x,y,a){
         velocity:0.5,
     };
     var style = {
-        background:{fill:'rgba(200,200,200,1)'},
-        h1:{fill:'rgba(0,0,0,1)', font:'4pt Courier New'},
-        h2:{fill:'rgba(0,0,0,1)', font:'3pt Courier New'},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
         dial:{
-            handle:{fill:'rgba(220,220,220,1)'},
-            slot:{fill:'rgba(50,50,50,1)'},
-            needle:{fill:'rgba(250,150,150,1)'},
+            handle:{r:220/255,g:220/255,b:220/255,a:1},
+            slot:{r:50/255,g:50/255,b:50/255,a:1},
+            needle:{r:250/255,g:150/255,b:150/255,a:1},
         },
         keys:{
             white:{
-                background__up__fill:'rgba(250,250,250,1)',
-                background__press__fill:'rgba(230,230,230,1)',
-                background__glow__fill:'rgba(220,200,220,1)',
-                background__glow_press__fill:'rgba(200,150,200,1)',
+                background__up__colour:{r:250/255,g:250/255,b:250/255,a:1},
+                background__press__colour:{r:230/255,g:230/255,b:230/255,a:1},
+                background__glow__colour:{r:220/255,g:200/255,b:220/255,a:1},
+                background__glow_press__colour:{r:200/255,g:150/255,b:200/255,a:1},
             },
             black:{
-                background__up__fill:'rgba(50,50,50,1)',
-                background__press__fill:'rgba(100,100,100,1)',
-                background__glow__fill:'rgba(220,200,220,1)',
-                background__glow_press__fill:'rgba(200,150,200,1)',
+                background__up__colour:{r:50/255,g:50/255,b:50/255,a:1},
+                background__press__colour:{r:100/255,g:100/255,b:100/255,a:1},
+                background__glow__colour:{r:220/255,g:200/255,b:220/255,a:1},
+                background__glow_press__colour:{r:200/255,g:150/255,b:200/255,a:1},
             }
         }
     };
@@ -34,7 +34,7 @@ this.musicalKeyboard = function(x,y,a){
         space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}], colour:style.background }},
 
             {type:'connectionNode_data', name:'midiout', data:{ 
                 x: -5, y: 5, width: 5, height: 10,
@@ -43,16 +43,16 @@ this.musicalKeyboard = function(x,y,a){
                 x: 320, y: 5, width: 5, height: 10,
                 onreceive:function(address,data){
                     if(address != 'midinumber'){return;}
-                    if(data.velocity > 0){ object.elements.button_rectangle[workspace.library.audio.num2name(data.num)].press();   }
-                                     else{ object.elements.button_rectangle[workspace.library.audio.num2name(data.num)].release(); }
+                    if(data.velocity > 0){ object.elements.button_rectangle[_canvas_.library.audio.num2name(data.num)].press();   }
+                                     else{ object.elements.button_rectangle[_canvas_.library.audio.num2name(data.num)].release(); }
                 },
             }},
 
             //velocity dial
-            {type:'text', name:'velocity_title', data:{x:5,  y:59,   text:'velocity', style:style.h1}},
-            {type:'text', name:'velocity_0',     data:{x:4,  y:55,   text:'0',        style:style.h2}},
-            {type:'text', name:'velocity_1/2',   data:{x:14, y:26.5, text:'1/2',      style:style.h2}},
-            {type:'text', name:'velocity_1',     data:{x:29, y:55,   text:'1',        style:style.h2}},
+            {type:'text', name:'velocity_title', data:{x:17.5, y:56, text:'velocity', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {type:'text', name:'velocity_0',     data:{x:8,    y:52, text:'0',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {type:'text', name:'velocity_1/2',   data:{x:17.5, y:28, text:'1/2',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {type:'text', name:'velocity_1',     data:{x:27,   y:52, text:'1',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
             {type:'dial_continuous',name:'velocity_dial',data:{
                 x:17.5, y:42, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, value:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
@@ -74,8 +74,8 @@ this.musicalKeyboard = function(x,y,a){
                         {type:'button_rectangle', name:noteNames[a], data:{
                             x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
                             style:style.keys.white,
-                            onpress:function(){ object.io.data.midiout.send('midinumber', { num:workspace.library.audio.name2num(this.name), velocity:state.velocity } ); },
-                            onrelease:function(){ object.io.data.midiout.send('midinumber', { num:workspace.library.audio.name2num(this.name), velocity:0 } ); },
+                            onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
+                            onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
                         }}
                     );
                     whiteX += whiteKeyWidth;
@@ -89,8 +89,8 @@ this.musicalKeyboard = function(x,y,a){
                         {type:'button_rectangle', name:noteNames[a], data:{
                             x:blackX, y:12.5, width:5, height:30, hoverable:false,
                             style:style.keys.black,
-                            onpress:function(){ object.io.data.midiout.send('midinumber', { num:workspace.library.audio.name2num(this.name), velocity:state.velocity } ); },
-                            onrelease:function(){ object.io.data.midiout.send('midinumber', { num:workspace.library.audio.name2num(this.name), velocity:0 } ); },
+                            onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
+                            onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
                         }}
                     );
                     blackX += whiteKeyWidth;
@@ -102,15 +102,15 @@ this.musicalKeyboard = function(x,y,a){
 
 
     //main object
-        var object = workspace.interface.unit.builder(this.musicalKeyboard,design);
+        var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
 
     //keycapture
-        object.onkeydown = function(x,y,event){
+        object.elements.polygon.backing.onkeydown = function(event){
             if( glyphs.includes(event.key) ){
                 object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].press();
             }
         };
-        object.onkeyup = function(x,y,event){
+        object.elements.polygon.backing.onkeyup = function(event){
             if( glyphs.includes(event.key) ){
                 object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].release();
             }

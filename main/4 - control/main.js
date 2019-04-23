@@ -1,7 +1,7 @@
 {{include:mouse.js}}
 {{include:keyboard.js}}
 
-workspace.control = new function(){
+_canvas_.control = new function(){
     var control = this;
 
     this.interaction = new function(){
@@ -101,9 +101,8 @@ workspace.control = new function(){
     };
 
     this.gui = new function(){
-        var pane = workspace.system.pane.f;
+        var pane = _canvas_.system.pane.f;
         var menubar = undefined;
-        var scale = window.devicePixelRatio;
 
         this.refresh = function(){
             if(menubar != undefined){menubar.refresh();}
@@ -111,13 +110,13 @@ workspace.control = new function(){
 
         this.showMenubar = function(){
             //control switch
-                if(!workspace.control.interaction.enableMenubar()){
+                if(!_canvas_.control.interaction.enableMenubar()){
                     this.hideMenubar();
                     return;
                 }
 
             if(menubar != undefined){return;}
-            menubar = control.gui.elements.menubar(0,0,scale);
+            menubar = control.gui.elements.menubar(0,0);
             pane.append( menubar );
         };
         this.hideMenubar = function(){
@@ -136,22 +135,20 @@ workspace.control = new function(){
         };
     };
     this.viewport = new function(){
-        this.width = function(){ return workspace.width; };
-        this.height = function(){ return workspace.height; };
+        this.width = function(){ return _canvas_.width/window.devicePixelRatio; };
+        this.height = function(){ return _canvas_.height/window.devicePixelRatio; };
 
-        this.scale = function(a){ return workspace.core.viewport.scale(a); };
-        this.position = function(x,y){ return workspace.core.viewport.position(x,y); };
+        this.scale = function(a){ return _canvas_.core.viewport.scale(a); };
+        this.position = function(x,y){ return _canvas_.core.viewport.position(x,y); };
         this.refresh = function(){ 
-            workspace.core.viewport.refresh();
+            _canvas_.core.viewport.refresh();
             control.gui.refresh();
         };
-        this.stopMouseScroll = function(bool){
-            return workspace.core.viewport.stopMouseScroll(bool);
-        }
-        this.activeRender = function(bool){ return workspace.core.render.active(bool); };
+        this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
+        this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
     };
     this.scene = new function(){
-        var pane = workspace.system.pane.mm;
+        var pane = _canvas_.system.pane.mm;
         var IDcounter = 0;
 
         {{include:scene.js}}
@@ -163,5 +160,5 @@ workspace.control = new function(){
 
 {{include:grapple.js}}
 
-window.onresize = workspace.control.viewport.refresh; 
-workspace.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
+window.onresize = _canvas_.control.viewport.refresh; 
+_canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );

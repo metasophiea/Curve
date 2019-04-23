@@ -1,8 +1,8 @@
-this.testUnit_1 = function(x,y,a){
+this.testUnit_1 = function(x,y,angle){
     var design = {
         name: 'testUnit_1',
         collection: 'test',
-        x:x, y:y, a:a,
+        x:x, y:y, angle:angle,
         space: [
             {x:-5,y:-5}, 
             {x:280,y:-5}, 
@@ -20,12 +20,12 @@ this.testUnit_1 = function(x,y,a){
         // spaceOutline: true,
         elements:[
             //basic
-                {type:'rectangle', name:'testRectangle', data:{ x:5, y:5, width:30, height:30, style:{fill:'rgba(255,0,0,1)'} }},
-                {type:'circle', name:'testCircle', data:{ x:20, y:55, r:15 }},
-                {type:'image', name:'testImage', data:{ x:40, y:40, width:30, height:30, url:'https://t2.genius.com/unsafe/300x300/https%3A%2F%2Fimages.genius.com%2F72ee0b753f056baa410c17a6ad9fea70.588x588x1.jpg' } }, 
-                {type:'polygon', name:'testPolygon', data:{ points:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], style:{ fill:'rgba(0,255,0,1)' } } }, 
-                {type:'text', name:'testText', data:{ x:7.5, y:95, text:'Hello', style:{font:'20pt Arial', fill:'rgba(150,150,255,1)' } } }, 
-                {type:'path', name:'testPath', data:{ points:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] }}, 
+                {type:'rectangle', name:'testRectangle', data:{ x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1} }},
+                {type:'circle', name:'testCircle', data:{ x:20, y:55, radius:15 }},
+                {type:'image', name:'testImage', data:{ x:40, y:40, width:30, height:30, url:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg' } }, 
+                {type:'polygon', name:'testPolygon', data:{ pointsAsXYArray:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], colour:{r:0,g:1,b:0,a:1} } }, 
+                {type:'text', name:'testText', data:{ x:7.5, y:95, printingMode:{widthCalculation:'absolute'}, text:'Hello', colour:{r:150/255,g:150/255,b:1,a:1} } }, 
+                {type:'path', name:'testPath', data:{ pointsAsXYArray:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] } }, 
             //display
                 {type:'glowbox_rect', name:'test_glowbox_rect', data:{x:90,y:0}},
                 {type:'sevenSegmentDisplay', name:'test_sevenSegmentDisplay', data:{x:125,y:0}},

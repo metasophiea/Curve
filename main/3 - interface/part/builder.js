@@ -3,44 +3,23 @@ this.builder = function(type,name,data){
     if(data.style == undefined){data.style={};}
 
     switch(type){
-        default: console.warn('Unknown element: '+ type); return null;  
+        default: console.warn('Interface Part Builder :: Unknown element: '+ type); return null;  
         //basic
-            case 'group': return this.collection.basic.group(
-                name, data.x, data.y, data.angle, data.ignored,
-            );
-            case 'rectangle': return this.collection.basic.rectangle(
-                name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored,
-                data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, data.style.miterLimit
-            );
-            case 'image': return this.collection.basic.image(
-                name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url
-            );
-            case 'canvas': return this.collection.basic.canvas(
-                name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution
-            );
-            case 'polygon': return this.collection.basic.polygon(
-                name, data.points, data.ignored,
-                data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, data.style.miterLimit
-            );
-            case 'text': return this.collection.basic.text(
-                name, data.x, data.y, data.text, data.angle, data.anchor, data.size, data.ignored,
-                data.style.font, data.style.textAlign, data.style.textBaseline,
-                data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, data.style.miterLimit,
-            );
-            case 'circle': return this.collection.basic.circle(
-                name, data.x, data.y, data.r, data.ignored,
-                data.style.fill, data.style.stroke, data.style.lineWidth, data.style.lineJoin, data.style.miterLimit
-            );
-            case 'path': return this.collection.basic.path(
-                name, data.points, data.ignored,
-                data.style.stroke, data.style.lineWidth, data.style.lineCap, data.style.lineJoin, data.style.miterLimit
-            );
+            case 'group': return this.collection.basic.group( name, data.x, data.y, data.angle, data.ignored );
+            case 'rectangle': return this.collection.basic.rectangle( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour );
+            case 'rectangleWithOutline': return this.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
+            case 'image': return this.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
+            case 'canvas': return this.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
+            case 'polygon': return this.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
+            case 'polygonWithOutline': return this.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
+            case 'circle': return this.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour );
+            case 'circleWithOutline': return this.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
+            case 'path': return this.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
+            case 'loopedPath': return this.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray );
+            case 'text': return this.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing );
     
         //display
-            case 'glowbox_rect': return this.collection.display.glowbox_rect(
-                name, data.x, data.y, data.width, data.height, data.angle, 
-                data.style.glow, data.style.dim
-            );
+            case 'glowbox_rect': return this.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
             case 'sevenSegmentDisplay': return this.collection.display.sevenSegmentDisplay(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.background, data.style.glow, data.style.dim
@@ -71,11 +50,11 @@ this.builder = function(type,name,data){
             );
             case 'meter_level': return this.collection.display.meter_level(
                 name, data.x, data.y, data.angle, data.width, data.height, data.markings,
-                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
             );
             case 'audio_meter_level': return this.collection.display.audio_meter_level(
                 name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
-                data.style.backing, data.style.levels, data.style.markingStyle_fill, data.style.markingStyle_font,
+                data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
             );
             case 'rastorDisplay': return this.collection.display.rastorDisplay(
                 name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
@@ -83,48 +62,48 @@ this.builder = function(type,name,data){
             case 'grapher': return this.collection.display.grapher(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_lineWidth,
-                data.style.backgroundText_fill, data.style.backgroundText_font,
+                data.style.background_colour, data.style.background_lineThickness,
+                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_static': return this.collection.display.grapher_static(
                 name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_lineWidth,
-                data.style.backgroundText_fill, data.style.backgroundText_font,
+                data.style.background_colour, data.style.background_lineThickness,
+                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_periodicWave': return this.collection.display.grapher_periodicWave(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_lineWidth,
-                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.background_colour, data.style.background_lineThickness,
+                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_periodicWave_static': return this.collection.display.grapher_periodicWave_static(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_lineWidth,
-                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.background_colour, data.style.background_lineThickness,
+                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_audioScope': return this.collection.display.grapher_audioScope(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_lineWidth,
-                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.background_colour, data.style.background_lineThickness,
+                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
             case 'grapher_audioScope_static': return this.collection.display.grapher_audioScope_static(
                 name, data.x, data.y, data.width, data.height, data.angle,
                 data.style.foregrounds, data.style.foregroundText,
-                data.style.background_stroke, data.style.background_lineWidth,
-                data.style.backgroundText_fill, data.style.backgroundText_size, data.style.backgroundText_font,
+                data.style.background_colour, data.style.background_lineThickness,
+                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                 data.style.backing,
             );
 
         //control
-            //button
+           //button
                 case 'button_': return this.collection.control.button_(
                     name, data.x, data.y, data.angle, data.interactable,
                     data.active, data.hoverable, data.selectable, data.pressable,
@@ -139,7 +118,6 @@ this.builder = function(type,name,data){
                     
                     data.subject,
                 );
-
                 case 'button_image': return this.collection.control.button_image(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
                     data.active, data.hoverable, data.selectable, data.pressable,
@@ -175,25 +153,25 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
 
-                    data.style.background__off__fill,                     data.style.background__off__stroke,                     data.style.background__off__strokeWidth,
-                    data.style.background__up__fill,                      data.style.background__up__stroke,                      data.style.background__up__strokeWidth,
-                    data.style.background__press__fill,                   data.style.background__press__stroke,                   data.style.background__press__strokeWidth,
-                    data.style.background__select__fill,                  data.style.background__select__stroke,                  data.style.background__select__strokeWidth,
-                    data.style.background__select_press__fill,            data.style.background__select_press__stroke,            data.style.background__select_press__strokeWidth,
-                    data.style.background__glow__fill,                    data.style.background__glow__stroke,                    data.style.background__glow__strokeWidth,
-                    data.style.background__glow_press__fill,              data.style.background__glow_press__stroke,              data.style.background__glow_press__strokeWidth,
-                    data.style.background__glow_select__fill,             data.style.background__glow_select__stroke,             data.style.background__glow_select__strokeWidth,
-                    data.style.background__glow_select_press__fill,       data.style.background__glow_select_press__stroke,       data.style.background__glow_select_press__strokeWidth,
-                    data.style.background__hover__fill,                   data.style.background__hover__stroke,                   data.style.background__hover__strokeWidth,
-                    data.style.background__hover_press__fill,             data.style.background__hover_press__stroke,             data.style.background__hover_press__strokeWidth,
-                    data.style.background__hover_select__fill,            data.style.background__hover_select__stroke,            data.style.background__hover_select__strokeWidth,
-                    data.style.background__hover_select_press__fill,      data.style.background__hover_select_press__stroke,      data.style.background__hover_select_press__strokeWidth,
-                    data.style.background__hover_glow__fill,              data.style.background__hover_glow__stroke,              data.style.background__hover_glow__strokeWidth,
-                    data.style.background__hover_glow_press__fill,        data.style.background__hover_glow_press__stroke,        data.style.background__hover_glow_press__strokeWidth,
-                    data.style.background__hover_glow_select__fill,       data.style.background__hover_glow_select__stroke,       data.style.background__hover_glow_select__strokeWidth,
-                    data.style.background__hover_glow_select_press__fill, data.style.background__hover_glow_select_press__stroke, data.style.background__hover_glow_select_press__strokeWidth,
+                    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
                 
                     data.onenter,
                     data.onleave,
@@ -208,25 +186,25 @@ this.builder = function(type,name,data){
                     data.text_centre,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
 
-                    data.style.background__off__fill,                     data.style.background__off__stroke,                     data.style.background__off__strokeWidth,
-                    data.style.background__up__fill,                      data.style.background__up__stroke,                      data.style.background__up__strokeWidth,
-                    data.style.background__press__fill,                   data.style.background__press__stroke,                   data.style.background__press__strokeWidth,
-                    data.style.background__select__fill,                  data.style.background__select__stroke,                  data.style.background__select__strokeWidth,
-                    data.style.background__select_press__fill,            data.style.background__select_press__stroke,            data.style.background__select_press__strokeWidth,
-                    data.style.background__glow__fill,                    data.style.background__glow__stroke,                    data.style.background__glow__strokeWidth,
-                    data.style.background__glow_press__fill,              data.style.background__glow_press__stroke,              data.style.background__glow_press__strokeWidth,
-                    data.style.background__glow_select__fill,             data.style.background__glow_select__stroke,             data.style.background__glow_select__strokeWidth,
-                    data.style.background__glow_select_press__fill,       data.style.background__glow_select_press__stroke,       data.style.background__glow_select_press__strokeWidth,
-                    data.style.background__hover__fill,                   data.style.background__hover__stroke,                   data.style.background__hover__strokeWidth,
-                    data.style.background__hover_press__fill,             data.style.background__hover_press__stroke,             data.style.background__hover_press__strokeWidth,
-                    data.style.background__hover_select__fill,            data.style.background__hover_select__stroke,            data.style.background__hover_select__strokeWidth,
-                    data.style.background__hover_select_press__fill,      data.style.background__hover_select_press__stroke,      data.style.background__hover_select_press__strokeWidth,
-                    data.style.background__hover_glow__fill,              data.style.background__hover_glow__stroke,              data.style.background__hover_glow__strokeWidth,
-                    data.style.background__hover_glow_press__fill,        data.style.background__hover_glow_press__stroke,        data.style.background__hover_glow_press__strokeWidth,
-                    data.style.background__hover_glow_select__fill,       data.style.background__hover_glow_select__stroke,       data.style.background__hover_glow_select__strokeWidth,
-                    data.style.background__hover_glow_select_press__fill, data.style.background__hover_glow_select_press__stroke, data.style.background__hover_glow_select_press__strokeWidth,
+                    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
                 
                     data.onenter,
                     data.onleave,
@@ -242,25 +220,25 @@ this.builder = function(type,name,data){
                     data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
                     data.active, data.hoverable, data.selectable, data.pressable,
 
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
 
-                    data.style.background__off__fill,                     data.style.background__off__stroke,                     data.style.background__off__strokeWidth,
-                    data.style.background__up__fill,                      data.style.background__up__stroke,                      data.style.background__up__strokeWidth,
-                    data.style.background__press__fill,                   data.style.background__press__stroke,                   data.style.background__press__strokeWidth,
-                    data.style.background__select__fill,                  data.style.background__select__stroke,                  data.style.background__select__strokeWidth,
-                    data.style.background__select_press__fill,            data.style.background__select_press__stroke,            data.style.background__select_press__strokeWidth,
-                    data.style.background__glow__fill,                    data.style.background__glow__stroke,                    data.style.background__glow__strokeWidth,
-                    data.style.background__glow_press__fill,              data.style.background__glow_press__stroke,              data.style.background__glow_press__strokeWidth,
-                    data.style.background__glow_select__fill,             data.style.background__glow_select__stroke,             data.style.background__glow_select__strokeWidth,
-                    data.style.background__glow_select_press__fill,       data.style.background__glow_select_press__stroke,       data.style.background__glow_select_press__strokeWidth,
-                    data.style.background__hover__fill,                   data.style.background__hover__stroke,                   data.style.background__hover__strokeWidth,
-                    data.style.background__hover_press__fill,             data.style.background__hover_press__stroke,             data.style.background__hover_press__strokeWidth,
-                    data.style.background__hover_select__fill,            data.style.background__hover_select__stroke,            data.style.background__hover_select__strokeWidth,
-                    data.style.background__hover_select_press__fill,      data.style.background__hover_select_press__stroke,      data.style.background__hover_select_press__strokeWidth,
-                    data.style.background__hover_glow__fill,              data.style.background__hover_glow__stroke,              data.style.background__hover_glow__strokeWidth,
-                    data.style.background__hover_glow_press__fill,        data.style.background__hover_glow_press__stroke,        data.style.background__hover_glow_press__strokeWidth,
-                    data.style.background__hover_glow_select__fill,       data.style.background__hover_glow_select__stroke,       data.style.background__hover_glow_select__strokeWidth,
-                    data.style.background__hover_glow_select_press__fill, data.style.background__hover_glow_select_press__stroke, data.style.background__hover_glow_select_press__strokeWidth,
+                    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
                 
                     data.onenter,
                     data.onleave,
@@ -273,7 +251,7 @@ this.builder = function(type,name,data){
             //dial
                 case 'dial_continuous': return this.collection.control.dial_continuous(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue,
                     data.startAngle, data.maxAngle,
                     data.style.handle, data.style.slot, data.style.needle,
@@ -281,7 +259,7 @@ this.builder = function(type,name,data){
                 );
                 case 'dial_discrete': return this.collection.control.dial_discrete(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue, data.optionCount,
                     data.startAngle, data.maxAngle,
                     data.style.handle, data.style.slot, data.style.needle,
@@ -289,7 +267,7 @@ this.builder = function(type,name,data){
                 );
                 case 'dial_continuous_image': return this.collection.control.dial_continuous_image(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue,
                     data.startAngle, data.maxAngle,
                     data.handleURL, data.slotURL, data.needleURL,
@@ -297,7 +275,7 @@ this.builder = function(type,name,data){
                 );
                 case 'dial_discrete_image': return this.collection.control.dial_discrete_image(
                     name,
-                    data.x, data.y, data.r, data.angle, data.interactable,
+                    data.x, data.y, data.radius, data.angle, data.interactable,
                     data.value, data.resetValue, data.optionCount,
                     data.startAngle, data.maxAngle,
                     data.handleURL, data.slotURL, data.needleURL,
@@ -319,7 +297,7 @@ this.builder = function(type,name,data){
                     data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                     data.onchange, data.onrelease
                 );
-                case 'slidePanel_image': return this.collection.control.slidePanel(
+                case 'slidePanel_image': return this.collection.control.slidePanel_image(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
                     data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
                     data.onchange, data.onrelease
@@ -345,24 +323,24 @@ this.builder = function(type,name,data){
                     data.spacingHeightMux,
 
                     data.style.backing, data.style.break,
-                    data.style.text_font, data.style.text_textBaseline, data.style.text_fill, data.style.text_stroke, data.style.text_lineWidth,
-                    data.style.item__off__fill,                     data.style.item__off__stroke,                     data.style.item__off__strokeWidth,
-                    data.style.item__up__fill,                      data.style.item__up__stroke,                      data.style.item__up__strokeWidth,
-                    data.style.item__press__fill,                   data.style.item__press__stroke,                   data.style.item__press__strokeWidth,
-                    data.style.item__select__fill,                  data.style.item__select__stroke,                  data.style.item__select__strokeWidth,
-                    data.style.item__select_press__fill,            data.style.item__select_press__stroke,            data.style.item__select_press__strokeWidth,
-                    data.style.item__glow__fill,                    data.style.item__glow__stroke,                    data.style.item__glow__strokeWidth,
-                    data.style.item__glow_press__fill,              data.style.item__glow_press__stroke,              data.style.item__glow_press__strokeWidth,
-                    data.style.item__glow_select__fill,             data.style.item__glow_select__stroke,             data.style.item__glow_select__strokeWidth,
-                    data.style.item__glow_select_press__fill,       data.style.item__glow_select_press__stroke,       data.style.item__glow_select_press__strokeWidth,
-                    data.style.item__hover__fill,                   data.style.item__hover__stroke,                   data.style.item__hover__strokeWidth,
-                    data.style.item__hover_press__fill,             data.style.item__hover_press__stroke,             data.style.item__hover_press__strokeWidth,
-                    data.style.item__hover_select__fill,            data.style.item__hover_select__stroke,            data.style.item__hover_select__strokeWidth,
-                    data.style.item__hover_select_press__fill,      data.style.item__hover_select_press__stroke,      data.style.item__hover_select_press__strokeWidth,
-                    data.style.item__hover_glow__fill,              data.style.item__hover_glow__stroke,              data.style.item__hover_glow__strokeWidth,
-                    data.style.item__hover_glow_press__fill,        data.style.item__hover_glow_press__stroke,        data.style.item__hover_glow_press__strokeWidth,
-                    data.style.item__hover_glow_select__fill,       data.style.item__hover_glow_select__stroke,       data.style.item__hover_glow_select__strokeWidth,
-                    data.style.item__hover_glow_select_press__fill, data.style.item__hover_glow_select_press__stroke, data.style.item__hover_glow_select_press__strokeWidth,
+                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+                    data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
+                    data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
+                    data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
+                    data.style.item__select__colour,                  data.style.item__select__lineColour,                  data.style.item__select__lineThickness,
+                    data.style.item__select_press__colour,            data.style.item__select_press__lineColour,            data.style.item__select_press__lineThickness,
+                    data.style.item__glow__colour,                    data.style.item__glow__lineColour,                    data.style.item__glow__lineThickness,
+                    data.style.item__glow_press__colour,              data.style.item__glow_press__lineColour,              data.style.item__glow_press__lineThickness,
+                    data.style.item__glow_select__colour,             data.style.item__glow_select__lineColour,             data.style.item__glow_select__lineThickness,
+                    data.style.item__glow_select_press__colour,       data.style.item__glow_select_press__lineColour,       data.style.item__glow_select_press__lineThickness,
+                    data.style.item__hover__colour,                   data.style.item__hover__lineColour,                   data.style.item__hover__lineThickness,
+                    data.style.item__hover_press__colour,             data.style.item__hover_press__lineColour,             data.style.item__hover_press__lineThickness,
+                    data.style.item__hover_select__colour,            data.style.item__hover_select__lineColour,            data.style.item__hover_select__lineThickness,
+                    data.style.item__hover_select_press__colour,      data.style.item__hover_select_press__lineColour,      data.style.item__hover_select_press__lineThickness,
+                    data.style.item__hover_glow__colour,              data.style.item__hover_glow__lineColour,              data.style.item__hover_glow__lineThickness,
+                    data.style.item__hover_glow_press__colour,        data.style.item__hover_glow_press__lineColour,        data.style.item__hover_glow_press__lineThickness,
+                    data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
+                    data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
                 
                     data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
                 );
@@ -403,13 +381,13 @@ this.builder = function(type,name,data){
                     data.onchange, data.subject,
                 );
                 case 'checkbox_circle': return this.collection.control.checkbox_circle(
-                    name, data.x, data.y, data.r, data.angle, data.interactable,
+                    name, data.x, data.y, data.radius, data.angle, data.interactable,
                     data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
                     data.onchange,
                 );
                 case 'checkbox_image': return this.collection.control.checkbox_image(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                    data.uncheckURL, data.checkURL,
+                    data.uncheckURL, data.checkURL, data.uncheckGlowURL, data.checkGlowURL,
                     data.onchange,
                 );
                 case 'checkbox_polygon': return this.collection.control.checkbox_polygon(
@@ -422,10 +400,9 @@ this.builder = function(type,name,data){
                     data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
                     data.onchange,
                 );
-            //other
                 case 'rastorgrid': return this.collection.control.rastorgrid(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
-                    data.style.backing, data.style.check, data.style.backingGlow, data.style.checkGlow,
+                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
                     data.onchange
                 );
                 case 'needleOverlay': return this.collection.control.needleOverlay(
@@ -436,8 +413,8 @@ this.builder = function(type,name,data){
                 case 'grapher_waveWorkspace': return this.collection.control.grapher_waveWorkspace(
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
                     data.style.foregrounds, data.style.foregroundText,
-                    data.style.background_stroke, data.style.background_lineWidth,
-                    data.style.backgroundText_fill, data.style.backgroundText_font,
+                    data.style.background_colour, data.style.background_lineThickness,
+                    data.style.backgroundText_colour, data.style.backgroundText_font,
                     data.style.backing,
                     data.onchange, data.onrelease, data.selectionAreaToggle
                 );
@@ -478,7 +455,7 @@ this.builder = function(type,name,data){
                 data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
             );
             case 'connectionNode_audio': return this.collection.dynamic.connectionNode_audio(
-                name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, workspace.library.audio.context,
+                name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context,
                 data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                 data.onconnect, data.ondisconnect,
             );

@@ -1,12 +1,12 @@
 this.dial_continuous = function(
     name='dial_continuous',
-    x, y, r=15, angle=0, interactable=true,
+    x, y, radius=10, angle=0, interactable=true,
     value=0, resetValue=-1,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
-    handleStyle = {fill:'rgba(200,200,200,1)'},
-    slotStyle = {fill:'rgba(50,50,50,1)'},
-    needleStyle = {fill:'rgba(250,100,100,1)'},
+    handleStyle = {r:220/255, g:220/255, b:220/255, a:1},
+    slotStyle =   {r:50/255,  g:50/255,  b:50/255,  a:1},
+    needleStyle = {r:250/255, g:100/255, b:100/255, a:1},
 
     onchange=function(){},
     onrelease=function(){},
@@ -16,23 +16,11 @@ this.dial_continuous = function(
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('circle','slot',{r:r*1.1, style:{
-                fill:slotStyle.fill,
-                stroke:slotStyle.stroke,
-                lineWidth:slotStyle.lineWidth,
-                lineJoin:slotStyle.lineJoin,
-                miterLimit:slotStyle.miterLimit,
-            }});
+            var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
             object.append(slot);
 
         //handle
-            var handle = interfacePart.builder('circle','handle',{r:r, style:{
-                fill:handleStyle.fill,
-                stroke:handleStyle.stroke,
-                lineWidth:handleStyle.lineWidth,
-                lineJoin:handleStyle.lineJoin,
-                miterLimit:handleStyle.miterLimit,
-            }});
+            var handle = interfacePart.builder('circle','handle',{radius:radius, detail:50, colour:handleStyle});
             object.append(handle);
 
         //needle group
@@ -40,15 +28,9 @@ this.dial_continuous = function(
             object.append(needleGroup);
 
             //needle
-                var needleWidth = r/5;
-                var needleLength = r;
-                var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, style:{
-                    fill:needleStyle.fill,
-                    stroke:needleStyle.stroke,
-                    lineWidth:needleStyle.lineWidth,
-                    lineJoin:needleStyle.lineJoin,
-                    miterLimit:needleStyle.miterLimit,
-                }});
+                var needleWidth = radius/5;
+                var needleLength = radius;
+                var needle = interfacePart.builder('rectangle','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, colour:needleStyle});
                 needleGroup.append(needle);
 
 
@@ -62,7 +44,7 @@ this.dial_continuous = function(
             if(update && object.onchange != undefined){object.onchange(a);}
 
             value = a;
-            needleGroup.parameter.angle(startAngle + maxAngle*value);
+            needleGroup.angle(startAngle + maxAngle*value);
         }
 
 
@@ -85,7 +67,7 @@ this.dial_continuous = function(
 
 
     //interaction
-        var turningSpeed = r*4;
+        var turningSpeed = radius*4;
         
         handle.ondblclick = function(){
             if(!interactable){return;}
@@ -96,27 +78,27 @@ this.dial_continuous = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onwheel = function(x,y,event){
+        handle.onwheel = function(event){
             if(!interactable){return;}
             if(grappled){return;}
             
             var move = event.deltaY/100;
-            var globalScale = workspace.core.viewport.scale();
+            var globalScale = _canvas_.core.viewport.scale();
             set( value - move/(10*globalScale) );
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onmousedown = function(x,y,event){
+        handle.onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
-            var initialY = event.y;
+            var initialY = event.Y;
 
             grappled = true;
-            workspace.system.mouse.mouseInteractionHandler(
+            _canvas_.system.mouse.mouseInteractionHandler(
                 function(event){
                     var value = initialValue;
-                    var numerator = event.y - initialY;
-                    var divider = workspace.core.viewport.scale();
+                    var numerator = event.Y - initialY;
+                    var divider = _canvas_.core.viewport.scale();
                     set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                 },
                 function(event){

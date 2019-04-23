@@ -1,3 +1,3 @@
-workspace.interface.unit.collection.alpha = new function(){
+_canvas_.interface.unit.collection.alpha = new function(){
     {{include:alpha/*}} /**/
 };

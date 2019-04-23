@@ -3,20 +3,21 @@ this.grapher_waveWorkspace = function(
     x, y, width=120, height=60, angle=0, interactable=true, selectNeedle=true, selectionArea=true,
 
     foregroundStyles=[
-        {stroke:'rgba(0,255,0,1)', lineWidth:0.25, lineJoin:'round'},
-        {stroke:'rgba(255,255,0,1)', lineWidth:0.25, lineJoin:'round'},
+        {colour:{r:0,g:1,b:0,a:1}, thickness:0.25},
+        {colour:{r:1,g:1,b:0,a:1}, thickness:0.25},
     ],
     foregroundTextStyles=[
-        {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-        {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+        {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
     ],
 
-    backgroundStyle_stroke='rgba(0,100,0,1)',
-    backgroundStyle_lineWidth=0.25,
-    backgroundTextStyle_fill='rgba(0,150,0,1)',
-    backgroundTextStyle_font='10pt Helvetica',
+    backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+    backgroundStyle_lineThickness=0.25,
+    backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
+    backgroundTextStyle_size=2*7.5,
+    backgroundTextStyle_font='Helvetica',
 
-    backingStyle='rgba(50,50,50,1)',
+    backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 
     onchange=function(needle,value){}, 
     onrelease=function(needle,value){}, 
@@ -31,9 +32,10 @@ this.grapher_waveWorkspace = function(
                 style:{
                     foregrounds:foregroundStyles,   
                     foregroundText:foregroundTextStyles,
-                    background_stroke:backgroundStyle_stroke,
-                    background_lineWidth:backgroundStyle_lineWidth,
-                    backgroundText_fill:backgroundTextStyle_fill,
+                    backgroundStyle_colour:backgroundStyle_colour,
+                    backgroundStyle_lineThickness:backgroundStyle_lineThickness,
+                    backgroundText_colour:backgroundTextStyle_colour,
+                    backgroundText_size:backgroundTextStyle_size,
                     backgroundText_font:backgroundTextStyle_font,
                     backing:backingStyle,
                 }
@@ -43,7 +45,6 @@ this.grapher_waveWorkspace = function(
         //needle overlay
             var overlay = interfacePart.builder('needleOverlay', 'overlay', {
                 width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
-                needleStyles:foregroundStyles.map(a => a.stroke),
             });
             object.append(overlay);
 

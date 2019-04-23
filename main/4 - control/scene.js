@@ -1,4 +1,4 @@
-this.backgroundColour = function(colour){ return workspace.core.render.clearColour(colour); };
+this.backgroundColour = function(colour){ return _canvas_.core.render.clearColour(colour); };
 
 this.new = function(askForConfirmation=false){
     if(askForConfirmation){
@@ -32,9 +32,9 @@ this.documentUnits = function(units){
 
             //get the units position
                 entry.position = {
-                    x: unit.parameter.x(),
-                    y: unit.parameter.y(),
-                    angle: unit.parameter.angle(),
+                    x: unit.x(),
+                    y: unit.y(),
+                    angle: unit.angle(),
                 };
 
             //unitDetails
@@ -108,12 +108,12 @@ this.printUnits = function(units){
 this.export = function(){
     //creating an array of all units to be saved (strip out all the cable units)
     //document all units in the main pane
-    return this.documentUnits( Array.from(pane.children).filter(a => !a._isCable) );
+    return this.documentUnits( Array.from(pane.children()).filter(a => !a._isCable) );
 };
 this.import = function(data){ this.printUnits( data ); };
 this.save = function(filename='project',compress=true){
     //control switch
-        if(!workspace.control.interaction.enableSceneSave()){return;}
+        if(!_canvas_.control.interaction.enableSceneSave()){return;}
     
 
 
@@ -121,19 +121,19 @@ this.save = function(filename='project',compress=true){
         var outputData = {
             filename: filename,
             viewportLocation: {
-                xy: workspace.control.viewport.position(),
-                scale: workspace.control.viewport.scale(),
+                xy: _canvas_.control.viewport.position(),
+                scale: _canvas_.control.viewport.scale(),
             },
         };
 
     //stopping audio
-        workspace.library.audio.destination.masterGain(0);
+        _canvas_.library.audio.destination.masterGain(0);
 
     //gather the scene data
         outputData.units = this.export();
 
     //serialize data
-        outputData = workspace.library.misc.serialize(outputData,compress);
+        outputData = _canvas_.library.misc.serialize(outputData,compress);
 
     //wrap serialized scene
         outputData = {
@@ -142,17 +142,17 @@ this.save = function(filename='project',compress=true){
         };
 
     //serialize again
-        outputData = workspace.library.misc.serialize(outputData,false);
+        outputData = _canvas_.library.misc.serialize(outputData,false);
 
     //print to file
-        workspace.library.misc.printFile(filename,outputData);
+        _canvas_.library.misc.printFile(filename,outputData);
 
     //restarting audio
-        workspace.library.audio.destination.masterGain(1);
+        _canvas_.library.audio.destination.masterGain(1);
 };
 this.load = function(url,callback,askForConfirmation=false){
     //control switch
-        if(!workspace.control.interaction.enableSceneLoad()){return;}
+        if(!_canvas_.control.interaction.enableSceneLoad()){return;}
 
 
 
@@ -163,11 +163,11 @@ this.load = function(url,callback,askForConfirmation=false){
     //procedure for loading in a .crv file
         function procedure(data,callback){
             //stopping audio
-                workspace.library.audio.destination.masterGain(0);
+                _canvas_.library.audio.destination.masterGain(0);
 
             //deserialize first layer
                 try{
-                    var data = workspace.library.misc.unserialize(data,false);
+                    var data = _canvas_.library.misc.unserialize(data,false);
                 }catch(e){
                     console.error( "Major error unserializing first layer of file" );
                     console.error(e);
@@ -179,7 +179,7 @@ this.load = function(url,callback,askForConfirmation=false){
 
             //deserialize second layer (knowing now whether it's compressed or not)
                 try{
-                    var data = workspace.library.misc.unserialize(data.data,compressed);
+                    var data = _canvas_.library.misc.unserialize(data.data,compressed);
                 }catch(e){
                     console.error( "Major error unserializing second layer of file" );
                     console.error(e);
@@ -197,7 +197,7 @@ this.load = function(url,callback,askForConfirmation=false){
                 control.viewport.scale( data.viewportLocation.scale );
 
             //restarting audio
-                workspace.library.audio.destination.masterGain(1);
+                _canvas_.library.audio.destination.masterGain(1);
 
             //deselect all units
                 control.selection.deselectEverything();
@@ -208,7 +208,7 @@ this.load = function(url,callback,askForConfirmation=false){
 
     //depending on whether a url has been provided or not, perform the appropiate load
         if(url == undefined){ //load from file
-            workspace.library.misc.openFile(function(data){procedure(data,callback);});
+            _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
         }else{  //load from url
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
@@ -221,7 +221,7 @@ this.load = function(url,callback,askForConfirmation=false){
 this.generateUnitName = function(){ return IDcounter++; };
 this.addUnit = function(x,y,a,model,collection='alpha'){
     //control switch
-        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
+        if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
@@ -229,18 +229,18 @@ this.addUnit = function(x,y,a,model,collection='alpha'){
         var name = this.generateUnitName();
 
     //produce unit, assign its name and add grapple code
-        if( workspace.interface.unit.collection[collection] == undefined ){
-            console.warn('unknown unit collection "'+collection+'" (workspace.interface.unit.collection['+collection+'])'); 
+        if( _canvas_.interface.unit.collection[collection] == undefined ){
+            console.warn('unknown unit collection "'+collection+'" (_canvas_.interface.unit.collection['+collection+'])'); 
             return;
         }
-        if( workspace.interface.unit.collection[collection][model] == undefined ){
-            console.warn('unknown unit model "'+model+'" (workspace.interface.unit.collection['+collection+']['+model+'])'); 
+        if( _canvas_.interface.unit.collection[collection][model] == undefined ){
+            console.warn('unknown unit model "'+model+'" (_canvas_.interface.unit.collection['+collection+']['+model+'])'); 
             return;
         }
 
-        var tmp = workspace.interface.unit.collection[collection][model](x,y,a);
+        var tmp = _canvas_.interface.unit.collection[collection][model](x,y,a);
         tmp.name = ''+name;
-        tmp = workspace.control.grapple.declare(tmp);
+        tmp = _canvas_.control.grapple.declare(tmp);
 
     //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
         this.rectifyUnitPosition(tmp);
@@ -252,42 +252,42 @@ this.addUnit = function(x,y,a,model,collection='alpha'){
 };
 this.removeUnit = function(unit){
     //control switch
-        if(!workspace.control.interaction.enableUnitAdditionRemoval()){return;}
+        if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
         
         pane.remove(unit);
 };
 
-this.getAllUnits = function(){ return pane.children.filter( a => !a._isCable ); };
+this.getAllUnits = function(){ return pane.children().filter( a => !a._isCable ); };
 this.getUnitByName = function(name){ return pane.getChildByName(name); };
 // this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
 this.getUnitUnderPoint = function(x,y){
-    for( var a = 0; a < pane.children.length; a++){
-        if( workspace.library.math.detectOverlap.boundingBoxes({bottomRight:{x:x,y:y},topLeft:{x:x,y:y}}, pane.children[a].space.box) ){
-            if( workspace.library.math.detectOverlap.pointWithinPoly({x:x,y:y}, pane.children[a].space.points) ){
-                return pane.children[a];
+    for( var a = 0; a < pane.children().length; a++){
+        if( _canvas_.library.math.detectOverlap.boundingBoxes({bottomRight:{x:x,y:y},topLeft:{x:x,y:y}}, pane.children()[a].space.box) ){
+            if( _canvas_.library.math.detectOverlap.pointWithinPoly({x:x,y:y}, pane.children()[a].space.points) ){
+                return pane.children()[a];
             }
         }
     }
 };
 this.getUnitsWithinPoly = function(points){
-    var box = workspace.library.math.boundingBoxFromPoints(points);
-    return pane.children.filter(function(a){ return !a._isCable && workspace.library.math.detectOverlap.boundingBoxes(box, a.space.boundingBox) && workspace.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
+    var box = _canvas_.library.math.boundingBoxFromPoints(points);
+    return pane.children().filter(function(a){ return !a._isCable && _canvas_.library.math.detectOverlap.boundingBoxes(box, a.space.boundingBox) && _canvas_.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
 };
 
 this.rectifyUnitPosition = function(unit){
     //control switch
-        if(!workspace.control.interaction.enableUnitCollision()){return;}
+        if(!_canvas_.control.interaction.enableUnitCollision()){return;}
 
     //discover if there's an overlap; if not skip all this
         var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit).map(a => { return a.space; });
-        if( !workspace.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
+        if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
 
     //get the offset which will allow this unit to fit
-        var offset = workspace.library.math.fitPolyIn( unit.space, allOtherUnits );
+        var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits );
         
     //apply offset
-        unit.parameter.x( unit.parameter.x() + offset.x);
-        unit.parameter.y( unit.parameter.y() + offset.y);
+        unit.x(unit.x() + offset.x);
+        unit.y(unit.y() + offset.y);
     
     return true; //false: no change was made - true: a change was made
 };

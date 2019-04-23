@@ -12,15 +12,15 @@ this.reverbUnit = function(
     //inAggregator
         flow.inAggregator.gain = 1;
         flow.inAggregator.node = context.createGain();
-        workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+        _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
 
     //reverbGain / bypassGain
         flow.reverbGain.gain = 0.5;
         flow.bypassGain.gain = 0.5;
         flow.reverbGain.node = context.createGain();
         flow.bypassGain.node = context.createGain();
-        workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-        workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+        _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+        _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
 
     //reverbNode
         flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
@@ -67,7 +67,7 @@ this.reverbUnit = function(
     //outAggregator
         flow.outAggregator.gain = 1;
         flow.outAggregator.node = context.createGain();    
-        workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+        _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
 
     //do connections
         flow.inAggregator.node.connect(flow.reverbGain.node);
@@ -90,14 +90,14 @@ this.reverbUnit = function(
         this.outGain = function(a){
             if(a==null){return flow.outAggregator.gain;}
             flow.outAggregator.gain=a;
-            workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
         };
         this.wetdry = function(a){
             if(a==null){return flow.reverbGain.gain;}
             flow.reverbGain.gain=a;
             flow.bypassGain.gain=1-a;
-            workspace.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
-            workspace.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
         };
 
     //setup

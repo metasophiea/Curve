@@ -1,78 +1,75 @@
-//rectangle clipping
-    var group1 = workspace.core.arrangement.createElement('group');
-        group1.name = 'rectangleClippingGroup';
-        group1.x = 10; group1.y = 10;
-        group1.width = 100; group1.height = 100;
-        workspace.core.arrangement.append(group1);
+var dynamicGroup = _canvas_.core.shape.create('group');
+    dynamicGroup.name = 'dynamicGroup';
+    dynamicGroup.heedCamera = true;
+    _canvas_.core.arrangement.append(dynamicGroup);
 
-    var rectangle1 = workspace.core.arrangement.createElement('rectangle');
-        rectangle1.name = 'baseShape';
-        rectangle1.width = 100; rectangle1.height = 100;
-        group1.append(rectangle1);
-
-    var rectangle2 = workspace.core.arrangement.createElement('rectangle');
-        rectangle2.name = 'clipShape';
-        rectangle2.x = 0; rectangle2.y = 0;
-        rectangle2.width = 100; rectangle2.height = 100;
-        group1.stencil(rectangle2);
-        group1.clip(true);
-
-    var rectangle3 = workspace.core.arrangement.createElement('rectangle');
-        rectangle3.name = 'clippedShape';
-        rectangle3.x = -20; rectangle3.y = -20;
-        rectangle3.width = 50; rectangle3.height = 50;
-        rectangle3.style.fill = 'rgba(255,0,0,1)';
-        group1.append(rectangle3);
-
-//circle clipping
-    var group1 = workspace.core.arrangement.createElement('group');
-        group1.name = 'circleClippingGroup';
-        group1.x = 115; group1.y = 10;
-        group1.width = 100; group1.height = 100;
-        workspace.core.arrangement.append(group1);
-
-    var rectangle1 = workspace.core.arrangement.createElement('rectangle');
-        rectangle1.name = 'baseShape';
-        rectangle1.width = 100; rectangle1.height = 100;
-        group1.append(rectangle1);
-
-    var circle1 = workspace.core.arrangement.createElement('circle');
-        circle1.name = 'clipShape';
-        circle1.x = 50; circle1.y = 50; circle1.r = 50;
-        group1.stencil(circle1);
-        group1.clip(true);
-
-    var rectangle3 = workspace.core.arrangement.createElement('rectangle');
-        rectangle3.name = 'clippedShape';
-        rectangle3.x = -20; rectangle3.y = -20;
-        rectangle3.width = 50; rectangle3.height = 50;
-        rectangle3.style.fill = 'rgba(255,0,0,1)';
-        group1.append(rectangle3);
-
-//polygon clipping
-    var group1 = workspace.core.arrangement.createElement('group');
-    group1.name = 'polygonClippingGroup';
-    group1.x = 200; group1.y = 10;
-    group1.width = 100; group1.height = 100;
-    workspace.core.arrangement.append(group1);
-
-    var rectangle1 = workspace.core.arrangement.createElement('rectangle');
-    rectangle1.name = 'baseShape';
-    rectangle1.width = 100; rectangle1.height = 100;
-    group1.append(rectangle1);
-
-    var polygon1 = workspace.core.arrangement.createElement('polygon');
-    polygon1.name = 'clipShape';
-    polygon1.points = [{x:0,y:0}, {x:100,y:0}, {x:50,y:100}];
-    group1.stencil(polygon1);
-    group1.clip(true);
-
-    var rectangle3 = workspace.core.arrangement.createElement('rectangle');
-    rectangle3.name = 'clippedShape';
-    rectangle3.x = -20; rectangle3.y = -20;
-    rectangle3.width = 50; rectangle3.height = 50;
-    rectangle3.style.fill = 'rgba(255,0,0,1)';
-    group1.append(rectangle3);
+var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'rectangle_1';
+    tmp.width(200);
+    tmp.height(20);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+var tmp = _canvas_.core.shape.create('circle');
+    tmp.name = 'circle_1';
+    tmp.x(100); tmp.y(100);
+    tmp.radius(100);
+    tmp.detail(5);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'rectangle_2';
+    tmp.width(30);
+    tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'rectangle_3';
+    tmp.x(30); tmp.y(30);
+    tmp.width(30);
+    tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'rectangle_4';
+    tmp.x(60); tmp.y(60);
+    tmp.width(30);
+    tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+dynamicGroup.append(tmp);
+var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'rectangle_5';
+    tmp.x(90); tmp.y(90);
+    tmp.width(30);
+    tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'rectangle_6';
+    tmp.x(120); tmp.y(120);
+    tmp.width(30);
+    tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
 
 
-workspace.core.render.frame();
+
+
+
+_canvas_.core.viewport.position(15,15);
+
+var tick = 0;
+var tickStep = 0.02/4;
+
+setInterval(function(){
+    var s_1 = ( 1 + Math.sin( Math.PI*tick ) );
+    var s_2 = ( 1 + Math.sin( Math.PI*0.5 + Math.PI*tick ) );
+
+    _canvas_.core.viewport.scale( 1 + (s_1-0.5) );
+    _canvas_.core.viewport.position(s_1*50,s_1*250);
+    _canvas_.core.viewport.angle(-s_1);
+
+    tick+=tickStep;
+},1000/40);
+_canvas_.core.viewport.angle(-Math.PI/4);
+
+_canvas_.core.render.active(true);

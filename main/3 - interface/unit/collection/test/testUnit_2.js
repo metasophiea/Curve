@@ -1,8 +1,8 @@
-this.testUnit_2 = function(x,y,a){
+this.testUnit_2 = function(x,y,angle){
     var design = {
         name: 'testUnit_2',
         collection: 'test',
-        x:x, y:y, a:a,
+        x:x, y:y, angle:angle,
         space: [
             {x:0,y:0}, 
             {x:100,y:0}, 
@@ -11,8 +11,8 @@ this.testUnit_2 = function(x,y,a){
         ],
         // spaceOutline: true,
         elements:[
-            {type:'rectangle', name:'testRectangle1', data:{ x:0, y:0, width:100, height:100, style:{fill:'rgba(200,200,200,1)'} }},
-            {type:'rectangle', name:'testRectangle2', data:{ x:10, y:10, width:80, height:80, style:{fill:'rgba(200,100,200,1)'} }},
+            {type:'rectangle', name:'testRectangle1', data:{ x:0, y:0, width:100, height:100, colour:{r:200/255,g:200/255,b:200/255,a:1} }},
+            {type:'rectangle', name:'testRectangle2', data:{ x:10, y:10, width:80, height:80, colour:{r:200/255,g:100/255,b:200/255,a:1} }},
         ],
     };
 

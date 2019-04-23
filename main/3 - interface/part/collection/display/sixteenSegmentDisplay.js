@@ -1,9 +1,9 @@
 this.sixteenSegmentDisplay = function(
     name='sixteenSegmentDisplay',
     x, y, width=20, height=30, angle=0,
-    backgroundStyle='rgb(0,0,0)',
-    glowStyle='rgb(200,200,200)',
-    dimStyle='rgb(20,20,20)'
+    backgroundStyle={r:0,g:0,b:0,a:1},
+    glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+    dimStyle={r:0.1,g:0.1,b:0.1,a:1},
 ){
     var margin = width/8;
     var division = width/8;
@@ -97,10 +97,10 @@ this.sixteenSegmentDisplay = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y});
+            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
 
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, style:{fill:backgroundStyle} });
+            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backgroundStyle });
                 object.append(rect);
 
 
@@ -242,7 +242,7 @@ this.sixteenSegmentDisplay = function(
             ];
             for(var a = 0; a < points.length; a++){
                 var temp = {
-                    segment: interfacePart.builder('polygon','segment_'+a,{points:points[a], style:{fill:dimStyle}}),
+                    segment: interfacePart.builder('polygon','segment_'+a,{pointsAsXYArray:points[a], colour:dimStyle}),
                     state: false
                 };
                 segments.push( temp );
@@ -253,8 +253,8 @@ this.sixteenSegmentDisplay = function(
     //methods
         object.set = function(segment,state){
             segments[segment].state = state;
-            if(state){ segments[segment].segment.style.fill = glowStyle; }
-            else{ segments[segment].segment.style.fill = dimStyle; }
+            if(state){ segments[segment].segment.colour = glowStyle; }
+            else{ segments[segment].segment.colour = dimStyle; }
         };
         object.get = function(segment){ return segments[segment].state; };
         object.clear = function(){
@@ -456,7 +456,7 @@ this.sixteenSegmentDisplay = function(
                     ]; 
                 break;
 
-                case '0': 
+                case '0': case 0: 
                     stamp = [
                         1,1,
                         1,0,0,1,1,
@@ -465,7 +465,7 @@ this.sixteenSegmentDisplay = function(
                         1,1,
                     ]; 
                 break;
-                case '1': 
+                case '1': case 1:
                     stamp = [
                         1,0,
                         0,0,1,0,0,
@@ -474,7 +474,7 @@ this.sixteenSegmentDisplay = function(
                         1,1,
                     ]; 
                 break;
-                case '2': 
+                case '2': case 2:
                     stamp = [
                         1,1,
                         0,0,0,0,1,
@@ -483,7 +483,7 @@ this.sixteenSegmentDisplay = function(
                         1,1,
                     ]; 
                 break;
-                case '3': 
+                case '3': case 3:
                     stamp = [
                         1,1,
                         0,0,0,0,1,
@@ -492,7 +492,7 @@ this.sixteenSegmentDisplay = function(
                         1,1,
                     ]; 
                 break;
-                case '4': 
+                case '4': case 4:
                     stamp = [
                         0,0,
                         1,0,0,0,1,
@@ -501,7 +501,7 @@ this.sixteenSegmentDisplay = function(
                         0,0,
                     ]; 
                 break;
-                case '5': 
+                case '5': case 5:
                     stamp = [
                         1,1,
                         1,0,0,0,0,
@@ -510,7 +510,7 @@ this.sixteenSegmentDisplay = function(
                         1,1,
                     ]; 
                 break;
-                case '6': 
+                case '6': case 6:
                     stamp = [
                         1,1,
                         1,0,0,0,0,
@@ -519,7 +519,7 @@ this.sixteenSegmentDisplay = function(
                         1,1,
                     ]; 
                 break;
-                case '7': 
+                case '7': case 7:
                     stamp = [
                         1,1,
                         0,0,0,1,0,
@@ -528,7 +528,7 @@ this.sixteenSegmentDisplay = function(
                         0,0,
                     ]; 
                 break;
-                case '8': 
+                case '8': case 8:
                     stamp = [
                         1,1,
                         1,0,0,0,1,
@@ -537,7 +537,7 @@ this.sixteenSegmentDisplay = function(
                         1,1,
                     ]; 
                 break;
-                case '9': 
+                case '9': case 9:
                     stamp = [
                         1,1,
                         1,0,0,0,1,

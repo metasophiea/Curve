@@ -1,8 +1,8 @@
-workspace.system = new function(){};
-workspace.system.mouse = new function(){
+_canvas_.system = new function(){};
+_canvas_.system.mouse = new function(){
     {{include:mouse.js}}
 };
-workspace.system.keyboard = new function(){
+_canvas_.system.keyboard = new function(){
     {{include:keyboard.js}}
 };
 

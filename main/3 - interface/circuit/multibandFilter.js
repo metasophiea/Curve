@@ -18,14 +18,14 @@ this.multibandFilter = function(
         //inAggregator
             flow.inAggregator.gain = 1;
             flow.inAggregator.node = context.createGain();
-            workspace.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
 
         //filterNodes
             function makeGenericFilter(type){
                 var temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
                 temp.node.type = type;
-                workspace.library.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
-                workspace.library.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
+                _canvas_.library.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
+                _canvas_.library.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
                 return temp;
             }
 
@@ -45,7 +45,7 @@ this.multibandFilter = function(
         //gainNodes
             for(var a = 0; a < bandcount; a++){
                 var temp = { gain:1, node:context.createGain() };
-                workspace.library.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
+                _canvas_.library.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
                 flow.gainNodes.push(temp);
                 saved.settings[a] = { Q:0.1, gain:1, frequency:110, fresh:true };
             }
@@ -53,7 +53,7 @@ this.multibandFilter = function(
         //outAggregator
             flow.outAggregator.gain = 1;
             flow.outAggregator.node = context.createGain();
-            workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
 
 
     //do connections
@@ -73,12 +73,12 @@ this.multibandFilter = function(
         this.masterGain = function(value){
             if(value == undefined){return flow.outAggregator.gain;}
             flow.outAggregator.gain = value;
-            workspace.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
         };
         this.gain = function(band,value){
             if(value == undefined){return flow.gainNodes[band].gain;}
             flow.gainNodes[band].gain = value;
-            workspace.library.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
+            _canvas_.library.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
 
             saved.settings[band].gain = value;
             saved.settings[band].fresh = true;
@@ -86,7 +86,7 @@ this.multibandFilter = function(
         this.frequency = function(band,value){
             if(value == undefined){return flow.filterNodes[band].frequency;}
             flow.filterNodes[band].frequency = value;
-            workspace.library.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
+            _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
 
             saved.settings[band].frequency = value;
             saved.settings[band].fresh = true;
@@ -94,7 +94,7 @@ this.multibandFilter = function(
         this.Q = function(band,value){
             if(value == undefined){return flow.filterNodes[band].Q;}
             flow.filterNodes[band].Q = value;
-            workspace.library.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
+            _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
 
             saved.settings[band].Q = value;
             saved.settings[band].fresh = true;

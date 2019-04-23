@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                width:100%; height:100%;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id='coreGraphicsCanvas' coreGraphics coreGraphicsWidth='100%' coreGraphicsHeight='100%' style='display: block;'></canvas>
+    </body>
+
+</html>
+
+
+<!-- <script type='text/javascript' src='js/core.js'></script> -->
+<script type='text/javascript' src='js/core.min.js'></script>
+
+<!-- detect demo request -->
+<script>
+    var demoNumber = parseInt((new URL(window.location.href)).searchParams.get("demo"));
+    if( isNaN(demoNumber) ){ demoNumber = 0; }
+</script>
+
+
+<!-- "coreGraphics" written out 10 times, on a 1:1.5 page, which adjusts on window adjust -->
+<script>
+    (function() { if(demoNumber != 0){return;}
+        var CC = document.getElementById('coreGraphicsCanvas');
+        CC.core.viewport.allowKeyboardInput(false);
+
+        var texts = [];
+        for(var a = 0; a < 10; a++){
+            var text = CC.core.arrangement.createElement('text');
+                text.name = 'mainHeading_'+a;
+                text.style.align = 'center';
+                text.style.baseline = 'top';
+                text.text = 'coreGraphics';
+
+                CC.core.arrangement.append(text);
+            texts.push(text);
+        }
+        function resize(){
+            CC.setAttribute('coreGraphicsHeight',window.innerWidth * 1.5);
+            CC.core.viewport.refresh();
+            texts.forEach(function(a,i){
+                a.parameter.y( (window.innerWidth/6)*i );
+                a.style.font = window.innerWidth/10+'pt Arial';
+                a.parameter.x(window.innerWidth/2);
+            } );
+            CC.core.render.frame();
+        }
+        window.onresize = resize;
+        resize();
+    })();
+</script>
+
+<!-- two rectangles, one within the other, on a 1:1.5 page, which adjusts on window adjust -->
+<script>
+    (function() { if(demoNumber != 1){return;}
+        var CC = document.getElementById('coreGraphicsCanvas');
+        CC.core.viewport.allowKeyboardInput(false);
+
+        var rectangle1 = CC.core.arrangement.createElement('rectangle');
+            rectangle1.name = 'rectangle1';
+            rectangle1.style.fill = 'rgba(255,0,255,1)';
+            rectangle1.resize = function(){
+                var w = window.document.documentElement.clientWidth;
+                this.parameter.width(w);
+                this.parameter.height(w*1.5);
+            };
+            CC.core.arrangement.append(rectangle1);
+
+        var rectangle2 = CC.core.arrangement.createElement('rectangle');
+            rectangle2.name = 'rectangle2';
+            rectangle2.resize = function(){
+                var w = window.document.documentElement.clientWidth;
+                this.parameter.x(w*0.1);
+                this.parameter.y(w*1.5*0.075);
+                this.parameter.width(w - w*0.2);
+                this.parameter.height(w*1.5 - w*1.5*0.15);
+            };
+            CC.core.arrangement.append(rectangle2);
+
+        function resize(){
+            var w = window.document.documentElement.clientWidth;
+            CC.setAttribute('coreGraphicsWidth',w);
+            CC.setAttribute('coreGraphicsHeight',w * 1.5);
+            rectangle1.resize();
+            rectangle2.resize();
+            CC.core.viewport.refresh();
+            CC.core.render.frame();
+        }
+        window.onresize = resize;
+        resize();
+        setTimeout(function(){resize();},1);
+    })();
+</script>
+
+<!-- full background rectangle, with smaller spinning and colour changing forground square
+    in the centre. On a 1:1 page, which adjusts on window adjust. Active render -->
+<script>
+    (function() { if(demoNumber != 2){return;}
+        var CC = document.getElementById('coreGraphicsCanvas');
+        CC.core.render.active(true);
+
+        var backgroundRectangle = CC.core.arrangement.createElement('rectangle');
+            backgroundRectangle.name = 'backgroundRectangle';
+            backgroundRectangle.style.fill = 'rgba(20,20,20,1)';
+            backgroundRectangle.resize = function(){
+                this.parameter.width( window.document.documentElement.clientWidth );
+                this.parameter.height( window.document.documentElement.clientHeight );
+            };
+            CC.core.arrangement.append(backgroundRectangle);
+
+        var rectangle1 = CC.core.arrangement.createElement('rectangle');
+            rectangle1.name = 'rectangle1';
+            rectangle1.style.fill = 'rgba(20,20,20,1)';
+            rectangle1.anchor = {x:0.5,y:0.5};
+            rectangle1.resize = function(){
+                var w = window.document.documentElement.clientWidth;
+                var h = window.document.documentElement.clientHeight;
+                var s = w > h ? h : w;
+
+                var div = 5;
+                this.parameter.width(s/div);
+                this.parameter.height(s/div);
+                this.parameter.x(w/2);
+                this.parameter.y(h/2);
+            };
+            CC.core.arrangement.append(rectangle1);
+        
+
+        function resize(){
+            backgroundRectangle.resize();
+            rectangle1.resize();
+            CC.core.viewport.refresh();
+        }
+        window.onresize = resize;
+        resize();
+
+
+
+        var ang = 0;
+        var destinationColour = 'rgba(255,0,20,1)';
+        var destinationColourJourneyPercent = 0;
+        var rate = 0.01;
+        setInterval(function(){
+            rectangle1.parameter.angle( ang+=0.04 );
+            destinationColourJourneyPercent = destinationColourJourneyPercent > 1-rate ? 1 : destinationColourJourneyPercent + rate;
+            rectangle1.style.fill = CC.library.misc.blendColours(rectangle1.style.fill,destinationColour,destinationColourJourneyPercent);
+        },25);
+
+        setInterval(function(){
+            destinationColour = "rgba("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+",1)";
+            destinationColourJourneyPercent = 0;
+        },1500);
+    })();
+</script>

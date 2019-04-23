@@ -3,22 +3,23 @@ this.grapher_static = function(
     x, y, width=120, height=60, angle=0, resolution=5,
 
     foregroundStyles=[
-        {stroke:'rgba(0,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-        {stroke:'rgba(255,255,0,1)', lineWidth:0.5, lineJoin:'round'},
-        {stroke:'rgba(0,255,255,1)', lineWidth:0.5, lineJoin:'round'},
+        {colour:{r:0,g:1,b:0,a:1}, thickness:1},
+        {colour:{r:1,g:1,b:0,a:1}, thickness:1},
+        {colour:{r:0,g:1,b:1,a:1}, thickness:1},
     ],
     foregroundTextStyles=[
-        {fill:'rgba(100,255,100,1)', size:0.75, font:'Helvetica'},
-        {fill:'rgba(255,255,100,1)', size:0.75, font:'Helvetica'},
-        {fill:'rgba(100,255,255,1)', size:0.75, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+        {colour:{r:1,g:1,b:0.39,a:1}, size:7.5, font:'Helvetica'},
+        {colour:{r:0.39,g:1,b:1,a:1}, size:7.5, font:'Helvetica'},
     ],
 
-    backgroundStyle_stroke='rgba(0,100,0,1)',
-    backgroundStyle_lineWidth=0.25,
-    backgroundTextStyle_fill='rgba(0,150,0,1)',
-    backgroundTextStyle_font='7.5pt Helvetica',
+    backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
+    backgroundStyle_lineThickness=0.5,
+    backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
+    backgroundTextStyle_size=7.5,
+    backgroundTextStyle_font='Helvetica',
 
-    backingStyle='rgba(50,50,50,1)',
+    backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 ){
     var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
     var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
@@ -34,13 +35,13 @@ this.grapher_static = function(
 
     //graphics
         function clear(){
-            canvas._.fillStyle = backingStyle;
+            canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backingStyle);
             canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
         };
         function drawBackground(){
             //horizontal lines
                 //calculate the x value for all parts of this section
-                    var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
+                    var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, horizontalMarkings.mappedPosition );
 
                 //add all horizontal markings
                     for(var a = 0; a < horizontalMarkings.points.length; a++){
@@ -48,17 +49,17 @@ this.grapher_static = function(
                             if( !(horizontalMarkings.points[a] < viewbox.top || horizontalMarkings.points[a] > viewbox.bottom) ){ continue; }
         
                         //calculate the y value for this section
-                            var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
+                            var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, horizontalMarkings.points[a]);
 
                         //add line and text to group
                             //lines
-                                canvas._.fillStyle = backgroundStyle_stroke;
-                                canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineWidth));
+                                canvas._.fillStyle = 'rgba('+backgroundStyle_colour.r*255+','+backgroundStyle_colour.g*255+','+backgroundStyle_colour.b*255+','+backgroundStyle_colour.a+')';
+                                canvas._.fillRect(0,canvas.$(y),canvas.$(width),canvas.$(backgroundStyle_lineThickness));
 
                             //text
                                 if( horizontalMarkings.printText ){
-                                    canvas._.fillStyle = backgroundTextStyle_fill;
-                                    canvas._.font = backgroundTextStyle_font;
+                                    canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
+                                    canvas._.font = backgroundTextStyle_size*resolution/8 +'pt '+backgroundTextStyle_font;
                                     canvas._.fillText(
                                         (horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
                                         canvas.$(x+horizontalMarkings.textPositionOffset.x),
@@ -69,7 +70,7 @@ this.grapher_static = function(
 
             //vertical lines
                 //calculate the y value for all parts of this section
-                    var y = height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
+                    var y = height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, verticalMarkings.mappedPosition );
 
                 //add all vertical markings
                     for(var a = 0; a < verticalMarkings.points.length; a++){
@@ -77,17 +78,17 @@ this.grapher_static = function(
                             if( verticalMarkings.points[a] < viewbox.left || verticalMarkings.points[a] > viewbox.right ){ continue; }
 
                         //calculate the x value for this section
-                            var x = workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
+                            var x = _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, verticalMarkings.points[a]);
 
                         //add line and text to group
                             //lines
-                                canvas._.fillStyle = backgroundStyle_stroke;
-                                canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineWidth),canvas.$(height));
+                                canvas._.fillStyle = 'rgba('+backgroundStyle_colour.r*255+','+backgroundStyle_colour.g*255+','+backgroundStyle_colour.b*255+','+backgroundStyle_colour.a+')';
+                                canvas._.fillRect(canvas.$(x),0,canvas.$(backgroundStyle_lineThickness),canvas.$(height));
                         
                             //text
                                 if( verticalMarkings.printText ){
-                                    canvas._.fillStyle = backgroundTextStyle_fill;
-                                    canvas._.font = backgroundTextStyle_font;
+                                    canvas._.fillStyle = 'rgba('+backgroundTextStyle_colour.r*255+','+backgroundTextStyle_colour.g*255+','+backgroundTextStyle_colour.b*255+','+backgroundTextStyle_colour.a+')';
+                                    canvas._.font = backgroundTextStyle_size*resolution/8 +'pt '+backgroundTextStyle_font;
                                     canvas._.fillText(
                                         (verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
                                         canvas.$(x+verticalMarkings.textPositionOffset.x),
@@ -96,6 +97,7 @@ this.grapher_static = function(
                                 }
                     }
 
+            canvas.requestUpdate();
         }
         function drawForeground(y,x,layer=0){
 
@@ -119,30 +121,30 @@ this.grapher_static = function(
                     var layer = foregroundElementsGroup[L];
 
                     //draw path
-                        canvas._.strokeStyle = foregroundStyles[L].stroke;
-                        canvas._.lineWidth = canvas.$(foregroundStyles[L].lineWidth);
+                        canvas._.strokeStyle = 'rgba('+foregroundStyles[L].colour.r*255+','+foregroundStyles[L].colour.g*255+','+foregroundStyles[L].colour.b*255+','+foregroundStyles[L].colour.a+')';
+                        canvas._.lineWidth = canvas.$(foregroundStyles[L].thickness);
                         canvas._.lineJoin = foregroundStyles[L].lineJoin;
                         canvas._.lineCap = foregroundStyles[L].lineJoin;
                         canvas._.beginPath();
 
                         if( layer.y != undefined && layer.x == undefined ){ //auto x print
-                            canvas._.moveTo( 0, canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
+                            canvas._.moveTo( 0, canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) ) );
                             for(var a = 1; a < layer.y.length; a++){ 
                                 canvas._.lineTo(
                                     canvas.$(a*(width/(layer.y.length-1))),
-                                    canvas.$(height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
+                                    canvas.$(height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true)),
                                 );
                             }
                         }else if( layer.y.length == layer.x.length ){ //straight print
                             for(var a = 0; a < layer.y.length; a++){ 
                                 canvas._.moveTo( 
-                                    canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
-                                    canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
+                                    canvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[0], true) ),
+                                    canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[0], true) )
                                 );
                                 for(var a = 1; a < layer.y.length; a++){ 
                                     canvas._.lineTo(
-                                        canvas.$(          workspace.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
-                                        canvas.$( height - workspace.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
+                                        canvas.$(          _canvas_.library.math.relativeDistance(width, viewbox.left,viewbox.right, layer.x[a], true) ),
+                                        canvas.$( height - _canvas_.library.math.relativeDistance(height, viewbox.bottom,viewbox.top, layer.y[a], true) ),
                                     );
                                 }
                             }
@@ -150,6 +152,8 @@ this.grapher_static = function(
 
                         canvas._.stroke();
                 }
+                    
+            canvas.requestUpdate();
         }
 
     //controls

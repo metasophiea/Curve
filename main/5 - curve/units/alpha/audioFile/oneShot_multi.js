@@ -1,25 +1,24 @@
 this.oneShot_multi = function(x,y,a){
     var style = {
-        background: {fill:'rgba(200,200,200,1)'},
-        markings: {fill:'rgba(150,150,150,1)'},
-        strokeMarkings: {fill:'rgba(0,0,0,0)', stroke:'rgba(150,150,150,1)', lineWidth:1},
+        background:{r:200/255,g:200/255,b:200/255,a:1},
+        markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
         button:{
-            background__up__fill:'rgba(175,175,175,1)', 
-            background__hover__fill:'rgba(220,220,220,1)', 
-            background__hover_press__fill:'rgba(150,150,150,1)',
+            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
         },
         fire_button:{
-            background__up__fill:'rgba(175,195,175,1)', 
-            background__hover__fill:'rgba(220,240,220,1)', 
-            background__hover_press__fill:'rgba(150,170,150,1)',
+            background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+            background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
         },
         stop_button:{
-            background__up__fill:'rgba(195,175,175,1)', 
-            background__hover__fill:'rgba(240,220,220,1)', 
-            background__hover_press__fill:'rgba(170,150,150,1)',
+            background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+            background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+            background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
         },
         slide:{
-            handle:'rgba(220,220,220,1)'
+            handle:{r:220/255,g:220/255,b:220/255,a:1}
         },
     };
     var design = {
@@ -30,22 +29,22 @@ this.oneShot_multi = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ points:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], style:style.background }},
+            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
 
             //connection nodes
-            {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_data', name:'trigger', data:{
-                x:220, y:17.5, width:10, height:20,
-                onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
-            }},
+                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                {type:'connectionNode_data', name:'trigger', data:{
+                    x:220, y:17.5, width:10, height:20,
+                    onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
+                }},
 
             //symbol
-                {type:'path', name:'symbol_arrow', data:{ points:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], style:style.strokeMarkings }},
-                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, style:style.markings }},
-                {type:'circle', name:'symbol_outterCircle', data:{ x:10, y:40, r:5.5, style:style.strokeMarkings }},
-                {type:'circle', name:'symbol_infCircle1', data:{ x:8.5, y:40, r:1.5, style:style.strokeMarkings }},
-                {type:'circle', name:'symbol_infCircle2', data:{ x:11.5, y:40, r:1.5, style:style.strokeMarkings }},
+                {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
+                {type:'circleWithOutline', name:'symbol_outterCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {type:'circleWithOutline', name:'symbol_infCircle1', data:{ x:8.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {type:'circleWithOutline', name:'symbol_infCircle2', data:{ x:11.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
 
             //load/fire/panic buttons
                 {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
@@ -66,6 +65,7 @@ this.oneShot_multi = function(x,y,a){
                         //determine start, end and duration values
                             var start = waveport.area().A != undefined ? waveport.area().A : 0;
                             var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                            if(start > end){var tmp = start; start = end; end = tmp;} //the 'ol switcheroo
                             var duration = filePlayer.duration();
 
                             var startTime = start*duration;
@@ -81,38 +81,35 @@ this.oneShot_multi = function(x,y,a){
 
                         //flash light
                             object.elements.glowbox_rect.glowbox_rect.on();
-                            setTimeout(
-                                function(){
-                                    object.elements.glowbox_rect.glowbox_rect.off();
-                                }
-                            ,100);
+                            setTimeout(object.elements.glowbox_rect.glowbox_rect.off, 100);
 
                         //perform graphical movements
                             needles[needleNumber].previousPosition = undefined;
-                            needles[needleNumber].currentPosition = startTime/duration;
-                            needles[needleNumber].endPosition = startTime/duration + subduration/duration;
+                            needles[needleNumber].currentPosition = start;
+                            needles[needleNumber].endPosition = end;
 
                             var desiredIntervalTime = 10;
-                            var step = desiredIntervalTime/(subduration*1000)
-                            needles[needleNumber].needleInterval = setInterval(function(){
+                            var step = (desiredIntervalTime*(end-start))/(subduration*1000);
+                            needles[needleNumber].needleInterval = setInterval(function(nN){
                                 //remove previous mark
-                                    if(needles[needleNumber].previousPosition != undefined){
-                                        waveport.mark(needles[needleNumber].currentPosition);
+                                    if(needles[nN].previousPosition != undefined){
+                                        waveport.mark(needles[nN].currentPosition);
                                     }
 
-                                needles[needleNumber].previousPosition = needles[needleNumber].currentPosition;
-                                needles[needleNumber].currentPosition += step;
+                                //update position
+                                    needles[nN].previousPosition = needles[nN].currentPosition;
+                                    needles[nN].currentPosition += step;
 
                                 //add new mark
-                                waveport.mark(needles[needleNumber].currentPosition);
+                                    waveport.mark(needles[nN].currentPosition);
 
                                 //check for ending
-                                    if( needles[needleNumber].currentPosition > needles[needleNumber].endPosition ){
-                                        waveport.mark(needles[needleNumber].currentPosition);
-                                        clearInterval(needles[needleNumber].needleInterval);
+                                    if( needles[nN].currentPosition > needles[nN].endPosition ){
+                                        waveport.mark(needles[nN].currentPosition);
+                                        clearInterval(needles[nN].needleInterval);
+                                        delete needles[nN];
                                     }
-
-                            },desiredIntervalTime);
+                            },desiredIntervalTime,needleNumber);
                     },
                 }},
                 {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
@@ -146,13 +143,13 @@ this.oneShot_multi = function(x,y,a){
     };
 
     //main object
-        var object = workspace.interface.unit.builder(this.oneShot_multi,design);
+        var object = _canvas_.interface.unit.builder(this.oneShot_multi,design);
 
     //circuitry
         var needles = [];
 
         //audioFilePlayer
-            object.oneShot = new workspace.interface.circuit.oneShot_multi(workspace.library.audio.context);
+            object.oneShot = new _canvas_.interface.circuit.oneShot_multi(_canvas_.library.audio.context);
             object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
             object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
 

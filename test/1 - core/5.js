@@ -1,85 +1,104 @@
-var canvas1 = workspace.core.arrangement.createElement('canvas');
-canvas1.name = 'canvas1';
-canvas1.x = 50; canvas1.y = 50;
-canvas1.parameter.width(50); canvas1.parameter.height(50);
-canvas1.dotFrame = true;
-workspace.core.arrangement.append(canvas1);
+var dynamicGroup = _canvas_.core.shape.create('group');
+dynamicGroup.name = 'dynamicGroup';
+dynamicGroup.heedCamera = true;
+_canvas_.core.arrangement.append(dynamicGroup);
 
-canvas1._.fillStyle = 'rgb(255,0,0)';
-canvas1._.fillRect(0,0,25,25);
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'topLeft';
+    tmp.x(0); tmp.y(0); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    tmp.onmousemove = function(x,y,event,shapes){console.log('rectangle::topLeft::onmousemove');};
+    dynamicGroup.append(tmp);
 
-workspace.core.render.active(true);
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'topRight';
+    tmp.x(470); tmp.y(0); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'bottomRight';
+    tmp.x(470); tmp.y(470); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'bottomLeft';
+    tmp.x(0); tmp.y(470); tmp.width(30); tmp.height(30);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    dynamicGroup.append(tmp);
+    
+    var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'centre';
+    tmp.x(30); tmp.y(30); tmp.width(440); tmp.height(440);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    tmp.onmousedown = function(x,y,event,shapes){console.log('rectangle::centre::onmousedown');};
+    tmp.onmouseup = function(x,y,event,shapes){console.log('rectangle::centre::onmouseup');};
+    tmp.onmousemove = function(x,y,event,shapes){console.log('rectangle::centre::onmousemove');};
+    tmp.onmouseenter = function(x,y,event,shapes){console.log('rectangle::centre::onmouseenter');};
+    tmp.onmouseleave = function(x,y,event,shapes){console.log('rectangle::centre::onmouseleave');};
+    tmp.onwheel = function(x,y,event,shapes){console.log('rectangle::centre::onwheel');};
+    tmp.onclick = function(x,y,event,shapes){console.log('rectangle::centre::onclick');};
+    tmp.ondblclick = function(x,y,event,shapes){console.log('rectangle::centre::ondblclick');};
+    tmp.onkeydown = function(x,y,event,shapes){console.log('rectangle::centre::onkeydown');};
+    tmp.onkeyup = function(x,y,event,shapes){console.log('rectangle::centre::onkeyup');};
+    dynamicGroup.append(tmp);
+
+var staticGroup = _canvas_.core.shape.create('group');
+staticGroup.name = 'staticGroup';
+staticGroup.x(100);
+staticGroup.y(200);
+staticGroup.angle(0);
+_canvas_.core.arrangement.append(staticGroup);
+
+    var tmp = _canvas_.core.shape.create('circle');
+    tmp.name = 'circle_1';
+    tmp.x(150); tmp.y(150);
+    tmp.radius(50)
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
+    staticGroup.append(tmp);
+
+    var tmp = _canvas_.core.shape.create('circle');
+        tmp.name = 'circle_2';
+        tmp.x(90); tmp.y(90);
+        tmp.angle(Math.PI/2);
+        tmp.radius(50);
+        tmp.detail(6);
+        tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
+        tmp.onmousedown = function(x,y,event,shapes){console.log('polygon::polygon_1::onmousedown');};
+        staticGroup.append(tmp);
 
 
 
+// console.log( tmp.getAddress() );
+
+// _canvas_.core.viewport.position(100,100);
+// _canvas_.core.viewport.angle( Math.PI/3 );
+// _canvas_.core.viewport.scale(1/2);
+
+
+// console.log( _canvas_.core.arrangement.getElementUnderPoint(70,70) );
+// console.log( _canvas_.core.arrangement.getElementsUnderArea([{x:0,y:0},{x:60,y:0},{x:0,y:60}]) );
+// console.log( _canvas_.core.viewport.getElementUnderCanvasPoint(70,70) );
+// console.log( _canvas_.core.viewport.getElementsUnderCanvasArea([{x:0,y:0},{x:60,y:0},{x:0,y:60}]) );
 
 
 
+// document.getElementById("canvas").onmousedown = function(event){
+//     console.log( _canvas_.core.arrangement.getElementUnderPoint(event.X,event.Y) );
+// }
+
+// _canvas_.core.callback.onmousedown   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousedown(x,y,event,shapes)); }
+// _canvas_.core.callback.onmouseup     = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseup(x,y,event,shapes)); }
+// _canvas_.core.callback.onmousemove   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousemove(x,y,event,shapes)); }
+// _canvas_.core.callback.onmouseenter  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseenter(x,y,event,shapes)); }
+// _canvas_.core.callback.onmouseleave  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseleave(x,y,event,shapes)); }
+// _canvas_.core.callback.onwheel       = function(x,y,event,shapes){ shapes.forEach(a => a.onwheel(x,y,event,shapes)); }
+// _canvas_.core.callback.onclick       = function(x,y,event,shapes){ shapes.forEach(a => a.onclick(x,y,event,shapes)); }
+// _canvas_.core.callback.ondblclick    = function(x,y,event,shapes){ shapes.forEach(a => a.ondblclick(x,y,event,shapes)); }
+// _canvas_.core.callback.onkeydown     = function(x,y,event,shapes){ shapes.forEach(a => a.onkeydown(x,y,event,shapes)); }
+// _canvas_.core.callback.onkeyup       = function(x,y,event,shapes){ shapes.forEach(a => a.onkeyup(x,y,event,shapes)); }
 
 
-var canvas2 = workspace.core.arrangement.createElement('canvas');
-canvas2.name = 'canvas2';
-canvas2.x = 150; canvas2.y = 50;
-canvas2.parameter.width(200); canvas2.parameter.height(200);
-canvas2.dotFrame = true;
-workspace.core.arrangement.append(canvas2);
-canvas2.resolution(0.5);
-
-canvas2._.fillStyle = 'rgb(255,255,255)';
-canvas2._.fillRect(canvas2.$(5),canvas2.$(5),canvas2.$(20),canvas2.$(20));
-canvas2._.fillRect(canvas2.$(175),canvas2.$(5),canvas2.$(20),canvas2.$(20));
-canvas2._.fillRect(canvas2.$(175),canvas2.$(175),canvas2.$(20),canvas2.$(20));
-canvas2._.fillRect(canvas2.$(5),canvas2.$(175),canvas2.$(20),canvas2.$(20));
-
-var points = [
-    {x:30,y:30},
-    {x:170, y:30},
-    {x:30, y:170},
-    {x:170, y:170},
-];
-
-canvas2._.strokeStyle = 'rgb(255,255,255)';
-canvas2._.lineWidth = canvas2.$(1);
-canvas2._.beginPath(); 
-canvas2._.moveTo(canvas2.$(points[0].x),canvas2.$(points[0].y));
-for(var a = 1; a < points.length; a++){
-    canvas2._.lineTo(canvas2.$(points[a].x),canvas2.$(points[a].y));
-}
-canvas2._.stroke();
-
-
-
-
-
-
-
-
-var canvas3 = workspace.core.arrangement.createElement('canvas');
-canvas3.name = 'canvas3';
-canvas3.x = 360; canvas3.y = 50;
-canvas3.parameter.width(200); canvas3.parameter.height(200);
-canvas3.dotFrame = true;
-workspace.core.arrangement.append(canvas3);
-canvas3.resolution(2);
-
-canvas3._.fillStyle = 'rgb(255,255,255)';
-canvas3._.fillRect(canvas3.$(5),canvas3.$(5),canvas3.$(20),canvas3.$(20));
-canvas3._.fillRect(canvas3.$(175),canvas3.$(5),canvas3.$(20),canvas3.$(20));
-canvas3._.fillRect(canvas3.$(175),canvas3.$(175),canvas3.$(20),canvas3.$(20));
-canvas3._.fillRect(canvas3.$(5),canvas3.$(175),canvas3.$(20),canvas3.$(20));
-
-var points = [
-    {x:30,y:30},
-    {x:170, y:30},
-    {x:30, y:170},
-    {x:170, y:170},
-];
-
-canvas3._.strokeStyle = 'rgb(255,255,255)';
-canvas3._.lineWidth = canvas3.$(1);
-canvas3._.beginPath(); 
-canvas3._.moveTo(canvas3.$(points[0].x),canvas3.$(points[0].y));
-for(var a = 1; a < points.length; a++){
-    canvas3._.lineTo(canvas3.$(points[a].x),canvas3.$(points[a].y));
-}
-canvas3._.stroke();
+_canvas_.core.render.frame();
+// this.render.active(true);

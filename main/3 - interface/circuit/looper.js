@@ -38,7 +38,7 @@ this.looper = function(context){
     //controls
         this.load = function(type,callback,url=''){
             state.fileLoaded = false;
-            workspace.library.audio.loadAudioFile(
+            _canvas_.library.audio.loadAudioFile(
                 function(data){
                     state.itself.stop();
                     flow.track = data;
@@ -56,7 +56,7 @@ this.looper = function(context){
                     flow.bufferSource.onended = function(){};
                     flow.bufferSource.stop(0);
                 }
-                flow.bufferSource = workspace.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
+                flow.bufferSource = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter);
                 flow.bufferSource.playbackRate.value = state.rate;
                 flow.bufferSource.loop = state.loop.active;
                 flow.bufferSource.loopStart = state.loop.start*this.duration();
@@ -85,7 +85,7 @@ this.looper = function(context){
         this.waveformSegment = function(data={start:0,end:1}){
             if(data==undefined){return [];}
             if(!state.fileLoaded){return [];}
-            return workspace.library.audio.waveformSegment(flow.track.buffer,data);
+            return _canvas_.library.audio.waveformSegment(flow.track.buffer,data);
         };
         this.loop = function(bool=false){
             if(data==undefined){return data;}

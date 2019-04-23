@@ -1,6 +1,6 @@
 this.dial_continuous_image = function(
     name='dial_continuous_image',
-    x, y, r=15, angle=0, interactable=true,
+    x, y, radius=10, angle=0, interactable=true,
     value=0, resetValue=-1,
     startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
 
@@ -12,7 +12,7 @@ this.dial_continuous_image = function(
     //default to non-image version if image links are missing
         if(handleURL == undefined || slotURL == undefined || needleURL == undefined){
             return this.dial_continuous(
-                name, x, y, r, angle, interactable, value, resetValue, startAngle, maxAngle,
+                name, x, y, radius, angle, interactable, value, resetValue, startAngle, maxAngle,
                 undefined, undefined, undefined,
                 onchange, onrelease
             );
@@ -23,11 +23,11 @@ this.dial_continuous_image = function(
             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('image','slot',{width:2.2*r, height:2.2*r, anchor:{x:0.5,y:0.5}, url:slotURL});
+            var slot = interfacePart.builder('image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
             object.append(slot);
 
         //handle
-            var handle = interfacePart.builder('image','handle',{width:2*r, height:2*r, anchor:{x:0.5,y:0.5}, url:handleURL});
+            var handle = interfacePart.builder('image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
             object.append(handle);
 
         //needle group
@@ -35,8 +35,8 @@ this.dial_continuous_image = function(
             object.append(needleGroup);
 
             //needle
-                var needleWidth = r/5;
-                var needleLength = r;
+                var needleWidth = radius/5;
+                var needleLength = radius;
                 var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
                     needleGroup.append(needle);
 
@@ -51,8 +51,8 @@ this.dial_continuous_image = function(
             if(update && object.onchange != undefined){object.onchange(a);}
 
             value = a;
-            needleGroup.parameter.angle(startAngle + maxAngle*value);
-            handle.parameter.angle(startAngle + maxAngle*value);
+            needleGroup.angle(startAngle + maxAngle*value);
+            handle.angle(startAngle + maxAngle*value);
         }
 
 
@@ -75,7 +75,7 @@ this.dial_continuous_image = function(
 
 
     //interaction
-        var turningSpeed = r*4;
+        var turningSpeed = radius*4;
         
         handle.ondblclick = function(){
             if(!interactable){return;}
@@ -86,27 +86,27 @@ this.dial_continuous_image = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onwheel = function(x,y,event){
+        handle.onwheel = function(event){
             if(!interactable){return;}
             if(grappled){return;}
             
             var move = event.deltaY/100;
-            var globalScale = workspace.core.viewport.scale();
+            var globalScale = _canvas_.core.viewport.scale();
             set( value - move/(10*globalScale) );
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onmousedown = function(x,y,event){
+        handle.onmousedown = function(event){
             if(!interactable){return;}
             var initialValue = value;
-            var initialY = event.y;
+            var initialY = event.Y;
 
             grappled = true;
-            workspace.system.mouse.mouseInteractionHandler(
+            _canvas_.system.mouse.mouseInteractionHandler(
                 function(event){
                     var value = initialValue;
-                    var numerator = event.y - initialY;
-                    var divider = workspace.core.viewport.scale();
+                    var numerator = event.Y - initialY;
+                    var divider = _canvas_.core.viewport.scale();
                     set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
                 },
                 function(event){
