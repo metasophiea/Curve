@@ -18409,7 +18409,7 @@
                                         var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                             
                                     //image data
-                                        var image = { object:undefined, textureData:undefined, url:'', isLoaded:false, isChanged:true, defaultURL:'http://0.0.0.0:8000/workshop/webGL/testImages/noimageimage.png' };
+                                        var image = { object:undefined, textureData:undefined, url:'', isLoaded:false, isChanged:true, defaultURL:'/images/noimageimage.png' };
                                         function loadImage(url){
                                             image.object = new Image();
                                             image.object.src = url;
@@ -19377,7 +19377,7 @@
                             };
                             this.character.vectorLibrary = {};
                             const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%'.split('');
-                            const fontFilesLocation = 'https://0.0.0.0:8000/workshop/webGL/3/main/1%20-%20core/shapes/characterFonts/';
+                            const fontFilesLocation = '/fonts/';
                             const fontFileNames = [
                                 'Roboto/Roboto-Regular.ttf',
                                 'Roboto/Roboto-Italic.ttf',

@@ -25,7 +25,7 @@ this.image = function(){
             var scale = 1;          this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
 
         //image data
-            var image = { object:undefined, textureData:undefined, url:'', isLoaded:false, isChanged:true, defaultURL:'https://0.0.0.0:8000/workshop/webGL/testImages/noimageimage.png' };
+            var image = { object:undefined, textureData:undefined, url:'', isLoaded:false, isChanged:true, defaultURL:'/images/noimageimage.png' };
             function loadImage(url){
                 image.object = new Image();
                 image.object.src = url;

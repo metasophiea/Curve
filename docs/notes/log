@@ -1,4 +1,10 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-04-24
+  - emergency fixes to where the fonts are stored and the no image image, as I 
+    hadn't thought about access to that sort of stuff. There's now a /docs/fonts
+    folder for all the fonts (in their ttf form)
+
+
 2019-04-23
   - fixed rotated unit collision (the way it was calculating the unit space was
     wrong)
