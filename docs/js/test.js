@@ -20329,7 +20329,7 @@
                             var canvasElement = context.canvas;
                 
                             function dimensionAdjust(direction){
-                                var Direction = direction.charAt(0).toUpperCase() + direction.slice(1)
+                                var Direction = direction.charAt(0).toUpperCase() + direction.slice(1);
                     
                                 var attribute = canvasElement.getAttribute(__canvasPrefix+'Element'+Direction);
                                 if( pageData['selected'+Direction] != attribute || pageData['window'+Direction] != window['inner'+Direction] ){
@@ -34989,7 +34989,132 @@
                 };
                 
                 this.pulseGenerator.metadata = {
-                    name:'Pulse Generator',
+                    name:'Pulse Generator :: Data',
+                    category:'misc',
+                    helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                };
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                this.pulseGenerator_signal = function(x,y,a){
+                    var maxTempo = 240;
+                
+                    var style = {
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                
+                        dial:{
+                            handle:{r:220/255,g:220/255,b:220/255,a:1},
+                            slot:{r:50/255,g:50/255,b:50/255,a:1},
+                            needle:{r:250/255,g:150/255,b:150/255,a:1},
+                        }
+                    };
+                    var design = {
+                        name: 'pulseGenerator_signal',
+                        category:'misc',
+                        collection: 'alpha',
+                        x:x, y:y, a:a,
+                        space:[
+                            {x:0,y:10},{x:10,y:0},
+                            {x:100,y:0},{x:115,y:10},
+                            {x:115,y:30},{x:100,y:40},
+                            {x:10,y:40},{x:0,y:30}
+                        ], 
+                        // spaceOutline: true,
+                        elements:[
+                            {type:'connectionNode_signal', name:'out', data:{
+                                x: -5, y: 11.25, width: 5, height: 17.5,
+                            }},
+                            {type:'connectionNode_signal', name:'sync', data:{
+                                x: 115, y: 11.25, width: 5, height: 17.5,
+                                onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
+                            }},
+                
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+                
+                            {type:'button_rectangle', name:'syncButton', data:{
+                                x:102.5, y: 11.25, width:10, height: 17.5,
+                                selectable:false, 
+                                style:{ 
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                }, 
+                                onpress:function(){updateTempo(tempo)},
+                            }},
+                            {type:'dial_continuous',name:'tempo',data:{
+                                x:20, y:20, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, 
+                                style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                            }},
+                            {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                        ]
+                    };
+                
+                    //main object
+                        var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                
+                    //internal circuitry
+                        object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                
+                    //import/export
+                        object.exportData = function(){
+                            return object.elements.dial_continuous.tempo.get();
+                        };
+                        object.importData = function(data){
+                            object.elements.dial_continuous.tempo.set(data);
+                        };
+                
+                    //internal functions
+                        var interval = null;
+                        var tempo = 120;
+                        function updateTempo(newTempo){
+                            //update readout
+                                object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                    _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                );
+                                object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                
+                            //update interval
+                                if(interval){ clearInterval(interval); }
+                                if(newTempo > 0){
+                                    interval = setInterval(function(){
+                                        object.io.signal.out.set(true);
+                                        setTimeout(function(){object.io.signal.out.set(false);},50);
+                                    },1000*(60/newTempo));
+                                }
+                
+                            object.io.signal.out.set(true);
+                            tempo = newTempo;
+                        }
+                
+                    //interface
+                        object.i = {
+                            setTempo:function(value){
+                                object.elements.dial_continuous.tempo.set(value);
+                            },
+                        };
+                
+                    //setup
+                        object.elements.dial_continuous.tempo.set(0.5);
+                
+                    return object;
+                };
+                
+                this.pulseGenerator_signal.metadata = {
+                    name:'Pulse Generator :: Signal',
                     category:'misc',
                     helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
                 };
@@ -35171,6 +35296,79 @@
                     category:'misc',
                     helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout/'
                 };
+                
+                
+                
+                
+                
+                
+                
+                
+                this.universalreadout2 = function(x,y,a){
+                    var style = {
+                        background:{r:200/255,g:200/255,b:200/255,a:1},
+                        text:{colour:{r:0,g:0,b:0,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
+                    };
+                
+                    var design = {
+                        name: 'universalreadout2',
+                        category:'misc',
+                        collection: 'alpha',
+                        x:x, y:y, a:a,
+                        space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                        // spaceOutline: true,
+                        elements:[
+                            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+                        
+                            {type:'connectionNode_data', name:'dataIn', data:{ x:5, y:5, width:20, height:20,
+                                onreceive:function(address,data){ print('data :: address: '+address+' data: '+JSON.stringify(data)); }
+                            }},
+                            {type:'connectionNode_signal', name:'signalIn', data:{ x:30, y:5, width:20, height:20,
+                                onchange:function(value){print('signal :: '+value); },
+                            }},
+                            {type:'connectionNode_voltage', name:'voltageIn', data:{ x:5, y:30, width:20, height:20,
+                                onchange:function(value){print('voltage :: '+value); },
+                            }},
+                        ]
+                    };
+                
+                    //main object
+                        var object = _canvas_.interface.unit.builder(this.universalreadout,design);
+                
+                    //internal functions
+                        var lines = [];
+                        var lineElements = [];
+                        var lineLimit = 10;
+                        var tickerCount = 0;
+                        function print(text){
+                            //add ticker to text
+                            text = (tickerCount++)+'> '+text;
+                
+                            //add the new text to the list, and if the list becomes too long, remove the oldest item
+                            lines.unshift(text);
+                            if( lines.length > lineLimit ){ lines.pop(); }
+                
+                            //remove all the text elements
+                            for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
+                            lineElements = [];
+                
+                            //write in the new list
+                            for(var a = 0; a < lines.length; a++){
+                                lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:60, y:2.5+a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
+                                object.append( lineElements[a] );
+                            }
+                        }
+                
+                    return object;
+                };
+                
+                this.universalreadout2.metadata = {
+                    name:'Universal Readout V2',
+                    dev:true,
+                    category:'misc',
+                    helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout2/'
+                };
+
                 this.basicSequencer = function(x,y,a){
                     var vals = {
                         sequencer:{
@@ -36470,9 +36668,13 @@
             _canvas_.control.scene.addUnit(20,480,0,'recorder');
             
             
-            // // //view positioning
-            // _canvas_.core.viewport.scale(5);
-            // _canvas_.core.viewport.position(-15*_canvas_.core.viewport.scale(),-470*_canvas_.core.viewport.scale());
+            _canvas_.control.scene.addUnit(20,-90,0,'universalreadout2');
+            _canvas_.control.scene.addUnit(100,-90,0,'pulseGenerator_signal');
+            
+            
+            //view positioning
+            _canvas_.core.viewport.scale(5);
+            _canvas_.core.viewport.position(-15*_canvas_.core.viewport.scale(),100*_canvas_.core.viewport.scale());
             
             
             

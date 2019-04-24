@@ -30,9 +30,13 @@ _canvas_.control.scene.addUnit(20,395,0,'player');
 _canvas_.control.scene.addUnit(20,480,0,'recorder');
 
 
-// // //view positioning
-// _canvas_.core.viewport.scale(5);
-// _canvas_.core.viewport.position(-15*_canvas_.core.viewport.scale(),-470*_canvas_.core.viewport.scale());
+_canvas_.control.scene.addUnit(20,-90,0,'universalreadout2');
+_canvas_.control.scene.addUnit(100,-90,0,'pulseGenerator_signal');
+
+
+//view positioning
+_canvas_.core.viewport.scale(5);
+_canvas_.core.viewport.position(-15*_canvas_.core.viewport.scale(),100*_canvas_.core.viewport.scale());
 
 
 

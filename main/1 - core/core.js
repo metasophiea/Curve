@@ -136,7 +136,7 @@ this.render = new function(){
             var canvasElement = context.canvas;
 
             function dimensionAdjust(direction){
-                var Direction = direction.charAt(0).toUpperCase() + direction.slice(1)
+                var Direction = direction.charAt(0).toUpperCase() + direction.slice(1);
     
                 var attribute = canvasElement.getAttribute(__canvasPrefix+'Element'+Direction);
                 if( pageData['selected'+Direction] != attribute || pageData['window'+Direction] != window['inner'+Direction] ){

@@ -3,6 +3,25 @@
   - emergency fixes to where the fonts are stored and the no image image, as I 
     hadn't thought about access to that sort of stuff. There's now a /docs/fonts
     folder for all the fonts (in their ttf form)
+  - fixed up the core demo file
+  - updated the readme
+  - little bit of work on a new universalreadout and pulseGenerator (using
+    different connection node types)
+
+  ideas
+  - there probably should be some way that character shapes use one of the
+    default fonts, when a requested URL font fails to load
+  - change the unit connections that are sending essentially pulse commands, 
+    away from using data connections and to using signal or voltage connections
+
+
+  Compilation Results
+  - core.js                              1303 Kb  (100%)
+  - core.min.js                           331 Kb  (25.44%)
+  - workspace.js                         2182 Kb  (100%)
+  - workspace.min.js                      547 Kb  (25.09%)
+  - curve.js                             2476 Kb  (100%)
+  - curve.min.js                          668 Kb  (27.01%)
 
 
 2019-04-23

@@ -20281,7 +20281,7 @@
                                 var canvasElement = context.canvas;
                     
                                 function dimensionAdjust(direction){
-                                    var Direction = direction.charAt(0).toUpperCase() + direction.slice(1)
+                                    var Direction = direction.charAt(0).toUpperCase() + direction.slice(1);
                         
                                     var attribute = canvasElement.getAttribute(__canvasPrefix+'Element'+Direction);
                                     if( pageData['selected'+Direction] != attribute || pageData['window'+Direction] != window['inner'+Direction] ){
@@ -20457,7 +20457,7 @@
                     
                         //adapter
                             this.adapter = new function(){
-                                this.windowPoint2coreGraphicsPoint = function(x,y){
+                                this.windowPoint2workspacePoint = function(x,y){
                                     var position = core.viewport.position();
                                     var scale = core.viewport.scale();
                                     var angle = core.viewport.angle();
@@ -20469,7 +20469,7 @@
                     
                                     return tmp;
                                 };
-                                // this.coreGraphicsPoint2windowPoint = function(x,y){
+                                // this.workspacePoint2windowPoint = function(x,y){
                                 //     var position = core.viewport.position();
                                 //     var scale = core.viewport.scale();
                                 //     var angle = core.viewport.angle();
@@ -20572,8 +20572,8 @@
                             }
                             var point = undefined;
                             if(count > 2){
-                                //calculate the coreGraphics point
-                                point = _canvas_.core.viewport.adapter.windowPoint2coreGraphicsPoint(event.X,event.Y);
+                                //calculate the workspace point
+                                point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                             }
                     
                             return {shapes:shapes, point:point};
@@ -20625,7 +20625,7 @@
                                         //get all shapes under point that have onmouseenter or onmouseleave callbacks
                                             var shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onmouseenter!=undefined || a.onmouseleave!=undefined);
                                         //get point
-                                            var point = _canvas_.core.viewport.adapter.windowPoint2coreGraphicsPoint(event.X,event.Y);
+                                            var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                                         //go through this list, comparing to the shape transition list
                                             //shapes only on shapes list; run onmouseenter and add to shapeMouseoverList
                                             //shapes only on shapeMouseoverList; run onmouseleave and remove from shapeMouseoverList
@@ -20672,9 +20672,9 @@
                                                 }
                                                 var point = undefined;
                                                 if(core.callback[callback].length > 2){
-                                                    //calculate the coreGraphics point
+                                                    //calculate the workspace point
                                                     var p = core.viewport.mousePosition();
-                                                    point = _canvas_.core.viewport.adapter.windowPoint2coreGraphicsPoint(p.x,p.y);
+                                                    point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(p.x,p.y);
                                                 }
                                     
                                             //activate core's callback, providing the point, original event, and shapes
