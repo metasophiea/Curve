@@ -18851,14 +18851,20 @@
                                         var height = 10;            this.height = function(a){ if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                         var scale = 1;              this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
                                         var font = defaultFontName;
-                                            this.font = function(a){
-                                                if(a==undefined){return font;}
+                                            this.font = function(newFont){
+                                                if(newFont==undefined){return font;}
                                                 if(this.devMode){console.log(this.getAddress()+'::font');} 
                             
-                                                font = vectorLibrary[a] == undefined ? defaultFontName : a;
+                                                if( library.character.isApprovedFont(newFont) ){
+                                                    if( !library.character.fontLoadAttempted(newFont) ){ library.character.loadFont(newFont); }
+                                                    if( !library.character.isFontLoaded(newFont) ){ setTimeout(function(){ self.font(newFont); },100,newFont); }
+                                                    if(this.devMode){console.log(this.getAddress()+'::font - isLoaded:',library.character.isFontLoaded(newFont));} 
                             
-                                                if(this.devMode){console.log(this.getAddress()+'::font - isLoaded:',vectorLibrary[font].isLoaded);} 
-                                                if(!vectorLibrary[font].isLoaded){ setTimeout(function(){ self.font(font); },100,font); }
+                                                    font = !library.character.isFontLoaded(newFont) ? defaultFontName : newFont;
+                                                }else{
+                                                    console.warn('library.character : error : unknown font:',newFont);
+                                                    font = defaultFontName;
+                                                }
                             
                                                 producePoints();
                             
@@ -18901,7 +18907,7 @@
                                     this.bottom = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].bottom; };
                                     this.left = function(){ return vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].left; };
                                     this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
-                                    function producePoints(){            
+                                    function producePoints(){
                                         points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
                             
                                         //adjust for vertical printingMode
@@ -19109,11 +19115,19 @@
                                         var interCharacterSpacing = 0; 
                                             this.interCharacterSpacing = function(a){ if(a==undefined){return interCharacterSpacing;} interCharacterSpacing = a; if(this.devMode){console.log(this.getAddress()+'::interCharacterSpacing');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); }
                                         var font = defaultFontName;
-                                            this.font =   function(a){ 
-                                                if(a==undefined){return font;}
-                                                font = a == undefined || a === '' || library.character.vectorLibrary[a] == undefined ? defaultFontName : a;
+                                            this.font =   function(newFont){
+                                                if(newFont==undefined){return font;}
                             
-                                                if(!vectorLibrary[font].isLoaded){ setTimeout(function(){ self.font(font); },100,font); }
+                                                if( library.character.isApprovedFont(newFont) ){
+                                                    if( !library.character.fontLoadAttempted(newFont) ){ library.character.loadFont(newFont); }
+                                                    if( !library.character.isFontLoaded(newFont) ){ setTimeout(function(){ self.font(newFont); },100,newFont); }
+                                                    if(this.devMode){console.log(this.getAddress()+'::font - isLoaded:',library.character.isFontLoaded(newFont));} 
+                            
+                                                    font = !library.character.isFontLoaded(newFont) ? defaultFontName : newFont;
+                                                }else{
+                                                    console.warn('library.characterString : error : unknown font:',newFont);
+                                                    font = defaultFontName;
+                                                }
                             
                                                 generateStringCharacters(); 
                                                 if(this.devMode){console.log(this.getAddress()+'::font');} 
@@ -19378,6 +19392,10 @@
                             this.character.vectorLibrary = {};
                             const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%'.split('');
                             const fontFilesLocation = '/fonts/';
+                            const systemFonts = [
+                                'defaultThick',
+                                'defaultThin',
+                            ];
                             const fontFileNames = [
                                 'Roboto/Roboto-Regular.ttf',
                                 'Roboto/Roboto-Italic.ttf',
@@ -19404,38 +19422,71 @@
                             
                                 'Lobster/Lobster-Regular.ttf',
                             ];
-                            library.character.getLoadedFonts = function(){ 
+                            //create locations in the vector library for these fonts
+                            fontFileNames.forEach(name => {
+                                var libraryEntryName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]; //produce font name from file name
+                                library.character.vectorLibrary[libraryEntryName] = {};
+                                library.character.vectorLibrary[libraryEntryName].fileName = name;
+                                library.character.vectorLibrary[libraryEntryName].loadAttempted = false;
+                                library.character.vectorLibrary[libraryEntryName].isLoaded = false;
+                            });
+                            
+                            
+                            
+                            
+                            library.character.getLoadableFonts = function(){ 
                                 var defaultFontNames = ['defaultThick','defaultThin'];
-                                var loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
-                                return  defaultFontNames.concat(loadedFontNames);
+                                var loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
+                                return defaultFontNames.concat(loadableFontNames);
+                            };
+                            library.character.getLoadedFonts = function(){
+                                var defaultFontNames = ['defaultThick','defaultThin'];
+                                var loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => library.character.vectorLibrary[name].isLoaded);
+                                return defaultFontNames.concat(loadedFontNames);
                             };
                             
-                            if(core.devMode){ console.log('-- Loading Advanced Fonts --'); }
-                            //load and extract all fonts
-                                fontFileNames.forEach(name => {
-                                    //remove extension from name
-                                        var vectorLibraryName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0];
-                                        library.character.vectorLibrary[vectorLibraryName] = {};
-                                        library.character.vectorLibrary[vectorLibraryName].isLoaded = false;
-                                        //add default glyph
-                                            library.character.vectorLibrary[vectorLibraryName]['default'] = {vector:[0,0, 1,0, 0,-1, 1,0, 0,-1, 1,-1]};
+                            library.character.isApprovedFont = function(fontName){ return library.character.vectorLibrary[fontName] != undefined; };
+                            library.character.isFontLoaded = function(fontName){ 
+                                if(library.character.vectorLibrary[fontName] == undefined){ console.warn('library.character.isFontLoaded : error : unknown font name:',fontName); return false;}
+                                return library.character.vectorLibrary[fontName].isLoaded;
+                            }
+                            library.character.fontLoadAttempted = function(fontName){ 
+                                if(library.character.vectorLibrary[fontName] == undefined){ console.warn('library.character.fontLoadAttempted : error : unknown font name:',fontName); return false;}
+                                return library.character.vectorLibrary[fontName].loadAttempted;
+                            }
+                            library.character.loadFont = function(fontName){
+                                if(library.character.vectorLibrary[fontName] == undefined){ console.warn('library.character.loadFont : error : unknown font name:',fontName); return false;}
+                                var filename = library.character.vectorLibrary[fontName].fileName;
                             
-                                    //code to be run when data has loaded
-                                        function func(fontData){
-                                            library.character.vectorLibrary[vectorLibraryName] = _canvas_.library.font.extractGlyphs(fontData,reducedGlyphSet);
-                                            library.character.vectorLibrary[vectorLibraryName]['default'] = {vector:[0,0, 1,0, 0,-1, 1,0, 0,-1, 1,-1]};
-                                            library.character.vectorLibrary[vectorLibraryName].isLoaded = true;
+                                //make sure font file is on the approved list
+                                    if( !fontFileNames.includes(filename) && !systemFonts.includes(fontName) ){
+                                        console.warn('library.character.loadFont error: attempting to load unapproved font:',fontName); 
+                                        return;
+                                    }
                             
-                                            if(core.devMode){ console.log('loaded font:',name,'(now named "'+vectorLibraryName+'")'); }
-                                        }
+                                //if font is already loaded, bail
+                                    if( library.character.vectorLibrary[fontName].isLoaded ){return;}
                             
-                                    //load file
-                                        if(core.devMode){ console.log('attempting: '+ name,fontFilesLocation+name); }
-                                        _canvas_.library.misc.loadFileFromURL(fontFilesLocation+name, func, 'arraybuffer');
-                                });
+                                //set up library entry
+                                    library.character.vectorLibrary[fontName].loadAttempted = true;
+                                    library.character.vectorLibrary[fontName].isLoaded = false;
+                                    library.character.vectorLibrary[fontName]['default'] = {vector:[0,0, 1,0, 0,-1, 1,0, 0,-1, 1,-1]};
                             
+                                //code to be run when data has loaded
+                                    function func(fontData){
+                                        var vectors = _canvas_.library.font.extractGlyphs(fontData,reducedGlyphSet);
+                                        Object.keys(vectors).forEach(glyphName => library.character.vectorLibrary[fontName][glyphName] = vectors[glyphName] );
+                                        library.character.vectorLibrary[fontName].isLoaded = true;
+                                        if(core.devMode){ console.log('loaded font:',filename,'(now named "'+fontName+'")'); }
+                                    }
+                            
+                                //load file
+                                    if(core.devMode){ console.log('library.character.loadFont : attempting: '+ name,fontFilesLocation+filename); }
+                                    _canvas_.library.misc.loadFileFromURL(fontFilesLocation+filename, func, 'arraybuffer');
+                            };
                             
                             this.character.vectorLibrary.defaultThick = {
+                                loadAttempted:true,
                                 isLoaded:true,
                                 'default':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ]) },
                                 '':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ]) },
@@ -19752,6 +19803,7 @@
                                     }
                             });
                             this.character.vectorLibrary.defaultThin = {
+                                loadAttempted:true,
                                 isLoaded:true,
                                 'default':{ 
                                     vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 0.0,0.0, 0.1,0.1,  0.1,0.9, 0.9,0.9, 0.9,0.1, 0.1,0.1 ]) 

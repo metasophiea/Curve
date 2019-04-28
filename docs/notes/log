@@ -1,4 +1,31 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-04-26
+  - changed font loading, so that fonts are only loaded when they are to be used
+    also expanded the character font functions out a bit, adding
+    getLoadableFonts, getLoadedFonts, isApprovedFont, isFontLoaded,
+    fontLoadAttempted and loadFont. I've also expanded the vector library 
+    entries a little to recored whether an attempt has been made to load the
+    font (to stop multiple requests)
+  - added stereo version of the filter unit
+  - created a new version of the sequencer using the more modern connections
+
+  Notes
+  - alot of these units need to be redone with more appropriate modern connection
+    nodes. I'm only worried that that will mess up the demo. I'm thinking of
+    just making a load of 'v2' versions, and remaking the old demo...I'd rather
+    do that on my desktop
+
+  ideas
+  - advanced drop down menus (extra branches, named sections, checkboxes)
+
+
+2019-04-25
+  - added getUnitsByModel to control.scene
+  - fleshing out the curve units a little (adding pulse generators for signal
+    and voltage connection nodes, same for duplicators and stereo versions of
+    the distortion and reverb units)
+
+
 2019-04-24
   - emergency fixes to where the fonts are stored and the no image image, as I 
     hadn't thought about access to that sort of stuff. There's now a /docs/fonts

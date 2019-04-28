@@ -30,11 +30,19 @@ this.characterString = function(){
             var interCharacterSpacing = 0; 
                 this.interCharacterSpacing = function(a){ if(a==undefined){return interCharacterSpacing;} interCharacterSpacing = a; if(this.devMode){console.log(this.getAddress()+'::interCharacterSpacing');} generateStringCharacters(); if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); }
             var font = defaultFontName;
-                this.font =   function(a){ 
-                    if(a==undefined){return font;}
-                    font = a == undefined || a === '' || library.character.vectorLibrary[a] == undefined ? defaultFontName : a;
+                this.font =   function(newFont){
+                    if(newFont==undefined){return font;}
 
-                    if(!vectorLibrary[font].isLoaded){ setTimeout(function(){ self.font(font); },100,font); }
+                    if( library.character.isApprovedFont(newFont) ){
+                        if( !library.character.fontLoadAttempted(newFont) ){ library.character.loadFont(newFont); }
+                        if( !library.character.isFontLoaded(newFont) ){ setTimeout(function(){ self.font(newFont); },100,newFont); }
+                        if(this.devMode){console.log(this.getAddress()+'::font - isLoaded:',library.character.isFontLoaded(newFont));} 
+
+                        font = !library.character.isFontLoaded(newFont) ? defaultFontName : newFont;
+                    }else{
+                        console.warn('library.characterString : error : unknown font:',newFont);
+                        font = defaultFontName;
+                    }
 
                     generateStringCharacters(); 
                     if(this.devMode){console.log(this.getAddress()+'::font');} 

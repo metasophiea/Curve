@@ -1,8 +1,8 @@
 this.recorder = function(x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
-        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-        h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
         button:{
             background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
             background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 

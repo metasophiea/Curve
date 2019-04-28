@@ -1,4 +1,5 @@
 this.character.vectorLibrary.defaultThin = {
+    loadAttempted:true,
     isLoaded:true,
     'default':{ 
         vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 0.0,0.0, 0.1,0.1,  0.1,0.9, 0.9,0.9, 0.9,0.1, 0.1,0.1 ]) 

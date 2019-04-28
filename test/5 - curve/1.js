@@ -1,42 +1,78 @@
-_canvas_.control.scene.addUnit(20,10,0,'audio_duplicator');
-_canvas_.control.scene.addUnit(100,10,0,'basicMixer');
-_canvas_.control.scene.addUnit(230,10,0,'data_duplicator');
-_canvas_.control.scene.addUnit(470,10,0,'pulseGenerator_hyper');
-_canvas_.control.scene.addUnit(330,10,0,'pulseGenerator');
-_canvas_.control.scene.addUnit(300,50,0,'universalreadout');
-
-_canvas_.control.scene.addUnit(350,70,0,'basicSynthesizer');
-
-_canvas_.control.scene.addUnit(10,225,0,'audioScope');
-_canvas_.control.scene.addUnit(10,70,0,'audioSink');
-
-_canvas_.control.scene.addUnit(350,175,0,'musicalKeyboard');
-// _canvas_.control.scene.addUnit(10,340,0,'audioIn');
-
-_canvas_.control.scene.addUnit(225,85,0,'distortionUnit');
-_canvas_.control.scene.addUnit(225,185,0,'filterUnit');
-_canvas_.control.scene.addUnit(380,250,0,'multibandFilter');
-_canvas_.control.scene.addUnit(225,290,0,'reverbUnit');
-
-_canvas_.control.scene.addUnit(610,10,0,'launchpad');
-_canvas_.control.scene.addUnit(750,250,0,'basicSequencer_midiOut');
-_canvas_.control.scene.addUnit(750,10,0,'basicSequencer');
-
-_canvas_.control.scene.addUnit(20,525,0,'looper');
-_canvas_.control.scene.addUnit(20,705,0,'oneShot_multi_multiTrack');
-_canvas_.control.scene.addUnit(20,645,0,'oneShot_multi');
-_canvas_.control.scene.addUnit(20,585,0,'oneShot_single');
-_canvas_.control.scene.addUnit(20,395,0,'player');
-_canvas_.control.scene.addUnit(20,480,0,'recorder');
-
-
-_canvas_.control.scene.addUnit(20,-90,0,'universalreadout2');
-_canvas_.control.scene.addUnit(100,-90,0,'pulseGenerator_signal');
-
-
 //view positioning
-_canvas_.core.viewport.scale(5);
-_canvas_.core.viewport.position(-15*_canvas_.core.viewport.scale(),100*_canvas_.core.viewport.scale());
+// _canvas_.core.viewport.scale(5);
+// _canvas_.core.viewport.position(-1000,0);
+
+
+
+//pulse generators
+    _canvas_.control.scene.addUnit(10,25,0,'pulseGenerator_signal');
+    _canvas_.control.scene.addUnit(10,75,0,'pulseGenerator_signal_hyper');
+    _canvas_.control.scene.addUnit(10,125,0,'pulseGenerator_voltage');
+    _canvas_.control.scene.addUnit(10,175,0,'pulseGenerator_voltage_hyper');
+    _canvas_.control.scene.addUnit(10,225,0,'pulseGenerator_data');
+    _canvas_.control.scene.addUnit(10,275,0,'pulseGenerator_data_hyper');
+
+//direct human input units
+    _canvas_.control.scene.addUnit(175,25,0,'musicalKeyboard');
+
+//duplicators
+    _canvas_.control.scene.addUnit(515,25,0,'signal_duplicator');
+    _canvas_.control.scene.addUnit(515,85,0,'voltage_duplicator');
+    _canvas_.control.scene.addUnit(515,145,0,'data_duplicator');
+    _canvas_.control.scene.addUnit(515,205,0,'audio_duplicator');
+
+//mixing units
+    _canvas_.control.scene.addUnit(595,25,0,'basicMixer');
+
+//audio effect units
+    _canvas_.control.scene.addUnit(720,25,0,'distortionUnit');
+    _canvas_.control.scene.addUnit(720,125,0,'distortionUnit_stereo');
+    _canvas_.control.scene.addUnit(845,25,0,'reverbUnit');
+    _canvas_.control.scene.addUnit(845,100,0,'reverbUnit_stereo');
+    _canvas_.control.scene.addUnit(970,25,0,'filterUnit');
+    _canvas_.control.scene.addUnit(970,130,0,'filterUnit_stereo');
+    _canvas_.control.scene.addUnit(1120,25,0,'multibandFilter');
+
+//audio output
+    _canvas_.control.scene.addUnit(1330,25,0,'audioSink');
+
+//audio input
+    _canvas_.control.scene.addUnit(1385,25,0,'audioIn');
+
+//visualisation
+    _canvas_.control.scene.addUnit(1640,25,0,'universalreadout2');
+    _canvas_.control.scene.addUnit(1640,85,0,'audioScope');
+
+//audio playback units
+    _canvas_.control.scene.addUnit(1860,25,0,'player');
+    _canvas_.control.scene.addUnit(1860,110,0,'looper');
+    _canvas_.control.scene.addUnit(1860,170,0,'oneShot_single');
+    _canvas_.control.scene.addUnit(1860,230,0,'oneShot_multi');
+    _canvas_.control.scene.addUnit(1860,290,0,'oneShot_multi_multiTrack');
+
+//recording units
+    _canvas_.control.scene.addUnit(2095,25,0,'recorder');
+
+//synthesizer
+    _canvas_.control.scene.addUnit(2300,25,0,'basicSynthesizer');
+    _canvas_.control.scene.addUnit(2300,135,0,'basicSynthesizer_img');
+
+//sequencers
+    _canvas_.control.scene.addUnit(2560,25,0,'launchpad');
+    _canvas_.control.scene.addUnit(2560,135,0,'basicSequencer');
+    _canvas_.control.scene.addUnit(2560,370,0,'basicSequencer2');
+    _canvas_.control.scene.addUnit(2560,605,0,'basicSequencer_midiOut');
+
+
+
+
+
+
+
+
+
+
+
 
 
 

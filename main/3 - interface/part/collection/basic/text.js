@@ -1,4 +1,4 @@
-this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.1, interCharacterSpacing=0.0 ){
+this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0 ){
     var temp = _canvas_.core.shape.create('characterString');
     temp.name = name;
     temp.ignored = ignored;

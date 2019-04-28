@@ -1,4 +1,4 @@
-function makeText(y,font,text){
+function makeText(y,font){
     var tmp = _canvas_.core.shape.create('characterString');
     tmp.name = 'characterString_'+y;
     tmp.stopAttributeStartedExtremityUpdate = true;
@@ -16,8 +16,8 @@ function makeText(y,font,text){
 
 
 var gap = 60;
-_canvas_.core.shape.library.character.getLoadedFonts().forEach((name,index) => {
-    makeText(index*gap,name,'How are you today?');
+_canvas_.core.shape.library.character.getLoadableFonts().forEach((name,index) => {
+    makeText(index*gap,name);
 });
 
 

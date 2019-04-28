@@ -2,8 +2,8 @@ this.player = function(x,y,a){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
-        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-        h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
         readout_sixteenSegmentDisplay_static:{background:{r:0/255,g:0/255,b:0/255,a:1}, glow:{r:200/255,g:200/255,b:200/255,a:1},dim:{r:20/255,g:20/255,b:20/255,a:1}},
         button:{
             background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 

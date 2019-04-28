@@ -6,8 +6,8 @@ this.audioIn = function(x,y,a,setupConnect=true){
     var style = {
         background:{r:200/255,g:200/255,b:200/255,a:1},
         marking:{stroke:{r:160/255,g:160/255,b:160/255,a:1}, lineWidth:1},
-        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
 
         readout:{ background:'rgb(0,0,0)', glow:'rgb(200,200,200)', dim:'rgb(20,20,20)' },
         button:{

@@ -1,4 +1,5 @@
 this.character.vectorLibrary.defaultThick = {
+    loadAttempted:true,
     isLoaded:true,
     'default':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ]) },
     '':{ vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ]) },

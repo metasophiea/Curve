@@ -3,12 +3,12 @@ this.basicSynthesizer_img = function(x,y,angle){
         detuneLimits: {min:-100, max:100}
     };
     var style = {
-        background:'/docs/images/units/alpha/basicSynthesizer_2.png',
+        background:'/images/units/alpha/basicSynthesizer_2.png',
 
         dial:{
-            handle:'/docs/images/units/alpha/basicSynthesizer_2_dial_handle.png',
-            slot:'/docs/images/units/alpha/basicSynthesizer_2_dial_slot.png',
-            needle:'/docs/images/units/alpha/basicSynthesizer_2_dial_needle.png',
+            handle:'/images/units/alpha/basicSynthesizer_2_dial_handle.png',
+            slot:'/images/units/alpha/basicSynthesizer_2_dial_slot.png',
+            needle:'/images/units/alpha/basicSynthesizer_2_dial_needle.png',
         },
         button:{
             background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 

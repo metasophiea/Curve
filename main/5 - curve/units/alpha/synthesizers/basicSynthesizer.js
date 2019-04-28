@@ -4,8 +4,8 @@ this.basicSynthesizer = function(x,y,a){
     };
     var style = { //regular
         background:{r:200/255,g:200/255,b:200/255,a:1},
-        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1.75, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+        h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1.75, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
 
 
         dial:{
@@ -26,8 +26,8 @@ this.basicSynthesizer = function(x,y,a){
     //         lineWidth:2,
     //         lineJoin:'miter',
     //     },
-    //     h1:{fill:'rgba(255,255,255,1)', font:'4pt Courier New'},
-    //     h2:{fill:'rgba(255,255,255,1)', font:'3pt Courier New'},
+    //     h1:{fill:'rgba(255,255,255,1)', font:'4pt defaultThin'},
+    //     h2:{fill:'rgba(255,255,255,1)', font:'3pt defaultThin'},
 
     //     dial:{
     //         handle:{

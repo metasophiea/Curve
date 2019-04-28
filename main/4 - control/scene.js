@@ -259,6 +259,9 @@ this.removeUnit = function(unit){
 
 this.getAllUnits = function(){ return pane.children().filter( a => !a._isCable ); };
 this.getUnitByName = function(name){ return pane.getChildByName(name); };
+this.getUnitsByModel = function(model){
+    return this.getAllUnits().filter( a => a.model == model);
+};
 // this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
 this.getUnitUnderPoint = function(x,y){
     for( var a = 0; a < pane.children().length; a++){
