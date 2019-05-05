@@ -80,7 +80,7 @@ this.player = function(context){
                     return;
                 }
 
-            //if loop is enabled, and the desired value is beyond the loop's end boundry,
+            //if loop is enabled, and the desired value is beyond the loop's end boundary,
             //set the value to the start value
                 if(state.loop.active && value > state.loop.end){value = state.loop.start;}
 

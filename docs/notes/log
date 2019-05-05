@@ -1,4 +1,83 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-05-05
+  - fixed issue with adjusting the audioFilePlayer play head. It was entering a
+    loop of some kind. Caused by the builder not lining up with all the
+    arguments of the part's creator function
+
+
+2019-05-03
+  - changed the item__hover_glow__colour for the menubar dropdowns to be a bit
+    more purple
+  - fixed issue in list part's sublist closing, where 'space' not existing in
+    the itemArray was causing problems related to the 'list' array
+  - upgraded list_image part to be the same as the list part from (though
+    ofcourse, with all images instead of shapes)
+  - started thinking more seriously about what curve's units should be
+
+  Compilation Results
+  - core.js                           1283 kB  (100%)
+  - core.min.js                        333 kB  (25.99%)
+  - core.min.js(compressed)           78.6 kB  (6.12%)
+  - workspace.js                      2199 kB  (100%)
+  - workspace.min.js                   558 kB  (25.41%)
+  - workspace.min.js (compressed)    119.8 kB  (5.44%)
+  - curve.js                          2607 kB  (100%)
+  - curve.min.js                       725 kB  (27.82%)
+  - curve.min.js (compressed)        139.7 kB  (5.35%)
+
+  ideas
+  - search function in menubar, like in macOS
+  - 'hover' for checkboxes? defaulted off I think
+  - might have to rename the "signal" connection type to something else, so
+    we can start saying that the thing that signal/voltage/data/audio
+    connections send to eachother is a 'signal'. I need to reclaim that word.
+
+  bugs
+  - something is not right with the audioFilePlayer when you adjust the playhead
+    backwards. It also doesn't seem to line up great with the waveform on speed
+    adjusted play
+
+
+2019-05-02
+  - the new list is getting pretty solid, I've completely replaced the older one
+    with this snazzy new one now, and updated all the places that used the old
+    one to work with the newer interface. (need to update the image based one
+    accordingly)
+  - added sub-dropdowns for the menubar
+  - created '_canvas_.interface.unit.collection.alpha._categoryData' which holds
+    information about the categories of a collection. Probably not the best
+    place for this data - its in the same space as all the units - but its there
+    now
+
+
+2019-05-01
+  - redoing the list part from the ground. Things were getting a little messy
+    with how things were scaled, so this version is simpler. Still in progress
+    however, though mostly done. Needs some testing and a review.
+  - added 'getChildIndexByName' to group shape
+
+
+2019-04-30
+  - added resultingWidth function to characterString shape, which you can use to
+    discover what the with of the string is when printed.
+  - added onFontUpdateCallback callback attribute to characterString
+  - created the 'list2' control part which will replace the 'list' control part
+    when its ready. Currently, it has all the old features plus named sections
+    and checkboxes
+
+
+2019-04-29
+  - updated the tester function a little bit, to ease the comparison of numbers
+    There's now: 
+      if( Math.abs(item1 - item2) < 1.0e-15 ){return true;}
+    This was added as tests were failing on firefox while passing on Chrome. It
+    seems that firefox will display 17 digits after a decimal point, but chrome
+    only uses 16, thus, those numbers will not match. This extra piece ensures
+    that they do.
+  - interestingly, if you make a comment like /*! hello */ the comment will
+    pass through closure untouched.
+
+
 2019-04-26
   - changed font loading, so that fonts are only loaded when they are to be used
     also expanded the character font functions out a bit, adding
@@ -10,13 +89,14 @@
   - created a new version of the sequencer using the more modern connections
 
   Notes
-  - alot of these units need to be redone with more appropriate modern connection
-    nodes. I'm only worried that that will mess up the demo. I'm thinking of
-    just making a load of 'v2' versions, and remaking the old demo...I'd rather
-    do that on my desktop
+  - alot of these units need to be redone with more appropriate modern 
+    connection nodes. I'm only worried that that will mess up the demo. I'm 
+    thinking of just making a load of 'v2' versions, and remaking the old 
+    demo...I'd rather do that on my desktop
 
   ideas
-  - advanced drop down menus (extra branches, named sections, checkboxes)
+  - advanced drop down menus (extra branches, named sections, checkboxes, help
+    search box (like on macOS))
 
 
 2019-04-25
@@ -40,7 +120,6 @@
     default fonts, when a requested URL font fails to load
   - change the unit connections that are sending essentially pulse commands, 
     away from using data connections and to using signal or voltage connections
-
 
   Compilation Results
   - core.js                              1303 Kb  (100%)
@@ -696,7 +775,7 @@
 
 2019-02-12
   - webGL experiment
-    - made 'computeExtremities' a little more complicted in the rectangle shape
+    - made 'computeExtremities' a little more complicated in the rectangle shape
       in order to stop it from recalculating it's extremities where there was no
       change in it's position values or offset. It's done little to alleviate
       the speed problem

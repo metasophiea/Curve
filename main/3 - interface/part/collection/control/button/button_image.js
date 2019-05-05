@@ -30,7 +30,7 @@ this.button_image = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
-    //default to non-image version if image links are missing
+    //default to non-image version if any image links are missing
         if(
             backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
             backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 

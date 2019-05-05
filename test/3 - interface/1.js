@@ -3,9 +3,9 @@
 _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
-// //view positioning
-// _canvas_.core.viewport.scale(5);
-// var x = 832.5;
+// // view positioning
+// _canvas_.core.viewport.scale(6);
+// var x = 625;
 // var y = 300;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // // _canvas_.core.viewport.angle(-0.1);
@@ -30,10 +30,10 @@ _canvas_.core.render.active(true);
     _canvas_.system.pane.mm.append( basicGroup );
     basicGroup.append( _canvas_.interface.part.builder( 'rectangle', 'testRectangle', { x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'circle', 'testCircle', { x:20, y:55, radius:15 } ) );
-    basicGroup.append( _canvas_.interface.part.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'http://0.0.0.0:8000/workshop/webGL/testImages/Dore-munchausen-illustration.jpg' } ) );
+    basicGroup.append( _canvas_.interface.part.builder( 'image', 'testImage', { x:40, y:40, width:30, height:30, url:'/images/testImages/Dore-munchausen-illustration.jpg' } ) );
     var clippingGroup = _canvas_.interface.part.builder( 'group', 'clippingGroup', { x:75, y:5 } );
         clippingGroup.stencil( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[0,0, 50,0, 50,50], colour:{r:0,g:1,b:0,a:1} } ) );
-        clippingGroup.append( _canvas_.interface.part.builder( 'image', 'clippedImage', { width:50, height:50, url:'http://0.0.0.0:8000/workshop/webGL/testImages/mikeandbrian.jpg' } ) );
+        clippingGroup.append( _canvas_.interface.part.builder( 'image', 'clippedImage', { width:50, height:50, url:'/images/testImages/mikeandbrian.jpg' } ) );
         clippingGroup.clipActive(true);
         basicGroup.append(clippingGroup);
     basicGroup.append( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1} } ) );
@@ -86,62 +86,62 @@ _canvas_.core.render.active(true);
         var s_1 = _canvas_.interface.part.builder( 'slide', 'test_slide1', {x:0,y:0} ); controlGroup.append( s_1 );
         var si_1 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image1', {
             x:12.5,y:0,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            backingURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
         } ); controlGroup.append( si_1 );
         var sp_1 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel1', {x:25,y:0} ); controlGroup.append( sp_1 );
         var spi_1 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image1', {
             x:107.5,y:0,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            backingURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            overlayURL:'http://0.0.0.0:8000/workshop/webGL/testImages/glowbox_rect_overlay_1.png',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            overlayURL:'/images/units/alpha/glowbox_rect_overlay_1.png',
         } ); controlGroup.append( spi_1 );
         var s_2 = _canvas_.interface.part.builder( 'slide', 'test_slide2', {x:190,y:10,angle:-Math.PI/2} ); controlGroup.append( s_2 );
         var si_2 = _canvas_.interface.part.builder( 'slide_image', 'test_slide_image2', {
             x:190,y:22.5,angle:-Math.PI/2,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            backingURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
         } ); controlGroup.append( si_2 );
         var sp_2 = _canvas_.interface.part.builder( 'slidePanel', 'test_slidePanel2', {x:287.5,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
         var spi_2 = _canvas_.interface.part.builder( 'slidePanel_image', 'test_slidePanel_image2', {
             x:287.5,y:162.5,angle:-Math.PI/2,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            backingURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
         } ); controlGroup.append( spi_2 );
         var r_1 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide1', {x:385,y:0} ); controlGroup.append(r_1);
         var ri_1 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image1', {
             x:397.5,y:0,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            backingURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            spanURL:'http://0.0.0.0:8000/workshop/webGL/testImages/glowbox_rect_overlay_1.png',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            spanURL:'/images/units/alpha/glowbox_rect_overlay_1.png',
         } ); controlGroup.append(ri_1);
         var r_2 = _canvas_.interface.part.builder( 'rangeslide', 'test_rangeslide2', {x:410,y:10,angle:-Math.PI/2} ); controlGroup.append(r_2);
         var ri_2 = _canvas_.interface.part.builder( 'rangeslide_image', 'test_rangeslide_image2', {
             x:410,y:22.5,angle:-Math.PI/2,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            backingURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            spanURL:'http://0.0.0.0:8000/workshop/webGL/testImages/glowbox_rect_overlay_1.png',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            spanURL:'/images/units/alpha/glowbox_rect_overlay_1.png',
         } ); controlGroup.append(ri_2);
     //dial
         var dc_1 = _canvas_.interface.part.builder( 'dial_continuous', 'test_dial_continuous1', {x:525,y:20} ); controlGroup.append(dc_1);
         var dd_1 = _canvas_.interface.part.builder( 'dial_discrete', 'test_dial_discrete1', {x:560,y:20} ); controlGroup.append(dd_1);
         var dic_1 = _canvas_.interface.part.builder( 'dial_continuous_image', 'test_dial_continuous_image1', {
             x:525,y:60,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            needleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            needleURL:'/images/testImages/41-satin-stainless-steel.jpg',
         } ); controlGroup.append(dic_1);
         var did_1 = _canvas_.interface.part.builder( 'dial_discrete_image', 'test_dial_discrete_image1', {
             x:560,y:60,
-            handleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            slotURL:'http://0.0.0.0:8000/workshop/webGL/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
-            needleURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
+            handleURL:'/images/testImages/expanded-metal-1.jpg',
+            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
+            needleURL:'/images/testImages/41-satin-stainless-steel.jpg',
         } ); controlGroup.append(did_1);
     //button
         var br_1 = _canvas_.interface.part.builder( 'button_rectangle', 'test_button_rectangle1', {x:580,y:0,text_centre:'rectangle'} ); controlGroup.append(br_1);
@@ -152,87 +152,136 @@ _canvas_.core.render.active(true);
         } ); controlGroup.append(bp_1);
         var bi_1 = _canvas_.interface.part.builder( 'button_image', 'test_button_image1', {
             x:580,y:87.5,
-            backingURL__off:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/off.png',
-            backingURL__up:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/up.png',
-            backingURL__press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/press.png',
-            backingURL__select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/select.png',
-            backingURL__select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/select_press.png',
-            backingURL__glow:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow.png',
-            backingURL__glow_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow_press.png',
-            backingURL__glow_select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow_select.png',
-            backingURL__glow_select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow_select_press.png',
-            backingURL__hover:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover.png',
-            backingURL__hover_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_press.png',
-            backingURL__hover_select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_select.png',
-            backingURL__hover_select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_select_press.png',
-            backingURL__hover_glow:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow.png',
-            backingURL__hover_glow_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow_press.png',
-            backingURL__hover_glow_select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow_select.png',
-            backingURL__hover_glow_select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow_select_press.png',
+            backingURL__off:'/images/testImages/buttonStates/off.png',
+            backingURL__up:'/images/testImages/buttonStates/up.png',
+            backingURL__press:'/images/testImages/buttonStates/press.png',
+            backingURL__select:'/images/testImages/buttonStates/select.png',
+            backingURL__select_press:'/images/testImages/buttonStates/select_press.png',
+            backingURL__glow:'/images/testImages/buttonStates/glow.png',
+            backingURL__glow_press:'/images/testImages/buttonStates/glow_press.png',
+            backingURL__glow_select:'/images/testImages/buttonStates/glow_select.png',
+            backingURL__glow_select_press:'/images/testImages/buttonStates/glow_select_press.png',
+            backingURL__hover:'/images/testImages/buttonStates/hover.png',
+            backingURL__hover_press:'/images/testImages/buttonStates/hover_press.png',
+            backingURL__hover_select:'/images/testImages/buttonStates/hover_select.png',
+            backingURL__hover_select_press:'/images/testImages/buttonStates/hover_select_press.png',
+            backingURL__hover_glow:'/images/testImages/buttonStates/hover_glow.png',
+            backingURL__hover_glow_press:'/images/testImages/buttonStates/hover_glow_press.png',
+            backingURL__hover_glow_select:'/images/testImages/buttonStates/hover_glow_select.png',
+            backingURL__hover_glow_select_press:'/images/testImages/buttonStates/hover_glow_select_press.png',
         } ); controlGroup.append(bi_1);
     //list
-        var l_1 = _canvas_.interface.part.builder( 'list', 'test_list1', {x:612.5,y:0,list:[
-            'space',
-            { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
-            { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
-            { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
-            { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
-            { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
-            'break',
-            { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
-            { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
-            { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
-            { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
-            { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
-            'break',
-            { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
-            { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
-            { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
-            { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
-            { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
-            'space',
+        var l_1 = _canvas_.interface.part.builder( 'list', 'test_list', {x:612.5,y:0,limitHeightTo:100,limitWidthTo:50,list:[
+            { type:'space' },
+            { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
+            { type:'list', text:'sublist', list:[
+                { type:'space' },
+                { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist item1 function');} },
+                { type:'break' },
+                { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist item2 function');} },
+                { type:'textbreak', text:'break 1'},
+                { type:'list', text:'sublist', list:[
+                    { type:'space' },
+                    { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item1 function');} },
+                    { type:'break' },
+                    { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item2 function');} },
+                    { type:'textbreak', text:'break 1'},
+                    { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item3 function');} },
+                    { type:'space' },
+                ] },
+                { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist item3 function');} },
+                { type:'space' },
+            ] },
+            { type:'break' },
+            { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
+            { type:'textbreak', text:'break 1'},
+            { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
+            { type:'checkbox', text:'checkable', function:function(val){console.log('checkbox:',val);} },
+            { type:'item', text_left:'item4', text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
+            { type:'item', text_left:'item5', text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
+            { type:'textbreak', text:'break 1'},
+            { type:'item', text_left:'item6', text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
+            { type:'item', text_left:'item7', text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
+            { type:'item', text_left:'item8', text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
+            { type:'item', text_left:'item9', text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
+            { type:'item', text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
+            { type:'break' },
+            { type:'item', text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
+            { type:'item', text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
+            { type:'item', text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
+            { type:'item', text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
+            { type:'item', text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
+            { type:'space' },
         ]} ); controlGroup.append(l_1);
-        var li_1 = _canvas_.interface.part.builder( 'list_image', 'test_list_image1', {
-            x:665,y:0,list:[
-                'space',
-                { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
-                { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
-                { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
-                { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
-                { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
-                'break',
-                { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
-                { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
-                { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
-                { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
-                { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
-                'break',
-                { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
-                { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
-                { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
-                { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
-                { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
-                'space',
+        var li_1 = _canvas_.interface.part.builder( 'list_image', 'test_list_image', {
+            x:665,y:0,limitHeightTo:100,limitWidthTo:50,list:[
+                { type:'space' },
+                { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
+                { type:'list', text:'sublist', list:[
+                    { type:'space' },
+                    { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist item1 function');} },
+                    { type:'break' },
+                    { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist item2 function');} },
+                    { type:'textbreak', text:'break 1'},
+                    { type:'list', text:'sublist', list:[
+                        { type:'space' },
+                        { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item1 function');} },
+                        { type:'break' },
+                        { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item2 function');} },
+                        { type:'textbreak', text:'break 1'},
+                        { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item3 function');} },
+                        { type:'space' },
+                    ] },
+                    { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist item3 function');} },
+                    { type:'space' },
+                ] },
+                { type:'break' },
+                { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
+                { type:'textbreak', text:'break 1'},
+                { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
+                { type:'checkbox', text:'checkable', function:function(val){console.log('checkbox:',val);} },
+                { type:'item', text_left:'item4', text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
+                { type:'item', text_left:'item5', text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
+                { type:'textbreak', text:'break 1'},
+                { type:'item', text_left:'item6', text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
+                { type:'item', text_left:'item7', text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
+                { type:'item', text_left:'item8', text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
+                { type:'item', text_left:'item9', text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
+                { type:'item', text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
+                { type:'break' },
+                { type:'item', text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
+                { type:'item', text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
+                { type:'item', text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
+                { type:'item', text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
+                { type:'item', text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
+                { type:'space' },
             ],
-            backingURL:'http://0.0.0.0:8000/workshop/webGL/testImages/41-satin-stainless-steel.jpg',
-            breakURL:'http://0.0.0.0:8000/workshop/webGL/testImages/expanded-metal-1.jpg',
-            itemURL__off:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/off.png',
-            itemURL__up:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/up.png',
-            itemURL__press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/press.png',
-            itemURL__select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/select.png',
-            itemURL__select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/select_press.png',
-            itemURL__glow:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow.png',
-            itemURL__glow_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow_press.png',
-            itemURL__glow_select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow_select.png',
-            itemURL__glow_select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/glow_select_press.png',
-            itemURL__hover:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover.png',
-            itemURL__hover_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_press.png',
-            itemURL__hover_select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_select.png',
-            itemURL__hover_select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_select_press.png',
-            itemURL__hover_glow:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow.png',
-            itemURL__hover_glow_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow_press.png',
-            itemURL__hover_glow_select:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow_select.png',
-            itemURL__hover_glow_select_press:'http://0.0.0.0:8000/workshop/webGL/testImages/buttonStates/hover_glow_select_press.png',
+            backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
+            breakURL:'/images/testImages/expanded-metal-1.jpg',
+            sublist__up:'/images/testImages/buttonStates/up.png',
+            sublist__hover:'/images/testImages/buttonStates/hover.png',
+            sublist__glow:'/images/testImages/buttonStates/glow.png',
+            sublist__hover_glow:'/images/testImages/buttonStates/hover_glow.png',
+            sublist__hover_glow_press:'/images/testImages/buttonStates/hover_glow_press.png',
+            checkbox_uncheckURL:'/images/testImages/Dore-munchausen-illustration.jpg',
+            checkbox_checkURL:'/images/testImages/mikeandbrian.jpg',
+            itemURL__off:'/images/testImages/buttonStates/off.png',
+            itemURL__up:'/images/testImages/buttonStates/up.png',
+            itemURL__press:'/images/testImages/buttonStates/press.png',
+            itemURL__select:'/images/testImages/buttonStates/select.png',
+            itemURL__select_press:'/images/testImages/buttonStates/select_press.png',
+            itemURL__glow:'/images/testImages/buttonStates/glow.png',
+            itemURL__glow_press:'/images/testImages/buttonStates/glow_press.png',
+            itemURL__glow_select:'/images/testImages/buttonStates/glow_select.png',
+            itemURL__glow_select_press:'/images/testImages/buttonStates/glow_select_press.png',
+            itemURL__hover:'/images/testImages/buttonStates/hover.png',
+            itemURL__hover_press:'/images/testImages/buttonStates/hover_press.png',
+            itemURL__hover_select:'/images/testImages/buttonStates/hover_select.png',
+            itemURL__hover_select_press:'/images/testImages/buttonStates/hover_select_press.png',
+            itemURL__hover_glow:'/images/testImages/buttonStates/hover_glow.png',
+            itemURL__hover_glow_press:'/images/testImages/buttonStates/hover_glow_press.png',
+            itemURL__hover_glow_select:'/images/testImages/buttonStates/hover_glow_select.png',
+            itemURL__hover_glow_select_press:'/images/testImages/buttonStates/hover_glow_select_press.png',
         } ); controlGroup.append(li_1);
     //check box
         var cr_1 = _canvas_.interface.part.builder( 'checkbox_rectangle', 'test_checkbox_rectangle1', {x:717.5,y:0} ); controlGroup.append(cr_1);
@@ -245,8 +294,8 @@ _canvas_.core.render.active(true);
         } ); controlGroup.append(cp_1);
         var ci_1 = _canvas_.interface.part.builder( 'checkbox_image', 'test_checkbox_image1', {
             x:717.5,y:67.5,
-            uncheckURL:'http://0.0.0.0:8000/workshop/webGL/testImages/Dore-munchausen-illustration.jpg',
-            checkURL:'http://0.0.0.0:8000/workshop/webGL/testImages/mikeandbrian.jpg',
+            uncheckURL:'/images/testImages/Dore-munchausen-illustration.jpg',
+            checkURL:'/images/testImages/mikeandbrian.jpg',
         } ); controlGroup.append(ci_1);
     var ras_1 = _canvas_.interface.part.builder( 'rastorgrid', 'test_rastorgrid1', {x:740,y:0} ); controlGroup.append(ras_1);
     var no = _canvas_.interface.part.builder( 'needleOverlay', 'test_needleOverlay1', {x:822.5,y:0} );

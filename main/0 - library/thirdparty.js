@@ -1,9 +1,10 @@
 this.earcut = function(points,holeIndices){
+	//https://github.com/mapbox/earcut
+	
     var outputPoints = [];
     earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
     return outputPoints;
 
-    //https://github.com/mapbox/earcut
     function earcut(data, holeIndices, dim) {
 
         dim = dim || 2;
@@ -1077,19 +1078,12 @@ this.lzString = (function(){
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (factory((global.opentype = {})));
 }(this, (function (exports) { 'use strict';
-
     // https://github.com/opentypejs/opentype.js/blob/master/dist/opentype.js
-    // slightly modified.
-    // The line 
-    //  (factory((global.opentype = {})));
-    // should be replaced with 
-    //  (factory((library.thirdparty.opentype = {})));
-    // in order to wrap the code into a library location
 
     // https://opentype.js.org v0.11.0 | (c) Frederik De Bleser and other contributors | MIT License | 
     // Uses tiny-inflate by Devon Govett and string.prototype.codepointat polyfill by Mathias Bynens
 
-	/*! https://mths.be/codepointat v0.2.0 by @mathias */
+	/* https://mths.be/codepointat v0.2.0 by @mathias */
 	if (!String.prototype.codePointAt) {
 		(function() {
 			var defineProperty = (function() {

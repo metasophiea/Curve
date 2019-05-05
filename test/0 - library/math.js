@@ -120,13 +120,13 @@ console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
         tester(_canvas_.library.math.curvePoint.s(1)  , 1 );
     //exponential
         console.log('%c-- exponential', 'font-weight: bold;');
-        tester(_canvas_.library.math.curvePoint.exponential(),     0.2689414213699951 );
+        tester(_canvas_.library.math.curvePoint.exponential(),     0.26894142136999516 );
         tester(_canvas_.library.math.curvePoint.exponential(0.0),  0 );
         tester(_canvas_.library.math.curvePoint.exponential(0.1),  0.03465343780550409 );
         tester(_canvas_.library.math.curvePoint.exponential(0.2),  0.07697924232087867 );
         tester(_canvas_.library.math.curvePoint.exponential(0.3),  0.12867609669730537 );
         tester(_canvas_.library.math.curvePoint.exponential(0.4),  0.19181877722087765 );
-        tester(_canvas_.library.math.curvePoint.exponential(0.5),  0.2689414213699951 );
+        tester(_canvas_.library.math.curvePoint.exponential(0.5),  0.26894142136999516 );
         tester(_canvas_.library.math.curvePoint.exponential(0.6),  0.3631392316503325 );
         tester(_canvas_.library.math.curvePoint.exponential(0.7),  0.47819269693938515 );
         tester(_canvas_.library.math.curvePoint.exponential(0.8),  0.6187193167793194 );
@@ -323,7 +323,7 @@ console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
     tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7989772731353805, true), 8.209710732671443 );
     tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7687872823270903, true), 9.033074118352085 );
     tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7542679542679545, true), 9.429055792692154 );
-    tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7687872823270891, true), 09.033074118352115 );
+    tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7687872823270891, true), 9.033074118352115 );
     console.log('');
 
 //removeTheseElementsFromThatArray

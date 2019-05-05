@@ -28,10 +28,6 @@ this.player = function(x,y,a){
         slide:{
             handle:{r:220/255,g:220/255,b:220/255,a:1}
         },
-
-
-
-
     };
     var design = {
         name: 'player',
@@ -73,7 +69,10 @@ this.player = function(x,y,a){
             {type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
             {type:'dial_continuous',name:'rate_dial',data:{ x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, resetValue:0.5 }},
 
-            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ object.player.loop({active:bool}); } }},
+            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ 
+                console.log(bool); 
+                object.player.loop({active:bool}); 
+            } }},
         ]
     };
 

@@ -1,6 +1,6 @@
 this.needleOverlay = function(
     name='needleOverlay',
-    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9-1), selectNeedle=true, selectionArea=true,
+    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9), selectNeedle=true, selectionArea=true,
     needleStyles=[
         {r:0.94,g:0.94,b:0.94,a:1},
         {r:1,g:0.9,b:0.44,a:1},

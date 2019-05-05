@@ -15,6 +15,7 @@ this.characterString = function(){
             this.ignored = false;
             var colour = {r:1,g:0,b:0,a:1}; this.colour = function(a){ if(a==undefined){return colour;} colour = a; recolourCharacters(); };
         //advanced use attributes
+            this.onFontUpdateCallback = function(){};
             this.devMode = false;
             this.stopAttributeStartedExtremityUpdate = false;
         
@@ -47,6 +48,7 @@ this.characterString = function(){
                     generateStringCharacters(); 
                     if(this.devMode){console.log(this.getAddress()+'::font');} 
                     computeExtremities(); 
+                    self.onFontUpdateCallback();
                 };
             var printingMode = {
                 widthCalculation:'absolute', //filling / absolute
@@ -72,6 +74,7 @@ this.characterString = function(){
         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
         
     //string
+        var resultingWidth = 0;
         function recolourCharacters(){ children.forEach(a => a.colour = colour); }
         function generateStringCharacters(){
             if(self.devMode){console.log(self.getAddress()+'::generateStringCharacters');}
@@ -122,10 +125,13 @@ this.characterString = function(){
                     cumulativeWidth += (interCharacterSpacing + tmp.right()) * characterWidth;
                 }
 
+                resultingWidth = cumulativeWidth;
+
             //printingMode - horizontal
                 if( printingMode.horizontal == 'middle' ){ children.forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
                 else if( printingMode.horizontal == 'right' ){ children.forEach(a => a.x( a.x() - cumulativeWidth) ); }
         }
+        this.resultingWidth = function(){ return resultingWidth; };
 
     //group functions
         var children = [];

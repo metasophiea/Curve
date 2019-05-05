@@ -8,9 +8,9 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
-            {text_left:'New Scene', function:function(){ _canvas_.control.scene.new(true); } },
-            {text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ _canvas_.control.scene.load(undefined,undefined,true); } },
-            {text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene.save('project.crv'); } },
+            {type:'item', text_left:'New Scene', function:function(){ _canvas_.control.scene.new(true); } },
+            {type:'item', text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ _canvas_.control.scene.load(undefined,undefined,true); } },
+            {type:'item', text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene.save('project.crv'); } },
         ]
     },
     {
@@ -21,11 +21,11 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
-            {text_left:'Cut',       text_right:'ctrl-x', function:function(){_canvas_.control.selection.cut();}       },
-            {text_left:'Copy',      text_right:'ctrl-c', function:function(){_canvas_.control.selection.copy();}      },
-            {text_left:'Paste',     text_right:'ctrl-v', function:function(){_canvas_.control.selection.paste();}     },
-            {text_left:'Duplicate', text_right:'ctrl-b', function:function(){_canvas_.control.selection.duplicate();} },
-            {text_left:'Delete',    text_right:'del',    function:function(){_canvas_.control.selection.delete();}    },
+            {type:'item', text_left:'Cut',       text_right:'ctrl-x', function:function(){_canvas_.control.selection.cut();}       },
+            {type:'item', text_left:'Copy',      text_right:'ctrl-c', function:function(){_canvas_.control.selection.copy();}      },
+            {type:'item', text_left:'Paste',     text_right:'ctrl-v', function:function(){_canvas_.control.selection.paste();}     },
+            {type:'item', text_left:'Duplicate', text_right:'ctrl-b', function:function(){_canvas_.control.selection.duplicate();} },
+            {type:'item', text_left:'Delete',    text_right:'del',    function:function(){_canvas_.control.selection.delete();}    },
         ]
     },
     {
@@ -36,36 +36,43 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:(function(){
-            //collect units and separate by category
-                var collection = {};
-                for(design in _canvas_.interface.unit.collection.alpha){
-                    var data = _canvas_.interface.unit.collection.alpha[design].metadata;
-                    if(data.dev){continue;}
+            var collection = {};
+            var outputArray = [];
 
-                    if(collection[ data.category == undefined ? '' : data.category ] == undefined){
-                        collection[ data.category == undefined ? '' : data.category ] = [];
-                    }
-                    collection[ data.category == undefined ? '' : data.category ].push(
+            for(design in _canvas_.interface.unit.collection.alpha){
+                if(design == '_categoryData'){continue;}
+
+                var metadata = _canvas_.interface.unit.collection.alpha[design].metadata;
+                if(metadata.dev){continue;}
+                
+                if(!collection.hasOwnProperty(metadata.category)){
+                    collection[metadata.category] = [];
+                }
+                collection[metadata.category].push(design);
+            }
+
+            for(category in collection){
+                var printingName = _canvas_.interface.unit.collection.alpha._categoryData[category] ? _canvas_.interface.unit.collection.alpha._categoryData[category].printingName : category;
+                var sublist = { type:'list', text:printingName, list:[] };
+
+                collection[category].forEach(design => {
+                    var metadata = _canvas_.interface.unit.collection.alpha[design].metadata;
+                    sublist.list.push(
                         {
-                            text_left: data.name,
+                            type:'item', text_left: metadata.name,
                             function:function(design){return function(){
                                 var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
                                 _canvas_.control.scene.addUnit(p.x,p.y,0,design,'alpha');
                             }}(design),
                         }
                     );
-                }
+                });
 
-            //covert to an array, separating categories by breaks
-                var outputArray = [];
-                for(category in collection){
-                    outputArray = outputArray.concat( collection[category] );
-                    outputArray.push('break');
-                }
-                outputArray.pop();
-        
+                outputArray.push(sublist);
+            }
+
             return outputArray;
-        })()
+        })(),
     },
     {
         text:'help',
@@ -75,7 +82,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:[
-        {text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
+        {type:'item', text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
         ]
     },
 ];

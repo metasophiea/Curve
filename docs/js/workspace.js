@@ -1349,11 +1349,12 @@
                     };
                     this.thirdparty = new function(){
                         this.earcut = function(points,holeIndices){
+                        	//https://github.com/mapbox/earcut
+                        	
                             var outputPoints = [];
                             earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
                             return outputPoints;
                         
-                            //https://github.com/mapbox/earcut
                             function earcut(data, holeIndices, dim) {
                         
                                 dim = dim || 2;
@@ -2427,19 +2428,12 @@
                         	typeof define === 'function' && define.amd ? define(['exports'], factory) :
                             (factory((global.opentype = {})));
                         }(this, (function (exports) { 'use strict';
-                        
                             // https://github.com/opentypejs/opentype.js/blob/master/dist/opentype.js
-                            // slightly modified.
-                            // The line 
-                            //  (factory((global.opentype = {})));
-                            // should be replaced with 
-                            //  (factory((library.thirdparty.opentype = {})));
-                            // in order to wrap the code into a library location
                         
                             // https://opentype.js.org v0.11.0 | (c) Frederik De Bleser and other contributors | MIT License | 
                             // Uses tiny-inflate by Devon Govett and string.prototype.codepointat polyfill by Mathias Bynens
                         
-                        	/*! https://mths.be/codepointat v0.2.0 by @mathias */
+                        	/* https://mths.be/codepointat v0.2.0 by @mathias */
                         	if (!String.prototype.codePointAt) {
                         		(function() {
                         			var defineProperty = (function() {
@@ -16310,310 +16304,6 @@
                     this.shape = new function(){
                         this.library = new function(){
                             const library = this;
-                            // this.group = function(){
-                            //     var self = this;
-                            
-                            //     //attributes 
-                            //         //protected attributes
-                            //             const type = 'group'; this.getType = function(){return type;}
-                            
-                            //         //simple attributes
-                            //             this.name = '';
-                            //             this.parent = undefined;
-                            //             this.dotFrame = false;
-                            //             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                            //             this.ignored = false;
-                            //             this.heedCamera = false;
-                            //         //advanced use attributes
-                            //             this.devMode = false;
-                            //             this.stopAttributeStartedExtremityUpdate = false;
-                                    
-                            //         //attributes pertinent to extremity calculation
-                            //             var x = 0;     this.x =     function(a){ if(a==undefined){return x;}     x = a;     if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                            //             var y = 0;     this.y =     function(a){ if(a==undefined){return y;}     y = a;     if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                            //             var angle = 0; this.angle = function(a){ if(a==undefined){return angle;} angle = a; if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                            //             var scale = 1; this.scale = function(a){ if(a==undefined){return scale;} scale = a; if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                            
-                            //     //addressing
-                            //         this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
-                            
-                            //     //group functions
-                            //         var children = [];
-                            
-                            //         function getChildByName(name){ return children.find(a => a.name == name); }
-                            //         function checkForName(name){ return getChildByName(name) != undefined; }
-                            //         function checkForShape(shape){ return children.find(a => a == shape); }
-                            //         function isValidShape(shape){
-                            //             if( shape == undefined ){ return false; }
-                            //             if( shape.name.length == 0 ){
-                            //                 console.warn('group error: shape with no name being inserted into group "'+self.getAddress()+'", therefore; the shape will not be added');
-                            //                 return false;
-                            //             }
-                            //             if( checkForName(shape.name) ){
-                            //                 console.warn('group error: shape with name "'+shape.name+'" already exists in group "'+self.getAddress()+'", therefore; the shape will not be added');
-                            //                 return false;
-                            //             }
-                            
-                            //             return true;
-                            //         }
-                            
-                            //         this.children = function(){return children;};
-                            //         this.getChildByName = getChildByName;
-                            //         this.contains = checkForShape;
-                            //         this.append = function(shape){
-                            //             if(self.devMode){console.log(self.getAddress()+'::.append - type:'+shape.getType()+' - name:'+shape.name);}
-                            
-                            //             if( !isValidShape(shape) ){ return; }
-                            
-                            //             children.push(shape); 
-                            //             shape.parent = this;
-                            //             augmentExtremities_addChild(shape);
-                            //         };
-                            //         this.prepend = function(shape){
-                            //             if( !isValidShape(shape) ){ return; }
-                            
-                            //             children.unshift(shape); 
-                            //             shape.parent = this;
-                            //             augmentExtremities_addChild(shape);
-                            //         };
-                            //         this.remove = function(shape){ augmentExtremities_removeChild(shape); children.splice(children.indexOf(shape), 1); };
-                            //         this.clear = function(){ children = []; };
-                            //         this.getElementsUnderPoint = function(x,y){
-                            //             var returnList = [];
-                            
-                            //             //run though children backwords (thus, front to back)
-                            //             for(var a = children.length-1; a >= 0; a--){
-                            //                 //if child wants to be ignored, just move on to the next one
-                            //                     if( children[a].ignored ){ continue; }
-                            
-                            //                 //if the point is not within this child's bounding box, just move on to the next one
-                            //                     if( !_canvas_.library.math.detectOverlap.pointWithinBoundingBox( {x:x,y:y}, children[a].extremities.boundingBox ) ){ continue; }
-                            
-                            //                 //if the child is a group type; pass this point to it's "getElementsUnderPoint" function and collect the results, then move on to the next item
-                            //                     if( children[a].getType() == 'group' ){ returnList = returnList.concat( children[a].getElementsUnderPoint(x,y) ); continue; }
-                            
-                            //                 //if this point exists within the child; add it to the results list
-                            //                     if( _canvas_.library.math.detectOverlap.pointWithinPoly( {x:x,y:y}, children[a].extremities.points ) ){ returnList = returnList.concat( children[a] ); }
-                            //             }
-                            
-                            //             return returnList;
-                            //         };
-                            //         this.getElementsUnderArea = function(points){
-                            //             var returnList = [];
-                            
-                            //             //run though children backwords (thus, front to back)
-                            //             for(var a = children.length-1; a >= 0; a--){
-                            //                 //if child wants to be ignored, just move on to the next one
-                            //                     if( children[a].ignored ){ continue; }
-                            
-                            //                 //if the area does not overlap with this child's bounding box, just move on to the next one
-                            //                     if( !_canvas_.library.math.detectOverlap.boundingBoxes( _canvas_.library.math.boundingBoxFromPoints(points), item.extremities.boundingBox ) ){ continue; }
-                            
-                            //                 //if the child is a group type; pass this area to it's "getElementsUnderArea" function and collect the results, then move on to the next item
-                            //                     if( children[a].getType() == 'group' ){ returnList = returnList.concat( item.getElementUnderArea(points) ); continue; }
-                            
-                            //                 //if this area overlaps with the child; add it to the results list
-                            //                     if( _canvas_.library.math.detectOverlap.overlappingPolygons(points, item.extremities.points) ){ returnList = returnList.concat( children[a] ); }
-                            //             }
-                            
-                            //             return returnList;
-                            //         };
-                            //         this.getTree = function(){
-                            //             var result = {name:this.name,type:type,children:[]};
-                            
-                            //             children.forEach(function(a){
-                            //                 if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
-                            //                 else{ result.children.push({ type:a.getType(), name:a.name }); }
-                            //             });
-                            
-                            //             return result;
-                            //         };
-                            
-                            //     //clipping
-                            //         var clipping = { stencil:undefined, active:false };
-                            //         this.stencil = function(shape){
-                            //             if(shape == undefined){return clipping.stencil;}
-                            //             clipping.stencil = shape;
-                            //             clipping.stencil.parent = this;
-                            //             if(clipping.active){ computeExtremities(); }
-                            //         };
-                            //         this.clipActive = function(bool){
-                            //             if(bool == undefined){return clipping.active;}
-                            //             clipping.active = bool;
-                            //             computeExtremities();
-                            //         };
-                            
-                            //     //extremities
-                            //         function updateExtremities(informParent=true){
-                            //             if(self.devMode){console.log(self.getAddress()+'::updateExtremities');}
-                            
-                            //             //generate extremity points
-                            //                 self.extremities.points = [];
-                            
-                            //                 //if clipping is active and possible, the extremities of this group are limited to those of the clipping shape
-                            //                 //otherwise, gather extremities from children and calculate extremities here
-                            //                 if(clipping.active && clipping.stencil != undefined){
-                            //                     self.extremities.points = clipping.stencil.extremities.points.slice();
-                            //                 }else{
-                            //                     children.forEach(a => self.extremities.points = self.extremities.points.concat(a.extremities.points));
-                            //                 }
-                            //                 if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
-                            
-                            //             //generate bounding box from points
-                            //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                            
-                            //             //update parent
-                            //                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                            //         }
-                            //         function augmentExtremities(shape){
-                            //             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities');}
-                            
-                            //             //get offset from parent
-                            //                 var offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
-                            //             //combine offset with group's position, angle and scale to produce new offset for children
-                            //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            //                 var newOffset = { 
-                            //                     x: point.x*offset.scale + offset.x,
-                            //                     y: point.y*offset.scale + offset.y,
-                            //                     scale: offset.scale*scale,
-                            //                     angle: offset.angle + angle,
-                            //                 };
-                            //             //run computeExtremities on new child
-                            //                 shape.computeExtremities(false,newOffset);
-                            //         }
-                            //         function augmentExtremities_addChild(newShape){
-                            //             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
-                            
-                            //             //augment extremities, and bail if it was found that clipping is active
-                            //                 augmentExtremities(newShape);
-                            //             //add points to points list
-                            //                 self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
-                            //                 if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
-                            //             //recalculate bounding box
-                            //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                            //             //inform parent of change
-                            //                 if(self.parent){self.parent.updateExtremities();}
-                            //         }
-                            //         function augmentExtremities_removeChild(departingShape){
-                            //             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_removeChild - type:'+departingShape.getType()+' - name:'+departingShape.name);}
-                            
-                            //             //augment extremities, and bail if it was found that clipping is active
-                            //                 augmentExtremities(departingShape);
-                            //             //remove matching points from points list
-                            //                 // var index = _canvas_.library.math.getIndexOfSequence(self.extremities.points,departingShape.extremities.points);
-                            //                 // if(index == undefined){console.error("core:: group shape: departing shape points not found. Bailing.."); return;}
-                            //                 // self.extremities.points.splice(index, index+departingShape.extremities.points.length);
-                            //                 var leftOvers = _canvas_.library.math.removeTheseElementsFromThatArray(self.extremities.points,departingShape.extremities.points,self.extremities.points);
-                            //                 if(leftOvers.length < 0){console.error('core:: group shape: not all of departing shape\'s points were found');console.error('left overs:',leftOvers);}
-                            //                 if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
-                            //             //recalculate bounding box
-                            //                 self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                            //             //inform parent of change
-                            //                 if(self.parent){self.parent.updateExtremities();}
-                            //         }
-                            //         function computeExtremities(informParent=true,offset){
-                            //             if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
-                                        
-                            //             //get offset from parent, if one isn't provided
-                            //                 if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                            //             //combine offset with group's position, angle and scale to produce new offset for chilren
-                            //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            //                 var newOffset = { 
-                            //                     x: point.x*offset.scale + offset.x,
-                            //                     y: point.y*offset.scale + offset.y,
-                            //                     scale: offset.scale*scale,
-                            //                     angle: offset.angle + angle,
-                            //                 };
-                            //             //run computeExtremities on all children
-                            //                 children.forEach(a => a.computeExtremities(false,newOffset));
-                            //             //run computeExtremities on stencil (if applicable)
-                            //                 if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
-                            //             //update extremities
-                            //                 updateExtremities(informParent,offset);
-                            //         }
-                            
-                            //         this.getOffset = function(){
-                            //             if(this.parent){
-                            //                 var offset = this.parent.getOffset();
-                            //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            //                 return { 
-                            //                     x: point.x*offset.scale + offset.x,
-                            //                     y: point.y*offset.scale + offset.y,
-                            //                     scale: offset.scale * scale,
-                            //                     angle: offset.angle + angle,
-                            //                 };
-                            //             }else{ return {x:x ,y:y ,scale:scale ,angle:angle}; }
-                            //         };
-                            //         this.computeExtremities = computeExtremities;
-                            //         this.updateExtremities = updateExtremities;
-                            
-                            //     //lead render
-                            //         function drawDotFrame(){
-                            //             //draw bounding box top left and bottom right points
-                            //             core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:0,b:0,a:0.75});
-                            //             core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
-                            //         }
-                            //         this.render = function(context, offset){
-                            //             //combine offset with group's position, angle and scale to produce new offset for children
-                            //                 var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            //                 var newOffset = { 
-                            //                     x: point.x*offset.scale + offset.x,
-                            //                     y: point.y*offset.scale + offset.y,
-                            //                     scale: offset.scale*scale,
-                            //                     angle: offset.angle + angle,
-                            //                 };
-                            
-                            //             //activate clipping (if requested, and is possible)
-                            //                 if(clipping.active && clipping.stencil != undefined){
-                            //                     //active stencil drawing mode
-                            //                         context.enable(context.STENCIL_TEST);
-                            //                         context.colorMask(false,false,false,false);
-                            //                         context.stencilFunc(context.ALWAYS,1,0xFF);
-                            //                         context.stencilOp(context.KEEP,context.KEEP,context.REPLACE);
-                            //                         context.stencilMask(0xFF);
-                            //                     //draw stencil
-                            //                         clipping.stencil.render(context,newOffset);
-                            //                     //reactive regular rendering
-                            //                         context.colorMask(true,true,true,true);
-                            //                         context.stencilFunc(context.EQUAL,1,0xFF);
-                            //                 }
-                                        
-                            //             //render children
-                            //                 children.forEach(function(a){
-                            //                     if(
-                            //                         _canvas_.library.math.detectOverlap.boundingBoxes(
-                            //                             clipping.active ? self.extremities.boundingBox : core.viewport.getBoundingBox(),
-                            //                             a.extremities.boundingBox
-                            //                         )
-                            //                     ){ a.render(context,newOffset); }
-                            //                 });
-                            
-                            //             //deactivate clipping
-                            //                 if(clipping.active){ 
-                            //                     context.disable(context.STENCIL_TEST); 
-                            //                     context.clear(context.STENCIL_BUFFER_BIT);
-                            //                 }
-                            
-                            //             //if requested; draw dot frame
-                            //                 if(self.dotFrame){drawDotFrame();}
-                            //         };
-                            // };
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
                             this.group = function(){
                                 var self = this;
                             
@@ -16663,6 +16353,7 @@
                             
                                     this.children = function(){return children;};
                                     this.getChildByName = getChildByName;
+                                    this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                                     this.contains = checkForShape;
                                     this.append = function(shape){
                                         if(self.devMode){console.log(self.getAddress()+'::.append - type:'+shape.getType()+' - name:'+shape.name);}
@@ -16680,7 +16371,10 @@
                                         shape.parent = this;
                                         augmentExtremities_addChild(shape);
                                     };
-                                    this.remove = function(shape){ augmentExtremities_removeChild(shape); children.splice(children.indexOf(shape), 1); };
+                                    this.remove = function(shape){ 
+                                        augmentExtremities_removeChild(shape);
+                                        children.splice(children.indexOf(shape), 1);
+                                    };
                                     this.clear = function(){ children = []; };
                                     this.getElementsUnderPoint = function(x,y){
                                         var returnList = [];
@@ -19100,6 +18794,7 @@
                                         this.ignored = false;
                                         var colour = {r:1,g:0,b:0,a:1}; this.colour = function(a){ if(a==undefined){return colour;} colour = a; recolourCharacters(); };
                                     //advanced use attributes
+                                        this.onFontUpdateCallback = function(){};
                                         this.devMode = false;
                                         this.stopAttributeStartedExtremityUpdate = false;
                                     
@@ -19132,6 +18827,7 @@
                                                 generateStringCharacters(); 
                                                 if(this.devMode){console.log(this.getAddress()+'::font');} 
                                                 computeExtremities(); 
+                                                self.onFontUpdateCallback();
                                             };
                                         var printingMode = {
                                             widthCalculation:'absolute', //filling / absolute
@@ -19157,6 +18853,7 @@
                                     this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
                                     
                                 //string
+                                    var resultingWidth = 0;
                                     function recolourCharacters(){ children.forEach(a => a.colour = colour); }
                                     function generateStringCharacters(){
                                         if(self.devMode){console.log(self.getAddress()+'::generateStringCharacters');}
@@ -19207,10 +18904,13 @@
                                                 cumulativeWidth += (interCharacterSpacing + tmp.right()) * characterWidth;
                                             }
                             
+                                            resultingWidth = cumulativeWidth;
+                            
                                         //printingMode - horizontal
                                             if( printingMode.horizontal == 'middle' ){ children.forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
                                             else if( printingMode.horizontal == 'right' ){ children.forEach(a => a.x( a.x() - cumulativeWidth) ); }
                                     }
+                                    this.resultingWidth = function(){ return resultingWidth; };
                             
                                 //group functions
                                     var children = [];
@@ -21843,7 +21543,7 @@
                                             return;
                                         }
                         
-                                    //if loop is enabled, and the desired value is beyond the loop's end boundry,
+                                    //if loop is enabled, and the desired value is beyond the loop's end boundary,
                                     //set the value to the start value
                                         if(state.loop.active && value > state.loop.end){value = state.loop.start;}
                         
@@ -22573,7 +22273,7 @@
                                 };
                                 this.needleOverlay = function(
                                     name='needleOverlay',
-                                    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9-1), selectNeedle=true, selectionArea=true,
+                                    x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9), selectNeedle=true, selectionArea=true,
                                     needleStyles=[
                                         {r:0.94,g:0.94,b:0.94,a:1},
                                         {r:1,g:0.9,b:0.44,a:1},
@@ -26405,7 +26105,7 @@
                                     onselect = function(event){},
                                     ondeselect = function(event){},
                                 ){
-                                    //default to non-image version if image links are missing
+                                    //default to non-image version if any image links are missing
                                         if(
                                             backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
                                             backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
@@ -26572,17 +26272,29 @@
                                 };
                                 this.list_image = function(
                                     name='list_image', 
-                                    x, y, width=50, height=100, angle=0, interactable=true,
-                                    list=[],
-                                
-                                    itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                    x, y, angle=0, interactable=true, list=[],
                                     active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
+                                    limitHeightTo=-1,limitWidthTo=-1,
                                 
-                                    itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                    breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                    spacingHeightMux=0.005,
-                                    backingURL, breakURL,
+                                    itemHeight=10, itemWidth=47.5,
+                                    itemSpacingHeight=0.75,
+                                    spacingHeight=0.5,
+                                    breakHeight=0.25,
                                 
+                                    backingURL, 
+                                    breakURL,
+                                    textbreakURL,
+                                    sublist__up,
+                                    sublist__hover,
+                                    sublist__glow,
+                                    sublist__hover_glow,
+                                    sublist__hover_glow_press,
+                                
+                                    checkbox_uncheckURL,
+                                    checkbox_checkURL,
+                                    checkbox_uncheckGlowURL,
+                                    checkbox_checkGlowURL,
+                                    
                                     itemURL__off,
                                     itemURL__up,
                                     itemURL__press,
@@ -26601,126 +26313,286 @@
                                     itemURL__hover_glow_select,
                                     itemURL__hover_glow_select_press,
                                 
-                                    onenter=function(){},
-                                    onleave=function(){},
-                                    onpress=function(){},
-                                    ondblpress=function(){},
-                                    onrelease=function(){},
-                                    onselection=function(){},
-                                    onpositionchange=function(){},
+                                    onenter=function(a){/*console.log('onenter >',a);*/},
+                                    onleave=function(a){/*console.log('onleave >',a);*/},
+                                    onpress=function(a){/*console.log('onpress >',a);*/},
+                                    ondblpress=function(a){/*console.log('ondblpress >',a);*/},
+                                    onrelease=function(a){/*console.log('onrelease >',a);*/},
+                                    onselection=function(a){/*console.log('onselection >',a);*/},
+                                    onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
                                 ){
                                     //state
                                         var itemArray = [];
                                         var selectedItems = [];
                                         var lastNonShiftClicked = 0;
                                         var position = 0;
-                                        var calculatedListHeight;
+                                        var calculatedListHeight = 0;
+                                
+                                    //genrate list content
+                                        function generateListContent(listItems=[]){
+                                            var output = {elements:[], calculatedListHeight:0};
+                                            var xOffset = limitWidthTo < 0 ? 0 : (limitWidthTo-itemWidth)/2;
+                                
+                                            listItems.forEach((item,index) => {
+                                                if(index != 0){output.calculatedListHeight += itemSpacingHeight;}
+                                
+                                                switch(item.type){
+                                                    case 'space':
+                                                        var space_group = interfacePart.builder('group',index+'_space');
+                                                        output.elements.push(space_group);
+                                                        output.calculatedListHeight += spacingHeight;
+                                                    break;
+                                                    case 'break': 
+                                                        var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
+                                                        var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
+                                
+                                                        var imageBacking = interfacePart.builder('image',index+'_break',{
+                                                            x:xPosition, y:output.calculatedListHeight+itemSpacingHeight/2,
+                                                            width:lineWidth, height:breakHeight,
+                                                            url:breakURL
+                                                        });
+                                
+                                                        output.elements.push(imageBacking);
+                                                        output.calculatedListHeight += itemSpacingHeight+breakHeight;
+                                                    break;
+                                                    case 'textbreak': 
+                                                        var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
+                                                        var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
+                                                        var imageBacking = interfacePart.builder('image',index+'_break',{
+                                                            x:xPosition, y:output.calculatedListHeight,
+                                                            width:lineWidth, height:itemSpacingHeight+breakHeight,
+                                                            url:breakURL
+                                                        });
+                                
+                                                        output.elements.push(imageBacking);
+                                                        output.calculatedListHeight += itemSpacingHeight+breakHeight;
+                                                    break;
+                                                    case 'checkbox':
+                                                        var checkbox = interfacePart.builder( 'checkbox_image', 'checkbox', {
+                                                            x:xOffset, y:output.calculatedListHeight,
+                                                            width:itemWidth, height:itemHeight,
+                                                            uncheckURL:checkbox_uncheckURL,
+                                                            checkURL:checkbox_checkURL,
+                                                            uncheckGlowURL:checkbox_uncheckGlowURL,
+                                                            checkGlowURL:checkbox_checkGlowURL,
+                                                        });
+                                
+                                                        output.elements.push(checkbox);
+                                                        output.calculatedListHeight += itemHeight;
+                                                    break;
+                                                    case 'list':
+                                                        var sublistName = 'sublist__'+index+'_list';
+                                                        var list_group = interfacePart.builder('group',index+'_list');
+                                                            var button = interfacePart.builder( 'button_image', 'button', {
+                                                                x:xOffset, y:output.calculatedListHeight,
+                                                                width:itemWidth, height:itemHeight, interactable:interactable, 
+                                
+                                                                backingURL__off:                        '',
+                                                                backingURL__up:                         sublist__up,
+                                                                backingURL__press:                      '',
+                                                                backingURL__select:                     '',
+                                                                backingURL__select_press:               '',
+                                                                backingURL__glow:                       sublist__glow,
+                                                                backingURL__glow_press:                 '',
+                                                                backingURL__glow_select:                '',
+                                                                backingURL__glow_select_press:          '',
+                                                                backingURL__hover:                      sublist__hover,
+                                                                backingURL__hover_press:                '',
+                                                                backingURL__hover_select:               '',
+                                                                backingURL__hover_select_press:         '',
+                                                                backingURL__hover_glow:                 sublist__hover_glow,
+                                                                backingURL__hover_glow_press:           sublist__hover_glow_press,
+                                                                backingURL__hover_glow_select:          '',
+                                                                backingURL__hover_glow_select_press:    '',
+                                                            });
+                                                            list_group.append(button);
+                                
+                                                            button.onpress = (function(sublistName){
+                                                                return function(){ 
+                                                                    if( subListGroup.getChildByName(sublistName) != undefined ){
+                                                                        object.closeAllLists();
+                                                                    }else if(subListGroup.children().length != 0){
+                                                                        object.closeAllLists();
+                                                                        list_group.open();
+                                                                    }else{
+                                                                        list_group.open();
+                                                                    }
+                                                                }
+                                                            })(sublistName);
+                                
+                                                            list_group.open = (function(sublistName,listItem,y){
+                                                                return function(){
+                                                                    list_group.getChildByName('button').glow(true);
+                                                                    var sublist = _canvas_.interface.part.builder( 'list_image', sublistName, {
+                                                                        x:limitWidthTo<0?itemWidth:limitWidthTo, y:y,
+                                                                        list:listItem.list,
+                                                                        active:active, multiSelect:multiSelect, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                
+                                                                        limitHeightTo:-1, limitWidthTo:limitWidthTo,
+                                
+                                                                        itemHeight:                         itemHeight, 
+                                                                        itemWidth:                          itemWidth,
+                                                                        itemSpacingHeight:                  itemSpacingHeight,
+                                                                        spacingHeight:                      spacingHeight,
+                                                                        breakHeight:                        breakHeight,
+                                                                        backingURL:                         backingURL, 
+                                                                        breakURL:                           breakURL,
+                                                                        textbreakURL:                       textbreakURL,
+                                                                        sublist__up:                        sublist__up,
+                                                                        sublist__hover:                     sublist__hover,
+                                                                        sublist__glow:                      sublist__glow,
+                                                                        sublist__hover_glow:                sublist__hover_glow,
+                                                                        sublist__hover_glow_press:          sublist__hover_glow_press,
+                                
+                                                                        checkbox_uncheckURL:                checkbox_uncheckURL,
+                                                                        checkbox_checkURL:                  checkbox_checkURL,
+                                                                        checkbox_uncheckGlowURL:            checkbox_uncheckGlowURL,
+                                                                        checkbox_checkGlowURL:              checkbox_checkGlowURL,
+                                
+                                                                        itemURL__off:                       itemURL__off,
+                                                                        itemURL__up:                        itemURL__up,
+                                                                        itemURL__press:                     itemURL__press,
+                                                                        itemURL__select:                    itemURL__select,
+                                                                        itemURL__select_press:              itemURL__select_press,
+                                                                        itemURL__glow:                      itemURL__glow,
+                                                                        itemURL__glow_press:                itemURL__glow_press,
+                                                                        itemURL__glow_select:               itemURL__glow_select,
+                                                                        itemURL__glow_select_press:         itemURL__glow_select_press,
+                                                                        itemURL__hover:                     itemURL__hover,
+                                                                        itemURL__hover_press:               itemURL__hover_press,
+                                                                        itemURL__hover_select:              itemURL__hover_select,
+                                                                        itemURL__hover_select_press:        itemURL__hover_select_press,
+                                                                        itemURL__hover_glow:                itemURL__hover_glow,
+                                                                        itemURL__hover_glow_press:          itemURL__hover_glow_press,
+                                                                        itemURL__hover_glow_select:         itemURL__hover_glow_select,
+                                                                        itemURL__hover_glow_select_press:   itemURL__hover_glow_select_press,
+                                                                    });
+                                                                    sublist.onenter = function(a){object.onenter([index].concat(a));};
+                                                                    sublist.onleave = function(a){object.onleave([index].concat(a));};
+                                                                    sublist.onpress = function(a){object.onpress([index].concat(a));};
+                                                                    sublist.ondblpress = function(a){object.ondblpress([index].concat(a));};
+                                                                    sublist.onrelease = function(a){object.onrelease([index].concat(a));};
+                                                                    subListGroup.append(sublist);
+                                                                }
+                                                            })(sublistName,item,output.calculatedListHeight);
+                                                            list_group.close = function(){
+                                                                list_group.getChildByName('button').glow(false);
+                                                                var sublistElement = subListGroup.getChildByName('sublist__'+index+'_list');
+                                                                if( sublistElement == undefined ){return;}
+                                                                subListGroup.remove(sublistElement);
+                                                            };
+                                
+                                                        output.elements.push(list_group);
+                                                        output.calculatedListHeight += itemHeight;
+                                                    break;
+                                                    case 'item': 
+                                                        var name = index+'_item';
+                                                        var temp = interfacePart.builder( 'button_image', name, {
+                                                            x:xOffset, y:output.calculatedListHeight,
+                                                            width:itemWidth, height:itemHeight, interactable:interactable, 
+                                
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                
+                                                            backingURL__off:                     itemURL__off,
+                                                            backingURL__up:                      itemURL__up,
+                                                            backingURL__press:                   itemURL__press,
+                                                            backingURL__select:                  itemURL__select,
+                                                            backingURL__select_press:            itemURL__select_press,
+                                                            backingURL__glow:                    itemURL__glow,
+                                                            backingURL__glow_press:              itemURL__glow_press,
+                                                            backingURL__glow_select:             itemURL__glow_select,
+                                                            backingURL__glow_select_press:       itemURL__glow_select_press,
+                                                            backingURL__hover:                   itemURL__hover,
+                                                            backingURL__hover_press:             itemURL__hover_press,
+                                                            backingURL__hover_select:            itemURL__hover_select,
+                                                            backingURL__hover_select_press:      itemURL__hover_select_press,
+                                                            backingURL__hover_glow:              itemURL__hover_glow,
+                                                            backingURL__hover_glow_press:        itemURL__hover_glow_press,
+                                                            backingURL__hover_glow_select:       itemURL__hover_glow_select,
+                                                            backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
+                                                        });
+                                                        temp.onenter = function(a){ return function(){ object.onenter([a]); } }(index);
+                                                        temp.onleave = function(a){ return function(){ object.onleave([a]); } }(index);
+                                                        temp.onpress = function(a){ return function(){ object.onpress([a]); } }(index);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress([a]); } }(index);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease([a]);
+                                                            }
+                                                        }(index);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false);} }(name);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(name);
+                                
+                                                        output.elements.push(temp);
+                                                        output.calculatedListHeight += itemHeight;
+                                                    break;
+                                                    default: console.warn('interface part "list" :: error : unknown list item type:',item); break;
+                                                }
+                                
+                                            });
+                                
+                                
+                                            return output;
+                                        }
+                                
+                                    //refreshing function
+                                        function refresh(){
+                                            itemArray = [];
+                                            selectedItems = [];
+                                            lastNonShiftClicked = 0;
+                                            position = 0;
+                                            
+                                            results = generateListContent(list);
+                                            calculatedListHeight = results.calculatedListHeight;
+                                            itemArray = results.elements;
+                                
+                                            backing.width(limitWidthTo<0?itemWidth:limitWidthTo);
+                                            backing.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
+                                            cover.width(limitWidthTo<0?itemWidth:limitWidthTo);
+                                            cover.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
+                                            stencil.width(limitWidthTo<0?itemWidth:limitWidthTo);
+                                            stencil.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
+                                
+                                            itemCollection.clear();
+                                            results.elements.forEach(element => itemCollection.append(element));
+                                        }
                                 
                                     //elements 
                                         //main
                                             var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
                                         //backing
-                                            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                                            var backing = interfacePart.builder('image','backing',{url:backingURL});
                                             object.append(backing);
+                                        //stenciled group
+                                            var stenciledGroup = interfacePart.builder('group','stenciledGroup');
+                                            object.append(stenciledGroup);
+                                        //sub list group
+                                            var subListGroup = interfacePart.builder('group','subListGroup');
+                                            object.append(subListGroup);
                                         //item collection
                                             var itemCollection = interfacePart.builder('group','itemCollection');
-                                            object.append(itemCollection);
-                                            function refreshList(){
-                                                //clean out all values
-                                                    itemArray = [];
-                                                    itemCollection.clear();
-                                                    selectedItems = [];
-                                                    position = 0;
-                                                    lastNonShiftClicked = 0;
-                                
-                                                //populate list
-                                                    var accumulativeHeight = 0;
-                                                    for(var a = 0; a < list.length; a++){
-                                                        if( list[a] == 'space' ){
-                                                            var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                                x:0, y:accumulativeHeight,
-                                                                width:width, height:height*spacingHeightMux,
-                                                                colour:{r:0,g:0,b:0,a:0}
-                                                            });
-                                
-                                                            accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                            itemCollection.append( temp );
-                                                        }else if( list[a] == 'break'){
-                                                            var temp = interfacePart.builder('image',''+a,{
-                                                                x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                                width:width*breakWidthMux, height:height*breakHeightMux,
-                                                                url:breakURL
-                                                            });
-                                
-                                                            accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                            itemCollection.append( temp );
-                                                        }else{
-                                                            var temp = interfacePart.builder( 'button_image', ''+a, {
-                                                                x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                                width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
-                                
-                                                                active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
-                                
-                                                                backingURL__off:                     itemURL__off,
-                                                                backingURL__up:                      itemURL__up,
-                                                                backingURL__press:                   itemURL__press,
-                                                                backingURL__select:                  itemURL__select,
-                                                                backingURL__select_press:            itemURL__select_press,
-                                                                backingURL__glow:                    itemURL__glow,
-                                                                backingURL__glow_press:              itemURL__glow_press,
-                                                                backingURL__glow_select:             itemURL__glow_select,
-                                                                backingURL__glow_select_press:       itemURL__glow_select_press,
-                                                                backingURL__hover:                   itemURL__hover,
-                                                                backingURL__hover_press:             itemURL__hover_press,
-                                                                backingURL__hover_select:            itemURL__hover_select,
-                                                                backingURL__hover_select_press:      itemURL__hover_select_press,
-                                                                backingURL__hover_glow:              itemURL__hover_glow,
-                                                                backingURL__hover_glow_press:        itemURL__hover_glow_press,
-                                                                backingURL__hover_glow_select:       itemURL__hover_glow_select,
-                                                                backingURL__hover_glow_select_press: itemURL__hover_glow_select_press,
-                                                            });
-                                
-                                                            temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                            temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                            temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                            temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                            temp.onrelease = function(a){
-                                                                return function(){
-                                                                    if( list[a].function ){ list[a].function(); }
-                                                                    object.onrelease(a);
-                                                                }
-                                                            }(a);
-                                                            temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                            temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
-                                
-                                                            accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                            itemCollection.append( temp );
-                                                            itemArray.push( temp );
-                                                        }
-                                                    }
-                                
-                                                return accumulativeHeight - height*itemSpacingMux;
-                                            }
-                                            calculatedListHeight = refreshList();
+                                            stenciledGroup.append(itemCollection);
                                         //cover
-                                            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                            object.append(cover);
+                                            var cover = interfacePart.builder('rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+                                            stenciledGroup.append(cover);
                                         //stencil
-                                            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                            object.stencil(stencil);
-                                            object.clipActive(true);
-                                
+                                            var stencil = interfacePart.builder('rectangle','stencil');
+                                            stenciledGroup.stencil(stencil);
+                                            stenciledGroup.clipActive(true);
                                 
                                     //interaction
                                         cover.onwheel = function(event){
                                             if(!interactable){return;}
                                             var move = event.deltaY/100;
                                             object.position( object.position() + move/10 );
-                                            for(var a = 0; a < itemArray.length; a++){
-                                                itemArray[a].forceMouseLeave();
-                                            }
+                                            itemArray.forEach(item => {
+                                                if(item.forceMouseLeave != undefined){
+                                                    item.forceMouseLeave();
+                                                }
+                                            });
                                         };
-                                    
+                                
                                     //controls
                                         object.position = function(a,update=true){
                                             if(a == undefined){return position;}
@@ -26728,8 +26600,8 @@
                                             a = a > 1 ? 1 : a;
                                             position = a;
                                 
-                                            if( calculatedListHeight < height ){return;}
-                                            var movementSpace = calculatedListHeight - height;
+                                            if(limitHeightTo < 0){return;}
+                                            var movementSpace = calculatedListHeight - limitHeightTo;
                                             itemCollection.y( -a*movementSpace );
                                             
                                             if(update&&this.onpositionchange){this.onpositionchange(a);}
@@ -26737,13 +26609,13 @@
                                         object.select = function(a,state,event,update=true){
                                             if(!selectable){return;}
                                 
-                                            //where multi selection is not allowed
                                                 if(!multiSelect){
+                                                //where multi selection is not allowed
                                                     //where we want to select an item, which is not already selected
                                                         if(state && !selectedItems.includes(a) ){
                                                             //deselect all other items
                                                                 while( selectedItems.length > 0 ){
-                                                                    itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                    itemCollection.getChildByName(selectedItems[0]).select(false,undefined,undefined);
                                                                     selectedItems.shift();
                                                                 }
                                 
@@ -26757,14 +26629,15 @@
                                 
                                                 //do not update the item itself, in the case that it was the item that sent this command
                                                 //(which would cause a little loop)
-                                                    if(update){ itemCollection.children[a].select(true,undefined,false); }
-                                
-                                            //where multi selection is allowed
+                                                    if(update){ itemCollection.getChildByName(a).select(true,undefined,false); }
                                                 }else{
-                                                    //wherer range-selection is to be done
+                                                //where multi selection is allowed
+                                                    //where range-selection is to be done
                                                         if( event != undefined && event.shiftKey ){
                                                             //gather top and bottom item
                                                             //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                                a = itemCollection.getChildIndexByName(a);
+                                
                                                                 var min = Math.min(lastNonShiftClicked, a);
                                                                 var max = Math.max(lastNonShiftClicked, a);
                                                                 for(var b = 0; b < itemArray.length; b++){
@@ -26776,7 +26649,7 @@
                                                                 selectedItems = [];
                                                                 for(var b = 0; b < itemArray.length; b++){
                                                                     if( b > max || b < min ){
-                                                                        if( itemArray[b].select() ){
+                                                                        if( itemArray[b].select != undefined && itemArray[b].select() ){
                                                                             itemArray[b].select(false,undefined,false);
                                                                         }
                                                                     }
@@ -26784,7 +26657,7 @@
                                 
                                                             //select those within the range (that aren't already selected)
                                                                 for(var b = min; b <= max; b++){
-                                                                    if( !itemArray[b].select() ){
+                                                                    if( itemArray[b].select != undefined && !itemArray[b].select() ){
                                                                         itemArray[b].select(true,undefined,false);
                                                                         selectedItems.push(b);
                                                                     }
@@ -26794,7 +26667,7 @@
                                                             if(update){ itemArray[a].select(state); }
                                                             if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
                                                             else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                            lastNonShiftClicked = a;
+                                                            lastNonShiftClicked = itemCollection.getChildIndexByName(a);
                                                         }
                                                 }
                                 
@@ -26802,17 +26675,31 @@
                                         };
                                         object.add = function(item){
                                             list.push(item);
-                                            calculatedListHeight = refreshList();
+                                            refresh();
                                         };
                                         object.remove = function(a){
                                             list.splice(a,1);
-                                            calculatedListHeight = refreshList();
+                                            refresh();
                                         };
                                         object.interactable = function(bool){
                                             if(bool==undefined){return interactable;}
                                             interactable = bool;
-                                            refreshList();
+                                            refresh();
                                         };
+                                        object.limitHeightTo = function(value){
+                                            if(value==undefined){return limitHeightTo;}
+                                            limitHeightTo = value;
+                                            refresh();
+                                        };
+                                        object.closeAllLists = function(){
+                                            list.forEach((item,index) => {
+                                                if(item.type != 'list'){return;}
+                                                itemArray[index].close();
+                                            });
+                                        };
+                                
+                                    //info
+                                        object.getCalculatedListHeight = function(){return calculatedListHeight;};
                                 
                                     //callbacks
                                         object.onenter = onenter;
@@ -26822,28 +26709,40 @@
                                         object.onrelease = onrelease;
                                         object.onselection = onselection;
                                         object.onpositionchange = onpositionchange;
-                                        
+                                
+                                    refresh();
+                                
                                     return object;
                                 };
                                 this.list = function(
                                     name='list', 
-                                    x, y, width=50, height=100, angle=0, interactable=true,
+                                    x, y, angle=0, interactable=true,
                                     list=[],
                                 
-                                    itemTextVerticalOffsetMux=0.5, itemTextHorizontalOffsetMux=0.05,
+                                    limitHeightTo=-1,limitWidthTo=-1,
+                                
+                                    itemHeight=10, itemWidth=47.5,
+                                    itemSpacingHeight=0.75,
+                                    spacingHeight=0.5,
+                                    breakHeight=0.25,
+                                
+                                    textbreak_fontSize=1.5,
+                                    textbreak_colour={r:0.7,g:0.7,b:0.7,a:1},
+                                
+                                    item_textSize=2.5,
+                                    item_textColour={r:0.2,g:0.2,b:0.2,a:1},
+                                    item_textFont='defaultThin',
+                                    item_textSpacing=0.1,
+                                    item_textInterCharacterSpacing=0,
+                                
+                                    sublist_arrowSize=2.5,
+                                    sublist_arrowColour={r:0.2,g:0.2,b:0.2,a:1},
+                                
+                                    item_textVerticalOffsetMux=0.5, item_textHorizontalOffsetMux=0.05,
                                     active=true, multiSelect=true, hoverable=true, selectable=!false, pressable=true,
                                 
-                                    itemHeightMux=0.1, itemWidthMux=0.95, itemSpacingMux=0.01, 
-                                    breakHeightMux=0.0025, breakWidthMux=0.9, 
-                                    spacingHeightMux=0.005,
                                     backing_style={r:230/255,g:230/255,b:230/255,a:1}, break_style={r:195/255,g:195/255,b:195/255,a:1},
-                                
-                                    text_font = 'Arial',
-                                    text_size=2.5,
-                                    text_colour = {r:0/255,g:0/255,b:0/255,a:1},
-                                    text_spacing=0.1, 
-                                    text_interCharacterSpacing=0,
-                                
+                                    
                                     item__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
                                     item__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
                                     item__off__lineThickness=                     0,
@@ -26883,7 +26782,7 @@
                                     item__hover_select_press__colour=             {r:240/255,g:240/255,b:240/255,a:1},
                                     item__hover_select_press__lineColour=         {r:120/255,g:120/255,b:120/255,a:1},
                                     item__hover_select_press__lineThickness=      0.75,
-                                    item__hover_glow__colour=                     {r:240/255,g:240/255,b:240/255,a:1},
+                                    item__hover_glow__colour=                     {r:250/255,g:250/255,b:250/255,a:1},
                                     item__hover_glow__lineColour=                 {r:0/255,g:0/255,b:0/255,a:0},
                                     item__hover_glow__lineThickness=              0,
                                     item__hover_glow_press__colour=               {r:250/255,g:250/255,b:250/255,a:1},
@@ -26896,76 +26795,130 @@
                                     item__hover_glow_select_press__lineColour=    {r:120/255,g:120/255,b:120/255,a:1},
                                     item__hover_glow_select_press__lineThickness= 0.75,
                                 
-                                    onenter=function(){},
-                                    onleave=function(){},
-                                    onpress=function(){},
-                                    ondblpress=function(){},
-                                    onrelease=function(){},
-                                    onselection=function(){},
-                                    onpositionchange=function(){},
+                                    onenter=function(a){/*console.log('onenter >',a);*/},
+                                    onleave=function(a){/*console.log('onleave >',a);*/},
+                                    onpress=function(a){/*console.log('onpress >',a);*/},
+                                    ondblpress=function(a){/*console.log('ondblpress >',a);*/},
+                                    onrelease=function(a){/*console.log('onrelease >',a);*/},
+                                    onselection=function(a){/*console.log('onselection >',a);*/},
+                                    onpositionchange=function(a){/*console.log('onpositionchange >',a);*/},
                                 ){
                                     //state
                                         var itemArray = [];
                                         var selectedItems = [];
                                         var lastNonShiftClicked = 0;
                                         var position = 0;
-                                        var calculatedListHeight;
+                                        var calculatedListHeight = 0;
                                 
-                                    //elements 
-                                        //main
-                                            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
-                                        //backing
-                                            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backing_style});
-                                            object.append(backing);
-                                        //item collection
-                                            var itemCollection = interfacePart.builder('group','itemCollection');
-                                            object.append(itemCollection);
-                                            function refreshList(){
-                                                //clean out all values
-                                                    itemArray = [];
-                                                    itemCollection.clear();
-                                                    selectedItems = [];
-                                                    position = 0;
-                                                    lastNonShiftClicked = 0;
+                                    //genrate list content
+                                        function generateListContent(listItems=[]){
+                                            var output = {elements:[], calculatedListHeight:0};
+                                            var xOffset = limitWidthTo < 0 ? 0 : (limitWidthTo-itemWidth)/2;
                                 
-                                                //populate list
-                                                    var accumulativeHeight = 0;
-                                                    for(var a = 0; a < list.length; a++){
-                                                        if( list[a] == 'space' ){
-                                                            var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                                x:0, y:accumulativeHeight,
-                                                                width:width, height:height*spacingHeightMux,
-                                                                colour:{r:1,g:0,b:0,a:0},
+                                            listItems.forEach((item,index) => {
+                                                if(index != 0){output.calculatedListHeight += itemSpacingHeight;}
+                                
+                                                switch(item.type){
+                                                    case 'space':
+                                                        var space_group = interfacePart.builder('group',index+'_space');
+                                                        output.elements.push(space_group);
+                                                        output.calculatedListHeight += spacingHeight;
+                                                    break;
+                                                    case 'break': 
+                                                        var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
+                                                        var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
+                                
+                                                        var rectangleBacking = interfacePart.builder( 'rectangle', index+'_break', {
+                                                            x:xPosition, y:output.calculatedListHeight+itemSpacingHeight/2,
+                                                            width:lineWidth, height:breakHeight,
+                                                            colour:break_style,
+                                                        });
+                                                        output.elements.push(rectangleBacking);
+                                                        output.calculatedListHeight += itemSpacingHeight+breakHeight;
+                                                    break;
+                                                    case 'textbreak': 
+                                                        var textbreak_group = interfacePart.builder('group',index+'_textbreak');
+                                                            var textXPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
+                                                            var text = interfacePart.builder('text', 'text', {
+                                                                x:textXPosition, y:output.calculatedListHeight + itemSpacingHeight/2 + breakHeight/2,
+                                                                width:textbreak_fontSize, height:textbreak_fontSize,
+                                                                printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
+                                                                text:item.text, colour:textbreak_colour,
                                                             });
+                                                            textbreak_group.append(text);
+                                                            text.onFontUpdateCallback = function(){
+                                                                var maxWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
+                                                                var offset = maxWidth*0.025 + text.resultingWidth();
+                                                                breakLine.x( textXPosition + offset );
+                                                                breakLine.width( maxWidth - offset );
+                                                            };
                                 
-                                                            accumulativeHeight += height*(spacingHeightMux+itemSpacingMux);
-                                                            itemCollection.append( temp );
-                                                        }else if( list[a] == 'break'){
-                                                            var temp = interfacePart.builder( 'rectangle', ''+a, {
-                                                                x:width*(1-breakWidthMux)*0.5, y:accumulativeHeight,
-                                                                width:width*breakWidthMux, height:height*breakHeightMux,
-                                                                colour:break_style
+                                                            var breakLine = interfacePart.builder( 'rectangle', 'line', {
+                                                                y:output.calculatedListHeight+itemSpacingHeight/2,
+                                                                height:breakHeight,
+                                                                colour:textbreak_colour,
                                                             });
+                                                            text.onFontUpdateCallback();
+                                                            textbreak_group.append(breakLine);
                                 
-                                                            accumulativeHeight += height*(breakHeightMux+itemSpacingMux);
-                                                            itemCollection.append( temp );
-                                                        }else{
-                                                            var temp = interfacePart.builder( 'button_rectangle', ''+a, {
-                                                                x:width*(1-itemWidthMux)*0.5, y:accumulativeHeight,
-                                                                width:width*itemWidthMux, height:height*itemHeightMux, interactable:interactable,
-                                                                text_left: list[a].text_left,
-                                                                text_centre: (list[a].text?list[a].text:list[a].text_centre),
-                                                                text_right: list[a].text_right,
+                                                        output.elements.push(textbreak_group);
+                                                        output.calculatedListHeight += itemSpacingHeight+breakHeight;
+                                                    break;
+                                                    case 'checkbox':
+                                                        var checkbox_group = interfacePart.builder('group',index+'_checkbox');
+                                                            var rectangleBacking = interfacePart.builder( 'rectangle', 'backing', {
+                                                                x:xOffset, y:output.calculatedListHeight,
+                                                                width:itemWidth, height:itemHeight,
+                                                                colour:item__up__colour,
+                                                            });
+                                                            checkbox_group.append(rectangleBacking);
+                                                            rectangleBacking.onmouseenter = function(){this.colour = item__hover__colour;};
+                                                            rectangleBacking.onmouseleave = function(){this.colour = item__up__colour;};
+                                                            rectangleBacking.onmouseup = function(){this.colour = item__hover__colour;};
+                                                            rectangleBacking.onmousedown = function(){this.colour = item__hover_press__colour;};
+                                                            rectangleBacking.onclick = (function(listItem){
+                                                                return function(){
+                                                                    var value = !checkbox.get();
+                                                                    checkbox.set(value);
+                                                                    listItem.function(value);
+                                                                }
+                                                            })(item);
+                                                                
+                                                            var radius = itemHeight/2;
+                                                            var checkbox = interfacePart.builder( 'checkbox_circle', 'checkbox', {
+                                                                x:xOffset+itemWidth-radius, y:output.calculatedListHeight + radius,
+                                                                radius:radius, interactable:false, style:{backing:{r:0,g:0,b:0,a:0}}
+                                                            });
+                                                            checkbox_group.append(checkbox);
                                 
-                                                                textVerticalOffset: itemTextVerticalOffsetMux, textHorizontalOffsetMux: itemTextHorizontalOffsetMux,
-                                                                active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                                            var text = interfacePart.builder('text', 'text', {
+                                                                x:xOffset + item_textHorizontalOffsetMux*itemWidth,
+                                                                y:output.calculatedListHeight + itemHeight*item_textVerticalOffsetMux,
+                                                                width:item_textSize, height:item_textSize,
+                                                                printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
+                                                                spacing:item_textSpacing, interCharacterSpacing:item_textInterCharacterSpacing,
+                                                                text:item.text, colour:item_textColour, font:item_textFont,
+                                                            });
+                                                            checkbox_group.append(text);
                                 
+                                                            checkbox_group.forceMouseLeave = function(){ rectangleBacking.onmouseleave(); };
+                                
+                                                        output.elements.push(checkbox_group);
+                                                        output.calculatedListHeight += itemHeight;
+                                                    break;
+                                                    case 'list':
+                                                        var sublistName = 'sublist__'+index+'_list';
+                                                        var list_group = interfacePart.builder('group',index+'_list');
+                                                            var button = interfacePart.builder('button_rectangle', 'button', {
+                                                                x:xOffset, y:output.calculatedListHeight,
+                                                                width:itemWidth, height:itemHeight,
+                                                                text_left:item.text,
                                                                 style:{
-                                                                    text_font:text_font,
-                                                                    text_size:text_size,
-                                                                    text_colour:text_colour,
-                                                                    text_spacing:text_spacing,
-                                                                    text_interCharacterSpacing:text_interCharacterSpacing,
+                                                                    text_font:item_textFont,
+                                                                    text_size:item_textSize,
+                                                                    text_colour:item_textColour,
+                                                                    text_spacing:item_textSpacing,
+                                                                    text_interCharacterSpacing:item_textInterCharacterSpacing,
                                 
                                                                     background__off__colour:                            item__off__colour,
                                                                     background__off__lineColour:                        item__off__lineColour,
@@ -27018,50 +26971,281 @@
                                                                     background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
                                                                     background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
                                                                     background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
-                                                                }
+                                                                },
                                                             });
+                                                            list_group.append(button);
                                 
-                                                            temp.onenter = function(a){ return function(){ object.onenter(a); } }(a);
-                                                            temp.onleave = function(a){ return function(){ object.onleave(a); } }(a);
-                                                            temp.onpress = function(a){ return function(){ object.onpress(a); } }(a);
-                                                            temp.ondblpress = function(a){ return function(){ object.ondblpress(a); } }(a);
-                                                            temp.onrelease = function(a){
-                                                                return function(){
-                                                                    if( list[a].function ){ list[a].function(); }
-                                                                    object.onrelease(a);
+                                                            button.onpress = (function(sublistName){
+                                                                return function(){ 
+                                                                    if( subListGroup.getChildByName(sublistName) != undefined ){
+                                                                        object.closeAllLists();
+                                                                    }else if(subListGroup.children().length != 0){
+                                                                        object.closeAllLists();
+                                                                        list_group.open();
+                                                                    }else{
+                                                                        list_group.open();
+                                                                    }
                                                                 }
-                                                            }(a);
-                                                            temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false); } }(a);
-                                                            temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(a);
+                                                            })(sublistName);
                                 
-                                                            accumulativeHeight += height*(itemHeightMux+itemSpacingMux);
-                                                            itemCollection.append( temp );
-                                                            itemArray.push( temp );
-                                                        }
-                                                    }
+                                                            var xOff = xOffset + itemWidth - sublist_arrowSize - item_textHorizontalOffsetMux*itemWidth;
+                                                            var yOff = output.calculatedListHeight + itemHeight/2;
+                                                            var arrow = interfacePart.builder('polygon', 'arrow', {
+                                                                pointsAsXYArray:[ 
+                                                                    {x:xOff,y:yOff-sublist_arrowSize/2}, 
+                                                                    {x:xOff,y:yOff+sublist_arrowSize/2}, 
+                                                                    {x:xOff+sublist_arrowSize,y:yOff}
+                                                                ],
+                                                                colour:sublist_arrowColour,
+                                                            });
+                                                            list_group.append(arrow);
                                 
-                                                return accumulativeHeight - height*itemSpacingMux;
-                                            }
-                                            calculatedListHeight = refreshList();
+                                                            list_group.open = (function(sublistName,listItem,y){
+                                                                return function(){
+                                                                    list_group.getChildByName('button').glow(true);
+                                                                    var sublist = _canvas_.interface.part.builder( 'list', sublistName, {
+                                                                        x:limitWidthTo<0?itemWidth:limitWidthTo, y:y,
+                                                                        list:listItem.list,
+                                
+                                                                        limitHeightTo:-1, limitWidthTo:limitWidthTo,
+                                
+                                                                        itemHeight:itemHeight, itemWidth:itemWidth, itemSpacingHeight:itemSpacingHeight, spacingHeight:spacingHeight, breakHeight:breakHeight,
+                                                                        textbreak_fontSize:textbreak_fontSize, textbreak_colour:textbreak_colour,
+                                                                        item_textSize:item_textSize, item_textColour:item_textColour, item_textFont:item_textFont, item_textSpacing:item_textSpacing, item_textInterCharacterSpacing:item_textInterCharacterSpacing,
+                                                                        item_textVerticalOffsetMux:item_textVerticalOffsetMux, item_textHorizontalOffsetMux:item_textHorizontalOffsetMux,
+                                                    
+                                                                        active:active, multiSelect:multiSelect, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                                                    
+                                                                        backing_style:backing_style,
+                                                                        break_style:break_style,
+                                                                        
+                                                                        style:{
+                                                                            item__off__colour:item__off__colour,                     
+                                                                            item__off__lineColour:item__off__lineColour,                     
+                                                                            item__off__lineThickness:item__off__lineThickness,
+                                                                            item__up__colour:item__up__colour,                      
+                                                                            item__up__lineColour:item__up__lineColour,                      
+                                                                            item__up__lineThickness:item__up__lineThickness,
+                                                                            item__press__colour:item__press__colour,                   
+                                                                            item__press__lineColour:item__press__lineColour,                   
+                                                                            item__press__lineThickness:item__press__lineThickness,
+                                                                            item__select__colour:item__select__colour,                  
+                                                                            item__select__lineColour:item__select__lineColour,                  
+                                                                            item__select__lineThickness:item__select__lineThickness,
+                                                                            item__select_press__colour:item__select_press__colour,            
+                                                                            item__select_press__lineColour:item__select_press__lineColour,            
+                                                                            item__select_press__lineThickness:item__select_press__lineThickness,
+                                                                            item__glow__colour:item__glow__colour,                    
+                                                                            item__glow__lineColour:item__glow__lineColour,                    
+                                                                            item__glow__lineThickness:item__glow__lineThickness,
+                                                                            item__glow_press__colour:item__glow_press__colour,              
+                                                                            item__glow_press__lineColour:item__glow_press__lineColour,              
+                                                                            item__glow_press__lineThickness:item__glow_press__lineThickness,
+                                                                            item__glow_select__colour:item__glow_select__colour,             
+                                                                            item__glow_select__lineColour:item__glow_select__lineColour,             
+                                                                            item__glow_select__lineThickness:item__glow_select__lineThickness,
+                                                                            item__glow_select_press__colour:item__glow_select_press__colour,       
+                                                                            item__glow_select_press__lineColour:item__glow_select_press__lineColour,       
+                                                                            item__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
+                                                                            item__hover__colour:item__hover__colour,                   
+                                                                            item__hover__lineColour:item__hover__lineColour,                   
+                                                                            item__hover__lineThickness:item__hover__lineThickness,
+                                                                            item__hover_press__colour:item__hover_press__colour,             
+                                                                            item__hover_press__lineColour:item__hover_press__lineColour,             
+                                                                            item__hover_press__lineThickness:item__hover_press__lineThickness,
+                                                                            item__hover_select__colour:item__hover_select__colour,            
+                                                                            item__hover_select__lineColour:item__hover_select__lineColour,            
+                                                                            item__hover_select__lineThickness:item__hover_select__lineThickness,
+                                                                            item__hover_select_press__colour:item__hover_select_press__colour,      
+                                                                            item__hover_select_press__lineColour:item__hover_select_press__lineColour,      
+                                                                            item__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
+                                                                            item__hover_glow__colour:item__hover_glow__colour,              
+                                                                            item__hover_glow__lineColour:item__hover_glow__lineColour,              
+                                                                            item__hover_glow__lineThickness:item__hover_glow__lineThickness,
+                                                                            item__hover_glow_press__colour:item__hover_glow_press__colour,        
+                                                                            item__hover_glow_press__lineColour:item__hover_glow_press__lineColour,        
+                                                                            item__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
+                                                                            item__hover_glow_select__colour:item__hover_glow_select__colour,       
+                                                                            item__hover_glow_select__lineColour:item__hover_glow_select__lineColour,       
+                                                                            item__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
+                                                                            item__hover_glow_select_press__colour:item__hover_glow_select_press__colour, 
+                                                                            item__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour, 
+                                                                            item__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
+                                                                        }
+                                                                    });
+                                                                    sublist.onenter = function(a){object.onenter([index].concat(a));};
+                                                                    sublist.onleave = function(a){object.onleave([index].concat(a));};
+                                                                    sublist.onpress = function(a){object.onpress([index].concat(a));};
+                                                                    sublist.ondblpress = function(a){object.ondblpress([index].concat(a));};
+                                                                    sublist.onrelease = function(a){object.onrelease([index].concat(a));};
+                                                                    subListGroup.append(sublist);
+                                                                }
+                                                            })(sublistName,item,output.calculatedListHeight);
+                                                            list_group.close = function(){
+                                                                list_group.getChildByName('button').glow(false);
+                                                                var sublistElement = subListGroup.getChildByName('sublist__'+index+'_list');
+                                                                if( sublistElement == undefined ){return;}
+                                                                subListGroup.remove(sublistElement);
+                                                            };
+                                
+                                                        output.elements.push(list_group);
+                                                        output.calculatedListHeight += itemHeight;
+                                                    break;
+                                                    case 'item': 
+                                                        var name = index+'_item';
+                                                        var temp = interfacePart.builder('button_rectangle', name, {
+                                                            x:xOffset, y:output.calculatedListHeight,
+                                                            width:itemWidth, height:itemHeight, interactable:interactable, 
+                                                            text_left: item.text_left,
+                                                            text_centre: (item.text?item.text:item.text_centre),
+                                                            text_right: item.text_right,
+                                
+                                                            textVerticalOffsetMux: item_textVerticalOffsetMux, textHorizontalOffsetMux: item_textHorizontalOffsetMux,
+                                                            active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                
+                                                            style:{
+                                                                text_font:item_textFont,
+                                                                text_size:item_textSize,
+                                                                text_colour:item_textColour,
+                                                                text_spacing:item_textSpacing,
+                                                                text_interCharacterSpacing:item_textInterCharacterSpacing,
+                                
+                                                                background__off__colour:                            item__off__colour,
+                                                                background__off__lineColour:                        item__off__lineColour,
+                                                                background__off__lineThickness:                     item__off__lineThickness,
+                                                                background__up__colour:                             item__up__colour,
+                                                                background__up__lineColour:                         item__up__lineColour,
+                                                                background__up__lineThickness:                      item__up__lineThickness,
+                                                                background__press__colour:                          item__press__colour,
+                                                                background__press__lineColour:                      item__press__lineColour,
+                                                                background__press__lineThickness:                   item__press__lineThickness,
+                                                                background__select__colour:                         item__select__colour,
+                                                                background__select__lineColour:                     item__select__lineColour,
+                                                                background__select__lineThickness:                  item__select__lineThickness,
+                                                                background__select_press__colour:                   item__select_press__colour,
+                                                                background__select_press__lineColour:               item__select_press__lineColour,
+                                                                background__select_press__lineThickness:            item__select_press__lineThickness,
+                                                                background__glow__colour:                           item__glow__colour,
+                                                                background__glow__lineColour:                       item__glow__lineColour,
+                                                                background__glow__lineThickness:                    item__glow__lineThickness,
+                                                                background__glow_press__colour:                     item__glow_press__colour,
+                                                                background__glow_press__lineColour:                 item__glow_press__lineColour,
+                                                                background__glow_press__lineThickness:              item__glow_press__lineThickness,
+                                                                background__glow_select__colour:                    item__glow_select__colour,
+                                                                background__glow_select__lineColour:                item__glow_select__lineColour,
+                                                                background__glow_select__lineThickness:             item__glow_select__lineThickness,
+                                                                background__glow_select_press__colour:              item__glow_select_press__colour,
+                                                                background__glow_select_press__lineColour:          item__glow_select_press__lineColour,
+                                                                background__glow_select_press__lineThickness:       item__glow_select_press__lineThickness,
+                                                                background__hover__colour:                          item__hover__colour,
+                                                                background__hover__lineColour:                      item__hover__lineColour,
+                                                                background__hover__lineThickness:                   item__hover__lineThickness,
+                                                                background__hover_press__colour:                    item__hover_press__colour,
+                                                                background__hover_press__lineColour:                item__hover_press__lineColour,
+                                                                background__hover_press__lineThickness:             item__hover_press__lineThickness,
+                                                                background__hover_select__colour:                   item__hover_select__colour,
+                                                                background__hover_select__lineColour:               item__hover_select__lineColour,
+                                                                background__hover_select__lineThickness:            item__hover_select__lineThickness,
+                                                                background__hover_select_press__colour:             item__hover_select_press__colour,
+                                                                background__hover_select_press__lineColour:         item__hover_select_press__lineColour,
+                                                                background__hover_select_press__lineThickness:      item__hover_select_press__lineThickness,
+                                                                background__hover_glow__colour:                     item__hover_glow__colour,
+                                                                background__hover_glow__lineColour:                 item__hover_glow__lineColour,
+                                                                background__hover_glow__lineThickness:              item__hover_glow__lineThickness,
+                                                                background__hover_glow_press__colour:               item__hover_glow_press__colour,
+                                                                background__hover_glow_press__lineColour:           item__hover_glow_press__lineColour,
+                                                                background__hover_glow_press__lineThickness:        item__hover_glow_press__lineThickness,
+                                                                background__hover_glow_select__colour:              item__hover_glow_select__colour,
+                                                                background__hover_glow_select__lineColour:          item__hover_glow_select__lineColour,
+                                                                background__hover_glow_select__lineThickness:       item__hover_glow_select__lineThickness,
+                                                                background__hover_glow_select_press__colour:        item__hover_glow_select_press__colour,
+                                                                background__hover_glow_select_press__lineColour:    item__hover_glow_select_press__lineColour,
+                                                                background__hover_glow_select_press__lineThickness: item__hover_glow_select_press__lineThickness,
+                                                            }
+                                                        });
+                                
+                                                        temp.onenter = function(a){ return function(){ object.onenter([a]); } }(index);
+                                                        temp.onleave = function(a){ return function(){ object.onleave([a]); } }(index);
+                                                        temp.onpress = function(a){ return function(){ object.onpress([a]); } }(index);
+                                                        temp.ondblpress = function(a){ return function(){ object.ondblpress([a]); } }(index);
+                                                        temp.onrelease = function(a){
+                                                            return function(){
+                                                                if( list[a].function ){ list[a].function(); }
+                                                                object.onrelease([a]);
+                                                            }
+                                                        }(index);
+                                                        temp.onselect = function(a){ return function(obj,event){ object.select(a,true,event,false);} }(name);
+                                                        temp.ondeselect = function(a){ return function(obj,event){ object.select(a,false,event,false); } }(name);
+                                
+                                                        output.elements.push(temp);
+                                                        output.calculatedListHeight += itemHeight;
+                                                    break;
+                                                    default: console.warn('interface part "list" :: error : unknown list item type:',item); break;
+                                                }
+                                
+                                            });
+                                
+                                
+                                            return output;
+                                        }
+                                
+                                    //refreshing function
+                                        function refresh(){
+                                            itemArray = [];
+                                            selectedItems = [];
+                                            lastNonShiftClicked = 0;
+                                            position = 0;
+                                            
+                                            results = generateListContent(list);
+                                            calculatedListHeight = results.calculatedListHeight;
+                                            itemArray = results.elements;
+                                
+                                            backing.width(limitWidthTo<0?itemWidth:limitWidthTo);
+                                            backing.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
+                                            cover.width(limitWidthTo<0?itemWidth:limitWidthTo);
+                                            cover.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
+                                            stencil.width(limitWidthTo<0?itemWidth:limitWidthTo);
+                                            stencil.height(limitHeightTo<0?calculatedListHeight:limitHeightTo);
+                                
+                                            itemCollection.clear();
+                                            results.elements.forEach(element => itemCollection.append(element));
+                                        }
+                                
+                                    //elements 
+                                        //main
+                                            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+                                        //backing
+                                            var backing = interfacePart.builder('rectangle','backing',{colour:backing_style});
+                                            object.append(backing);
+                                        //stenciled group
+                                            var stenciledGroup = interfacePart.builder('group','stenciledGroup');
+                                            object.append(stenciledGroup);
+                                        //sub list group
+                                            var subListGroup = interfacePart.builder('group','subListGroup');
+                                            object.append(subListGroup);
+                                        //item collection
+                                            var itemCollection = interfacePart.builder('group','itemCollection');
+                                            stenciledGroup.append(itemCollection);
                                         //cover
-                                            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                            object.append(cover);
+                                            var cover = interfacePart.builder('rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+                                            stenciledGroup.append(cover);
                                         //stencil
-                                            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
-                                            object.stencil(stencil);
-                                            object.clipActive(true);
-                                
+                                            var stencil = interfacePart.builder('rectangle','stencil');
+                                            stenciledGroup.stencil(stencil);
+                                            stenciledGroup.clipActive(true);
                                 
                                     //interaction
                                         cover.onwheel = function(event){
                                             if(!interactable){return;}
                                             var move = event.deltaY/100;
                                             object.position( object.position() + move/10 );
-                                            for(var a = 0; a < itemArray.length; a++){
-                                                itemArray[a].forceMouseLeave();
-                                            }
+                                            itemArray.forEach(item => {
+                                                if(item.forceMouseLeave != undefined){
+                                                    item.forceMouseLeave();
+                                                }
+                                            });
                                         };
-                                    
+                                
                                     //controls
                                         object.position = function(a,update=true){
                                             if(a == undefined){return position;}
@@ -27069,8 +27253,8 @@
                                             a = a > 1 ? 1 : a;
                                             position = a;
                                 
-                                            if( calculatedListHeight < height ){return;}
-                                            var movementSpace = calculatedListHeight - height;
+                                            if(limitHeightTo < 0){return;}
+                                            var movementSpace = calculatedListHeight - limitHeightTo;
                                             itemCollection.y( -a*movementSpace );
                                             
                                             if(update&&this.onpositionchange){this.onpositionchange(a);}
@@ -27078,13 +27262,13 @@
                                         object.select = function(a,state,event,update=true){
                                             if(!selectable){return;}
                                 
-                                            //where multi selection is not allowed
                                                 if(!multiSelect){
+                                                //where multi selection is not allowed
                                                     //where we want to select an item, which is not already selected
                                                         if(state && !selectedItems.includes(a) ){
                                                             //deselect all other items
                                                                 while( selectedItems.length > 0 ){
-                                                                    itemCollection.children[ selectedItems[0] ].select(false,undefined,false);
+                                                                    itemCollection.getChildByName(selectedItems[0]).select(false,undefined,undefined);
                                                                     selectedItems.shift();
                                                                 }
                                 
@@ -27098,14 +27282,15 @@
                                 
                                                 //do not update the item itself, in the case that it was the item that sent this command
                                                 //(which would cause a little loop)
-                                                    if(update){ itemCollection.children[a].select(true,undefined,false); }
-                                
-                                            //where multi selection is allowed
+                                                    if(update){ itemCollection.getChildByName(a).select(true,undefined,false); }
                                                 }else{
-                                                    //wherer range-selection is to be done
+                                                //where multi selection is allowed
+                                                    //where range-selection is to be done
                                                         if( event != undefined && event.shiftKey ){
                                                             //gather top and bottom item
                                                             //(first gather the range positions overall, then compute those positions to indexes on the itemArray)
+                                                                a = itemCollection.getChildIndexByName(a);
+                                
                                                                 var min = Math.min(lastNonShiftClicked, a);
                                                                 var max = Math.max(lastNonShiftClicked, a);
                                                                 for(var b = 0; b < itemArray.length; b++){
@@ -27117,7 +27302,7 @@
                                                                 selectedItems = [];
                                                                 for(var b = 0; b < itemArray.length; b++){
                                                                     if( b > max || b < min ){
-                                                                        if( itemArray[b].select() ){
+                                                                        if( itemArray[b].select != undefined && itemArray[b].select() ){
                                                                             itemArray[b].select(false,undefined,false);
                                                                         }
                                                                     }
@@ -27125,7 +27310,7 @@
                                 
                                                             //select those within the range (that aren't already selected)
                                                                 for(var b = min; b <= max; b++){
-                                                                    if( !itemArray[b].select() ){
+                                                                    if( itemArray[b].select != undefined && !itemArray[b].select() ){
                                                                         itemArray[b].select(true,undefined,false);
                                                                         selectedItems.push(b);
                                                                     }
@@ -27135,7 +27320,7 @@
                                                             if(update){ itemArray[a].select(state); }
                                                             if(state && !selectedItems.includes(a) ){ selectedItems.push(a); }
                                                             else if(!state && selectedItems.includes(a)){ selectedItems.splice( selectedItems.indexOf(a), 1 ); }
-                                                            lastNonShiftClicked = a;
+                                                            lastNonShiftClicked = itemCollection.getChildIndexByName(a);
                                                         }
                                                 }
                                 
@@ -27143,17 +27328,31 @@
                                         };
                                         object.add = function(item){
                                             list.push(item);
-                                            calculatedListHeight = refreshList();
+                                            refresh();
                                         };
                                         object.remove = function(a){
                                             list.splice(a,1);
-                                            calculatedListHeight = refreshList();
+                                            refresh();
                                         };
                                         object.interactable = function(bool){
                                             if(bool==undefined){return interactable;}
                                             interactable = bool;
-                                            refreshList();
+                                            refresh();
                                         };
+                                        object.limitHeightTo = function(value){
+                                            if(value==undefined){return limitHeightTo;}
+                                            limitHeightTo = value;
+                                            refresh();
+                                        };
+                                        object.closeAllLists = function(){
+                                            list.forEach((item,index) => {
+                                                if(item.type != 'list'){return;}
+                                                itemArray[index].close();
+                                            });
+                                        };
+                                
+                                    //info
+                                        object.getCalculatedListHeight = function(){return calculatedListHeight;};
                                 
                                     //callbacks
                                         object.onenter = onenter;
@@ -27163,7 +27362,9 @@
                                         object.onrelease = onrelease;
                                         object.onselection = onselection;
                                         object.onpositionchange = onpositionchange;
-                                        
+                                    
+                                    refresh();
+                                
                                     return object;
                                 };
                             };
@@ -30964,16 +31165,20 @@
                                         );
                                     //list
                                         case 'list': return this.collection.control.list(
-                                            name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
-                                            data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                                            name, data.x, data.y, data.angle, data.interactable, data.list,
+                                            data.limitHeightTo, data.limitWidthTo,
+                        
+                                            data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+                                            data.textbreak_fontSize, data.textbreak_colour,
+                                            data.item_textSize, data.item_textColour, data.item_textFont, data.item_textSpacing, data.item_textInterCharacterSpacing,
+                                            data.sublist_arrowSize, data.sublist_arrowColour,
+                                            data.item_textVerticalOffsetMux, data.item_textHorizontalOffsetMux,
+                        
                                             data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
-                        
-                                            data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
-                                            data.breakHeightMux, data.breakWidthMux, 
-                                            data.spacingHeightMux,
-                        
-                                            data.style.backing, data.style.break,
-                                            data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+                                        
+                                            data.style.backing_style,
+                                            data.style.break_style,
+                                            
                                             data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
                                             data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
                                             data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
@@ -30992,19 +31197,35 @@
                                             data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
                                             data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
                                         
-                                            data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                                            data.onenter,
+                                            data.onleave,
+                                            data.onpress,
+                                            data.ondblpress,
+                                            data.onrelease,
+                                            data.onselection,
+                                            data.onpositionchange,
                                         );
                                         case 'list_image': return this.collection.control.list_image(
-                                            name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
-                                            data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                                            name, data.x, data.y, data.angle, data.interactable, data.list,
                                             data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+                                            data.limitHeightTo, data.limitWidthTo,
                         
-                                            data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
-                                            data.breakHeightMux, data.breakWidthMux, 
-                                            data.spacingHeightMux,
+                                            data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+                                        
+                                            data.backingURL, 
+                                            data.breakURL,
+                                            data.textbreakURL,
+                                            data.sublist__up,
+                                            data.sublist__hover,
+                                            data.sublist__glow,
+                                            data.sublist__hover_glow,
+                                            data.sublist__hover_glow_press,
                         
-                                            data.backingURL, data.breakURL,
-                        
+                                            data.checkbox_uncheckURL, 
+                                            data.checkbox_checkURL, 
+                                            data.checkbox_uncheckGlowURL, 
+                                            data.checkbox_checkGlowURL,
+                                            
                                             data.itemURL__off,
                                             data.itemURL__up,
                                             data.itemURL__press,
@@ -31023,7 +31244,13 @@
                                             data.itemURL__hover_glow_select,
                                             data.itemURL__hover_glow_select_press,
                                         
-                                            data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                                            data.onenter,
+                                            data.onleave,
+                                            data.onpress,
+                                            data.ondblpress,
+                                            data.onrelease,
+                                            data.onselection,
+                                            data.onpositionchange,
                                         );
                                     //checkbox
                                         case 'checkbox_': return this.collection.control.checkbox_(
@@ -31064,7 +31291,7 @@
                                             name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
                                             data.style.foregrounds, data.style.foregroundText,
                                             data.style.background_colour, data.style.background_lineThickness,
-                                            data.style.backgroundText_colour, data.style.backgroundText_font,
+                                            data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                             data.style.backing,
                                             data.onchange, data.onrelease, data.selectionAreaToggle
                                         );
@@ -31142,7 +31369,7 @@
                                             //basic
                                                 {type:'rectangle', name:'testRectangle', data:{ x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1} }},
                                                 {type:'circle', name:'testCircle', data:{ x:20, y:55, radius:15 }},
-                                                {type:'image', name:'testImage', data:{ x:40, y:40, width:30, height:30, url:'http://0.0.0.0:8000/testImages/mikeandbrian.jpg' } }, 
+                                                {type:'image', name:'testImage', data:{ x:40, y:40, width:30, height:30, url:'/images/testImages/mikeandbrian.jpg' } }, 
                                                 {type:'polygon', name:'testPolygon', data:{ pointsAsXYArray:[{x:55,y:5}, {x:70,y:35}, {x:40,y:35}], colour:{r:0,g:1,b:0,a:1} } }, 
                                                 {type:'text', name:'testText', data:{ x:7.5, y:95, printingMode:{widthCalculation:'absolute'}, text:'Hello', colour:{r:150/255,g:150/255,b:1,a:1} } }, 
                                                 {type:'path', name:'testPath', data:{ pointsAsXYArray:[{x:0,y:0},{x:0,y:90},{x:2.5,y:90},{x:2.5,y:72.5},{x:75,y:72.5}] } }, 
@@ -31168,26 +31395,48 @@
                                                 {type:'dial_continuous', name:'test_dial_continuous1', data:{x:130,y:125}},
                                                 {type:'dial_discrete', name:'test_dial_discrete1', data:{x:170,y:125}},
                                                 {type:'button_rectangle', name:'test_button_rectangle1', data:{x:115,y:145}},
-                                                {type:'list', name:'test_list1', data:{x:185,y:225,list:[
-                                                    'space',
-                                                    { text_left:'item1',  text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
-                                                    { text_left:'item2',  text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
-                                                    { text_left:'item3',  text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
-                                                    { text_left:'item4',  text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
-                                                    { text_left:'item5',  text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
-                                                    'break',
-                                                    { text_left:'item6',  text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
-                                                    { text_left:'item7',  text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
-                                                    { text_left:'item8',  text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
-                                                    { text_left:'item9',  text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
-                                                    { text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
-                                                    'break',
-                                                    { text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
-                                                    { text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
-                                                    { text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
-                                                    { text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
-                                                    { text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
-                                                    'space',
+                                
+                                                {type:'list', name:'test_list1', data:{x:185,y:225,limitHeightTo:100,list:[
+                                                    { type:'space' },
+                                                    { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
+                                                    { type:'list', text:'sublist', list:[
+                                                        { type:'space' },
+                                                        { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist item1 function');} },
+                                                        { type:'break' },
+                                                        { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist item2 function');} },
+                                                        { type:'textbreak', text:'break 1'},
+                                                        { type:'list', text:'sublist', list:[
+                                                            { type:'space' },
+                                                            { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item1 function');} },
+                                                            { type:'break' },
+                                                            { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item2 function');} },
+                                                            { type:'textbreak', text:'break 1'},
+                                                            { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item3 function');} },
+                                                            { type:'space' },
+                                                        ] },
+                                                        { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist item3 function');} },
+                                                        { type:'space' },
+                                                    ] },
+                                                    { type:'break' },
+                                                    { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('item2 function');} },
+                                                    { type:'textbreak', text:'break 1'},
+                                                    { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('item3 function');} },
+                                                    { type:'checkbox', text:'checkable', function:function(val){console.log('checkbox:',val);} },
+                                                    { type:'item', text_left:'item4', text_centre:'', text_right:'', function:function(){console.log('item4 function');} },
+                                                    { type:'item', text_left:'item5', text_centre:'', text_right:'', function:function(){console.log('item5 function');} },
+                                                    { type:'textbreak', text:'break 1'},
+                                                    { type:'item', text_left:'item6', text_centre:'', text_right:'', function:function(){console.log('item6 function');} },
+                                                    { type:'item', text_left:'item7', text_centre:'', text_right:'', function:function(){console.log('item7 function');} },
+                                                    { type:'item', text_left:'item8', text_centre:'', text_right:'', function:function(){console.log('item8 function');} },
+                                                    { type:'item', text_left:'item9', text_centre:'', text_right:'', function:function(){console.log('item9 function');} },
+                                                    { type:'item', text_left:'item10', text_centre:'', text_right:'', function:function(){console.log('item10 function');} },
+                                                    { type:'break' },
+                                                    { type:'item', text_left:'item11', text_centre:'', text_right:'', function:function(){console.log('item11 function');} },
+                                                    { type:'item', text_left:'item12', text_centre:'', text_right:'', function:function(){console.log('item12 function');} },
+                                                    { type:'item', text_left:'item13', text_centre:'', text_right:'', function:function(){console.log('item13 function');} },
+                                                    { type:'item', text_left:'item14', text_centre:'', text_right:'', function:function(){console.log('item14 function');} },
+                                                    { type:'item', text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
+                                                    { type:'space' },
                                                 ]}},
                                                 {type:'checkbox_rect', name:'test_checkbox_rect1', data:{x:150,y:145}},
                                                 {type:'rastorgrid', name:'test_rastorgrid1', data:{x:100,y:225}},
@@ -31740,7 +31989,7 @@
                             if(menubar != undefined){menubar.refresh();}
                         };
                 
-                        this.showMenubar = function(){
+                        this.showMenubar = function(version=1){
                             //control switch
                                 if(!_canvas_.control.interaction.enableMenubar()){
                                     this.hideMenubar();
@@ -31748,7 +31997,7 @@
                                 }
                 
                             if(menubar != undefined){return;}
-                            menubar = control.gui.elements.menubar(0,0);
+                            menubar = version == 1 ? control.gui.elements.menubar(0,0) : control.gui.elements.menubar2(0,0);
                             pane.append( menubar );
                         };
                         this.hideMenubar = function(){
@@ -31791,8 +32040,10 @@
                                         text_font:'Helvetica',
                                         text_spacing:0.3,
                                         text_interCharacterSpacing:0.04,
+                                        sublist_arrowColour:{r:0.5,g:0.5,b:0.5,a:1},
                                         item__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
                                         item__hover__colour:{r:229/255,g:167/255,b:255/255,a:1}, 
+                                        item__hover_glow__colour:{r:239/255,g:209/255,b:255/255,a:1}, 
                                     },
                                 };
                             
@@ -31806,34 +32057,32 @@
                                         function createDropdown(a,x){
                                             var dropdown = undefined;
                             
-                                            //precalc
-                                                var height = 0;
-                                                for(var b = 0; b < self.menubar.dropdowns[a].itemList.length; b++){
-                                                    switch(self.menubar.dropdowns[a].itemList[b]){
-                                                        case 'break': height += self.menubar.dropdowns[a].breakHeight; break;
-                                                        case 'space': height += self.menubar.dropdowns[a].spaceHeight; break;
-                                                        default: height += self.menubar.dropdowns[a].listItemHeight; break;
-                                                    }
-                                                }
-                                                if(height > _canvas_.control.viewport.height()){
-                                                    height = _canvas_.control.viewport.height() - vars.height;
-                                                }
-                            
                                             //produce dropdown
                                                 dropdown = _canvas_.interface.part.builder( 'list', 'dropdown', {
                                                     x:x, y:vars.height, style:style.list,
-                                                    width:self.menubar.dropdowns[a].listWidth, height:height,
+                                                    itemWidth:self.menubar.dropdowns[a].listWidth,
+                                                    itemHeight:self.menubar.dropdowns[a].listItemHeight,
                             
                                                     multiSelect:false, selectable:false,
                             
-                                                    itemWidthMux:   1,
-                                                    itemHeightMux:  (self.menubar.dropdowns[a].listItemHeight/height), 
-                                                    breakHeightMux: (self.menubar.dropdowns[a].breakHeight/height),
-                                                    spaceHeightMux: (self.menubar.dropdowns[a].spaceHeight/height),
-                                                    itemSpacingMux: 0, 
+                                                    item_textSize:style.list.text_size,
+                                                    item_textFont:style.list.text_font, 
+                                                    item_textSpacing:style.list.text_spacing,
+                                                    item_textInterCharacterSpacing:style.list.text_interCharacterSpacing,
+                                                    sublist_arrowSize:style.list.text_size/2,
+                                                    sublist_arrowColour:style.list.sublist_arrowColour,
+                            
+                                                    itemSpacingHeight:0,
+                                                    spacingHeight:self.menubar.dropdowns[a].spaceHeight,
+                                                    breakHeight:self.menubar.dropdowns[a].breakHeight,
                             
                                                     list:self.menubar.dropdowns[a].itemList,
                                                 });
+                            
+                                            //add height limittation if the dropdown height exceeds the window height
+                                                if( control.viewport.height() < dropdown.getCalculatedListHeight()){
+                                                    dropdown.limitHeightTo(control.viewport.height()-vars.height);
+                                                }
                             
                                             //upon selection of an item in a dropdown; close the dropdown and have nothing selected
                                                 dropdown.onrelease = function(){

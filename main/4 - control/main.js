@@ -108,7 +108,7 @@ _canvas_.control = new function(){
             if(menubar != undefined){menubar.refresh();}
         };
 
-        this.showMenubar = function(){
+        this.showMenubar = function(version=1){
             //control switch
                 if(!_canvas_.control.interaction.enableMenubar()){
                     this.hideMenubar();
@@ -116,7 +116,7 @@ _canvas_.control = new function(){
                 }
 
             if(menubar != undefined){return;}
-            menubar = control.gui.elements.menubar(0,0);
+            menubar = version == 1 ? control.gui.elements.menubar(0,0) : control.gui.elements.menubar2(0,0);
             pane.append( menubar );
         };
         this.hideMenubar = function(){

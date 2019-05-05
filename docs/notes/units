@@ -1,0 +1,83 @@
+current units
+    audioEffectUnits
+        distortionUnit
+        filterUnit
+        multibandFilter
+        reverbUnit
+    audioFile
+        looper
+        oneShot_multi_multiTrack
+        oneShot_multi
+        oneShot_single
+        player
+        recorder
+    humanInputDevices
+        audioIn
+        musicalKeyboard
+    humanOutputDevices
+        audioScope
+        audioSink
+    misc
+        audio_duplicator
+        basicMixer
+        data_duplicator
+        pulseGenerator_hyper
+        pulseGenerator
+        universalReadout
+    sequencers
+        basicSequencer_midiOut
+        basicSequencer
+        launchpad
+    synthesizers
+        basicSynthesizer_img
+        basicSynthesizer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+collecions
+    brandon walsh's essentials
+        pulse generator (signal)
+        musical keyboard (data:midi)
+
+        launchpad (1 signal in, 8 signal out)
+        basicSequencer (mode select: signal/voltage)
+        basicSequencer (data:midi)
+
+        signal duplicator
+        voltage duplicator
+        data duplicator
+        audio duplicator
+
+        LED board readout (signal readout)
+        voltmeter readout (voltage readout)
+        data logger readout (data readout)
+        audio scope readout (audio readout)
+
+        audio in (microphone)
+        audio sink (stereo audio connections)
+
+        basic synthesizer
+
+        distortion unit (mono)
+        filter unit (mono)
+        reverb unit (mono)
+
+        basic 8 track mixer (8 mono to 1 stereo)
+
+        audio file player
+        audio file one shot player
+
+        audio recorder

@@ -314,16 +314,20 @@ this.builder = function(type,name,data){
                 );
             //list
                 case 'list': return this.collection.control.list(
-                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
-                    data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                    name, data.x, data.y, data.angle, data.interactable, data.list,
+                    data.limitHeightTo, data.limitWidthTo,
+
+                    data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+                    data.textbreak_fontSize, data.textbreak_colour,
+                    data.item_textSize, data.item_textColour, data.item_textFont, data.item_textSpacing, data.item_textInterCharacterSpacing,
+                    data.sublist_arrowSize, data.sublist_arrowColour,
+                    data.item_textVerticalOffsetMux, data.item_textHorizontalOffsetMux,
+
                     data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
-
-                    data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
-                    data.breakHeightMux, data.breakWidthMux, 
-                    data.spacingHeightMux,
-
-                    data.style.backing, data.style.break,
-                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+                
+                    data.style.backing_style,
+                    data.style.break_style,
+                    
                     data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
                     data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
                     data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
@@ -342,19 +346,35 @@ this.builder = function(type,name,data){
                     data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
                     data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
                 
-                    data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                    data.onenter,
+                    data.onleave,
+                    data.onpress,
+                    data.ondblpress,
+                    data.onrelease,
+                    data.onselection,
+                    data.onpositionchange,
                 );
                 case 'list_image': return this.collection.control.list_image(
-                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.list,
-                    data.itemTextVerticalOffsetMux, data.itemTextHorizontalOffsetMux,
+                    name, data.x, data.y, data.angle, data.interactable, data.list,
                     data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+                    data.limitHeightTo, data.limitWidthTo,
 
-                    data.itemHeightMux, data.itemWidthMux, data.itemSpacingMux, 
-                    data.breakHeightMux, data.breakWidthMux, 
-                    data.spacingHeightMux,
+                    data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+                
+                    data.backingURL, 
+                    data.breakURL,
+                    data.textbreakURL,
+                    data.sublist__up,
+                    data.sublist__hover,
+                    data.sublist__glow,
+                    data.sublist__hover_glow,
+                    data.sublist__hover_glow_press,
 
-                    data.backingURL, data.breakURL,
-
+                    data.checkbox_uncheckURL, 
+                    data.checkbox_checkURL, 
+                    data.checkbox_uncheckGlowURL, 
+                    data.checkbox_checkGlowURL,
+                    
                     data.itemURL__off,
                     data.itemURL__up,
                     data.itemURL__press,
@@ -373,7 +393,13 @@ this.builder = function(type,name,data){
                     data.itemURL__hover_glow_select,
                     data.itemURL__hover_glow_select_press,
                 
-                    data.onenter, data.onleave, data.onpress, data.ondblpress, data.onrelease, data.onselection, data.onpositionchange,
+                    data.onenter,
+                    data.onleave,
+                    data.onpress,
+                    data.ondblpress,
+                    data.onrelease,
+                    data.onselection,
+                    data.onpositionchange,
                 );
             //checkbox
                 case 'checkbox_': return this.collection.control.checkbox_(
@@ -414,7 +440,7 @@ this.builder = function(type,name,data){
                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
                     data.style.foregrounds, data.style.foregroundText,
                     data.style.background_colour, data.style.background_lineThickness,
-                    data.style.backgroundText_colour, data.style.backgroundText_font,
+                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                     data.style.backing,
                     data.onchange, data.onrelease, data.selectionAreaToggle
                 );

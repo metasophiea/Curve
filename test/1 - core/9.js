@@ -1,12 +1,12 @@
-function makeText(y,font){
+function makeText(index, size, font){
     var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_'+y;
+    tmp.name = 'characterString_'+index;
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string(font);
     tmp.x(10);
-    tmp.y(y);
-    tmp.width(60);
-    tmp.height(60);
+    tmp.y(size*index);
+    tmp.width(size);
+    tmp.height(size);
     tmp.font(font);
     tmp.printingMode({ widthCalculation:'absolute', horizontal:'left', vertical:'top' });
     tmp.stopAttributeStartedExtremityUpdate = false;
@@ -15,9 +15,9 @@ function makeText(y,font){
 }
 
 
-var gap = 60;
+var gap = 30;
 _canvas_.core.shape.library.character.getLoadableFonts().forEach((name,index) => {
-    makeText(index*gap,name);
+    makeText(index,gap,name);
 });
 
 

@@ -38,7 +38,7 @@
         for(var a = 0; a < 10; a++){
             var text = CC.core.shape.create('characterString');
                 text.name = 'mainHeading_'+a;
-                text.printingMode({horizontal:'middle',vertical:'middle'});
+                text.printingMode({horizontal:'middle',vertical:'top'});
                 text.string('coreGraphics');
 
                 CC.core.arrangement.append(text);
@@ -48,7 +48,7 @@
             CC.setAttribute('coreGraphicsElementHeight',window.innerWidth * 1.5);
             CC.core.viewport.refresh();
             texts.forEach(function(a,i){
-                a.y( (window.innerWidth/6)*i );
+                a.y( (window.innerWidth/6.5)*i + 10 );
                 a.font('Arial');
                 a.scale(window.innerWidth/100);
                 a.x(window.innerWidth/2);

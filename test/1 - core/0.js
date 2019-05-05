@@ -115,7 +115,7 @@ var tmp = _canvas_.core.shape.create('character');
     tmp.name = 'character_1';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.character('a');
-    tmp.x(150); 
+    tmp.x(300); 
     tmp.y(150);
     tmp.width(60);
     tmp.height(60);
@@ -128,9 +128,9 @@ var tmp = _canvas_.core.shape.create('characterString');
     tmp.name = 'characterString_1';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string('Hello!');
-    tmp.x(220);
+    tmp.x(360);
     tmp.y(150);
-    tmp.width(200);
+    tmp.width(60);
     tmp.height(60);
     tmp.stopAttributeStartedExtremityUpdate = false;
     tmp.colour({r:Math.random(),g:Math.random(),b:Math.random(),a:1});
@@ -193,3 +193,4 @@ var clippingGroup_2 = _canvas_.core.shape.create('group');
 
 
 _canvas_.core.render.frame();
+setTimeout(_canvas_.core.render.frame,1000);

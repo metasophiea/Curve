@@ -26,8 +26,10 @@ this.menubar = function(x,y){
             text_font:'Helvetica',
             text_spacing:0.3,
             text_interCharacterSpacing:0.04,
+            sublist_arrowColour:{r:0.5,g:0.5,b:0.5,a:1},
             item__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
             item__hover__colour:{r:229/255,g:167/255,b:255/255,a:1}, 
+            item__hover_glow__colour:{r:239/255,g:209/255,b:255/255,a:1}, 
         },
     };
 
@@ -41,34 +43,32 @@ this.menubar = function(x,y){
             function createDropdown(a,x){
                 var dropdown = undefined;
 
-                //precalc
-                    var height = 0;
-                    for(var b = 0; b < self.menubar.dropdowns[a].itemList.length; b++){
-                        switch(self.menubar.dropdowns[a].itemList[b]){
-                            case 'break': height += self.menubar.dropdowns[a].breakHeight; break;
-                            case 'space': height += self.menubar.dropdowns[a].spaceHeight; break;
-                            default: height += self.menubar.dropdowns[a].listItemHeight; break;
-                        }
-                    }
-                    if(height > _canvas_.control.viewport.height()){
-                        height = _canvas_.control.viewport.height() - vars.height;
-                    }
-
                 //produce dropdown
                     dropdown = _canvas_.interface.part.builder( 'list', 'dropdown', {
                         x:x, y:vars.height, style:style.list,
-                        width:self.menubar.dropdowns[a].listWidth, height:height,
+                        itemWidth:self.menubar.dropdowns[a].listWidth,
+                        itemHeight:self.menubar.dropdowns[a].listItemHeight,
 
                         multiSelect:false, selectable:false,
 
-                        itemWidthMux:   1,
-                        itemHeightMux:  (self.menubar.dropdowns[a].listItemHeight/height), 
-                        breakHeightMux: (self.menubar.dropdowns[a].breakHeight/height),
-                        spaceHeightMux: (self.menubar.dropdowns[a].spaceHeight/height),
-                        itemSpacingMux: 0, 
+                        item_textSize:style.list.text_size,
+                        item_textFont:style.list.text_font, 
+                        item_textSpacing:style.list.text_spacing,
+                        item_textInterCharacterSpacing:style.list.text_interCharacterSpacing,
+                        sublist_arrowSize:style.list.text_size/2,
+                        sublist_arrowColour:style.list.sublist_arrowColour,
+
+                        itemSpacingHeight:0,
+                        spacingHeight:self.menubar.dropdowns[a].spaceHeight,
+                        breakHeight:self.menubar.dropdowns[a].breakHeight,
 
                         list:self.menubar.dropdowns[a].itemList,
                     });
+
+                //add height limittation if the dropdown height exceeds the window height
+                    if( control.viewport.height() < dropdown.getCalculatedListHeight()){
+                        dropdown.limitHeightTo(control.viewport.height()-vars.height);
+                    }
 
                 //upon selection of an item in a dropdown; close the dropdown and have nothing selected
                     dropdown.onrelease = function(){
