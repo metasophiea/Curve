@@ -26810,10 +26810,12 @@
                                         var position = 0;
                                         var calculatedListHeight = 0;
                                 
-                                    //genrate list content
+                                    //generate list content
                                         function generateListContent(listItems=[]){
                                             var output = {elements:[], calculatedListHeight:0};
                                             var xOffset = limitWidthTo < 0 ? 0 : (limitWidthTo-itemWidth)/2;
+                                
+                                            if(listItems.length == 0){ listItems = [{type:'item', text:'-empty-'}]; }
                                 
                                             listItems.forEach((item,index) => {
                                                 if(index != 0){output.calculatedListHeight += itemSpacingHeight;}
@@ -27012,6 +27014,7 @@
                                                                         itemHeight:itemHeight, itemWidth:itemWidth, itemSpacingHeight:itemSpacingHeight, spacingHeight:spacingHeight, breakHeight:breakHeight,
                                                                         textbreak_fontSize:textbreak_fontSize, textbreak_colour:textbreak_colour,
                                                                         item_textSize:item_textSize, item_textColour:item_textColour, item_textFont:item_textFont, item_textSpacing:item_textSpacing, item_textInterCharacterSpacing:item_textInterCharacterSpacing,
+                                                                        sublist_arrowSize:sublist_arrowSize, sublist_arrowColour:sublist_arrowColour,
                                                                         item_textVerticalOffsetMux:item_textVerticalOffsetMux, item_textHorizontalOffsetMux:item_textHorizontalOffsetMux,
                                                     
                                                                         active:active, multiSelect:multiSelect, hoverable:hoverable, selectable:selectable, pressable:pressable,
@@ -32816,4131 +32819,4000 @@
                 
                 window.onresize = _canvas_.control.viewport.refresh; 
                 _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
-                _canvas_.interface.unit.collection.alpha = new function(){
-                    // this.audio_duplicator = function(x,y,a){
-                    //     var style = {
-                    //         background:{r:200/255,g:200/255,b:200/255,a:1},
-                    //         markings:{r:150/255,g:150/255,b:150/255,a:1},
-                    //     };
-                    //     var design = {
-                    //         name: 'audio_duplicator',
-                    //         category:'misc',
-                    //         collection: 'alpha',
-                    //         x:x, y:y, a:a,
-                    //         space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                    //         // spaceOutline: true,
-                    //         elements:[
-                    //             {type:'connectionNode_audio', name:'input', data:{ type:0, x:55, y:5, width:10, height:20 }},
-                    //             {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                    //             {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
-                    
-                    //             {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
-                    
-                    //             {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-                    //             {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-                    //             {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-                    //             {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-                    //             {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
-                    //         ],
-                    //     };
-                    
-                    //     //main object
-                    //         var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
-                    
-                    //     //circuitry
-                    //         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                    //         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
-                             
-                    //     return object;
-                    // };
-                    
-                    // this.audio_duplicator.metadata = {
-                    //     name:'Audio Duplicator',
-                    //     category:'misc',
-                    //     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
-                    // };
-                    this.universalreadout = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
-                        };
-                        var design = {
-                            name: 'universalreadout',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:-5,y:-5}, 
-                                {x:10,y:-10}, 
-                    
-                                {x:25,y:-5}, 
-                                {x:30,y:10}, 
-                    
-                                {x:25,y:25}, 
-                                {x:10,y:30}, 
-                    
-                                {x:-5,y:25}, 
-                                {x:-10,y:10}, 
-                            ],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'circle', name:'base', data:{
-                                    x:10, y:10, radius:20, colour:style.background,
-                                }},
-                                {type:'connectionNode_data', name:'in', data:{
-                                    x: 0, y: 0, width: 20, height: 20,
-                                    onreceive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.universalreadout,design);
-                    
-                        //internal functions
-                            var lines = [];
-                            var lineElements = [];
-                            var lineLimit = 10;
-                            var tickerCount = 0;
-                            function print(text){
-                                //add ticker to text
-                                text = (tickerCount++)+'> '+text;
-                    
-                                //add the new text to the list, and if the list becomes too long, remove the oldest item
-                                lines.unshift(text);
-                                if( lines.length > lineLimit ){ lines.pop(); }
-                    
-                                //remove all the text elements
-                                for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
-                                lineElements = [];
-                    
-                                //write in the new list
-                                for(var a = 0; a < lines.length; a++){
-                                    lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
-                                    object.append( lineElements[a] );
+                _canvas_.interface.unit.collection = new function(){
+                    this.alpha = new function(){
+                        // this.audio_duplicator = function(x,y,a){
+                        //     var style = {
+                        //         background:{r:200/255,g:200/255,b:200/255,a:1},
+                        //         markings:{r:150/255,g:150/255,b:150/255,a:1},
+                        //     };
+                        //     var design = {
+                        //         name: 'audio_duplicator',
+                        //         category:'misc',
+                        //         collection: 'alpha',
+                        //         x:x, y:y, a:a,
+                        //         space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                        //         // spaceOutline: true,
+                        //         elements:[
+                        //             {type:'connectionNode_audio', name:'input', data:{ type:0, x:55, y:5, width:10, height:20 }},
+                        //             {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                        //             {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
+                        
+                        //             {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+                        
+                        //             {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+                        //             {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+                        //             {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+                        //             {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+                        //             {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+                        //         ],
+                        //     };
+                        
+                        //     //main object
+                        //         var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
+                        
+                        //     //circuitry
+                        //         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                        //         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                                 
+                        //     return object;
+                        // };
+                        
+                        // this.audio_duplicator.metadata = {
+                        //     name:'Audio Duplicator',
+                        //     category:'misc',
+                        //     helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
+                        // };
+                        this.universalreadout = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
+                            };
+                            var design = {
+                                name: 'universalreadout',
+                                category:'misc',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:-5,y:-5}, 
+                                    {x:10,y:-10}, 
+                        
+                                    {x:25,y:-5}, 
+                                    {x:30,y:10}, 
+                        
+                                    {x:25,y:25}, 
+                                    {x:10,y:30}, 
+                        
+                                    {x:-5,y:25}, 
+                                    {x:-10,y:10}, 
+                                ],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'circle', name:'base', data:{
+                                        x:10, y:10, radius:20, colour:style.background,
+                                    }},
+                                    {type:'connectionNode_data', name:'in', data:{
+                                        x: 0, y: 0, width: 20, height: 20,
+                                        onreceive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.universalreadout,design);
+                        
+                            //internal functions
+                                var lines = [];
+                                var lineElements = [];
+                                var lineLimit = 10;
+                                var tickerCount = 0;
+                                function print(text){
+                                    //add ticker to text
+                                    text = (tickerCount++)+'> '+text;
+                        
+                                    //add the new text to the list, and if the list becomes too long, remove the oldest item
+                                    lines.unshift(text);
+                                    if( lines.length > lineLimit ){ lines.pop(); }
+                        
+                                    //remove all the text elements
+                                    for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
+                                    lineElements = [];
+                        
+                                    //write in the new list
+                                    for(var a = 0; a < lines.length; a++){
+                                        lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
+                                        object.append( lineElements[a] );
+                                    }
                                 }
-                            }
-                    
-                        return object;
-                    };
-                    
-                    this.universalreadout.metadata = {
-                        name:'Universal Readout',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout/'
-                    };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.universalreadout2 = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0,g:0,b:0,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
+                        
+                            return object;
                         };
-                    
-                        var design = {
-                            name: 'universalreadout2',
+                        
+                        this.universalreadout.metadata = {
+                            name:'Universal Readout',
                             category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
-                            
-                                {type:'connectionNode_data', name:'dataIn', data:{ x:5, y:5, width:20, height:20,
-                                    onreceive:function(address,data){ print('data :: address: "'+address+'" - data: "'+JSON.stringify(data)+'"'); }
-                                }},
-                                {type:'connectionNode_signal', name:'signalIn', data:{ x:30, y:5, width:20, height:20,
-                                    onchange:function(value){print('signal :: '+value); },
-                                }},
-                                {type:'connectionNode_voltage', name:'voltageIn', data:{ x:5, y:30, width:20, height:20,
-                                    onchange:function(value){print('voltage :: '+value); },
-                                }},
-                            ]
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout/'
                         };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.universalreadout,design);
-                    
-                        //internal functions
-                            var lines = [];
-                            var lineElements = [];
-                            var lineLimit = 10;
-                            var tickerCount = 0;
-                            function print(text){
-                                //add ticker to text
-                                text = (tickerCount++)+'> '+text;
-                    
-                                //add the new text to the list, and if the list becomes too long, remove the oldest item
-                                lines.unshift(text);
-                                if( lines.length > lineLimit ){ lines.pop(); }
-                    
-                                //remove all the text elements
-                                for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
-                                lineElements = [];
-                    
-                                //write in the new list
-                                for(var a = 0; a < lines.length; a++){
-                                    lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:60, y:2.5+a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
-                                    object.append( lineElements[a] );
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.universalreadout2 = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0,g:0,b:0,a:1}, size:4, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}},
+                            };
+                        
+                            var design = {
+                                name: 'universalreadout2',
+                                category:'misc',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+                                
+                                    {type:'connectionNode_data', name:'dataIn', data:{ x:5, y:5, width:20, height:20,
+                                        onreceive:function(address,data){ print('data :: address: "'+address+'" - data: "'+JSON.stringify(data)+'"'); }
+                                    }},
+                                    {type:'connectionNode_signal', name:'signalIn', data:{ x:30, y:5, width:20, height:20,
+                                        onchange:function(value){print('signal :: '+value); },
+                                    }},
+                                    {type:'connectionNode_voltage', name:'voltageIn', data:{ x:5, y:30, width:20, height:20,
+                                        onchange:function(value){print('voltage :: '+value); },
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.universalreadout,design);
+                        
+                            //internal functions
+                                var lines = [];
+                                var lineElements = [];
+                                var lineLimit = 10;
+                                var tickerCount = 0;
+                                function print(text){
+                                    //add ticker to text
+                                    text = (tickerCount++)+'> '+text;
+                        
+                                    //add the new text to the list, and if the list becomes too long, remove the oldest item
+                                    lines.unshift(text);
+                                    if( lines.length > lineLimit ){ lines.pop(); }
+                        
+                                    //remove all the text elements
+                                    for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
+                                    lineElements = [];
+                        
+                                    //write in the new list
+                                    for(var a = 0; a < lines.length; a++){
+                                        lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:60, y:2.5+a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
+                                        object.append( lineElements[a] );
+                                    }
                                 }
-                            }
-                    
-                        return object;
-                    };
-                    
-                    this.universalreadout2.metadata = {
-                        name:'Universal Readout V2',
-                        dev:true,
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout2/'
-                    };
+                        
+                            return object;
+                        };
+                        
+                        this.universalreadout2.metadata = {
+                            name:'Universal Readout V2',
+                            dev:true,
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/universalReadout2/'
+                        };
 
-                    this.pulseGenerator_hyper = function(x,y,a){
-                        var maxTempo = 999;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator_hyper',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_data', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_data', name:'sync', data:{
-                                    x:115, y:11.25, width:5, height:17.5,
-                                    receive:function(){ object.elements.button_rectangle.sync.press();},
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator_hyper,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.data.out.send('pulse');
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.data.out.send('pulse');
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    
-                    this.pulseGenerator_hyper.metadata = {
-                        name:'Pulse Generator ::Old (Hyper)',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator_hyper/'
-                    };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.pulseGenerator_signal_hyper = function(x,y,a){
-                        var maxTempo = 999;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator_signal_hyper',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_signal', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_signal', name:'sync', data:{
-                                    x:115, y:11.25, width:5, height:17.5,
-                                    onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.signal.out.set(true);
-                                            setTimeout(function(){object.io.signal.out.set(false);},50);
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.signal.out.set(true);
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    this.pulseGenerator_signal_hyper.metadata = {
-                        name:'Pulse Generator (Hyper) ::Signal',
-                        category:'misc',
-                        dev:true,
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
-                    };
-                    
-                    this.pulseGenerator_voltage_hyper = function(x,y,a){
-                        var maxTempo = 999;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator_voltage_hyper',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0}, 
-                                {x:100+30,y:0},{x:115+30,y:10}, 
-                                {x:115+30,y:30},{x:100+30,y:40}, 
-                                {x:10,y:40},{x:0,y:30} 
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_voltage', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_signal', name:'sync', data:{
-                                    x:145, y:11.25, width:5, height:17.5,
-                                    onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ 
-                                    {x:0,y:10},{x:10,y:0}, 
-                                    {x:100+30,y:0},{x:115+30,y:10}, 
-                                    {x:115+30,y:30},{x:100+30,y:40}, 
-                                    {x:10,y:40},{x:0,y:30} 
-                                ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                    
-                                {type:'text', name:'strength_0', data:{x:8, y:32, text:'0', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-                                {type:'text', name:'strength_1/2', data:{x:20, y:4, text:'1/2', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-                                {type:'text', name:'strength_1', data:{x:32, y:32, text:'1', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-                                {type:'dial_continuous',name:'strength',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:50, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:65, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
-                                            setTimeout(function(){object.io.voltage.out.set(0);},50);
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    this.pulseGenerator_voltage_hyper.metadata = {
-                        name:'Pulse Generator (Hyper) ::Voltage',
-                        category:'misc',
-                        dev:true,
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
-                    };
-                    
-                    this.pulseGenerator_data_hyper = function(x,y,a){
-                        var maxTempo = 999;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator_data_hyper',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_data', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_signal', name:'sync', data:{
-                                    x:115, y:11.25, width:5, height:17.5,
-                                    onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.data.out.send('pulse');
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.data.out.send('pulse');
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    this.pulseGenerator_data_hyper.metadata = {
-                        name:'Pulse Generator (Hyper) ::Data',
-                        category:'misc',
-                        dev:true,
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
-                    };
-                    this.signal_duplicator = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{r:150/255,g:150/255,b:150/255,a:1},
-                        };
-                        var design = {
-                            name: 'signal_duplicator',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_signal', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } }},
-                                {type:'connectionNode_signal', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_signal', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
-                    
-                                {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-                                {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-                                {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-                                {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-                                {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
-                            ],
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
-                    
-                        //circuitry
-                            // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                            // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
-                             
-                        return object;
-                    };
-                    this.signal_duplicator.metadata = {
-                        name:'Signal Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
-                    };
-                    
-                    this.voltage_duplicator = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{r:150/255,g:150/255,b:150/255,a:1},
-                        };
-                        var design = {
-                            name: 'voltage_duplicator',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_voltage', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } }},
-                                {type:'connectionNode_voltage', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_voltage', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
-                    
-                                {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-                                {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-                                {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-                                {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-                                {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
-                            ],
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
-                    
-                        //circuitry
-                            // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                            // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
-                             
-                        return object;
-                    };
-                    this.voltage_duplicator.metadata = {
-                        name:'Voltage Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
-                    };
-                    
-                    this.audio_duplicator = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{r:150/255,g:150/255,b:150/255,a:1},
-                        };
-                        var design = {
-                            name: 'audio_duplicator',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_audio', name:'input', data:{ type:0, x:55, y:5, width:10, height:20 }},
-                                {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
-                    
-                                {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-                                {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-                                {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-                                {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-                                {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
-                            ],
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
-                    
-                        //circuitry
-                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
-                             
-                        return object;
-                    };
-                    this.audio_duplicator.metadata = {
-                        name:'Audio Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
-                    };
-                    
-                    this.data_duplicator = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{r:150/255,g:150/255,b:150/255,a:1},
-                        };
-                        var design = {
-                            name:'data_duplicator',
-                            category:'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
-                                {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
-                                {type:'connectionNode_data', name:'input', data:{ 
-                                    x:45, y:5, width:20, height:20,
-                                    onreceive:function(address,data){
-                                        object.io.data.output_1.send(address,data);
-                                        object.io.data.output_2.send(address,data);
-                                    }
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background }},
-                    
-                                {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-                                {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-                                {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-                                {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-                                {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
+                        this.pulseGenerator_hyper = function(x,y,a){
+                            var maxTempo = 999;
                         
-                        return object;
-                    
-                    };
-                    this.data_duplicator.metadata = {
-                        name:'Data Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/dataDuplicator/'
-                    };
-                    //Operation Note:
-                    //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
-                    //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
-                    //  then the 2nd port
-                    this.pulseGenerator = function(x,y,a){
-                        var maxTempo = 240;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_data', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_data', name:'sync', data:{
-                                    x:115, y:11.25, width:5, height:17.5,
-                                    receive:function(){ object.elements.button_rectangle.sync.press();},
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.data.out.send('pulse');
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.data.out.send('pulse');
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    
-                    this.pulseGenerator.metadata = {
-                        name:'Pulse Generator ::Old',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
-                    };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.pulseGenerator_signal = function(x,y,a){
-                        var maxTempo = 240;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator_signal',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_signal', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_signal', name:'sync', data:{
-                                    x:115, y:11.25, width:5, height:17.5,
-                                    onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.signal.out.set(true);
-                                            setTimeout(function(){object.io.signal.out.set(false);},50);
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.signal.out.set(true);
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    this.pulseGenerator_signal.metadata = {
-                        name:'Pulse Generator ::Signal',
-                        category:'misc',
-                        dev:true,
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
-                    };
-                    
-                    this.pulseGenerator_voltage = function(x,y,a){
-                        var maxTempo = 240;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator_voltage',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0}, 
-                                {x:100+30,y:0},{x:115+30,y:10}, 
-                                {x:115+30,y:30},{x:100+30,y:40}, 
-                                {x:10,y:40},{x:0,y:30} 
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_voltage', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_signal', name:'sync', data:{
-                                    x:145, y:11.25, width:5, height:17.5,
-                                    onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ 
-                                    {x:0,y:10},{x:10,y:0}, 
-                                    {x:100+30,y:0},{x:115+30,y:10}, 
-                                    {x:115+30,y:30},{x:100+30,y:40}, 
-                                    {x:10,y:40},{x:0,y:30} 
-                                ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                    
-                                {type:'text', name:'strength_0', data:{x:8, y:32, text:'0', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-                                {type:'text', name:'strength_1/2', data:{x:20, y:4, text:'1/2', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-                                {type:'text', name:'strength_1', data:{x:32, y:32, text:'1', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-                                {type:'dial_continuous',name:'strength',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:50, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:65, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
-                                            setTimeout(function(){object.io.voltage.out.set(0);},50);
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    this.pulseGenerator_voltage.metadata = {
-                        name:'Pulse Generator ::Voltage',
-                        category:'misc',
-                        dev:true,
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
-                    };
-                    
-                    this.pulseGenerator_data = function(x,y,a){
-                        var maxTempo = 240;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'pulseGenerator_data',
-                            category:'misc',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:0},
-                                {x:100,y:0},{x:115,y:10},
-                                {x:115,y:30},{x:100,y:40},
-                                {x:10,y:40},{x:0,y:30}
-                            ], 
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_data', name:'out', data:{
-                                    x:-5, y:11.25, width:5, height:17.5,
-                                }},
-                                {type:'connectionNode_signal', name:'sync', data:{
-                                    x:115, y:11.25, width:5, height:17.5,
-                                    onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
-                                }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
-                    
-                                {type:'button_rectangle', name:'syncButton', data:{
-                                    x:102.5, y:11.25, width:10, height:17.5,
-                                    selectable:false, 
-                                    style:{ 
-                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                        background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                        background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
-                                    }, 
-                                    onpress:function(){updateTempo(tempo)},
-                                }},
-                                {type:'dial_continuous',name:'tempo',data:{
-                                    x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
-                                }},
-                                {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
-                    
-                        //internal circuitry
-                            object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return object.elements.dial_continuous.tempo.get();
-                            };
-                            object.importData = function(data){
-                                object.elements.dial_continuous.tempo.set(data);
-                            };
-                    
-                        //internal functions
-                            var interval = null;
-                            var tempo = 120;
-                            function updateTempo(newTempo){
-                                //update readout
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.text(
-                                        _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
-                                    );
-                                    object.elements.readout_sixteenSegmentDisplay_static.readout.print();
-                    
-                                //update interval
-                                    if(interval){ clearInterval(interval); }
-                                    if(newTempo > 0){
-                                        interval = setInterval(function(){
-                                            object.io.data.out.send('pulse');
-                                        },1000*(60/newTempo));
-                                    }
-                    
-                                object.io.data.out.send('pulse');
-                                tempo = newTempo;
-                            }
-                    
-                        //interface
-                            object.i = {
-                                setTempo:function(value){
-                                    object.elements.dial_continuous.tempo.set(value);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.tempo.set(0.5);
-                    
-                        return object;
-                    };
-                    this.pulseGenerator_data.metadata = {
-                        name:'Pulse Generator ::Data',
-                        category:'misc',
-                        dev:true,
-                        helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
-                    };
-                    // this.data_duplicator = function(x,y,a){
-                    //     var style = {
-                    //         background:{r:200/255,g:200/255,b:200/255,a:1},
-                    //         markings:{r:150/255,g:150/255,b:150/255,a:1},
-                    //     };
-                    //     var design = {
-                    //         name:'data_duplicator',
-                    //         category:'misc',
-                    //         collection: 'alpha',
-                    //         x:x, y:y, a:a,
-                    //         space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
-                    //         // spaceOutline: true,
-                    //         elements:[
-                    //             {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
-                    //             {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
-                    //             {type:'connectionNode_data', name:'input', data:{ 
-                    //                 x:45, y:5, width:20, height:20,
-                    //                 onreceive:function(address,data){
-                    //                     object.io.data.output_1.send(address,data);
-                    //                     object.io.data.output_2.send(address,data);
-                    //                 }
-                    //             }},
-                    
-                    //             {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background }},
-                    
-                    //             {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-                    //             {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-                    //             {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-                    //             {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-                    //             {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
-                    //         ]
-                    //     };
-                    
-                    //     //main object
-                    //         var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
                         
-                    //     return object;
-                    
-                    // };
-                    
-                    // this.data_duplicator.metadata = {
-                    //     name:'Data Duplicator',
-                    //     category:'misc',
-                    //     helpURL:'https://curve.metasophiea.com/help/units/alpha/dataDuplicator/'
-                    // };
-                    
-                    // //Operation Note:
-                    // //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
-                    // //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
-                    // //  then the 2nd port
-                    this.basicMixer = function(x,y,a){
-                        var connectionCount = 8;
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{r:150/255,g:150/255,b:150/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:8, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'basicMixer',
-                            category: 'misc',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], colour:style.background }},
-                    
-                                {type:'text', name:'gain', data:{ x:85, y:5, text:'gain', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
-                                {type:'text', name:'pan', data:{  x:60, y:5, text:'pan', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
-                                
-                                {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, colour:style.markings }},
-                                {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, colour:style.markings }},
-                                {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, colour:style.markings }},
-                                {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, colour:style.markings }},
-                                {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, colour:style.markings }},
-                            ],
-                        };
-                    
-                        //dynamic design
-                        for(var a = 0; a < connectionCount; a++){
-                            design.elements.unshift(
-                                {type:'connectionNode_audio', name:'input_'+a, data:{ 
-                                    x:90, y:10+(a*25), width:20, height:20 
-                                }},
-                            );
-                    
-                            design.elements.push(
-                                {type:'rectangle', name:'line_'+a, data:{
-                                    x:23, y:19.1+a*25, width:75, height:2, 
-                                    colour:style.markings,
-                                }}
-                            );
-                    
-                            design.elements.push(
-                                {type:'dial_continuous',name:'gain_'+a,data:{
-                                    x:85, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }}
-                            );
-                            design.elements.push(
-                                {type:'dial_continuous',name:'pan_'+a,data:{
-                                    x:60, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }}
-                            );
-                        }
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.basicMixer,design);
-                    
-                        
-                    
-                        //internal circuitry
-                            for(var a = 0; a < connectionCount; a++){
-                                object['splitter_'+a] = new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2);
-                                object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
-                                object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_0'].in() );
-                                object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_1'].in() );
-                    
-                                object.elements.dial_continuous['gain_'+a].onchange = function(a){
-                                    return function(value){
-                                        object['splitter_'+a].inGain(value);
-                                    }
-                                }(a);
-                                object.elements.dial_continuous['pan_'+a].onchange = function(a){
-                                    return function(value){
-                                        object['splitter_'+a].outGain(0,value);
-                                        object['splitter_'+a].outGain(1,1-value);
-                                    }
-                                }(a);
-                            }
-                    
-                        //interface
-                            object.i = {
-                                gain:function(track,value){object.elements.dial_continuous['gain_'+track].set(value);},
-                                pan:function(track,value){object.elements.dial_continuous['pan_'+track].set(value);},
-                            };
-                    
-                        //setup
-                            for(var a = 0; a < connectionCount; a++){
-                                object.i.gain(a,0.5);
-                                object.i.pan(a,0.5);
-                            }
-                        
-                        return object;
-                    };
-                    
-                    this.basicMixer.metadata = {
-                        name:'Basic Audio Mixer',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicAudioMixer/'
-                    };
-                    this.filterUnit = function(x,y,a){
-                        var state = {
-                            freqRange:{ low:0.1, high:20000, },
-                            graphDetail:3,
-                        };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                            graph:{
-                                foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.25}],
-                                backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, thickness:0.25},
-                                backgroundtext:{colour:{r:0/255,g:200/255,b:163/255,a:0.75}, font:'Helvetica'},
-                            }
-                        };
-                        var design = {
-                            name:'filterUnit',
-                            category:'audioEffectUnits',
-                            collection:'alpha',
-                            x:x, y:y, angle:a,
-                            space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioIn', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
-                                {type:'connectionNode_audio', name:'audioOut', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
-                            
-                                {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
-                                    style:{
-                                        foregrounds:style.graph.foregroundlines, 
-                                        background_colour:style.graph.backgroundlines.colour, 
-                                        background_lineThickness:style.graph.backgroundlines.thickness, 
-                                        backgroundText_colour:style.graph.backgroundtext.colour, 
-                                        backgroundText_font:style.graph.backgroundtext.font,
-                                    }}
-                                },
-                    
-                                {type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_continuous',name:'Q_dial',data:{
-                                    x:82.5, y:68.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_continuous',name:'gain_dial',data:{
-                                    x:62.5, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                                
-                                {type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_continuous',name:'frequency_dial',data:{
-                                    x:40, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_discrete',name:'type_dial',data:{
-                                    x:20, y:67.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, optionCount:8,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.filterUnit,design);
-                    
-                        //import/export
-                            object.importData = function(data){
-                                object.elements.dial_continuous.Q_dial.set(data.Q);
-                                object.elements.dial_continuous.gain_dial.set(data.gain);
-                                object.elements.dial_discrete.type_dial.set(data.type);
-                                object.elements.dial_continuous.frequency_dial.set(data.frequency);
-                            };
-                            object.exportData = function(){
-                                return {
-                                    Q:        object.elements.dial_continuous.Q_dial.get(), 
-                                    gain:     object.elements.dial_continuous.gain_dial.get(), 
-                                    type:     object.elements.dial_discrete.type_dial.get(), 
-                                    frequency:object.elements.dial_continuous.frequency_dial.get(), 
-                                };
-                            };
-                    
-                        //circuitry
-                            //filter
-                                object.filterCircuit = new _canvas_.interface.circuit.filterUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.audioIn.out().connect( object.filterCircuit.in() );
-                                object.filterCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                    
-                            //internal functions
-                                function getFrequencyAndLocationArray(){
-                                    var locationArray = [];
-                                    var frequencyArray = [];
-                                    for(var a = 0; a <= Math.floor(Math.log10(state.freqRange.high))+1; a++){
-                                        for(var b = 1; b < 10; b+=1/Math.pow(2,state.graphDetail)){
-                                            if( Math.pow(10,a)*(b/10) >= state.freqRange.high){break;}
-                                            locationArray.push( Math.log10(Math.pow(10,a)*b) );
-                                            frequencyArray.push( Math.pow(10,a)*(b/10) );
-                                        }
-                                    }
-                                    return {frequency:frequencyArray, location:_canvas_.library.math.normalizeStretchArray(locationArray)};
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
                                 }
-                                function updateGraph(){
-                                    var temp = getFrequencyAndLocationArray();
-                                    object.elements.grapher_static.graph.draw( object.filterCircuit.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
-                                };
-                            
-                            //wiring
-                                object.elements.dial_continuous.Q_dial.onchange = function(value){object.filterCircuit.Q(value*10);updateGraph();};
-                                object.elements.dial_continuous.gain_dial.onchange = function(value){object.filterCircuit.gain(value*10);updateGraph();};
-                                object.elements.dial_continuous.frequency_dial.onchange = function(value){object.filterCircuit.frequency( _canvas_.library.math.curvePoint.exponential(value,0,20000,10.5866095) );updateGraph();};
-                                object.elements.dial_discrete.type_dial.onchange = function(value){object.filterCircuit.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);updateGraph();};
-                    
-                        //setup
-                            var arrays = getFrequencyAndLocationArray();
-                            arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
-                            arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
-                            object.elements.grapher_static.graph.viewbox({bottom:0, top:2, left:0, right:1});
-                            object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
-                            object.elements.grapher_static.graph.verticalMarkings({
-                                points:arrays.location,
-                                printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a :'').slice(0,arrays.frequency.length-1).concat(''), //only print the factors of 10, leaving everything else as an empty string
-                                textPosition:{x:-0.0025,y:1.99},
-                                printText:true,
-                            });
-                    
-                            object.elements.dial_discrete.type_dial.set(0);
-                            object.elements.dial_continuous.Q_dial.set(0);
-                            object.elements.dial_continuous.gain_dial.set(0.1);
-                            object.elements.dial_continuous.frequency_dial.set(0.5);
-                            setTimeout(updateGraph,100);
-                    
-                        return object;
-                    };
-                    this.filterUnit.metadata = {
-                        name:'Filter Unit - Mono',
-                        category:'audioEffectUnits',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
-                    };
-                    
-                    this.filterUnit_stereo = function(x,y,a){
-                        var state = {
-                            freqRange:{ low:0.1, high:20000, },
-                            graphDetail:3,
-                        };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                            graph:{
-                                foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.25}],
-                                backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, thickness:0.25},
-                                backgroundtext:{colour:{r:0/255,g:200/255,b:163/255,a:0.75}, font:'Helvetica'},
-                            }
-                        };
-                        var design = {
-                            name:'filterUnit_stereo',
-                            category:'audioEffectUnits',
-                            collection:'alpha',
-                            x:x, y:y, angle:a,
-                            space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_audio', name:'audioIn_R', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
-                                {type:'connectionNode_audio', name:'audioIn_L', data:{ x:94.8+3.65, y:42, width:10, height:20, angle:-0.14 }},
-                                {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-2.3-3.65, y:42, width:10, height:20, angle:0.144, isAudioOutput:true }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
-                            
-                                {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
-                                    style:{
-                                        foregrounds:style.graph.foregroundlines, 
-                                        background_colour:style.graph.backgroundlines.colour, 
-                                        background_lineThickness:style.graph.backgroundlines.thickness, 
-                                        backgroundText_colour:style.graph.backgroundtext.colour, 
-                                        backgroundText_font:style.graph.backgroundtext.font,
-                                    }}
-                                },
-                    
-                                {type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_continuous',name:'Q_dial',data:{
-                                    x:82.5, y:68.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_continuous',name:'gain_dial',data:{
-                                    x:62.5, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                                
-                                {type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_continuous',name:'frequency_dial',data:{
-                                    x:40, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'dial_discrete',name:'type_dial',data:{
-                                    x:20, y:67.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, optionCount:8,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.filterUnit,design);
-                    
-                        //import/export
-                            object.importData = function(data){
-                                object.elements.dial_continuous.Q_dial.set(data.Q);
-                                object.elements.dial_continuous.gain_dial.set(data.gain);
-                                object.elements.dial_discrete.type_dial.set(data.type);
-                                object.elements.dial_continuous.frequency_dial.set(data.frequency);
                             };
-                            object.exportData = function(){
-                                return {
-                                    Q:        object.elements.dial_continuous.Q_dial.get(), 
-                                    gain:     object.elements.dial_continuous.gain_dial.get(), 
-                                    type:     object.elements.dial_discrete.type_dial.get(), 
-                                    frequency:object.elements.dial_continuous.frequency_dial.get(), 
-                                };
-                            };
-                    
-                        //circuitry
-                            //filter
-                                object.filterCircuit_R = new _canvas_.interface.circuit.filterUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.audioIn_R.out().connect( object.filterCircuit_R.in() );
-                                object.filterCircuit_R.out().connect( object.elements.connectionNode_audio.audioOut_R.in() );
-                    
-                                object.filterCircuit_L = new _canvas_.interface.circuit.filterUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.audioIn_L.out().connect( object.filterCircuit_L.in() );
-                                object.filterCircuit_L.out().connect( object.elements.connectionNode_audio.audioOut_L.in() );
-                    
-                            //internal functions
-                                function getFrequencyAndLocationArray(){
-                                    var locationArray = [];
-                                    var frequencyArray = [];
-                                    for(var a = 0; a <= Math.floor(Math.log10(state.freqRange.high))+1; a++){
-                                        for(var b = 1; b < 10; b+=1/Math.pow(2,state.graphDetail)){
-                                            if( Math.pow(10,a)*(b/10) >= state.freqRange.high){break;}
-                                            locationArray.push( Math.log10(Math.pow(10,a)*b) );
-                                            frequencyArray.push( Math.pow(10,a)*(b/10) );
-                                        }
-                                    }
-                                    return {frequency:frequencyArray, location:_canvas_.library.math.normalizeStretchArray(locationArray)};
-                                }
-                                function updateGraph(){
-                                    var temp = getFrequencyAndLocationArray();
-                                    object.elements.grapher_static.graph.draw( object.filterCircuit_R.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
-                                };
-                            
-                            //wiring
-                                object.elements.dial_continuous.Q_dial.onchange = function(value){
-                                    object.filterCircuit_R.Q(value*10);
-                                    object.filterCircuit_L.Q(value*10);
-                                    updateGraph();
-                                };
-                                object.elements.dial_continuous.gain_dial.onchange = function(value){
-                                    object.filterCircuit_R.gain(value*10);
-                                    object.filterCircuit_L.gain(value*10);
-                                    updateGraph();
-                                };
-                                object.elements.dial_continuous.frequency_dial.onchange = function(value){
-                                    object.filterCircuit_R.frequency( _canvas_.library.math.curvePoint.exponential(value,0,20000,10.5866095) );
-                                    object.filterCircuit_L.frequency( _canvas_.library.math.curvePoint.exponential(value,0,20000,10.5866095) );
-                                    updateGraph();
-                                };
-                                object.elements.dial_discrete.type_dial.onchange = function(value){
-                                    object.filterCircuit_R.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);
-                                    object.filterCircuit_L.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);
-                                    updateGraph();
-                                };
-                    
-                        //setup
-                            var arrays = getFrequencyAndLocationArray();
-                            arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
-                            arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
-                            object.elements.grapher_static.graph.viewbox({bottom:0, top:2, left:0, right:1});
-                            object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
-                            object.elements.grapher_static.graph.verticalMarkings({
-                                points:arrays.location,
-                                printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a :'').slice(0,arrays.frequency.length-1).concat(''), //only print the factors of 10, leaving everything else as an empty string
-                                textPosition:{x:-0.0025,y:1.99},
-                                printText:true,
-                            });
-                    
-                            object.elements.dial_discrete.type_dial.set(0);
-                            object.elements.dial_continuous.Q_dial.set(0);
-                            object.elements.dial_continuous.gain_dial.set(0.1);
-                            object.elements.dial_continuous.frequency_dial.set(0.5);
-                            setTimeout(updateGraph,100);
-                    
-                        return object;
-                    };
-                    this.filterUnit_stereo.metadata = {
-                        name:'Filter Unit - Stereo',
-                        category:'audioEffectUnits',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
-                    };
-                    this.reverbUnit = function(x,y){
-                        var state = {
-                            reverbTypeSelected:0,
-                            availableTypes:[],
-                        };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'reverbUnit',
-                            category:'audioEffectUnits',
-                            collection:'alpha',
-                            x:x, y:y,
-                            space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:16, width:10, height:20 }},
-                                {type:'connectionNode_audio', name:'audioOut', data:{ x:-10, y:16, width:10, height:20, isAudioOutput:true }},
-                                
-                                {type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'outGain_dial',data:{
-                                    x:20, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'wetdry_dial',data:{
-                                    x:82.5, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'button_rectangle',name:'raiseByOne',data:{
-                                    x:51, y:6, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ incReverbType(); },
-                                }},
-                                {type:'button_rectangle',name:'raiseByTen',data:{
-                                    x:38.75, y:6, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ inc10ReverbType(); },
-                                }},
-                                {type:'button_rectangle',name:'lowerByOne',data:{
-                                    x:51, y:39, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ decReverbType(); },
-                                }},
-                                {type:'button_rectangle',name:'lowerByTen',data:{
-                                    x:38.75, y:39, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ dec10ReverbType(); },
-                                }},
-                    
-                                {type:'sevenSegmentDisplay_static',name:'tens',data:{
-                                    x:50, y:12.5, width:12.5, height:25,
-                                }},
-                                {type:'sevenSegmentDisplay_static',name:'ones',data:{
-                                    x:37.5, y:12.5, width:12.5, height:25,
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.reverbUnit,design);
-                    
-                        //import/export
-                            object.importData = function(data){
-                                state.reverbTypeSelected = data.selectedType;
-                                object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
-                                object.elements.dial_continuous.outGain_dial.set(data.outGain);
-                            };
-                            object.exportData = function(){
-                                return {
-                                    selectedType:state.reverbTypeSelected,
-                                    wetdry:object.elements.dial_continuous.wetdry_dial.get(),
-                                    outGain:object.elements.dial_continuous.outGain_dial.get(),
-                                };
-                            };
-                    
-                        //circuitry
-                            //reverb
-                                object.reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.audioIn.out().connect( object.reverbCircuit.in() );
-                                object.reverbCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                                object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
-                                
-                            //internal functions
-                                function setReadout(num){
-                                    num = ("0" + num).slice(-2);
-                    
-                                    object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
-                                    object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
-                                }
-                                function setReverbType(a){
-                                    if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
-                    
-                                    if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
-                                    else if( a < 0 ){a = 0;}
-                        
-                                    state.reverbTypeSelected = a;
-                                    object.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
-                                }
-                                function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
-                                function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
-                                function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
-                                function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
-                    
-                            //wiring
-                            object.elements.dial_continuous.outGain_dial.onchange = function(value){ object.reverbCircuit.outGain(value); };
-                            object.elements.dial_continuous.wetdry_dial.onchange = function(value){ object.reverbCircuit.wetdry(1-value); };
-                    
-                        //interface
-                            object.i = {
-                                gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
-                                wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.outGain_dial.set(1/2);
-                            object.elements.dial_continuous.wetdry_dial.set(1/2);
-                            setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
-                    
-                        return object;
-                    };
-                    this.reverbUnit.metadata = {
-                        name:'Reverb Unit - Mono',
-                        category:'audioEffectUnits',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/reverbUnit/'
-                    };
-                    
-                    this.reverbUnit_stereo = function(x,y){
-                        var state = {
-                            reverbTypeSelected:0,
-                            availableTypes:[],
-                        };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'reverbUnit_stereo',
-                            category:'audioEffectUnits',
-                            collection:'alpha',
-                            x:x, y:y,
-                            space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'connectionNode_audio', name:'audioIn_R', data:{ x:92.5, y:3, width:20, height:20 }},
-                                {type:'connectionNode_audio', name:'audioIn_L', data:{ x:92.5, y:27, width:20, height:20 }},
-                                {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:3, width:20, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:27, width:20, height:20, isAudioOutput:true }},
-                    
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
-                                
-                                {type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'outGain_dial',data:{
-                                    x:20, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'wetdry_dial',data:{
-                                    x:82.5, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'button_rectangle',name:'raiseByOne',data:{
-                                    x:51, y:6, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ incReverbType(); },
-                                }},
-                                {type:'button_rectangle',name:'raiseByTen',data:{
-                                    x:38.75, y:6, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ inc10ReverbType(); },
-                                }},
-                                {type:'button_rectangle',name:'lowerByOne',data:{
-                                    x:51, y:39, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ decReverbType(); },
-                                }},
-                                {type:'button_rectangle',name:'lowerByTen',data:{
-                                    x:38.75, y:39, width:10.25, height:5, style:style.button, 
-                                    onpress:function(){ dec10ReverbType(); },
-                                }},
-                    
-                                {type:'sevenSegmentDisplay_static',name:'tens',data:{
-                                    x:50, y:12.5, width:12.5, height:25,
-                                }},
-                                {type:'sevenSegmentDisplay_static',name:'ones',data:{
-                                    x:37.5, y:12.5, width:12.5, height:25,
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.reverbUnit,design);
-                    
-                        //import/export
-                            object.importData = function(data){
-                                state.reverbTypeSelected = data.selectedType;
-                                object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
-                                object.elements.dial_continuous.outGain_dial.set(data.outGain);
-                            };
-                            object.exportData = function(){
-                                return {
-                                    selectedType:state.reverbTypeSelected,
-                                    wetdry:object.elements.dial_continuous.wetdry_dial.get(),
-                                    outGain:object.elements.dial_continuous.outGain_dial.get(),
-                                };
-                            };
-                    
-                        //circuitry
-                            //reverb
-                                object.reverbCircuit_R = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.audioIn_R.out().connect( object.reverbCircuit_R.in() );
-                                object.reverbCircuit_R.out().connect( object.elements.connectionNode_audio.audioOut_R.in() );
-                                object.reverbCircuit_R.getTypes( function(a){state.availableTypes = a;} );
-                    
-                                object.reverbCircuit_L = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.audioIn_L.out().connect( object.reverbCircuit_L.in() );
-                                object.reverbCircuit_L.out().connect( object.elements.connectionNode_audio.audioOut_L.in() );
-                                object.reverbCircuit_L.getTypes( function(a){state.availableTypes = a;} );
-                                
-                            //internal functions
-                                function setReadout(num){
-                                    num = ("0" + num).slice(-2);
-                    
-                                    object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
-                                    object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
-                                }
-                                function setReverbType(a){
-                                    if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
-                    
-                                    if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
-                                    else if( a < 0 ){a = 0;}
-                        
-                                    state.reverbTypeSelected = a;
-                                    object.reverbCircuit_R.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
-                                    object.reverbCircuit_L.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
-                                }
-                                function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
-                                function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
-                                function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
-                                function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
-                    
-                            //wiring
-                            object.elements.dial_continuous.outGain_dial.onchange = function(value){ object.reverbCircuit_R.outGain(value); object.reverbCircuit_L.outGain(value); };
-                            object.elements.dial_continuous.wetdry_dial.onchange = function(value){ object.reverbCircuit_R.wetdry(1-value); object.reverbCircuit_L.wetdry(1-value); };
-                    
-                        //interface
-                            object.i = {
-                                gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
-                                wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.outGain_dial.set(1/2);
-                            object.elements.dial_continuous.wetdry_dial.set(1/2);
-                            setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
-                    
-                        return object;
-                    };
-                    this.reverbUnit_stereo.metadata = {
-                        name:'Reverb Unit - Stereo',
-                        category:'audioEffectUnits',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/reverbUnit/'
-                    };
-
-                    this.multibandFilter = function(x,y,a){
-                        var vars = {
-                            allowUpdate:false,
-                            freqRange:{ low: 0.1, high: 20000 },
-                            graphDetail: 2, //factor of the number of points a graphed line is drawn with
-                            channelCount: 8,
-                            masterGain:1,
-                            gain:[],
-                            Q:[],
-                            frequency:[],
-                            curvePointExponentialSharpness:10.586609649448984,
-                            defaultValues:{
-                                gain:[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,],
-                                //standard tunings
-                                    // Q:[0,0.06,0.06,0.06,0.06,0.06,0.06,0],
-                                    // frequency:[0.05, 0.1, 0.225, 0.375, 0.5, 0.65, 0.8, 0.875],
-                                //human range tunings
-                                    Q:[0,0.09,0.09,0.09,0.09,0.09,0.09,0],
-                                    frequency:[0.41416, 0.479046, 0.565238, 0.630592, 0.717072, 0.803595, 0.91345175, 0.93452845],
-                            }
-                        };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            panels:[
-                                {r:0/255,g:200/255,b:163/255,  a:0.5},
-                                {r:100/255,g:235/255,b:131/255,a:0.5},
-                                {r:228/255,g:255/255,b:26/255, a:0.5},
-                                {r:232/255,g:170/255,b:20/255, a:0.5},
-                                {r:255/255,g:87/255,b:20/255,  a:0.5},
-                                {r:0/255,g:191/255,b:255/255,  a:0.5},
-                                {r:249/255,g:99/255,b:202/255, a:0.5},
-                                {r:255/255,g:255/255,b:255/255,a:0.5},
-                            ],
-                    
-                            slide:{
-                                handle:{r:240/255,g:240/255,b:240/255,a:1},
-                                backing:{r:200/255,g:200/255,b:200/255,a:0.5},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                            },
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                    
-                            graph:{
-                                foregrounds: [
-                                    {colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.5},
-                                    {colour:{r:100/255,g:235/255,b:131/255,a:1}, thickness:0.5},
-                                    {colour:{r:228/255,g:255/255,b:26/255,a:1}, thickness:0.5},
-                                    {colour:{r:232/255,g:170/255,b:20/255,a:1}, thickness:0.5},
-                                    {colour:{r:255/255,g:87/255,b:20/255,a:1}, thickness:0.5},
-                                    {colour:{r:0/255,g:191/255,b:255/255,a:1}, thickness:0.5},
-                                    {colour:{r:249/255,g:99/255,b:202/255,a:1}, thickness:0.5},
-                                    {colour:{r:255/255,g:255/255,b:255/255,a:1}, thickness:0.5},
+                            var design = {
+                                name:'pulseGenerator_hyper',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0},
+                                    {x:100,y:0},{x:115,y:10},
+                                    {x:115,y:30},{x:100,y:40},
+                                    {x:10,y:40},{x:0,y:30}
                                 ], 
-                                background_colour: {r:0/255,g:200/255,b:163/255,a:0.25}, 
-                                background_thickness: 0.25, 
-                                backgroundText_colour: {r:0/255,g:200/255,b:163/255,a:0.75}, 
-                                backgroundText_size: '10pt',
-                                backgroundText_font: 'Helvetica',
-                            },
-                        };
-                        var width = 195;
-                        var height = 255;
-                        var design = {
-                            name: 'multibandFilter',
-                            category: 'audioEffectUnits',
-                            collection: 'alpha',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,        y:10         }, { x:10,       y:0          },
-                                { x:width-10, y:0          }, { x:width,    y:10         },
-                                { x:width,    y:height-10  }, { x:width-10, y:height     },
-                                { x:10,       y:height     }, { x:0,        y:height-10  },
-                                { x:0, y:75 }, { x:-25, y:65 }, { x:-25, y:10 },
-                            ],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ { x:0,        y:10         }, { x:10,       y:0          },
-                                    { x:width-10, y:0          }, { x:width,    y:10         },
-                                    { x:width,    y:height-10  }, { x:width-10, y:height     },
-                                    { x:10,       y:height     }, { x:0,        y:height-10  },
-                                    { x:0, y:75 }, { x:-25, y:65 }, { x:-25, y:10 }
-                                ], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioIn_0', data:{x:195, y:15, width:10, height:20}},
-                                {type:'connectionNode_audio', name:'audioIn_1', data:{x:195, y:40, width:10, height:20}},
-                                {type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
-                                {type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
-                                {type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, radius:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
-                                {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:15 }},
-                            ]
-                        };
-                        //dynamic design
-                        for(var a = 0; a < vars.channelCount; a++){
-                            design.elements.push(
-                                //channel strip backing
-                                    {type:'rectangle', name:'backing_'+a, data:{ x:13.75+a*22, y:87.5, width:12.5, height:157.5, colour:style.panels[a] }},
-                                //gain
-                                    {type:'slide', name:'gainSlide_'+a, data:{ x:15+a*22, y:90, width: 10, height: 80, angle:0, handleHeight:0.05, resetValue:0.5, style:style.slide }},
-                                //Q
-                                    {type:'dial_continuous', name:'qDial_'+a, data:{ x:20+a*22, y:180, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
-                                //frequency
-                                    {type:'dial_continuous', name:'frequencyDial_'+a, data:{ x:20+a*22, y:200, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
-                                //frequency readout
-                                    {type:'readout_sixteenSegmentDisplay_static', name:'frequencyReadout_'+a, data:{ x:25+a*22, y:212.5, width:30, height:10, count:8, angle:Math.PI/2, resolution:10 }},
-                            );
-                        }
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.multibandFilter,design);
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    masterGain: vars.masterGain,
-                                    freqRange: vars.freqRange,
-                                    channelCount: vars.channelCount,
-                                    gain: vars.gain,
-                                    Q: vars.Q,
-                                    frequency: vars.frequency,
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_data', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_data', name:'sync', data:{
+                                        x:115, y:11.25, width:5, height:17.5,
+                                        receive:function(){ object.elements.button_rectangle.sync.press();},
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator_hyper,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
                                 };
-                            };
-                            object.importData = function(data){};
-                    
-                        //circuitry
-                            object.filterCircuit_0 = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, vars.channelCount, true);
-                            object.filterCircuit_1 = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, vars.channelCount, true);
-                            object.elements.connectionNode_audio.audioIn_0.out().connect( object.filterCircuit_0.in() );
-                            object.elements.connectionNode_audio.audioIn_1.out().connect( object.filterCircuit_1.in() );
-                            object.filterCircuit_0.out().connect( object.elements.connectionNode_audio.audioOut_0.in() );
-                            object.filterCircuit_1.out().connect( object.elements.connectionNode_audio.audioOut_1.in() );
-                    
-                        //internal functions
-                            function getFrequencyAndLocationArray(){
-                                var locationArray = [];
-                                var frequencyArray = [];
-                                for(var a = 0; a <= Math.floor(Math.log10(vars.freqRange.high))+1; a++){
-                                    for(var b = 1; b < 10; b+=1/Math.pow(2,vars.graphDetail)){
-                                        if( Math.pow(10,a)*(b/10) >= vars.freqRange.high){break;}
-                                        locationArray.push( Math.log10(Math.pow(10,a)*b) );
-                                        frequencyArray.push( Math.pow(10,a)*(b/10) );
-                                    }
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.data.out.send('pulse');
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.data.out.send('pulse');
+                                    tempo = newTempo;
                                 }
-                                return {frequency:frequencyArray, location:_canvas_.library.math.normalizeStretchArray(locationArray)};
-                            }
-                            function updateGraph(specificBand){
-                                if(!vars.allowUpdate){return;}
-                                //if no band has been specified, gather the data for all of them and draw the whole thing. Otherwise, just gather 
-                                //and redraw the data for the one band
-                    
-                                var frequencyAndLocationArray = getFrequencyAndLocationArray();
-                                    if(specificBand == undefined){
-                                        var result = object.filterCircuit_0.measureFrequencyResponse(undefined, frequencyAndLocationArray.frequency);
-                                        for(var a = 0; a < vars.channelCount; a++){ object.elements.grapher_static.graph.draw( result[a][0], frequencyAndLocationArray.location, a ); }
-                                    }else{
-                                        var result = object.filterCircuit_0.measureFrequencyResponse(specificBand, frequencyAndLocationArray.frequency);
-                                        object.elements.grapher_static.graph.draw( result[0], frequencyAndLocationArray.location, specificBand);
-                                    }
-                            }
-                    
-                        //wiring
-                            object.elements.dial_continuous.masterGain.onchange = function(value){
-                                vars.masterGain = value*2;
-                                object.filterCircuit_0.masterGain(vars.masterGain);
-                                object.filterCircuit_1.masterGain(vars.masterGain);
-                                updateGraph();
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        
+                        this.pulseGenerator_hyper.metadata = {
+                            name:'Pulse Generator ::Old (Hyper)',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator_hyper/'
+                        };
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.pulseGenerator_signal_hyper = function(x,y,a){
+                            var maxTempo = 999;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
                             };
-                    
-                            for(var a = 0; a < vars.channelCount; a++){
-                                object.elements.slide['gainSlide_'+a].onchange = function(a){
-                                    return function(value){
-                                        vars.gain[a] = (1-value)*2;
-                                        object.filterCircuit_0.gain(a,vars.gain[a]);
-                                        object.filterCircuit_1.gain(a,vars.gain[a]);
-                                        updateGraph(a);
-                                    }
-                                }(a);
-                                object.elements.dial_continuous['qDial_'+a].onchange = function(a){
-                                    return function(value){
-                                        vars.Q[a] = value;
-                                        object.filterCircuit_0.Q(a, _canvas_.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
-                                        object.filterCircuit_1.Q(a, _canvas_.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
-                                        updateGraph(a);
-                                    }
-                                }(a);
-                                object.elements.dial_continuous['frequencyDial_'+a].onchange = function(a){
-                                    return function(value){
-                                        vars.frequency[a] = value;
-                                        object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].text( _canvas_.library.misc.padString( _canvas_.library.math.curvePoint.exponential(value,0,20000,vars.curvePointExponentialSharpness).toFixed(2), 8) );
-                                        object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].print('smart');
-                                        object.filterCircuit_0.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
-                                        object.filterCircuit_1.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
-                                        updateGraph(a);
-                                    }
-                                }(a);
+                            var design = {
+                                name:'pulseGenerator_signal_hyper',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0},
+                                    {x:100,y:0},{x:115,y:10},
+                                    {x:115,y:30},{x:100,y:40},
+                                    {x:10,y:40},{x:0,y:30}
+                                ], 
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_signal', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_signal', name:'sync', data:{
+                                        x:115, y:11.25, width:5, height:17.5,
+                                        onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.signal.out.set(true);
+                                                setTimeout(function(){object.io.signal.out.set(false);},50);
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.signal.out.set(true);
+                                    tempo = newTempo;
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        this.pulseGenerator_signal_hyper.metadata = {
+                            name:'Pulse Generator (Hyper) ::Signal',
+                            category:'misc',
+                            dev:true,
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                        };
+                        
+                        this.pulseGenerator_voltage_hyper = function(x,y,a){
+                            var maxTempo = 999;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'pulseGenerator_voltage_hyper',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0}, 
+                                    {x:100+30,y:0},{x:115+30,y:10}, 
+                                    {x:115+30,y:30},{x:100+30,y:40}, 
+                                    {x:10,y:40},{x:0,y:30} 
+                                ], 
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_voltage', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_signal', name:'sync', data:{
+                                        x:145, y:11.25, width:5, height:17.5,
+                                        onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ 
+                                        {x:0,y:10},{x:10,y:0}, 
+                                        {x:100+30,y:0},{x:115+30,y:10}, 
+                                        {x:115+30,y:30},{x:100+30,y:40}, 
+                                        {x:10,y:40},{x:0,y:30} 
+                                    ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                        
+                                    {type:'text', name:'strength_0', data:{x:8, y:32, text:'0', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+                                    {type:'text', name:'strength_1/2', data:{x:20, y:4, text:'1/2', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+                                    {type:'text', name:'strength_1', data:{x:32, y:32, text:'1', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+                                    {type:'dial_continuous',name:'strength',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:50, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:65, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
+                                                setTimeout(function(){object.io.voltage.out.set(0);},50);
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
+                                    tempo = newTempo;
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        this.pulseGenerator_voltage_hyper.metadata = {
+                            name:'Pulse Generator (Hyper) ::Voltage',
+                            category:'misc',
+                            dev:true,
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                        };
+                        
+                        this.pulseGenerator_data_hyper = function(x,y,a){
+                            var maxTempo = 999;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'pulseGenerator_data_hyper',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0},
+                                    {x:100,y:0},{x:115,y:10},
+                                    {x:115,y:30},{x:100,y:40},
+                                    {x:10,y:40},{x:0,y:30}
+                                ], 
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_data', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_signal', name:'sync', data:{
+                                        x:115, y:11.25, width:5, height:17.5,
+                                        onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.data.out.send('pulse');
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.data.out.send('pulse');
+                                    tempo = newTempo;
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        this.pulseGenerator_data_hyper.metadata = {
+                            name:'Pulse Generator (Hyper) ::Data',
+                            category:'misc',
+                            dev:true,
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                        };
+                        this.signal_duplicator = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{r:150/255,g:150/255,b:150/255,a:1},
+                            };
+                            var design = {
+                                name: 'signal_duplicator',
+                                category:'misc',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'connectionNode_signal', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } }},
+                                    {type:'connectionNode_signal', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_signal', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+                        
+                                    {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+                                    {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+                                    {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+                                    {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+                                    {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+                                ],
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
+                        
+                            //circuitry
+                                // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                                // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                                 
+                            return object;
+                        };
+                        this.signal_duplicator.metadata = {
+                            name:'Signal Duplicator',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
+                        };
+                        
+                        this.voltage_duplicator = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{r:150/255,g:150/255,b:150/255,a:1},
+                            };
+                            var design = {
+                                name: 'voltage_duplicator',
+                                category:'misc',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'connectionNode_voltage', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } }},
+                                    {type:'connectionNode_voltage', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_voltage', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+                        
+                                    {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+                                    {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+                                    {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+                                    {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+                                    {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+                                ],
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
+                        
+                            //circuitry
+                                // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                                // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                                 
+                            return object;
+                        };
+                        this.voltage_duplicator.metadata = {
+                            name:'Voltage Duplicator',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
+                        };
+                        
+                        this.audio_duplicator = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{r:150/255,g:150/255,b:150/255,a:1},
+                            };
+                            var design = {
+                                name: 'audio_duplicator',
+                                category:'misc',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'connectionNode_audio', name:'input', data:{ type:0, x:55, y:5, width:10, height:20 }},
+                                    {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+                        
+                                    {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+                                    {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+                                    {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+                                    {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+                                    {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+                                ],
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
+                        
+                            //circuitry
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                                 
+                            return object;
+                        };
+                        this.audio_duplicator.metadata = {
+                            name:'Audio Duplicator',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/audioDuplicator/'
+                        };
+                        
+                        this.data_duplicator = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{r:150/255,g:150/255,b:150/255,a:1},
+                            };
+                            var design = {
+                                name:'data_duplicator',
+                                category:'misc',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+                                    {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+                                    {type:'connectionNode_data', name:'input', data:{ 
+                                        x:45, y:5, width:20, height:20,
+                                        onreceive:function(address,data){
+                                            object.io.data.output_1.send(address,data);
+                                            object.io.data.output_2.send(address,data);
+                                        }
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background }},
+                        
+                                    {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+                                    {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+                                    {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+                                    {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+                                    {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
+                            
+                            return object;
+                        
+                        };
+                        this.data_duplicator.metadata = {
+                            name:'Data Duplicator',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/dataDuplicator/'
+                        };
+                        //Operation Note:
+                        //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
+                        //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
+                        //  then the 2nd port
+                        this.pulseGenerator = function(x,y,a){
+                            var maxTempo = 240;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'pulseGenerator',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0},
+                                    {x:100,y:0},{x:115,y:10},
+                                    {x:115,y:30},{x:100,y:40},
+                                    {x:10,y:40},{x:0,y:30}
+                                ], 
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_data', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_data', name:'sync', data:{
+                                        x:115, y:11.25, width:5, height:17.5,
+                                        receive:function(){ object.elements.button_rectangle.sync.press();},
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.data.out.send('pulse');
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.data.out.send('pulse');
+                                    tempo = newTempo;
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        
+                        this.pulseGenerator.metadata = {
+                            name:'Pulse Generator ::Old',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                        };
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.pulseGenerator_signal = function(x,y,a){
+                            var maxTempo = 240;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'pulseGenerator_signal',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0},
+                                    {x:100,y:0},{x:115,y:10},
+                                    {x:115,y:30},{x:100,y:40},
+                                    {x:10,y:40},{x:0,y:30}
+                                ], 
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_signal', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_signal', name:'sync', data:{
+                                        x:115, y:11.25, width:5, height:17.5,
+                                        onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.signal.out.set(true);
+                                                setTimeout(function(){object.io.signal.out.set(false);},50);
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.signal.out.set(true);
+                                    tempo = newTempo;
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        this.pulseGenerator_signal.metadata = {
+                            name:'Pulse Generator ::Signal',
+                            category:'misc',
+                            dev:true,
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                        };
+                        
+                        this.pulseGenerator_voltage = function(x,y,a){
+                            var maxTempo = 240;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'pulseGenerator_voltage',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0}, 
+                                    {x:100+30,y:0},{x:115+30,y:10}, 
+                                    {x:115+30,y:30},{x:100+30,y:40}, 
+                                    {x:10,y:40},{x:0,y:30} 
+                                ], 
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_voltage', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_signal', name:'sync', data:{
+                                        x:145, y:11.25, width:5, height:17.5,
+                                        onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ 
+                                        {x:0,y:10},{x:10,y:0}, 
+                                        {x:100+30,y:0},{x:115+30,y:10}, 
+                                        {x:115+30,y:30},{x:100+30,y:40}, 
+                                        {x:10,y:40},{x:0,y:30} 
+                                    ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                        
+                                    {type:'text', name:'strength_0', data:{x:8, y:32, text:'0', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+                                    {type:'text', name:'strength_1/2', data:{x:20, y:4, text:'1/2', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+                                    {type:'text', name:'strength_1', data:{x:32, y:32, text:'1', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+                                    {type:'dial_continuous',name:'strength',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:50, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:65, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
+                                                setTimeout(function(){object.io.voltage.out.set(0);},50);
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.voltage.out.set(object.elements.dial_continuous.strength.get());
+                                    tempo = newTempo;
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        this.pulseGenerator_voltage.metadata = {
+                            name:'Pulse Generator ::Voltage',
+                            category:'misc',
+                            dev:true,
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                        };
+                        
+                        this.pulseGenerator_data = function(x,y,a){
+                            var maxTempo = 240;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                text:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'pulseGenerator_data',
+                                category:'misc',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                    {x:0,y:10},{x:10,y:0},
+                                    {x:100,y:0},{x:115,y:10},
+                                    {x:115,y:30},{x:100,y:40},
+                                    {x:10,y:40},{x:0,y:30}
+                                ], 
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_data', name:'out', data:{
+                                        x:-5, y:11.25, width:5, height:17.5,
+                                    }},
+                                    {type:'connectionNode_signal', name:'sync', data:{
+                                        x:115, y:11.25, width:5, height:17.5,
+                                        onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
+                                    }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+                        
+                                    {type:'button_rectangle', name:'syncButton', data:{
+                                        x:102.5, y:11.25, width:10, height:17.5,
+                                        selectable:false, 
+                                        style:{ 
+                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                            background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                            background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1}
+                                        }, 
+                                        onpress:function(){updateTempo(tempo)},
+                                    }},
+                                    {type:'dial_continuous',name:'tempo',data:{
+                                        x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
+                                    }},
+                                    {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+                        
+                            //internal circuitry
+                                object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return object.elements.dial_continuous.tempo.get();
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.tempo.set(data);
+                                };
+                        
+                            //internal functions
+                                var interval = null;
+                                var tempo = 120;
+                                function updateTempo(newTempo){
+                                    //update readout
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.text(
+                                            _canvas_.library.misc.padString(newTempo,3,' ')+'bpm'
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.readout.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.data.out.send('pulse');
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.data.out.send('pulse');
+                                    tempo = newTempo;
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        object.elements.dial_continuous.tempo.set(value);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.tempo.set(0.5);
+                        
+                            return object;
+                        };
+                        this.pulseGenerator_data.metadata = {
+                            name:'Pulse Generator ::Data',
+                            category:'misc',
+                            dev:true,
+                            helpURL:'https://curve.metasophiea.com/help/objectects/alpha/pulseGenerator/'
+                        };
+                        // this.data_duplicator = function(x,y,a){
+                        //     var style = {
+                        //         background:{r:200/255,g:200/255,b:200/255,a:1},
+                        //         markings:{r:150/255,g:150/255,b:150/255,a:1},
+                        //     };
+                        //     var design = {
+                        //         name:'data_duplicator',
+                        //         category:'misc',
+                        //         collection: 'alpha',
+                        //         x:x, y:y, a:a,
+                        //         space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
+                        //         // spaceOutline: true,
+                        //         elements:[
+                        //             {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+                        //             {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+                        //             {type:'connectionNode_data', name:'input', data:{ 
+                        //                 x:45, y:5, width:20, height:20,
+                        //                 onreceive:function(address,data){
+                        //                     object.io.data.output_1.send(address,data);
+                        //                     object.io.data.output_2.send(address,data);
+                        //                 }
+                        //             }},
+                        
+                        //             {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background }},
+                        
+                        //             {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+                        //             {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+                        //             {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+                        //             {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+                        //             {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+                        //         ]
+                        //     };
+                        
+                        //     //main object
+                        //         var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
+                            
+                        //     return object;
+                        
+                        // };
+                        
+                        // this.data_duplicator.metadata = {
+                        //     name:'Data Duplicator',
+                        //     category:'misc',
+                        //     helpURL:'https://curve.metasophiea.com/help/units/alpha/dataDuplicator/'
+                        // };
+                        
+                        // //Operation Note:
+                        // //  Data signals that are sent into the 'in' port, are duplicated and sent out the two 'out' ports
+                        // //  They are not sent out at the same time; signals are produced from the 1st 'out' port first and 
+                        // //  then the 2nd port
+                        this.basicMixer = function(x,y,a){
+                            var connectionCount = 8;
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{r:150/255,g:150/255,b:150/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:8, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'basicMixer',
+                                category: 'misc',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], colour:style.background }},
+                        
+                                    {type:'text', name:'gain', data:{ x:85, y:5, text:'gain', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
+                                    {type:'text', name:'pan', data:{  x:60, y:5, text:'pan', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
+                                    
+                                    {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, colour:style.markings }},
+                                    {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, colour:style.markings }},
+                                    {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, colour:style.markings }},
+                                    {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, colour:style.markings }},
+                                    {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, colour:style.markings }},
+                                ],
+                            };
+                        
+                            //dynamic design
+                            for(var a = 0; a < connectionCount; a++){
+                                design.elements.unshift(
+                                    {type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                        x:90, y:10+(a*25), width:20, height:20 
+                                    }},
+                                );
+                        
+                                design.elements.push(
+                                    {type:'rectangle', name:'line_'+a, data:{
+                                        x:23, y:19.1+a*25, width:75, height:2, 
+                                        colour:style.markings,
+                                    }}
+                                );
+                        
+                                design.elements.push(
+                                    {type:'dial_continuous',name:'gain_'+a,data:{
+                                        x:85, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }}
+                                );
+                                design.elements.push(
+                                    {type:'dial_continuous',name:'pan_'+a,data:{
+                                        x:60, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }}
+                                );
                             }
-                    
-                        //interface
-                            object.i = {
-                                gain:function(band,value){ if(value == undefined){return object.elements.slide['gainSlide_'+band].get(value);} object.elements.slide['gainSlide_'+band].set(value); },
-                                Q:function(band,value){ if(value == undefined){return object.elements.dial_continuous['qDial_'+band].get(value);} object.elements.dial_continuous['qDial_'+band].set(value); },
-                                frequency:function(band,value){ if(value == undefined){return object.elements.dial_continuous['frequencyDial_'+band].get(value);} object.elements.dial_continuous['frequencyDial_'+band].set(value); },
-                                reset:function(channel){
-                                    if(channel == undefined){
-                                        //if no channel if specified, reset all of them
-                                        for(var a = 0; a < vars.channelCount; a++){ object.i.reset(a); }
-                                        object.elements.dial_continuous.masterGain.set(0.5);
-                                        return;
-                                    }
-                                    for(var a = 0; a < vars.channelCount; a++){
-                                        object.elements.slide['gainSlide_'+a].set( vars.defaultValues.gain[a] );
-                                        object.elements.dial_continuous['qDial_'+a].set( vars.defaultValues.Q[a] );
-                                        object.elements.dial_continuous['frequencyDial_'+a].set( vars.defaultValues.frequency[a] );
-                                    }
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.basicMixer,design);
+                        
+                            
+                        
+                            //internal circuitry
+                                for(var a = 0; a < connectionCount; a++){
+                                    object['splitter_'+a] = new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2);
+                                    object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
+                                    object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_0'].in() );
+                                    object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_1'].in() );
+                        
+                                    object.elements.dial_continuous['gain_'+a].onchange = function(a){
+                                        return function(value){
+                                            object['splitter_'+a].inGain(value);
+                                        }
+                                    }(a);
+                                    object.elements.dial_continuous['pan_'+a].onchange = function(a){
+                                        return function(value){
+                                            object['splitter_'+a].outGain(0,value);
+                                            object['splitter_'+a].outGain(1,1-value);
+                                        }
+                                    }(a);
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(track,value){object.elements.dial_continuous['gain_'+track].set(value);},
+                                    pan:function(track,value){object.elements.dial_continuous['pan_'+track].set(value);},
+                                };
+                        
+                            //setup
+                                for(var a = 0; a < connectionCount; a++){
+                                    object.i.gain(a,0.5);
+                                    object.i.pan(a,0.5);
+                                }
+                            
+                            return object;
+                        };
+                        
+                        this.basicMixer.metadata = {
+                            name:'Basic Audio Mixer',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/basicAudioMixer/'
+                        };
+                        this.filterUnit = function(x,y,a){
+                            var state = {
+                                freqRange:{ low:0.1, high:20000, },
+                                graphDetail:3,
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
                                 },
+                                graph:{
+                                    foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.25}],
+                                    backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, thickness:0.25},
+                                    backgroundtext:{colour:{r:0/255,g:200/255,b:163/255,a:0.75}, font:'Helvetica'},
+                                }
                             };
-                    
-                        //setup
-                            //draw background
+                            var design = {
+                                name:'filterUnit',
+                                category:'audioEffectUnits',
+                                collection:'alpha',
+                                x:x, y:y, angle:a,
+                                space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'audioIn', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
+                                    {type:'connectionNode_audio', name:'audioOut', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
+                                
+                                    {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
+                                        style:{
+                                            foregrounds:style.graph.foregroundlines, 
+                                            background_colour:style.graph.backgroundlines.colour, 
+                                            background_lineThickness:style.graph.backgroundlines.thickness, 
+                                            backgroundText_colour:style.graph.backgroundtext.colour, 
+                                            backgroundText_font:style.graph.backgroundtext.font,
+                                        }}
+                                    },
+                        
+                                    {type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_continuous',name:'Q_dial',data:{
+                                        x:82.5, y:68.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_continuous',name:'gain_dial',data:{
+                                        x:62.5, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                                    
+                                    {type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_continuous',name:'frequency_dial',data:{
+                                        x:40, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_discrete',name:'type_dial',data:{
+                                        x:20, y:67.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, optionCount:8,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.filterUnit,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.Q_dial.set(data.Q);
+                                    object.elements.dial_continuous.gain_dial.set(data.gain);
+                                    object.elements.dial_discrete.type_dial.set(data.type);
+                                    object.elements.dial_continuous.frequency_dial.set(data.frequency);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        Q:        object.elements.dial_continuous.Q_dial.get(), 
+                                        gain:     object.elements.dial_continuous.gain_dial.get(), 
+                                        type:     object.elements.dial_discrete.type_dial.get(), 
+                                        frequency:object.elements.dial_continuous.frequency_dial.get(), 
+                                    };
+                                };
+                        
+                            //circuitry
+                                //filter
+                                    object.filterCircuit = new _canvas_.interface.circuit.filterUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.audioIn.out().connect( object.filterCircuit.in() );
+                                    object.filterCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
+                        
+                                //internal functions
+                                    function getFrequencyAndLocationArray(){
+                                        var locationArray = [];
+                                        var frequencyArray = [];
+                                        for(var a = 0; a <= Math.floor(Math.log10(state.freqRange.high))+1; a++){
+                                            for(var b = 1; b < 10; b+=1/Math.pow(2,state.graphDetail)){
+                                                if( Math.pow(10,a)*(b/10) >= state.freqRange.high){break;}
+                                                locationArray.push( Math.log10(Math.pow(10,a)*b) );
+                                                frequencyArray.push( Math.pow(10,a)*(b/10) );
+                                            }
+                                        }
+                                        return {frequency:frequencyArray, location:_canvas_.library.math.normalizeStretchArray(locationArray)};
+                                    }
+                                    function updateGraph(){
+                                        var temp = getFrequencyAndLocationArray();
+                                        object.elements.grapher_static.graph.draw( object.filterCircuit.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
+                                    };
+                                
+                                //wiring
+                                    object.elements.dial_continuous.Q_dial.onchange = function(value){object.filterCircuit.Q(value*10);updateGraph();};
+                                    object.elements.dial_continuous.gain_dial.onchange = function(value){object.filterCircuit.gain(value*10);updateGraph();};
+                                    object.elements.dial_continuous.frequency_dial.onchange = function(value){object.filterCircuit.frequency( _canvas_.library.math.curvePoint.exponential(value,0,20000,10.5866095) );updateGraph();};
+                                    object.elements.dial_discrete.type_dial.onchange = function(value){object.filterCircuit.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);updateGraph();};
+                        
+                            //setup
                                 var arrays = getFrequencyAndLocationArray();
-                                arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,vars.graphDetail)==0;});
-                                arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,vars.graphDetail)==0;});
-                                object.elements.grapher_static.graph.viewbox({bottom: 0, top: 2, left: 0, right: 1});
+                                arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
+                                arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
+                                object.elements.grapher_static.graph.viewbox({bottom:0, top:2, left:0, right:1});
                                 object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
                                 object.elements.grapher_static.graph.verticalMarkings({
                                     points:arrays.location,
-                                    printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a : '').slice(0,arrays.frequency.length-1).concat(''), //only print the factoirs of 10, leaving everything else as an empty string
+                                    printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a :'').slice(0,arrays.frequency.length-1).concat(''), //only print the factors of 10, leaving everything else as an empty string
                                     textPosition:{x:-0.0025,y:1.99},
                                     printText:true,
                                 });
-                    
-                            //setup default settings, allow graphical updates to occur and update graph
-                                object.i.reset();
-                                setTimeout(function(){object.i.reset();},1); 
-                                vars.allowUpdate = true;
-                                updateGraph();
                         
-                        return object;
-                    };
-                    
-                    this.multibandFilter.metadata = {
-                        name:'Multiband Filter',
-                        category:'audioEffectUnits',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/multibandFilter/'
-                    };
-                    this.distortionUnit = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'distortionUnit',
-                            category:'audioEffectUnits',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                    { x:0,           y:10     },
-                                    { x:10,          y:0      },
-                                    { x:102.5/3,     y:0      },
-                                    { x:102.5*0.45,  y:10     },
-                                    { x:102.5*0.55,  y:10     },
-                                    { x:2*(102.5/3), y:0      },
-                                    { x:102.5-10,    y:0      },
-                                    { x:102.5,       y:10     },
-                                    { x:102.5,       y:95-10  },
-                                    { x:102.5-10,    y:95     },
-                                    { x:2*(102.5/3), y:95     },
-                                    { x:102.5*0.55,  y:95-10  },
-                                    { x:102.5*0.45,  y:95-10  },
-                                    { x:102.5/3,     y:95     },
-                                    { x:10,          y:95     },
-                                    { x:0,           y:95-10  }
-                                ],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
-                                    { x:0,           y:10     },
-                                    { x:10,          y:0      },
-                                    { x:102.5/3,     y:0      },
-                                    { x:102.5*0.45,  y:10     },
-                                    { x:102.5*0.55,  y:10     },
-                                    { x:2*(102.5/3), y:0      },
-                                    { x:102.5-10,    y:0      },
-                                    { x:102.5,       y:10     },
-                                    { x:102.5,       y:95-10  },
-                                    { x:102.5-10,    y:95     },
-                                    { x:2*(102.5/3), y:95     },
-                                    { x:102.5*0.55,  y:95-10  },
-                                    { x:102.5*0.45,  y:95-10  },
-                                    { x:102.5/3,     y:95     },
-                                    { x:10,          y:95     },
-                                    { x:0,           y:95-10  }
-                                ], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:61.5, width:10, height:20 }},
-                                {type:'connectionNode_audio', name:'audioOut', data:{ x:-10, y:61.5, width:10, height:20, isAudioOutput:true }},
-                            
-                                {type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'outGain_dial',data:{
-                                    x:22.5, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'distortionAmount_dial',data:{
-                                    x:22.5, y:23, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'resolution_dial',data:{
-                                    x:52.5, y:47.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_discrete',name:'overSample_dial',data:{
-                                    x:80, y:23, radius:12, startAngle:(1.25*Math.PI), maxAngle:0.5*Math.PI, arcDistance:1.35, optionCount:3,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'inGain_dial',data:{
-                                    x:80, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.distortionUnit,design);
-                    
-                        //import/export
-                            object.importData = function(data){
-                                object.elements.dial_continuous.outGain_dial.set(data.outGain);
-                                object.elements.dial_continuous.distortionAmount_dial.set(data.distortionAmount);
-                                object.elements.dial_continuous.resolution_dial.set(data.resolution);
-                                object.elements.dial_discrete.overSample_dial.set(data.overSample);
-                                object.elements.dial_continuous.inGain_dial.set(data.inGain);
-                            };
-                            object.exportData = function(){
-                                return {
-                                    outGain:         object.elements.dial_continuous.outGain_dial.get(), 
-                                    distortionAmount:object.elements.dial_continuous.distortionAmount_dial.get(), 
-                                    resolution:      object.elements.dial_continuous.resolution_dial.get(), 
-                                    overSample:      object.elements.dial_discrete.overSample_dial.get(), 
-                                    inGain:          object.elements.dial_continuous.inGain_dial.get()
-                                };
-                            };
-                    
-                        //circuitry
-                            object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
-                            object.elements.connectionNode_audio.audioIn.out().connect( object.distortionCircuit.in() );
-                            object.distortionCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                    
-                        //wiring
-                            object.elements.dial_continuous.outGain_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
-                            object.elements.dial_continuous.distortionAmount_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
-                            object.elements.dial_continuous.resolution_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
-                            object.elements.dial_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
-                            object.elements.dial_continuous.inGain_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
-                    
-                        //setup
-                            object.elements.dial_continuous.resolution_dial.set(0.5);
-                            object.elements.dial_continuous.inGain_dial.set(0.5);
-                            object.elements.dial_continuous.outGain_dial.set(1);
-                    
-                        return object;
-                    };
-                    this.distortionUnit.metadata = {
-                        name:'Distortion Unit - Mono',
-                        category:'audioEffectUnits',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
-                    };
-                    
-                    this.distortionUnit_stereo = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        var design = {
-                            name:'distortionUnit_stereo',
-                            category:'audioEffectUnits',
-                            collection:'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                    { x:0,           y:10     },
-                                    { x:10,          y:0      },
-                                    { x:102.5/3,     y:0      },
-                                    { x:102.5*0.45,  y:10     },
-                                    { x:102.5*0.55,  y:10     },
-                                    { x:2*(102.5/3), y:0      },
-                                    { x:102.5-10,    y:0      },
-                                    { x:102.5,       y:10     },
-                                    { x:102.5,       y:95-10  },
-                                    { x:102.5-10,    y:95     },
-                                    { x:2*(102.5/3), y:95     },
-                                    { x:102.5*0.55,  y:95-10  },
-                                    { x:102.5*0.45,  y:95-10  },
-                                    { x:102.5/3,     y:95     },
-                                    { x:10,          y:95     },
-                                    { x:0,           y:95-10  }
-                                ],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
-                                    { x:0,           y:10     },
-                                    { x:10,          y:0      },
-                                    { x:102.5/3,     y:0      },
-                                    { x:102.5*0.45,  y:10     },
-                                    { x:102.5*0.55,  y:10     },
-                                    { x:2*(102.5/3), y:0      },
-                                    { x:102.5-10,    y:0      },
-                                    { x:102.5,       y:10     },
-                                    { x:102.5,       y:95-10  },
-                                    { x:102.5-10,    y:95     },
-                                    { x:2*(102.5/3), y:95     },
-                                    { x:102.5*0.55,  y:95-10  },
-                                    { x:102.5*0.45,  y:95-10  },
-                                    { x:102.5/3,     y:95     },
-                                    { x:10,          y:95     },
-                                    { x:0,           y:95-10  }
-                                ], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioIn_R', data:{ x:102.5, y:35.5, width:10, height:20 }},
-                                {type:'connectionNode_audio', name:'audioIn_L', data:{ x:102.5, y:61.5, width:10, height:20 }},
-                                {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:35.5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:61.5, width:10, height:20, isAudioOutput:true }},
-                            
-                                {type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'outGain_dial',data:{
-                                    x:22.5, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'distortionAmount_dial',data:{
-                                    x:22.5, y:23, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'resolution_dial',data:{
-                                    x:52.5, y:47.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_discrete',name:'overSample_dial',data:{
-                                    x:80, y:23, radius:12, startAngle:(1.25*Math.PI), maxAngle:0.5*Math.PI, arcDistance:1.35, optionCount:3,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                    
-                                {type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'inGain_dial',data:{
-                                    x:80, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.distortionUnit,design);
-                    
-                        //import/export
-                            object.importData = function(data){
-                                object.elements.dial_continuous.outGain_dial.set(data.outGain);
-                                object.elements.dial_continuous.distortionAmount_dial.set(data.distortionAmount);
-                                object.elements.dial_continuous.resolution_dial.set(data.resolution);
-                                object.elements.dial_discrete.overSample_dial.set(data.overSample);
-                                object.elements.dial_continuous.inGain_dial.set(data.inGain);
-                            };
-                            object.exportData = function(){
-                                return {
-                                    outGain:         object.elements.dial_continuous.outGain_dial.get(), 
-                                    distortionAmount:object.elements.dial_continuous.distortionAmount_dial.get(), 
-                                    resolution:      object.elements.dial_continuous.resolution_dial.get(), 
-                                    overSample:      object.elements.dial_discrete.overSample_dial.get(), 
-                                    inGain:          object.elements.dial_continuous.inGain_dial.get()
-                                };
-                            };
-                    
-                        //circuitry
-                            object.distortionCircuit_R = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
-                            object.elements.connectionNode_audio.audioIn_R.out().connect( object.distortionCircuit_R.in() );
-                            object.distortionCircuit_R.out().connect( object.elements.connectionNode_audio.audioIn_R.in() );
-                            
-                            object.distortionCircuit_L = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
-                            object.elements.connectionNode_audio.audioIn_L.out().connect( object.distortionCircuit_L.in() );
-                            object.distortionCircuit_L.out().connect( object.elements.connectionNode_audio.audioOut_L.in() );
-                    
-                        //wiring
-                            object.elements.dial_continuous.outGain_dial.onchange = function(value){
-                                object.distortionCircuit_R.outGain(value);
-                                object.distortionCircuit_L.outGain(value);
-                            };
-                            object.elements.dial_continuous.distortionAmount_dial.onchange = function(value){
-                                object.distortionCircuit_R.distortionAmount(value*100);
-                                object.distortionCircuit_L.distortionAmount(value*100);
-                            };
-                            object.elements.dial_continuous.resolution_dial.onchange = function(value){
-                                object.distortionCircuit_R.resolution(Math.round(value*1000));
-                                object.distortionCircuit_L.resolution(Math.round(value*1000));
-                            };
-                            object.elements.dial_discrete.overSample_dial.onchange = function(value){
-                                object.distortionCircuit_R.oversample(['none','2x','4x'][value]);
-                                object.distortionCircuit_L.oversample(['none','2x','4x'][value]);
-                            };
-                            object.elements.dial_continuous.inGain_dial.onchange = function(value){
-                                object.distortionCircuit_R.inGain(2*value);
-                                object.distortionCircuit_L.inGain(2*value);
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.resolution_dial.set(0.5);
-                            object.elements.dial_continuous.inGain_dial.set(0.5);
-                            object.elements.dial_continuous.outGain_dial.set(1);
-                    
-                        return object;
-                    };
-                    this.distortionUnit_stereo.metadata = {
-                        name:'Distortion Unit - Stereo',
-                        category:'audioEffectUnits',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
-                    };
-                    this.audioScope = function(x,y,a){
-                        var attributes = {
-                            framerateLimits: {min:1, max:30}
-                        };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:190/255,g:190/255,b:190/255,a:1}, 
-                                background__hover_press__colour:{r:170/255,g:170/255,b:170/255,a:1},
-                            },
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                        };
-                        var design = {
-                            name:'audioScope',
-                            category:'humanOutputDevices',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'input', data:{ x:195, y:5, width:10, height:20 }},
-                                {type:'grapher_audioScope_static', name:'waveport', data:{ x:5, y:5, width:150, height:100 }},
-                                {type:'button_rectangle', name:'holdKey', data:{ x:160, y:5, width:30, height:20, style:style.button }},
-                    
-                                {type:'text', name:'framerate_name', data:{x: 175, y: 68, text: 'framerate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'framerate_1',    data:{x: 164, y: 60, text: '1',         width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'framerate_15',   data:{x: 175, y: 32, text: '15',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'framerate_30',   data:{x: 187, y: 60, text: '30',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous', name:'framerate', data:{
-                                    x:175, y:47.5, radius:12, resetValue:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.audioScope,design);
+                                object.elements.dial_discrete.type_dial.set(0);
+                                object.elements.dial_continuous.Q_dial.set(0);
+                                object.elements.dial_continuous.gain_dial.set(0.1);
+                                object.elements.dial_continuous.frequency_dial.set(0.5);
+                                setTimeout(updateGraph,100);
                         
-                        //circuitry
-                            object.elements.button_rectangle.holdKey.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
-                            object.elements.button_rectangle.holdKey.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
-                            object.elements.connectionNode_audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
-                    
-                        //wiring
-                            object.elements.dial_continuous.framerate.onchange = function(a){
-                                object.elements.grapher_audioScope_static.waveport.refreshRate(
-                                    attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
+                            return object;
+                        };
+                        this.filterUnit.metadata = {
+                            name:'Filter Unit - Mono',
+                            category:'audioEffectUnits',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
+                        };
+                        
+                        this.filterUnit_stereo = function(x,y,a){
+                            var state = {
+                                freqRange:{ low:0.1, high:20000, },
+                                graphDetail:3,
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                                graph:{
+                                    foregroundlines:[{colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.25}],
+                                    backgroundlines:{colour:{r:0/255,g:200/255,b:163/255,a:0.25}, thickness:0.25},
+                                    backgroundtext:{colour:{r:0/255,g:200/255,b:163/255,a:0.75}, font:'Helvetica'},
+                                }
+                            };
+                            var design = {
+                                name:'filterUnit_stereo',
+                                category:'audioEffectUnits',
+                                collection:'alpha',
+                                x:x, y:y, angle:a,
+                                space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_audio', name:'audioIn_R', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
+                                    {type:'connectionNode_audio', name:'audioIn_L', data:{ x:94.8+3.65, y:42, width:10, height:20, angle:-0.14 }},
+                                    {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-2.3-3.65, y:42, width:10, height:20, angle:0.144, isAudioOutput:true }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
+                                
+                                    {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
+                                        style:{
+                                            foregrounds:style.graph.foregroundlines, 
+                                            background_colour:style.graph.backgroundlines.colour, 
+                                            background_lineThickness:style.graph.backgroundlines.thickness, 
+                                            backgroundText_colour:style.graph.backgroundtext.colour, 
+                                            backgroundText_font:style.graph.backgroundtext.font,
+                                        }}
+                                    },
+                        
+                                    {type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_continuous',name:'Q_dial',data:{
+                                        x:82.5, y:68.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_continuous',name:'gain_dial',data:{
+                                        x:62.5, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                                    
+                                    {type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_continuous',name:'frequency_dial',data:{
+                                        x:40, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'dial_discrete',name:'type_dial',data:{
+                                        x:20, y:67.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, optionCount:8,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.filterUnit,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.Q_dial.set(data.Q);
+                                    object.elements.dial_continuous.gain_dial.set(data.gain);
+                                    object.elements.dial_discrete.type_dial.set(data.type);
+                                    object.elements.dial_continuous.frequency_dial.set(data.frequency);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        Q:        object.elements.dial_continuous.Q_dial.get(), 
+                                        gain:     object.elements.dial_continuous.gain_dial.get(), 
+                                        type:     object.elements.dial_discrete.type_dial.get(), 
+                                        frequency:object.elements.dial_continuous.frequency_dial.get(), 
+                                    };
+                                };
+                        
+                            //circuitry
+                                //filter
+                                    object.filterCircuit_R = new _canvas_.interface.circuit.filterUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.audioIn_R.out().connect( object.filterCircuit_R.in() );
+                                    object.filterCircuit_R.out().connect( object.elements.connectionNode_audio.audioOut_R.in() );
+                        
+                                    object.filterCircuit_L = new _canvas_.interface.circuit.filterUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.audioIn_L.out().connect( object.filterCircuit_L.in() );
+                                    object.filterCircuit_L.out().connect( object.elements.connectionNode_audio.audioOut_L.in() );
+                        
+                                //internal functions
+                                    function getFrequencyAndLocationArray(){
+                                        var locationArray = [];
+                                        var frequencyArray = [];
+                                        for(var a = 0; a <= Math.floor(Math.log10(state.freqRange.high))+1; a++){
+                                            for(var b = 1; b < 10; b+=1/Math.pow(2,state.graphDetail)){
+                                                if( Math.pow(10,a)*(b/10) >= state.freqRange.high){break;}
+                                                locationArray.push( Math.log10(Math.pow(10,a)*b) );
+                                                frequencyArray.push( Math.pow(10,a)*(b/10) );
+                                            }
+                                        }
+                                        return {frequency:frequencyArray, location:_canvas_.library.math.normalizeStretchArray(locationArray)};
+                                    }
+                                    function updateGraph(){
+                                        var temp = getFrequencyAndLocationArray();
+                                        object.elements.grapher_static.graph.draw( object.filterCircuit_R.measureFrequencyResponse_values(temp.frequency)[0], temp.location );
+                                    };
+                                
+                                //wiring
+                                    object.elements.dial_continuous.Q_dial.onchange = function(value){
+                                        object.filterCircuit_R.Q(value*10);
+                                        object.filterCircuit_L.Q(value*10);
+                                        updateGraph();
+                                    };
+                                    object.elements.dial_continuous.gain_dial.onchange = function(value){
+                                        object.filterCircuit_R.gain(value*10);
+                                        object.filterCircuit_L.gain(value*10);
+                                        updateGraph();
+                                    };
+                                    object.elements.dial_continuous.frequency_dial.onchange = function(value){
+                                        object.filterCircuit_R.frequency( _canvas_.library.math.curvePoint.exponential(value,0,20000,10.5866095) );
+                                        object.filterCircuit_L.frequency( _canvas_.library.math.curvePoint.exponential(value,0,20000,10.5866095) );
+                                        updateGraph();
+                                    };
+                                    object.elements.dial_discrete.type_dial.onchange = function(value){
+                                        object.filterCircuit_R.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);
+                                        object.filterCircuit_L.type(['lowpass','highpass','bandpass','lowshelf','highshelf','peaking','notch','allpass'][value]);
+                                        updateGraph();
+                                    };
+                        
+                            //setup
+                                var arrays = getFrequencyAndLocationArray();
+                                arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
+                                arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,state.graphDetail)==0;});
+                                object.elements.grapher_static.graph.viewbox({bottom:0, top:2, left:0, right:1});
+                                object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
+                                object.elements.grapher_static.graph.verticalMarkings({
+                                    points:arrays.location,
+                                    printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a :'').slice(0,arrays.frequency.length-1).concat(''), //only print the factors of 10, leaving everything else as an empty string
+                                    textPosition:{x:-0.0025,y:1.99},
+                                    printText:true,
+                                });
+                        
+                                object.elements.dial_discrete.type_dial.set(0);
+                                object.elements.dial_continuous.Q_dial.set(0);
+                                object.elements.dial_continuous.gain_dial.set(0.1);
+                                object.elements.dial_continuous.frequency_dial.set(0.5);
+                                setTimeout(updateGraph,100);
+                        
+                            return object;
+                        };
+                        this.filterUnit_stereo.metadata = {
+                            name:'Filter Unit - Stereo',
+                            category:'audioEffectUnits',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/filterUnit/'
+                        };
+                        this.reverbUnit = function(x,y){
+                            var state = {
+                                reverbTypeSelected:0,
+                                availableTypes:[],
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'reverbUnit',
+                                category:'audioEffectUnits',
+                                collection:'alpha',
+                                x:x, y:y,
+                                space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:16, width:10, height:20 }},
+                                    {type:'connectionNode_audio', name:'audioOut', data:{ x:-10, y:16, width:10, height:20, isAudioOutput:true }},
+                                    
+                                    {type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'outGain_dial',data:{
+                                        x:20, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'wetdry_dial',data:{
+                                        x:82.5, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'button_rectangle',name:'raiseByOne',data:{
+                                        x:51, y:6, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ incReverbType(); },
+                                    }},
+                                    {type:'button_rectangle',name:'raiseByTen',data:{
+                                        x:38.75, y:6, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ inc10ReverbType(); },
+                                    }},
+                                    {type:'button_rectangle',name:'lowerByOne',data:{
+                                        x:51, y:39, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ decReverbType(); },
+                                    }},
+                                    {type:'button_rectangle',name:'lowerByTen',data:{
+                                        x:38.75, y:39, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ dec10ReverbType(); },
+                                    }},
+                        
+                                    {type:'sevenSegmentDisplay_static',name:'tens',data:{
+                                        x:50, y:12.5, width:12.5, height:25,
+                                    }},
+                                    {type:'sevenSegmentDisplay_static',name:'ones',data:{
+                                        x:37.5, y:12.5, width:12.5, height:25,
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.reverbUnit,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    state.reverbTypeSelected = data.selectedType;
+                                    object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
+                                    object.elements.dial_continuous.outGain_dial.set(data.outGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        selectedType:state.reverbTypeSelected,
+                                        wetdry:object.elements.dial_continuous.wetdry_dial.get(),
+                                        outGain:object.elements.dial_continuous.outGain_dial.get(),
+                                    };
+                                };
+                        
+                            //circuitry
+                                //reverb
+                                    object.reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.audioIn.out().connect( object.reverbCircuit.in() );
+                                    object.reverbCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
+                                    object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
+                                    
+                                //internal functions
+                                    function setReadout(num){
+                                        num = ("0" + num).slice(-2);
+                        
+                                        object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
+                                        object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
+                                    }
+                                    function setReverbType(a){
+                                        if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
+                        
+                                        if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
+                                        else if( a < 0 ){a = 0;}
+                            
+                                        state.reverbTypeSelected = a;
+                                        object.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                                    }
+                                    function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
+                                    function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
+                                    function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
+                                    function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
+                        
+                                //wiring
+                                object.elements.dial_continuous.outGain_dial.onchange = function(value){ object.reverbCircuit.outGain(value); };
+                                object.elements.dial_continuous.wetdry_dial.onchange = function(value){ object.reverbCircuit.wetdry(1-value); };
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
+                                    wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.outGain_dial.set(1/2);
+                                object.elements.dial_continuous.wetdry_dial.set(1/2);
+                                setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
+                        
+                            return object;
+                        };
+                        this.reverbUnit.metadata = {
+                            name:'Reverb Unit - Mono',
+                            category:'audioEffectUnits',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/reverbUnit/'
+                        };
+                        
+                        this.reverbUnit_stereo = function(x,y){
+                            var state = {
+                                reverbTypeSelected:0,
+                                availableTypes:[],
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'reverbUnit_stereo',
+                                category:'audioEffectUnits',
+                                collection:'alpha',
+                                x:x, y:y,
+                                space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'connectionNode_audio', name:'audioIn_R', data:{ x:92.5, y:3, width:20, height:20 }},
+                                    {type:'connectionNode_audio', name:'audioIn_L', data:{ x:92.5, y:27, width:20, height:20 }},
+                                    {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:3, width:20, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:27, width:20, height:20, isAudioOutput:true }},
+                        
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
+                                    
+                                    {type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'outGain_dial',data:{
+                                        x:20, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'wetdry_dial',data:{
+                                        x:82.5, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'button_rectangle',name:'raiseByOne',data:{
+                                        x:51, y:6, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ incReverbType(); },
+                                    }},
+                                    {type:'button_rectangle',name:'raiseByTen',data:{
+                                        x:38.75, y:6, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ inc10ReverbType(); },
+                                    }},
+                                    {type:'button_rectangle',name:'lowerByOne',data:{
+                                        x:51, y:39, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ decReverbType(); },
+                                    }},
+                                    {type:'button_rectangle',name:'lowerByTen',data:{
+                                        x:38.75, y:39, width:10.25, height:5, style:style.button, 
+                                        onpress:function(){ dec10ReverbType(); },
+                                    }},
+                        
+                                    {type:'sevenSegmentDisplay_static',name:'tens',data:{
+                                        x:50, y:12.5, width:12.5, height:25,
+                                    }},
+                                    {type:'sevenSegmentDisplay_static',name:'ones',data:{
+                                        x:37.5, y:12.5, width:12.5, height:25,
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.reverbUnit,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    state.reverbTypeSelected = data.selectedType;
+                                    object.elements.dial_continuous.wetdry_dial.set(data.wetdry);
+                                    object.elements.dial_continuous.outGain_dial.set(data.outGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        selectedType:state.reverbTypeSelected,
+                                        wetdry:object.elements.dial_continuous.wetdry_dial.get(),
+                                        outGain:object.elements.dial_continuous.outGain_dial.get(),
+                                    };
+                                };
+                        
+                            //circuitry
+                                //reverb
+                                    object.reverbCircuit_R = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.audioIn_R.out().connect( object.reverbCircuit_R.in() );
+                                    object.reverbCircuit_R.out().connect( object.elements.connectionNode_audio.audioOut_R.in() );
+                                    object.reverbCircuit_R.getTypes( function(a){state.availableTypes = a;} );
+                        
+                                    object.reverbCircuit_L = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.audioIn_L.out().connect( object.reverbCircuit_L.in() );
+                                    object.reverbCircuit_L.out().connect( object.elements.connectionNode_audio.audioOut_L.in() );
+                                    object.reverbCircuit_L.getTypes( function(a){state.availableTypes = a;} );
+                                    
+                                //internal functions
+                                    function setReadout(num){
+                                        num = ("0" + num).slice(-2);
+                        
+                                        object.elements.sevenSegmentDisplay_static.ones.enterCharacter(num[0]);
+                                        object.elements.sevenSegmentDisplay_static.tens.enterCharacter(num[1]);
+                                    }
+                                    function setReverbType(a){
+                                        if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return;}
+                        
+                                        if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
+                                        else if( a < 0 ){a = 0;}
+                            
+                                        state.reverbTypeSelected = a;
+                                        object.reverbCircuit_R.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                                        object.reverbCircuit_L.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                                    }
+                                    function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
+                                    function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
+                                    function inc10ReverbType(){ setReverbType(state.reverbTypeSelected+10); }
+                                    function dec10ReverbType(){ setReverbType(state.reverbTypeSelected-10); }
+                        
+                                //wiring
+                                object.elements.dial_continuous.outGain_dial.onchange = function(value){ object.reverbCircuit_R.outGain(value); object.reverbCircuit_L.outGain(value); };
+                                object.elements.dial_continuous.wetdry_dial.onchange = function(value){ object.reverbCircuit_R.wetdry(1-value); object.reverbCircuit_L.wetdry(1-value); };
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(a){object.elements.dial_continuous.outGain_dial.set(a);},
+                                    wetdry:function(a){object.elements.dial_continuous.wetdry_dial.set(a);},
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.outGain_dial.set(1/2);
+                                object.elements.dial_continuous.wetdry_dial.set(1/2);
+                                setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
+                        
+                            return object;
+                        };
+                        this.reverbUnit_stereo.metadata = {
+                            name:'Reverb Unit - Stereo',
+                            category:'audioEffectUnits',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/reverbUnit/'
+                        };
+
+                        this.multibandFilter = function(x,y,a){
+                            var vars = {
+                                allowUpdate:false,
+                                freqRange:{ low: 0.1, high: 20000 },
+                                graphDetail: 2, //factor of the number of points a graphed line is drawn with
+                                channelCount: 8,
+                                masterGain:1,
+                                gain:[],
+                                Q:[],
+                                frequency:[],
+                                curvePointExponentialSharpness:10.586609649448984,
+                                defaultValues:{
+                                    gain:[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,],
+                                    //standard tunings
+                                        // Q:[0,0.06,0.06,0.06,0.06,0.06,0.06,0],
+                                        // frequency:[0.05, 0.1, 0.225, 0.375, 0.5, 0.65, 0.8, 0.875],
+                                    //human range tunings
+                                        Q:[0,0.09,0.09,0.09,0.09,0.09,0.09,0],
+                                        frequency:[0.41416, 0.479046, 0.565238, 0.630592, 0.717072, 0.803595, 0.91345175, 0.93452845],
+                                }
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1, ratio:1.5, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                panels:[
+                                    {r:0/255,g:200/255,b:163/255,  a:0.5},
+                                    {r:100/255,g:235/255,b:131/255,a:0.5},
+                                    {r:228/255,g:255/255,b:26/255, a:0.5},
+                                    {r:232/255,g:170/255,b:20/255, a:0.5},
+                                    {r:255/255,g:87/255,b:20/255,  a:0.5},
+                                    {r:0/255,g:191/255,b:255/255,  a:0.5},
+                                    {r:249/255,g:99/255,b:202/255, a:0.5},
+                                    {r:255/255,g:255/255,b:255/255,a:0.5},
+                                ],
+                        
+                                slide:{
+                                    handle:{r:240/255,g:240/255,b:240/255,a:1},
+                                    backing:{r:200/255,g:200/255,b:200/255,a:0.5},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                },
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                        
+                                graph:{
+                                    foregrounds: [
+                                        {colour:{r:0/255,g:200/255,b:163/255,a:1}, thickness:0.5},
+                                        {colour:{r:100/255,g:235/255,b:131/255,a:1}, thickness:0.5},
+                                        {colour:{r:228/255,g:255/255,b:26/255,a:1}, thickness:0.5},
+                                        {colour:{r:232/255,g:170/255,b:20/255,a:1}, thickness:0.5},
+                                        {colour:{r:255/255,g:87/255,b:20/255,a:1}, thickness:0.5},
+                                        {colour:{r:0/255,g:191/255,b:255/255,a:1}, thickness:0.5},
+                                        {colour:{r:249/255,g:99/255,b:202/255,a:1}, thickness:0.5},
+                                        {colour:{r:255/255,g:255/255,b:255/255,a:1}, thickness:0.5},
+                                    ], 
+                                    background_colour: {r:0/255,g:200/255,b:163/255,a:0.25}, 
+                                    background_thickness: 0.25, 
+                                    backgroundText_colour: {r:0/255,g:200/255,b:163/255,a:0.75}, 
+                                    backgroundText_size: '10pt',
+                                    backgroundText_font: 'Helvetica',
+                                },
+                            };
+                            var width = 195;
+                            var height = 255;
+                            var design = {
+                                name: 'multibandFilter',
+                                category: 'audioEffectUnits',
+                                collection: 'alpha',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,        y:10         }, { x:10,       y:0          },
+                                    { x:width-10, y:0          }, { x:width,    y:10         },
+                                    { x:width,    y:height-10  }, { x:width-10, y:height     },
+                                    { x:10,       y:height     }, { x:0,        y:height-10  },
+                                    { x:0, y:75 }, { x:-25, y:65 }, { x:-25, y:10 },
+                                ],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ { x:0,        y:10         }, { x:10,       y:0          },
+                                        { x:width-10, y:0          }, { x:width,    y:10         },
+                                        { x:width,    y:height-10  }, { x:width-10, y:height     },
+                                        { x:10,       y:height     }, { x:0,        y:height-10  },
+                                        { x:0, y:75 }, { x:-25, y:65 }, { x:-25, y:10 }
+                                    ], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'audioIn_0', data:{x:195, y:15, width:10, height:20}},
+                                    {type:'connectionNode_audio', name:'audioIn_1', data:{x:195, y:40, width:10, height:20}},
+                                    {type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
+                                    {type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
+                                    {type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, radius:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
+                                    {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:15 }},
+                                ]
+                            };
+                            //dynamic design
+                            for(var a = 0; a < vars.channelCount; a++){
+                                design.elements.push(
+                                    //channel strip backing
+                                        {type:'rectangle', name:'backing_'+a, data:{ x:13.75+a*22, y:87.5, width:12.5, height:157.5, colour:style.panels[a] }},
+                                    //gain
+                                        {type:'slide', name:'gainSlide_'+a, data:{ x:15+a*22, y:90, width: 10, height: 80, angle:0, handleHeight:0.05, resetValue:0.5, style:style.slide }},
+                                    //Q
+                                        {type:'dial_continuous', name:'qDial_'+a, data:{ x:20+a*22, y:180, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
+                                    //frequency
+                                        {type:'dial_continuous', name:'frequencyDial_'+a, data:{ x:20+a*22, y:200, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
+                                    //frequency readout
+                                        {type:'readout_sixteenSegmentDisplay_static', name:'frequencyReadout_'+a, data:{ x:25+a*22, y:212.5, width:30, height:10, count:8, angle:Math.PI/2, resolution:10 }},
                                 );
-                            };
-                    
-                        //setup
-                            object.elements.grapher_audioScope_static.waveport.start();
-                            object.elements.dial_continuous.framerate.set(0);
-                    
-                        return object;
-                    };
-                    
-                    this.audioScope.metadata = {
-                        name:'Audio Scope',
-                        category:'humanOutputDevices',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioScope/'
-                    };
-                    this.audioSink = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            level:{
-                                backing:{r:10/255,g:10/255,b:10/255,a:1},
-                                levels:[{r:250/255,g:250/255,b:250/255,a:1},{r:150/255,g:150/255,b:150/255,a:1}],
-                                markingStyle_fill:{r:220/255,g:220/255,b:220/255,a:1},
-                                markingStyle_font:'defaultThin',
-                                markingStyle_size:1,
-                            },
+                            }
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.multibandFilter,design);
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        masterGain: vars.masterGain,
+                                        freqRange: vars.freqRange,
+                                        channelCount: vars.channelCount,
+                                        gain: vars.gain,
+                                        Q: vars.Q,
+                                        frequency: vars.frequency,
+                                    };
+                                };
+                                object.importData = function(data){};
+                        
+                            //circuitry
+                                object.filterCircuit_0 = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, vars.channelCount, true);
+                                object.filterCircuit_1 = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, vars.channelCount, true);
+                                object.elements.connectionNode_audio.audioIn_0.out().connect( object.filterCircuit_0.in() );
+                                object.elements.connectionNode_audio.audioIn_1.out().connect( object.filterCircuit_1.in() );
+                                object.filterCircuit_0.out().connect( object.elements.connectionNode_audio.audioOut_0.in() );
+                                object.filterCircuit_1.out().connect( object.elements.connectionNode_audio.audioOut_1.in() );
+                        
+                            //internal functions
+                                function getFrequencyAndLocationArray(){
+                                    var locationArray = [];
+                                    var frequencyArray = [];
+                                    for(var a = 0; a <= Math.floor(Math.log10(vars.freqRange.high))+1; a++){
+                                        for(var b = 1; b < 10; b+=1/Math.pow(2,vars.graphDetail)){
+                                            if( Math.pow(10,a)*(b/10) >= vars.freqRange.high){break;}
+                                            locationArray.push( Math.log10(Math.pow(10,a)*b) );
+                                            frequencyArray.push( Math.pow(10,a)*(b/10) );
+                                        }
+                                    }
+                                    return {frequency:frequencyArray, location:_canvas_.library.math.normalizeStretchArray(locationArray)};
+                                }
+                                function updateGraph(specificBand){
+                                    if(!vars.allowUpdate){return;}
+                                    //if no band has been specified, gather the data for all of them and draw the whole thing. Otherwise, just gather 
+                                    //and redraw the data for the one band
+                        
+                                    var frequencyAndLocationArray = getFrequencyAndLocationArray();
+                                        if(specificBand == undefined){
+                                            var result = object.filterCircuit_0.measureFrequencyResponse(undefined, frequencyAndLocationArray.frequency);
+                                            for(var a = 0; a < vars.channelCount; a++){ object.elements.grapher_static.graph.draw( result[a][0], frequencyAndLocationArray.location, a ); }
+                                        }else{
+                                            var result = object.filterCircuit_0.measureFrequencyResponse(specificBand, frequencyAndLocationArray.frequency);
+                                            object.elements.grapher_static.graph.draw( result[0], frequencyAndLocationArray.location, specificBand);
+                                        }
+                                }
+                        
+                            //wiring
+                                object.elements.dial_continuous.masterGain.onchange = function(value){
+                                    vars.masterGain = value*2;
+                                    object.filterCircuit_0.masterGain(vars.masterGain);
+                                    object.filterCircuit_1.masterGain(vars.masterGain);
+                                    updateGraph();
+                                };
+                        
+                                for(var a = 0; a < vars.channelCount; a++){
+                                    object.elements.slide['gainSlide_'+a].onchange = function(a){
+                                        return function(value){
+                                            vars.gain[a] = (1-value)*2;
+                                            object.filterCircuit_0.gain(a,vars.gain[a]);
+                                            object.filterCircuit_1.gain(a,vars.gain[a]);
+                                            updateGraph(a);
+                                        }
+                                    }(a);
+                                    object.elements.dial_continuous['qDial_'+a].onchange = function(a){
+                                        return function(value){
+                                            vars.Q[a] = value;
+                                            object.filterCircuit_0.Q(a, _canvas_.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
+                                            object.filterCircuit_1.Q(a, _canvas_.library.math.curvePoint.exponential(vars.Q[a],0,20000,vars.curvePointExponentialSharpness));
+                                            updateGraph(a);
+                                        }
+                                    }(a);
+                                    object.elements.dial_continuous['frequencyDial_'+a].onchange = function(a){
+                                        return function(value){
+                                            vars.frequency[a] = value;
+                                            object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].text( _canvas_.library.misc.padString( _canvas_.library.math.curvePoint.exponential(value,0,20000,vars.curvePointExponentialSharpness).toFixed(2), 8) );
+                                            object.elements.readout_sixteenSegmentDisplay_static['frequencyReadout_'+a].print('smart');
+                                            object.filterCircuit_0.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
+                                            object.filterCircuit_1.frequency(a, _canvas_.library.math.curvePoint.exponential(vars.frequency[a],0,20000,vars.curvePointExponentialSharpness));
+                                            updateGraph(a);
+                                        }
+                                    }(a);
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(band,value){ if(value == undefined){return object.elements.slide['gainSlide_'+band].get(value);} object.elements.slide['gainSlide_'+band].set(value); },
+                                    Q:function(band,value){ if(value == undefined){return object.elements.dial_continuous['qDial_'+band].get(value);} object.elements.dial_continuous['qDial_'+band].set(value); },
+                                    frequency:function(band,value){ if(value == undefined){return object.elements.dial_continuous['frequencyDial_'+band].get(value);} object.elements.dial_continuous['frequencyDial_'+band].set(value); },
+                                    reset:function(channel){
+                                        if(channel == undefined){
+                                            //if no channel if specified, reset all of them
+                                            for(var a = 0; a < vars.channelCount; a++){ object.i.reset(a); }
+                                            object.elements.dial_continuous.masterGain.set(0.5);
+                                            return;
+                                        }
+                                        for(var a = 0; a < vars.channelCount; a++){
+                                            object.elements.slide['gainSlide_'+a].set( vars.defaultValues.gain[a] );
+                                            object.elements.dial_continuous['qDial_'+a].set( vars.defaultValues.Q[a] );
+                                            object.elements.dial_continuous['frequencyDial_'+a].set( vars.defaultValues.frequency[a] );
+                                        }
+                                    },
+                                };
+                        
+                            //setup
+                                //draw background
+                                    var arrays = getFrequencyAndLocationArray();
+                                    arrays.frequency = arrays.frequency.filter(function(a,i){return i%Math.pow(2,vars.graphDetail)==0;});
+                                    arrays.location = arrays.location.filter(function(a,i){return i%Math.pow(2,vars.graphDetail)==0;});
+                                    object.elements.grapher_static.graph.viewbox({bottom: 0, top: 2, left: 0, right: 1});
+                                    object.elements.grapher_static.graph.horizontalMarkings({points:[0.25,0.5,0.75,1,1.25,1.5,1.75],textPosition:{x:0.005,y:0.075},printText:true});
+                                    object.elements.grapher_static.graph.verticalMarkings({
+                                        points:arrays.location,
+                                        printingValues:arrays.frequency.map(a => Math.log10(a)%1 == 0 ? a : '').slice(0,arrays.frequency.length-1).concat(''), //only print the factoirs of 10, leaving everything else as an empty string
+                                        textPosition:{x:-0.0025,y:1.99},
+                                        printText:true,
+                                    });
+                        
+                                //setup default settings, allow graphical updates to occur and update graph
+                                    object.i.reset();
+                                    setTimeout(function(){object.i.reset();},1); 
+                                    vars.allowUpdate = true;
+                                    updateGraph();
+                            
+                            return object;
                         };
-                        var design = {
-                            name:'audioSink',
+                        
+                        this.multibandFilter.metadata = {
+                            name:'Multiband Filter',
+                            category:'audioEffectUnits',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/multibandFilter/'
+                        };
+                        this.distortionUnit = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'distortionUnit',
+                                category:'audioEffectUnits',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                        { x:0,           y:10     },
+                                        { x:10,          y:0      },
+                                        { x:102.5/3,     y:0      },
+                                        { x:102.5*0.45,  y:10     },
+                                        { x:102.5*0.55,  y:10     },
+                                        { x:2*(102.5/3), y:0      },
+                                        { x:102.5-10,    y:0      },
+                                        { x:102.5,       y:10     },
+                                        { x:102.5,       y:95-10  },
+                                        { x:102.5-10,    y:95     },
+                                        { x:2*(102.5/3), y:95     },
+                                        { x:102.5*0.55,  y:95-10  },
+                                        { x:102.5*0.45,  y:95-10  },
+                                        { x:102.5/3,     y:95     },
+                                        { x:10,          y:95     },
+                                        { x:0,           y:95-10  }
+                                    ],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
+                                        { x:0,           y:10     },
+                                        { x:10,          y:0      },
+                                        { x:102.5/3,     y:0      },
+                                        { x:102.5*0.45,  y:10     },
+                                        { x:102.5*0.55,  y:10     },
+                                        { x:2*(102.5/3), y:0      },
+                                        { x:102.5-10,    y:0      },
+                                        { x:102.5,       y:10     },
+                                        { x:102.5,       y:95-10  },
+                                        { x:102.5-10,    y:95     },
+                                        { x:2*(102.5/3), y:95     },
+                                        { x:102.5*0.55,  y:95-10  },
+                                        { x:102.5*0.45,  y:95-10  },
+                                        { x:102.5/3,     y:95     },
+                                        { x:10,          y:95     },
+                                        { x:0,           y:95-10  }
+                                    ], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:61.5, width:10, height:20 }},
+                                    {type:'connectionNode_audio', name:'audioOut', data:{ x:-10, y:61.5, width:10, height:20, isAudioOutput:true }},
+                                
+                                    {type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'outGain_dial',data:{
+                                        x:22.5, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'distortionAmount_dial',data:{
+                                        x:22.5, y:23, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'resolution_dial',data:{
+                                        x:52.5, y:47.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_discrete',name:'overSample_dial',data:{
+                                        x:80, y:23, radius:12, startAngle:(1.25*Math.PI), maxAngle:0.5*Math.PI, arcDistance:1.35, optionCount:3,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'inGain_dial',data:{
+                                        x:80, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.distortionUnit,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.outGain_dial.set(data.outGain);
+                                    object.elements.dial_continuous.distortionAmount_dial.set(data.distortionAmount);
+                                    object.elements.dial_continuous.resolution_dial.set(data.resolution);
+                                    object.elements.dial_discrete.overSample_dial.set(data.overSample);
+                                    object.elements.dial_continuous.inGain_dial.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:         object.elements.dial_continuous.outGain_dial.get(), 
+                                        distortionAmount:object.elements.dial_continuous.distortionAmount_dial.get(), 
+                                        resolution:      object.elements.dial_continuous.resolution_dial.get(), 
+                                        overSample:      object.elements.dial_discrete.overSample_dial.get(), 
+                                        inGain:          object.elements.dial_continuous.inGain_dial.get()
+                                    };
+                                };
+                        
+                            //circuitry
+                                object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
+                                object.elements.connectionNode_audio.audioIn.out().connect( object.distortionCircuit.in() );
+                                object.distortionCircuit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
+                        
+                            //wiring
+                                object.elements.dial_continuous.outGain_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
+                                object.elements.dial_continuous.distortionAmount_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
+                                object.elements.dial_continuous.resolution_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
+                                object.elements.dial_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
+                                object.elements.dial_continuous.inGain_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+                        
+                            //setup
+                                object.elements.dial_continuous.resolution_dial.set(0.5);
+                                object.elements.dial_continuous.inGain_dial.set(0.5);
+                                object.elements.dial_continuous.outGain_dial.set(1);
+                        
+                            return object;
+                        };
+                        this.distortionUnit.metadata = {
+                            name:'Distortion Unit - Mono',
+                            category:'audioEffectUnits',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
+                        };
+                        
+                        this.distortionUnit_stereo = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'distortionUnit_stereo',
+                                category:'audioEffectUnits',
+                                collection:'alpha',
+                                x:x, y:y, a:a,
+                                space:[
+                                        { x:0,           y:10     },
+                                        { x:10,          y:0      },
+                                        { x:102.5/3,     y:0      },
+                                        { x:102.5*0.45,  y:10     },
+                                        { x:102.5*0.55,  y:10     },
+                                        { x:2*(102.5/3), y:0      },
+                                        { x:102.5-10,    y:0      },
+                                        { x:102.5,       y:10     },
+                                        { x:102.5,       y:95-10  },
+                                        { x:102.5-10,    y:95     },
+                                        { x:2*(102.5/3), y:95     },
+                                        { x:102.5*0.55,  y:95-10  },
+                                        { x:102.5*0.45,  y:95-10  },
+                                        { x:102.5/3,     y:95     },
+                                        { x:10,          y:95     },
+                                        { x:0,           y:95-10  }
+                                    ],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
+                                        { x:0,           y:10     },
+                                        { x:10,          y:0      },
+                                        { x:102.5/3,     y:0      },
+                                        { x:102.5*0.45,  y:10     },
+                                        { x:102.5*0.55,  y:10     },
+                                        { x:2*(102.5/3), y:0      },
+                                        { x:102.5-10,    y:0      },
+                                        { x:102.5,       y:10     },
+                                        { x:102.5,       y:95-10  },
+                                        { x:102.5-10,    y:95     },
+                                        { x:2*(102.5/3), y:95     },
+                                        { x:102.5*0.55,  y:95-10  },
+                                        { x:102.5*0.45,  y:95-10  },
+                                        { x:102.5/3,     y:95     },
+                                        { x:10,          y:95     },
+                                        { x:0,           y:95-10  }
+                                    ], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'audioIn_R', data:{ x:102.5, y:35.5, width:10, height:20 }},
+                                    {type:'connectionNode_audio', name:'audioIn_L', data:{ x:102.5, y:61.5, width:10, height:20 }},
+                                    {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:35.5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:61.5, width:10, height:20, isAudioOutput:true }},
+                                
+                                    {type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'outGain_dial',data:{
+                                        x:22.5, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'distortionAmount_dial',data:{
+                                        x:22.5, y:23, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'resolution_dial',data:{
+                                        x:52.5, y:47.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_discrete',name:'overSample_dial',data:{
+                                        x:80, y:23, radius:12, startAngle:(1.25*Math.PI), maxAngle:0.5*Math.PI, arcDistance:1.35, optionCount:3,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                        
+                                    {type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'inGain_dial',data:{
+                                        x:80, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.distortionUnit,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_continuous.outGain_dial.set(data.outGain);
+                                    object.elements.dial_continuous.distortionAmount_dial.set(data.distortionAmount);
+                                    object.elements.dial_continuous.resolution_dial.set(data.resolution);
+                                    object.elements.dial_discrete.overSample_dial.set(data.overSample);
+                                    object.elements.dial_continuous.inGain_dial.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:         object.elements.dial_continuous.outGain_dial.get(), 
+                                        distortionAmount:object.elements.dial_continuous.distortionAmount_dial.get(), 
+                                        resolution:      object.elements.dial_continuous.resolution_dial.get(), 
+                                        overSample:      object.elements.dial_discrete.overSample_dial.get(), 
+                                        inGain:          object.elements.dial_continuous.inGain_dial.get()
+                                    };
+                                };
+                        
+                            //circuitry
+                                object.distortionCircuit_R = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
+                                object.elements.connectionNode_audio.audioIn_R.out().connect( object.distortionCircuit_R.in() );
+                                object.distortionCircuit_R.out().connect( object.elements.connectionNode_audio.audioIn_R.in() );
+                                
+                                object.distortionCircuit_L = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
+                                object.elements.connectionNode_audio.audioIn_L.out().connect( object.distortionCircuit_L.in() );
+                                object.distortionCircuit_L.out().connect( object.elements.connectionNode_audio.audioOut_L.in() );
+                        
+                            //wiring
+                                object.elements.dial_continuous.outGain_dial.onchange = function(value){
+                                    object.distortionCircuit_R.outGain(value);
+                                    object.distortionCircuit_L.outGain(value);
+                                };
+                                object.elements.dial_continuous.distortionAmount_dial.onchange = function(value){
+                                    object.distortionCircuit_R.distortionAmount(value*100);
+                                    object.distortionCircuit_L.distortionAmount(value*100);
+                                };
+                                object.elements.dial_continuous.resolution_dial.onchange = function(value){
+                                    object.distortionCircuit_R.resolution(Math.round(value*1000));
+                                    object.distortionCircuit_L.resolution(Math.round(value*1000));
+                                };
+                                object.elements.dial_discrete.overSample_dial.onchange = function(value){
+                                    object.distortionCircuit_R.oversample(['none','2x','4x'][value]);
+                                    object.distortionCircuit_L.oversample(['none','2x','4x'][value]);
+                                };
+                                object.elements.dial_continuous.inGain_dial.onchange = function(value){
+                                    object.distortionCircuit_R.inGain(2*value);
+                                    object.distortionCircuit_L.inGain(2*value);
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.resolution_dial.set(0.5);
+                                object.elements.dial_continuous.inGain_dial.set(0.5);
+                                object.elements.dial_continuous.outGain_dial.set(1);
+                        
+                            return object;
+                        };
+                        this.distortionUnit_stereo.metadata = {
+                            name:'Distortion Unit - Stereo',
+                            category:'audioEffectUnits',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/distortionUnit/'
+                        };
+                        this.audioScope = function(x,y,a){
+                            var attributes = {
+                                framerateLimits: {min:1, max:30}
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:190/255,g:190/255,b:190/255,a:1}, 
+                                    background__hover_press__colour:{r:170/255,g:170/255,b:170/255,a:1},
+                                },
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                            };
+                            var design = {
+                                name:'audioScope',
+                                category:'humanOutputDevices',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'input', data:{ x:195, y:5, width:10, height:20 }},
+                                    {type:'grapher_audioScope_static', name:'waveport', data:{ x:5, y:5, width:150, height:100 }},
+                                    {type:'button_rectangle', name:'holdKey', data:{ x:160, y:5, width:30, height:20, style:style.button }},
+                        
+                                    {type:'text', name:'framerate_name', data:{x: 175, y: 68, text: 'framerate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'framerate_1',    data:{x: 164, y: 60, text: '1',         width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'framerate_15',   data:{x: 175, y: 32, text: '15',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'framerate_30',   data:{x: 187, y: 60, text: '30',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous', name:'framerate', data:{
+                                        x:175, y:47.5, radius:12, resetValue:0.5,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.audioScope,design);
+                            
+                            //circuitry
+                                object.elements.button_rectangle.holdKey.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
+                                object.elements.button_rectangle.holdKey.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
+                                object.elements.connectionNode_audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
+                        
+                            //wiring
+                                object.elements.dial_continuous.framerate.onchange = function(a){
+                                    object.elements.grapher_audioScope_static.waveport.refreshRate(
+                                        attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a)
+                                    );
+                                };
+                        
+                            //setup
+                                object.elements.grapher_audioScope_static.waveport.start();
+                                object.elements.dial_continuous.framerate.set(0);
+                        
+                            return object;
+                        };
+                        
+                        this.audioScope.metadata = {
+                            name:'Audio Scope',
                             category:'humanOutputDevices',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioInput_right', data:{ x:30, y:5, width:10, height:20 }},
-                                {type:'connectionNode_audio', name:'audioInput_left', data:{ x:30, y:30, width:10, height:20 }},
-                                {type:'audio_meter_level', name:'audioLevel_right', data:{ x:15, y:5, width:10, height:45, style:style.level }},
-                                {type:'audio_meter_level', name:'audioLevel_left', data:{ x:5, y:5, width:10, height:45, style:style.level }},
-                            ],
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/audioScope/'
                         };
-                     
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.audioSink,design);
-                    
-                        //circuitry
-                            var flow = {
-                                destination:null,
-                                stereoCombiner: null,
-                                pan_left:null, pan_right:null,
+                        this.audioSink = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                level:{
+                                    backing:{r:10/255,g:10/255,b:10/255,a:1},
+                                    levels:[{r:250/255,g:250/255,b:250/255,a:1},{r:150/255,g:150/255,b:150/255,a:1}],
+                                    markingStyle_fill:{r:220/255,g:220/255,b:220/255,a:1},
+                                    markingStyle_font:'defaultThin',
+                                    markingStyle_size:1,
+                                },
                             };
-                            //destination
-                                flow._destination = _canvas_.library.audio.destination;
-                    
-                            //stereo channel combiner
-                                flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
-                    
-                            //audio connections
-                                //inputs to meters
-                                    object.elements.connectionNode_audio.audioInput_left.out().connect( object.elements.audio_meter_level.audioLevel_left.audioIn() );
-                                    object.elements.connectionNode_audio.audioInput_right.out().connect(object.elements.audio_meter_level.audioLevel_right.audioIn());
-                                //inputs to stereo combiner
-                                    object.elements.connectionNode_audio.audioInput_left.out().connect(flow.stereoCombiner, 0, 0);
-                                    object.elements.connectionNode_audio.audioInput_right.out().connect(flow.stereoCombiner, 0, 1);
-                                //stereo combiner to main output
-                                    flow.stereoCombiner.connect(flow._destination);
-                    
-                                //start audio meters
-                                    object.elements.audio_meter_level.audioLevel_left.start();
-                                    object.elements.audio_meter_level.audioLevel_right.start();
-                    
-                        return object;
-                    };
-                    
-                    this.audioSink.metadata = {
-                        name:'Audio Sink',
-                        category:'humanOutputDevices',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioSink/'
-                    };
-                    this.basicSynthesizer = function(x,y,a){
-                        var attributes = {
-                            detuneLimits: {min:-100, max:100}
-                        };
-                        var style = { //regular
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1.75, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                    
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            }
-                        };
-                        // var style = { //tron-like
-                        //     background:{
-                        //         fill:'rgba(200,200,200,0)',
-                        //         stroke:'rgba(255,255,255,1)',
-                        //         lineWidth:2,
-                        //         lineJoin:'miter',
-                        //     },
-                        //     h1:{fill:'rgba(255,255,255,1)', font:'4pt defaultThin'},
-                        //     h2:{fill:'rgba(255,255,255,1)', font:'3pt defaultThin'},
-                    
-                        //     dial:{
-                        //         handle:{
-                        //             fill:'rgba(220,220,220,0)',
-                        //             stroke:'rgba(255,255,255,1)',
-                        //         },
-                        //         slot:{fill:'rgba(50,50,50,0)'},
-                        //         needle:{fill:'rgba(250,255,255,1)'},
-                        //     },
-                        //     button:{
-                        //         background__up__fill:'rgba(0,0,0,0)',
-                        //         background__hover__fill:'rgba(255,255,255,1)',
-                        //         background__hover_press__fill:'rgba(255,0,0,1)',
-                    
-                        //         background__up__stroke:'rgba(255,255,255,1)', 
-                        //         background__hover__stroke:'rgba(255,255,255,1)', 
-                        //         background__hover_press__stroke:'rgba(255,255,255,1)',
-                        //     }
-                        // };
-                    
-                    
-                        var design = {
-                            name:'basicSynthesizer',
-                            category:'synthesizers',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'audioOut', data: {
-                                    type: 1, x: -15, y: 5, width: 15, height: 30, isAudioOutput:true 
-                                }},
-                                {type:'connectionNode_data', name:'port_gain', data:{
-                                    x: 12.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        switch(address){
-                                            case '%': object.elements.dial_continuous.gain.set(data); break;
-                                            case '%t': 
-                                                object.__synthesizer.gain(data.target,data.time,data.curve);
-                                                object.elements.dial_continuous.gain.smoothSet(data.target,data.time,data.curve,false);
-                                            break;
-                                            default: break;
-                                        }
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_attack', data:{
-                                    x: 52.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous.attack.set(data);
-                                    } 
-                                }},
-                                {type:'connectionNode_data', name:'port_release', data:{
-                                    x: 92.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous.release.set(data);
-                                    } 
-                                }},
-                                {type:'connectionNode_data', name:'port_detune', data:{
-                                    x: 132.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){ 
-                                        switch(address){
-                                            case '%': object.elements.dial_continuous.detune.set(data); break;
-                                            case '%t': 
-                                                object.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
-                                                object.elements.dial_continuous.detune.smoothSet(data.target,data.time,data.curve,false);
-                                            break;
-                                            default: break;
-                                        }
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_octave', data:{
-                                    x: 170.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != 'discrete'){return;}
-                                        object.elements.dial_discrete.octave.select(data);
-                                    } 
-                                }},
-                                {type:'connectionNode_data', name:'port_waveType', data:{
-                                    x: 210.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != 'discrete'){return;}
-                                        object.elements.dial_discrete.waveType.select(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_periodicWave', data:{
-                                    x: 240, y: 12.5, width: 7.5, height: 15,
-                                    onreceive: function(address,data){
-                                        if(address != 'periodicWave'){return;}
-                                        object.__synthesizer.periodicWave(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_midiNote', data:{
-                                    x:225, y:55, width: 15, height: 30, angle:Math.PI/4,
-                                    onreceive: function(address,data){
-                                        if(address != 'midinumber'){return;}
-                                        object.__synthesizer.perform(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_gainWobblePeriod', data:{
-                                    x: 22.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous.gainWobblePeriod.set(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
-                                    x: 57.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous.gainWobbleDepth.set(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
-                                    x: 107.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous.detuneWobblePeriod.set(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
-                                    x: 142.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous.detuneWobbleDepth.set(data);
-                                    }
-                                }},
-                    
-                                //gain dial
-                                    {type:'text', name:'gain_gain', data:{x: 20, y: 40, text: 'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'gain_0',    data:{x: 9,  y: 35, text: '0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'gain_1/2',  data:{x: 20, y: 7,  text: '1/2',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'gain_1',    data:{x: 32, y: 35, text: '1',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous',name:'dial_gain',data:{
-                                        x: 20, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //attack dial
-                                    {type:'text', name:'attack_gain', data:{x: 60, y: 40, text: 'attack', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'attack_0',    data:{x: 49, y: 35, text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'attack_5',    data:{x: 60, y: 7,  text: '5',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'attack_10',   data:{x: 73, y: 35, text: '10',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous',name:'dial_attack',data:{
-                                        x: 60, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //release dial
-                                    {type:'text', name:'release_gain', data:{x: 100, y: 40, text: 'release', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'release_0',    data:{x: 89,  y: 35, text: '0',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'release_5',    data:{x: 100, y: 7,  text: '5',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'release_10',   data:{x: 113, y: 35, text: '10',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous',name:'dial_release',data:{
-                                        x: 100, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //detune dial
-                                    {type:'text', name:'detune_gain', data:{x: 140, y: 40, text: 'detune', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'detune_-100', data:{x: 126, y: 35, text: '-100',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'detune_0',    data:{x: 140, y: 7,  text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'detune_100',  data:{x: 153, y: 35, text: '100',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous',name:'dial_detune',data:{
-                                        x: 140, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //octave dial
-                                    {type:'text', name:'octave_gain', data:{x: 180, y: 40, text: 'octave', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'octave_-3',   data:{x: 168, y: 35, text: '-3',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'octave_-2',   data:{x: 163, y: 24, text: '-2',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'octave_-1',   data:{x: 169, y: 11, text: '-1',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'octave_0',    data:{x: 180, y: 7,  text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'octave_1',    data:{x: 191, y: 11, text: '1',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'octave_2',    data:{x: 196, y: 24, text: '2',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'octave_3',    data:{x: 191, y: 35, text: '3',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_discrete',name:'dial_octave',data:{
-                                        x: 180, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //waveType dial
-                                    {type:'text', name:'waveType_gain', data:{x: 220, y: 40, text: 'wave', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'waveType_sin',  data:{x: 207, y: 35, text: 'sin',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'waveType_tri',  data:{x: 203, y: 19, text: 'tri',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'waveType_squ',  data:{x: 213, y: 7,  text: 'squ',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'waveType_saw',  data:{x: 231, y: 9,  text: 'saw',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'rectangle', name:'periodicWaveType', data:{
-                                        x: 232, y: 21.75, angle: 0, radius: 12, 
-                                        width: 8, height: 2.5,
-                                        colour:style.h1.colour,
-                                    }},
-                                    {type:'dial_discrete',name:'dial_waveType',data:{
-                                        x: 220, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4,  optionCount: 5,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //gainWobblePeriod dial
-                                    {type:'text', name:'gainWobble', data:{x: 8, y: 65, angle: -Math.PI/2, text: 'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}}, 
-                                    {type:'text', name:'gainWobblePeriod_gain', data:{x: 30, y: 82, text: 'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'gainWobblePeriod_0',    data:{x: 19, y: 77, text: '0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'gainWobblePeriod_50',   data:{x: 30, y: 49, text: '50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'gainWobblePeriod_100',  data:{x: 42, y: 77, text: '100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous', name:'dial_gainWobblePeriod',data:{
-                                        x: 30, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //gainWobbleDepth dial
-                                    {type:'text', name:'gainWobbleDepth_gain', data:{x: 65, y: 82, text: 'depth', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'gainWobbleDepth_0',    data:{x: 54, y: 77, text: '0',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'gainWobbleDepth_50',   data:{x: 65, y: 49, text: '1/2',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'gainWobbleDepth_100',  data:{x: 77, y: 77, text: '1',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous',name:'dial_gainWobbleDepth',data:{
-                                        x: 65, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //detuneWobblePeriod dial
-                                    {type:'text', name:'detuneWobble', data:{x: 93, y: 65, angle: -Math.PI/2, text: 'detune', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},    
-                                    {type:'text', name:'detuneWobblePeriod_gain', data:{x: 114, y: 82, text: 'rate',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'detuneWobblePeriod_0',    data:{x: 103, y: 77, text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'detuneWobblePeriod_50',   data:{x: 114, y: 49, text: '50',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'detuneWobblePeriod_100',  data:{x: 126, y: 77, text: '100',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous',name:'dial_detuneWobblePeriod',data:{
-                                        x: 114, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                                //detuneWobbleDepth dial
-                                    {type:'text', name:'detuneWobbleDepth_gain', data:{x: 149, y: 82, text: 'depth', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                    {type:'text', name:'detuneWobbleDepth_0',    data:{x: 138, y: 77, text: '0',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'detuneWobbleDepth_50',   data:{x: 149, y: 49, text: '1/2',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'text', name:'detuneWobbleDepth_100',  data:{x: 160, y: 77, text: '1',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    {type:'dial_continuous',name:'dial_detuneWobbleDepth',data:{
-                                        x: 149, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    }},
-                    
-                                {type:'button_rectangle', name:'panicButton', data: {
-                                    x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
-                                    style:style.button,
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.basicSynthesizer,design);
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    gain: object.elements.dial_continuous.dial_gain.get(),
-                                    attack: object.elements.dial_continuous.dial_attack.get()*10,
-                                    release: object.elements.dial_continuous.dial_release.get()*10,
-                                    detune: 100*((object.elements.dial_continuous.dial_detune.get()*2)-1),
-                                    octave: object.elements.dial_discrete.dial_octave.get()-3,
-                                    waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_discrete.dial_waveType.get()],
-                                    gainWobble:{
-                                        rate: object.elements.dial_continuous.dial_gainWobblePeriod.get()*100,
-                                        depth: object.elements.dial_continuous.dial_gainWobbleDepth.get()
-                                    },
-                                    detuneWobble:{
-                                        rate: object.elements.dial_continuous.dial_detuneWobblePeriod.get()*100,
-                                        depth: object.elements.dial_continuous.dial_detuneWobbleDepth.get()
-                                    },
+                            var design = {
+                                name:'audioSink',
+                                category:'humanOutputDevices',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:30,y:0},{x:30,y:55},{x:0,y:55}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'audioInput_right', data:{ x:30, y:5, width:10, height:20 }},
+                                    {type:'connectionNode_audio', name:'audioInput_left', data:{ x:30, y:30, width:10, height:20 }},
+                                    {type:'audio_meter_level', name:'audioLevel_right', data:{ x:15, y:5, width:10, height:45, style:style.level }},
+                                    {type:'audio_meter_level', name:'audioLevel_left', data:{ x:5, y:5, width:10, height:45, style:style.level }},
+                                ],
+                            };
+                         
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.audioSink,design);
+                        
+                            //circuitry
+                                var flow = {
+                                    destination:null,
+                                    stereoCombiner: null,
+                                    pan_left:null, pan_right:null,
                                 };
-                            };
-                            object.importData = function(data){
-                                if(data == undefined){return;}
-                    
-                                object.elements.dial_continuous.dial_gain.set(data.gain);
-                                object.elements.dial_continuous.dial_attack.set(data.attack/10);
-                                object.elements.dial_continuous.dial_release.set(data.release/10);
-                                object.elements.dial_continuous.dial_detune.set( (1+(data.detune/100))/2 );
-                                object.elements.dial_discrete.dial_octave.set(data.octave+3);
-                                object.elements.dial_discrete.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
-                                object.elements.dial_continuous.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
-                                object.elements.dial_continuous.dial_gainWobbleDepth.set(data.gainWobble.depth);
-                                object.elements.dial_continuous.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
-                                object.elements.dial_continuous.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
-                            };
-                    
-                        //circuitry
-                            object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
-                            object.__synthesizer.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                    
-                        //wiring
-                            object.elements.dial_continuous.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
-                            object.elements.dial_continuous.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
-                            object.elements.dial_continuous.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
-                            object.elements.dial_continuous.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
-                            object.elements.dial_discrete.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
-                            object.elements.dial_discrete.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
-                            object.elements.dial_continuous.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-                            object.elements.dial_continuous.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
-                            object.elements.dial_continuous.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-                            object.elements.dial_continuous.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
-                            object.elements.button_rectangle.panicButton.onpress = function(){ object.__synthesizer.panic(); },
-                    
-                        //interface
-                            object.i = {
-                                gain:function(value){object.elements.dial_continuous.dial_gain.set(value);},
-                                attack:function(value){object.elements.dial_continuous.dial_attack.set(value);},
-                                release:function(value){object.elements.dial_continuous.dial_release.set(value);},
-                                detune:function(value){object.elements.dial_continuous.dial_detune.set(value);},
-                                octave:function(value){object.elements.dial_discrete.dial_octave.set(value);},
-                                waveType:function(value){object.elements.dial_discrete.dial_waveType.set(value);},
-                                periodicWave:function(data){object.__synthesizer.periodicWave(data);},
-                                midiNote:function(data){object.__synthesizer.perform(data);},
-                                gainWobblePeriod:function(value){object.elements.dial_continuous.dial_gainWobblePeriod.set(value);},
-                                gainWobbleDepth:function(value){object.elements.dial_continuous.dial_gainWobbleDepth.set(value);},
-                                detuneWobblePeriod:function(value){object.elements.dial_continuous.dial_detuneWobblePeriod.set(value);},
-                                detuneWobbleDepth:function(value){object.elements.dial_continuous.dial_detuneWobbleDepth.set(value);},
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.dial_gain.set(0.5);
-                            object.elements.dial_continuous.dial_detune.set(0.5);
-                            object.elements.dial_discrete.dial_octave.set(3);
-                    
-                        return object;
-                    };
-                    
-                    this.basicSynthesizer.metadata = {
-                        name:'Basic Synthesizer',
-                        category:'synthesizer',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer/'
-                    };
-                    this.basicSynthesizer_img = function(x,y,angle){
-                        var attributes = {
-                            detuneLimits: {min:-100, max:100}
+                                //destination
+                                    flow._destination = _canvas_.library.audio.destination;
+                        
+                                //stereo channel combiner
+                                    flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
+                        
+                                //audio connections
+                                    //inputs to meters
+                                        object.elements.connectionNode_audio.audioInput_left.out().connect( object.elements.audio_meter_level.audioLevel_left.audioIn() );
+                                        object.elements.connectionNode_audio.audioInput_right.out().connect(object.elements.audio_meter_level.audioLevel_right.audioIn());
+                                    //inputs to stereo combiner
+                                        object.elements.connectionNode_audio.audioInput_left.out().connect(flow.stereoCombiner, 0, 0);
+                                        object.elements.connectionNode_audio.audioInput_right.out().connect(flow.stereoCombiner, 0, 1);
+                                    //stereo combiner to main output
+                                        flow.stereoCombiner.connect(flow._destination);
+                        
+                                    //start audio meters
+                                        object.elements.audio_meter_level.audioLevel_left.start();
+                                        object.elements.audio_meter_level.audioLevel_right.start();
+                        
+                            return object;
                         };
-                        var style = {
-                            background:'/images/units/alpha/basicSynthesizer_2.png',
-                    
-                            dial:{
-                                handle:'/images/units/alpha/basicSynthesizer_2_dial_handle.png',
-                                slot:'/images/units/alpha/basicSynthesizer_2_dial_slot.png',
-                                needle:'/images/units/alpha/basicSynthesizer_2_dial_needle.png',
-                            },
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            }
+                        
+                        this.audioSink.metadata = {
+                            name:'Audio Sink',
+                            category:'humanOutputDevices',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/audioSink/'
                         };
-                        var design = {
-                            name:'basicSynthesizer_img',
-                            category:'synthesizers',
-                            collection: 'alpha',
-                            x:x, y:y, angle:angle,
-                            space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'image', name:'imgBacking', data:{ x:0, y:0, width:240, height:90, url:style.background, points:[{x:0,y:0},{x:1,y:0},{x:1,y:4/9},{x:19/24,y:1},{x:0,y:1}] } },
-                    
-                                {type:'connectionNode_audio', name:'audioOut', data: {
-                                    type: 1, x: -15, y: 5, width: 15, height: 30, isAudioOutput:true 
-                                }},
-                                {type:'connectionNode_data', name:'port_gain', data:{
-                                    x: 12.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        switch(address){
-                                            case '%': object.elements.dial_continuous_image.gain.set(data); break;
-                                            case '%t': 
-                                                object.__synthesizer.gain(data.target,data.time,data.curve);
-                                                object.elements.dial_continuous_image.gain.smoothSet(data.target,data.time,data.curve,false);
-                                            break;
-                                            default: break;
+                        this.basicSynthesizer = function(x,y,a){
+                            var attributes = {
+                                detuneLimits: {min:-100, max:100}
+                            };
+                            var style = { //regular
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:1.75, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                        
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            // var style = { //tron-like
+                            //     background:{
+                            //         fill:'rgba(200,200,200,0)',
+                            //         stroke:'rgba(255,255,255,1)',
+                            //         lineWidth:2,
+                            //         lineJoin:'miter',
+                            //     },
+                            //     h1:{fill:'rgba(255,255,255,1)', font:'4pt defaultThin'},
+                            //     h2:{fill:'rgba(255,255,255,1)', font:'3pt defaultThin'},
+                        
+                            //     dial:{
+                            //         handle:{
+                            //             fill:'rgba(220,220,220,0)',
+                            //             stroke:'rgba(255,255,255,1)',
+                            //         },
+                            //         slot:{fill:'rgba(50,50,50,0)'},
+                            //         needle:{fill:'rgba(250,255,255,1)'},
+                            //     },
+                            //     button:{
+                            //         background__up__fill:'rgba(0,0,0,0)',
+                            //         background__hover__fill:'rgba(255,255,255,1)',
+                            //         background__hover_press__fill:'rgba(255,0,0,1)',
+                        
+                            //         background__up__stroke:'rgba(255,255,255,1)', 
+                            //         background__hover__stroke:'rgba(255,255,255,1)', 
+                            //         background__hover_press__stroke:'rgba(255,255,255,1)',
+                            //     }
+                            // };
+                        
+                        
+                            var design = {
+                                name:'basicSynthesizer',
+                                category:'synthesizers',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'audioOut', data: {
+                                        type: 1, x: -15, y: 5, width: 15, height: 30, isAudioOutput:true 
+                                    }},
+                                    {type:'connectionNode_data', name:'port_gain', data:{
+                                        x: 12.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            switch(address){
+                                                case '%': object.elements.dial_continuous.gain.set(data); break;
+                                                case '%t': 
+                                                    object.__synthesizer.gain(data.target,data.time,data.curve);
+                                                    object.elements.dial_continuous.gain.smoothSet(data.target,data.time,data.curve,false);
+                                                break;
+                                                default: break;
+                                            }
                                         }
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_attack', data:{
-                                    x: 52.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous_image.attack.set(data);
-                                    } 
-                                }},
-                                {type:'connectionNode_data', name:'port_release', data:{
-                                    x: 92.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous_image.release.set(data);
-                                    } 
-                                }},
-                                {type:'connectionNode_data', name:'port_detune', data:{
-                                    x: 132.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){ 
-                                        switch(address){
-                                            case '%': object.elements.dial_continuous_image.detune.set(data); break;
-                                            case '%t': 
-                                                object.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
-                                                object.elements.dial_continuous_image.detune.smoothSet(data.target,data.time,data.curve,false);
-                                            break;
-                                            default: break;
+                                    }},
+                                    {type:'connectionNode_data', name:'port_attack', data:{
+                                        x: 52.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous.attack.set(data);
+                                        } 
+                                    }},
+                                    {type:'connectionNode_data', name:'port_release', data:{
+                                        x: 92.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous.release.set(data);
+                                        } 
+                                    }},
+                                    {type:'connectionNode_data', name:'port_detune', data:{
+                                        x: 132.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){ 
+                                            switch(address){
+                                                case '%': object.elements.dial_continuous.detune.set(data); break;
+                                                case '%t': 
+                                                    object.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
+                                                    object.elements.dial_continuous.detune.smoothSet(data.target,data.time,data.curve,false);
+                                                break;
+                                                default: break;
+                                            }
                                         }
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_octave', data:{
-                                    x: 170.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != 'discrete'){return;}
-                                        object.elements.dial_discrete_image.octave.select(data);
-                                    } 
-                                }},
-                                {type:'connectionNode_data', name:'port_waveType', data:{
-                                    x: 210.5, y: -7.5, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != 'discrete'){return;}
-                                        object.elements.dial_discrete_image.waveType.select(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_periodicWave', data:{
-                                    x: 240, y: 12.5, width: 7.5, height: 15,
-                                    onreceive: function(address,data){
-                                        if(address != 'periodicWave'){return;}
-                                        object.__synthesizer.periodicWave(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_midiNote', data:{
-                                    x:225, y:55, width: 15, height: 30, angle:Math.PI/4,
-                                    onreceive: function(address,data){
-                                        if(address != 'midinumber'){return;}
-                                        object.__synthesizer.perform(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_gainWobblePeriod', data:{
-                                    x: 22.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous_image.gainWobblePeriod.set(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
-                                    x: 57.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous_image.gainWobbleDepth.set(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
-                                    x: 107.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous_image.detuneWobblePeriod.set(data);
-                                    }
-                                }},
-                                {type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
-                                    x: 142.5, y: 90, width: 15, height: 7.5,
-                                    onreceive: function(address,data){
-                                        if(address != '%'){return;}
-                                        object.elements.dial_continuous_image.detuneWobbleDepth.set(data);
-                                    }
-                                }},
-                    
-                                //gain dial
-                                    {type:'dial_continuous_image',name:'dial_gain',data:{
-                                        x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                                     }},
-                                //attack dial
-                                    {type:'dial_continuous_image',name:'dial_attack',data:{
-                                        x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_octave', data:{
+                                        x: 170.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != 'discrete'){return;}
+                                            object.elements.dial_discrete.octave.select(data);
+                                        } 
                                     }},
-                                //release dial
-                                    {type:'dial_continuous_image',name:'dial_release',data:{
-                                        x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_waveType', data:{
+                                        x: 210.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != 'discrete'){return;}
+                                            object.elements.dial_discrete.waveType.select(data);
+                                        }
                                     }},
-                                //detune dial
-                                    {type:'dial_continuous_image',name:'dial_detune',data:{
-                                        x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_periodicWave', data:{
+                                        x: 240, y: 12.5, width: 7.5, height: 15,
+                                        onreceive: function(address,data){
+                                            if(address != 'periodicWave'){return;}
+                                            object.__synthesizer.periodicWave(data);
+                                        }
                                     }},
-                                //octave dial
-                                    {type:'dial_discrete_image',name:'dial_octave',data:{
-                                        x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_midiNote', data:{
+                                        x:225, y:55, width: 15, height: 30, angle:Math.PI/4,
+                                        onreceive: function(address,data){
+                                            if(address != 'midinumber'){return;}
+                                            object.__synthesizer.perform(data);
+                                        }
                                     }},
-                                //waveType dial
-                                    {type:'dial_discrete_image',name:'dial_waveType',data:{
-                                        x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4, optionCount: 5,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_gainWobblePeriod', data:{
+                                        x: 22.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous.gainWobblePeriod.set(data);
+                                        }
                                     }},
-                                //gainWobblePeriod dial
-                                    {type:'dial_continuous_image', name:'dial_gainWobblePeriod',data:{
-                                        x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
+                                        x: 57.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous.gainWobbleDepth.set(data);
+                                        }
                                     }},
-                                //gainWobbleDepth dial
-                                    {type:'dial_continuous_image',name:'dial_gainWobbleDepth',data:{
-                                        x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
+                                        x: 107.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous.detuneWobblePeriod.set(data);
+                                        }
                                     }},
-                                //detuneWobblePeriod dial
-                                    {type:'dial_continuous_image',name:'dial_detuneWobblePeriod',data:{
-                                        x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                    {type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
+                                        x: 142.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous.detuneWobbleDepth.set(data);
+                                        }
                                     }},
-                                //detuneWobbleDepth dial
-                                    {type:'dial_continuous_image',name:'dial_detuneWobbleDepth',data:{
-                                        x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
-                                        handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                        
+                                    //gain dial
+                                        {type:'text', name:'gain_gain', data:{x: 20, y: 40, text: 'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'gain_0',    data:{x: 9,  y: 35, text: '0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'gain_1/2',  data:{x: 20, y: 7,  text: '1/2',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'gain_1',    data:{x: 32, y: 35, text: '1',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous',name:'dial_gain',data:{
+                                            x: 20, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //attack dial
+                                        {type:'text', name:'attack_gain', data:{x: 60, y: 40, text: 'attack', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'attack_0',    data:{x: 49, y: 35, text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'attack_5',    data:{x: 60, y: 7,  text: '5',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'attack_10',   data:{x: 73, y: 35, text: '10',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous',name:'dial_attack',data:{
+                                            x: 60, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //release dial
+                                        {type:'text', name:'release_gain', data:{x: 100, y: 40, text: 'release', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'release_0',    data:{x: 89,  y: 35, text: '0',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'release_5',    data:{x: 100, y: 7,  text: '5',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'release_10',   data:{x: 113, y: 35, text: '10',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous',name:'dial_release',data:{
+                                            x: 100, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //detune dial
+                                        {type:'text', name:'detune_gain', data:{x: 140, y: 40, text: 'detune', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'detune_-100', data:{x: 126, y: 35, text: '-100',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'detune_0',    data:{x: 140, y: 7,  text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'detune_100',  data:{x: 153, y: 35, text: '100',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous',name:'dial_detune',data:{
+                                            x: 140, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //octave dial
+                                        {type:'text', name:'octave_gain', data:{x: 180, y: 40, text: 'octave', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'octave_-3',   data:{x: 168, y: 35, text: '-3',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'octave_-2',   data:{x: 163, y: 24, text: '-2',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'octave_-1',   data:{x: 169, y: 11, text: '-1',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'octave_0',    data:{x: 180, y: 7,  text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'octave_1',    data:{x: 191, y: 11, text: '1',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'octave_2',    data:{x: 196, y: 24, text: '2',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'octave_3',    data:{x: 191, y: 35, text: '3',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_discrete',name:'dial_octave',data:{
+                                            x: 180, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //waveType dial
+                                        {type:'text', name:'waveType_gain', data:{x: 220, y: 40, text: 'wave', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'waveType_sin',  data:{x: 207, y: 35, text: 'sin',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'waveType_tri',  data:{x: 203, y: 19, text: 'tri',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'waveType_squ',  data:{x: 213, y: 7,  text: 'squ',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'waveType_saw',  data:{x: 231, y: 9,  text: 'saw',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'rectangle', name:'periodicWaveType', data:{
+                                            x: 232, y: 21.75, angle: 0, radius: 12, 
+                                            width: 8, height: 2.5,
+                                            colour:style.h1.colour,
+                                        }},
+                                        {type:'dial_discrete',name:'dial_waveType',data:{
+                                            x: 220, y: 23, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4,  optionCount: 5,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //gainWobblePeriod dial
+                                        {type:'text', name:'gainWobble', data:{x: 8, y: 65, angle: -Math.PI/2, text: 'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}}, 
+                                        {type:'text', name:'gainWobblePeriod_gain', data:{x: 30, y: 82, text: 'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'gainWobblePeriod_0',    data:{x: 19, y: 77, text: '0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'gainWobblePeriod_50',   data:{x: 30, y: 49, text: '50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'gainWobblePeriod_100',  data:{x: 42, y: 77, text: '100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous', name:'dial_gainWobblePeriod',data:{
+                                            x: 30, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //gainWobbleDepth dial
+                                        {type:'text', name:'gainWobbleDepth_gain', data:{x: 65, y: 82, text: 'depth', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'gainWobbleDepth_0',    data:{x: 54, y: 77, text: '0',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'gainWobbleDepth_50',   data:{x: 65, y: 49, text: '1/2',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'gainWobbleDepth_100',  data:{x: 77, y: 77, text: '1',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous',name:'dial_gainWobbleDepth',data:{
+                                            x: 65, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //detuneWobblePeriod dial
+                                        {type:'text', name:'detuneWobble', data:{x: 93, y: 65, angle: -Math.PI/2, text: 'detune', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},    
+                                        {type:'text', name:'detuneWobblePeriod_gain', data:{x: 114, y: 82, text: 'rate',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'detuneWobblePeriod_0',    data:{x: 103, y: 77, text: '0',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'detuneWobblePeriod_50',   data:{x: 114, y: 49, text: '50',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'detuneWobblePeriod_100',  data:{x: 126, y: 77, text: '100',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous',name:'dial_detuneWobblePeriod',data:{
+                                            x: 114, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                                    //detuneWobbleDepth dial
+                                        {type:'text', name:'detuneWobbleDepth_gain', data:{x: 149, y: 82, text: 'depth', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                        {type:'text', name:'detuneWobbleDepth_0',    data:{x: 138, y: 77, text: '0',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'detuneWobbleDepth_50',   data:{x: 149, y: 49, text: '1/2',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'text', name:'detuneWobbleDepth_100',  data:{x: 160, y: 77, text: '1',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        {type:'dial_continuous',name:'dial_detuneWobbleDepth',data:{
+                                            x: 149, y: 65, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        }},
+                        
+                                    {type:'button_rectangle', name:'panicButton', data: {
+                                        x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
+                                        style:style.button,
                                     }},
-                    
-                                {type:'button_rectangle', name:'panicButton', data: {
-                                    x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
-                                    style:style.button, 
-                                }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.basicSynthesizer_img,design);
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    gain: object.elements.dial_continuous_image.dial_gain.get(),
-                                    attack: object.elements.dial_continuous_image.dial_attack.get()*10,
-                                    release: object.elements.dial_continuous_image.dial_release.get()*10,
-                                    detune: 100*((object.elements.dial_continuous_image.dial_detune.get()*2)-1),
-                                    octave: object.elements.dial_discrete_image.dial_octave.get()-3,
-                                    waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_discrete_image.dial_waveType.get()],
-                                    gainWobble:{
-                                        rate: object.elements.dial_continuous_image.dial_gainWobblePeriod.get()*100,
-                                        depth: object.elements.dial_continuous_image.dial_gainWobbleDepth.get()
-                                    },
-                                    detuneWobble:{
-                                        rate: object.elements.dial_continuous_image.dial_detuneWobblePeriod.get()*100,
-                                        depth: object.elements.dial_continuous_image.dial_detuneWobbleDepth.get()
-                                    },
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.basicSynthesizer,design);
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        gain: object.elements.dial_continuous.dial_gain.get(),
+                                        attack: object.elements.dial_continuous.dial_attack.get()*10,
+                                        release: object.elements.dial_continuous.dial_release.get()*10,
+                                        detune: 100*((object.elements.dial_continuous.dial_detune.get()*2)-1),
+                                        octave: object.elements.dial_discrete.dial_octave.get()-3,
+                                        waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_discrete.dial_waveType.get()],
+                                        gainWobble:{
+                                            rate: object.elements.dial_continuous.dial_gainWobblePeriod.get()*100,
+                                            depth: object.elements.dial_continuous.dial_gainWobbleDepth.get()
+                                        },
+                                        detuneWobble:{
+                                            rate: object.elements.dial_continuous.dial_detuneWobblePeriod.get()*100,
+                                            depth: object.elements.dial_continuous.dial_detuneWobbleDepth.get()
+                                        },
+                                    };
                                 };
-                            };
-                            object.importData = function(data){
-                                if(data == undefined){return;}
-                    
-                                object.elements.dial_continuous_image.dial_gain.set(data.gain);
-                                object.elements.dial_continuous_image.dial_attack.set(data.attack/10);
-                                object.elements.dial_continuous_image.dial_release.set(data.release/10);
-                                object.elements.dial_continuous_image.dial_detune.set( (1+(data.detune/100))/2 );
-                                object.elements.dial_discrete_image.dial_octave.set(data.octave+3);
-                                object.elements.dial_discrete_image.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
-                                object.elements.dial_continuous_image.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
-                                object.elements.dial_continuous_image.dial_gainWobbleDepth.set(data.gainWobble.depth);
-                                object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
-                                object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
-                            };
-                    
-                        //circuitry
-                            object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
-                            object.__synthesizer.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                    
-                        //wiring
-                            object.elements.dial_continuous_image.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
-                            object.elements.dial_continuous_image.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
-                            object.elements.dial_continuous_image.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
-                            object.elements.dial_continuous_image.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
-                            object.elements.dial_discrete_image.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
-                            object.elements.dial_discrete_image.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
-                            object.elements.dial_continuous_image.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-                            object.elements.dial_continuous_image.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
-                            object.elements.dial_continuous_image.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
-                            object.elements.dial_continuous_image.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
-                            object.elements.button_rectangle.panicButton.onpress = function(){ object.__synthesizer.panic(); },
-                    
-                        //interface
-                            object.i = {
-                                gain:function(value){object.elements.dial_continuous_image.dial_gain.set(value);},
-                                attack:function(value){object.elements.dial_continuous_image.dial_attack.set(value);},
-                                release:function(value){object.elements.dial_continuous_image.dial_release.set(value);},
-                                detune:function(value){object.elements.dial_continuous_image.dial_detune.set(value);},
-                                octave:function(value){object.elements.dial_discrete_image.dial_octave.set(value);},
-                                waveType:function(value){object.elements.dial_discrete_image.dial_waveType.set(value);},
-                                periodicWave:function(data){object.__synthesizer.periodicWave(data);},
-                                midiNote:function(data){object.__synthesizer.perform(data);},
-                                gainWobblePeriod:function(value){object.elements.dial_continuous_image.dial_gainWobblePeriod.set(value);},
-                                gainWobbleDepth:function(value){object.elements.dial_continuous_image.dial_gainWobbleDepth.set(value);},
-                                detuneWobblePeriod:function(value){object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(value);},
-                                detuneWobbleDepth:function(value){object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(value);},
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous_image.dial_gain.set(0.5);
-                            object.elements.dial_continuous_image.dial_detune.set(0.5);
-                            object.elements.dial_discrete_image.dial_octave.set(3);
-                    
-                        return object;
-                    };
-                    
-                    this.basicSynthesizer_img.metadata = {
-                        name:'Basic Synthesizer With Image',
-                        dev:true,
-                        category:'synthesizer',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer_img/'
-                    };
-                    this.audioIn = function(x,y,a,setupConnect=true){
-                        var attributes = {
-                            deviceList:[],
-                            currentSelection: 0
+                                object.importData = function(data){
+                                    if(data == undefined){return;}
+                        
+                                    object.elements.dial_continuous.dial_gain.set(data.gain);
+                                    object.elements.dial_continuous.dial_attack.set(data.attack/10);
+                                    object.elements.dial_continuous.dial_release.set(data.release/10);
+                                    object.elements.dial_continuous.dial_detune.set( (1+(data.detune/100))/2 );
+                                    object.elements.dial_discrete.dial_octave.set(data.octave+3);
+                                    object.elements.dial_discrete.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+                                    object.elements.dial_continuous.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
+                                    object.elements.dial_continuous.dial_gainWobbleDepth.set(data.gainWobble.depth);
+                                    object.elements.dial_continuous.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
+                                    object.elements.dial_continuous.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
+                                };
+                        
+                            //circuitry
+                                object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+                                object.__synthesizer.out().connect( object.elements.connectionNode_audio.audioOut.in() );
+                        
+                            //wiring
+                                object.elements.dial_continuous.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
+                                object.elements.dial_continuous.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
+                                object.elements.dial_continuous.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
+                                object.elements.dial_continuous.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
+                                object.elements.dial_discrete.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
+                                object.elements.dial_discrete.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
+                                object.elements.dial_continuous.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                                object.elements.dial_continuous.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
+                                object.elements.dial_continuous.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                                object.elements.dial_continuous.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
+                                object.elements.button_rectangle.panicButton.onpress = function(){ object.__synthesizer.panic(); },
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(value){object.elements.dial_continuous.dial_gain.set(value);},
+                                    attack:function(value){object.elements.dial_continuous.dial_attack.set(value);},
+                                    release:function(value){object.elements.dial_continuous.dial_release.set(value);},
+                                    detune:function(value){object.elements.dial_continuous.dial_detune.set(value);},
+                                    octave:function(value){object.elements.dial_discrete.dial_octave.set(value);},
+                                    waveType:function(value){object.elements.dial_discrete.dial_waveType.set(value);},
+                                    periodicWave:function(data){object.__synthesizer.periodicWave(data);},
+                                    midiNote:function(data){object.__synthesizer.perform(data);},
+                                    gainWobblePeriod:function(value){object.elements.dial_continuous.dial_gainWobblePeriod.set(value);},
+                                    gainWobbleDepth:function(value){object.elements.dial_continuous.dial_gainWobbleDepth.set(value);},
+                                    detuneWobblePeriod:function(value){object.elements.dial_continuous.dial_detuneWobblePeriod.set(value);},
+                                    detuneWobbleDepth:function(value){object.elements.dial_continuous.dial_detuneWobbleDepth.set(value);},
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.dial_gain.set(0.5);
+                                object.elements.dial_continuous.dial_detune.set(0.5);
+                                object.elements.dial_discrete.dial_octave.set(3);
+                        
+                            return object;
                         };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            marking:{stroke:{r:160/255,g:160/255,b:160/255,a:1}, lineWidth:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            readout:{ background:'rgb(0,0,0)', glow:'rgb(200,200,200)', dim:'rgb(20,20,20)' },
-                            button:{
-                                background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover__colour:{r:230/255,g:230/255,b:230/255,a:1}, 
-                                background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
-                            },
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
+                        
+                        this.basicSynthesizer.metadata = {
+                            name:'Basic Synthesizer',
+                            category:'synthesizer',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer/'
                         };
-                        var design = {
-                            name:'audioIn',
-                            category:'humanInputDevices',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[
-                                {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
-                                {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
-                            ],
-                            // spaceOutline: true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
+                        this.basicSynthesizer_img = function(x,y,angle){
+                            var attributes = {
+                                detuneLimits: {min:-100, max:100}
+                            };
+                            var style = {
+                                background:'/images/units/alpha/basicSynthesizer_2.png',
+                        
+                                dial:{
+                                    handle:'/images/units/alpha/basicSynthesizer_2_dial_handle.png',
+                                    slot:'/images/units/alpha/basicSynthesizer_2_dial_slot.png',
+                                    needle:'/images/units/alpha/basicSynthesizer_2_dial_needle.png',
+                                },
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                }
+                            };
+                            var design = {
+                                name:'basicSynthesizer_img',
+                                category:'synthesizers',
+                                collection: 'alpha',
+                                x:x, y:y, angle:angle,
+                                space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'image', name:'imgBacking', data:{ x:0, y:0, width:240, height:90, url:style.background, points:[{x:0,y:0},{x:1,y:0},{x:1,y:4/9},{x:19/24,y:1},{x:0,y:1}] } },
+                        
+                                    {type:'connectionNode_audio', name:'audioOut', data: {
+                                        type: 1, x: -15, y: 5, width: 15, height: 30, isAudioOutput:true 
+                                    }},
+                                    {type:'connectionNode_data', name:'port_gain', data:{
+                                        x: 12.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            switch(address){
+                                                case '%': object.elements.dial_continuous_image.gain.set(data); break;
+                                                case '%t': 
+                                                    object.__synthesizer.gain(data.target,data.time,data.curve);
+                                                    object.elements.dial_continuous_image.gain.smoothSet(data.target,data.time,data.curve,false);
+                                                break;
+                                                default: break;
+                                            }
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_attack', data:{
+                                        x: 52.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous_image.attack.set(data);
+                                        } 
+                                    }},
+                                    {type:'connectionNode_data', name:'port_release', data:{
+                                        x: 92.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous_image.release.set(data);
+                                        } 
+                                    }},
+                                    {type:'connectionNode_data', name:'port_detune', data:{
+                                        x: 132.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){ 
+                                            switch(address){
+                                                case '%': object.elements.dial_continuous_image.detune.set(data); break;
+                                                case '%t': 
+                                                    object.__synthesizer.detune((data.target*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min),data.time,data.curve);
+                                                    object.elements.dial_continuous_image.detune.smoothSet(data.target,data.time,data.curve,false);
+                                                break;
+                                                default: break;
+                                            }
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_octave', data:{
+                                        x: 170.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != 'discrete'){return;}
+                                            object.elements.dial_discrete_image.octave.select(data);
+                                        } 
+                                    }},
+                                    {type:'connectionNode_data', name:'port_waveType', data:{
+                                        x: 210.5, y: -7.5, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != 'discrete'){return;}
+                                            object.elements.dial_discrete_image.waveType.select(data);
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_periodicWave', data:{
+                                        x: 240, y: 12.5, width: 7.5, height: 15,
+                                        onreceive: function(address,data){
+                                            if(address != 'periodicWave'){return;}
+                                            object.__synthesizer.periodicWave(data);
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_midiNote', data:{
+                                        x:225, y:55, width: 15, height: 30, angle:Math.PI/4,
+                                        onreceive: function(address,data){
+                                            if(address != 'midinumber'){return;}
+                                            object.__synthesizer.perform(data);
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_gainWobblePeriod', data:{
+                                        x: 22.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous_image.gainWobblePeriod.set(data);
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
+                                        x: 57.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous_image.gainWobbleDepth.set(data);
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
+                                        x: 107.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous_image.detuneWobblePeriod.set(data);
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
+                                        x: 142.5, y: 90, width: 15, height: 7.5,
+                                        onreceive: function(address,data){
+                                            if(address != '%'){return;}
+                                            object.elements.dial_continuous_image.detuneWobbleDepth.set(data);
+                                        }
+                                    }},
+                        
+                                    //gain dial
+                                        {type:'dial_continuous_image',name:'dial_gain',data:{
+                                            x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //attack dial
+                                        {type:'dial_continuous_image',name:'dial_attack',data:{
+                                            x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //release dial
+                                        {type:'dial_continuous_image',name:'dial_release',data:{
+                                            x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //detune dial
+                                        {type:'dial_continuous_image',name:'dial_detune',data:{
+                                            x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //octave dial
+                                        {type:'dial_discrete_image',name:'dial_octave',data:{
+                                            x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //waveType dial
+                                        {type:'dial_discrete_image',name:'dial_waveType',data:{
+                                            x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4, optionCount: 5,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //gainWobblePeriod dial
+                                        {type:'dial_continuous_image', name:'dial_gainWobblePeriod',data:{
+                                            x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //gainWobbleDepth dial
+                                        {type:'dial_continuous_image',name:'dial_gainWobbleDepth',data:{
+                                            x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //detuneWobblePeriod dial
+                                        {type:'dial_continuous_image',name:'dial_detuneWobblePeriod',data:{
+                                            x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                                    //detuneWobbleDepth dial
+                                        {type:'dial_continuous_image',name:'dial_detuneWobbleDepth',data:{
+                                            x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
+                                            handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
+                                        }},
+                        
+                                    {type:'button_rectangle', name:'panicButton', data: {
+                                        x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
+                                        style:style.button, 
+                                    }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.basicSynthesizer_img,design);
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        gain: object.elements.dial_continuous_image.dial_gain.get(),
+                                        attack: object.elements.dial_continuous_image.dial_attack.get()*10,
+                                        release: object.elements.dial_continuous_image.dial_release.get()*10,
+                                        detune: 100*((object.elements.dial_continuous_image.dial_detune.get()*2)-1),
+                                        octave: object.elements.dial_discrete_image.dial_octave.get()-3,
+                                        waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_discrete_image.dial_waveType.get()],
+                                        gainWobble:{
+                                            rate: object.elements.dial_continuous_image.dial_gainWobblePeriod.get()*100,
+                                            depth: object.elements.dial_continuous_image.dial_gainWobbleDepth.get()
+                                        },
+                                        detuneWobble:{
+                                            rate: object.elements.dial_continuous_image.dial_detuneWobblePeriod.get()*100,
+                                            depth: object.elements.dial_continuous_image.dial_detuneWobbleDepth.get()
+                                        },
+                                    };
+                                };
+                                object.importData = function(data){
+                                    if(data == undefined){return;}
+                        
+                                    object.elements.dial_continuous_image.dial_gain.set(data.gain);
+                                    object.elements.dial_continuous_image.dial_attack.set(data.attack/10);
+                                    object.elements.dial_continuous_image.dial_release.set(data.release/10);
+                                    object.elements.dial_continuous_image.dial_detune.set( (1+(data.detune/100))/2 );
+                                    object.elements.dial_discrete_image.dial_octave.set(data.octave+3);
+                                    object.elements.dial_discrete_image.dial_waveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+                                    object.elements.dial_continuous_image.dial_gainWobblePeriod.set(data.gainWobble.rate/100);
+                                    object.elements.dial_continuous_image.dial_gainWobbleDepth.set(data.gainWobble.depth);
+                                    object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(data.detuneWobble.rate/100);
+                                    object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(data.detuneWobble.depth);
+                                };
+                        
+                            //circuitry
+                                object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+                                object.__synthesizer.out().connect( object.elements.connectionNode_audio.audioOut.in() );
+                        
+                            //wiring
+                                object.elements.dial_continuous_image.dial_gain.onchange = function(value){ object.__synthesizer.gain( value ); };
+                                object.elements.dial_continuous_image.dial_attack.onchange = function(value){ object.__synthesizer.attack( value ); }
+                                object.elements.dial_continuous_image.dial_release.onchange = function(value){ object.__synthesizer.release( value ); }
+                                object.elements.dial_continuous_image.dial_detune.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); }
+                                object.elements.dial_discrete_image.dial_octave.onchange = function(value){ object.__synthesizer.octave(value-3); }
+                                object.elements.dial_discrete_image.dial_waveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); }
+                                object.elements.dial_continuous_image.dial_gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                                object.elements.dial_continuous_image.dial_gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value); },
+                                object.elements.dial_continuous_image.dial_detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); }
+                                object.elements.dial_continuous_image.dial_detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); }
+                                object.elements.button_rectangle.panicButton.onpress = function(){ object.__synthesizer.panic(); },
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(value){object.elements.dial_continuous_image.dial_gain.set(value);},
+                                    attack:function(value){object.elements.dial_continuous_image.dial_attack.set(value);},
+                                    release:function(value){object.elements.dial_continuous_image.dial_release.set(value);},
+                                    detune:function(value){object.elements.dial_continuous_image.dial_detune.set(value);},
+                                    octave:function(value){object.elements.dial_discrete_image.dial_octave.set(value);},
+                                    waveType:function(value){object.elements.dial_discrete_image.dial_waveType.set(value);},
+                                    periodicWave:function(data){object.__synthesizer.periodicWave(data);},
+                                    midiNote:function(data){object.__synthesizer.perform(data);},
+                                    gainWobblePeriod:function(value){object.elements.dial_continuous_image.dial_gainWobblePeriod.set(value);},
+                                    gainWobbleDepth:function(value){object.elements.dial_continuous_image.dial_gainWobbleDepth.set(value);},
+                                    detuneWobblePeriod:function(value){object.elements.dial_continuous_image.dial_detuneWobblePeriod.set(value);},
+                                    detuneWobbleDepth:function(value){object.elements.dial_continuous_image.dial_detuneWobbleDepth.set(value);},
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous_image.dial_gain.set(0.5);
+                                object.elements.dial_continuous_image.dial_detune.set(0.5);
+                                object.elements.dial_discrete_image.dial_octave.set(3);
+                        
+                            return object;
+                        };
+                        
+                        this.basicSynthesizer_img.metadata = {
+                            name:'Basic Synthesizer With Image',
+                            dev:true,
+                            category:'synthesizer',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer_img/'
+                        };
+                        this.audioIn = function(x,y,a,setupConnect=true){
+                            var attributes = {
+                                deviceList:[],
+                                currentSelection: 0
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                marking:{stroke:{r:160/255,g:160/255,b:160/255,a:1}, lineWidth:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                readout:{ background:'rgb(0,0,0)', glow:'rgb(200,200,200)', dim:'rgb(20,20,20)' },
+                                button:{
+                                    background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover__colour:{r:230/255,g:230/255,b:230/255,a:1}, 
+                                    background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
+                                },
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                            };
+                            var design = {
+                                name:'audioIn',
+                                category:'humanInputDevices',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[
                                     {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
                                     {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
-                                ], colour:style.background }},
-                                {type:'connectionNode_audio', name:'audioOut', data:{x: -10, y: 15, width: 10, height: 20, isAudioOutput:true }},
-                                {type:'readout_sixteenSegmentDisplay_static', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
-                                {type:'readout_sixteenSegmentDisplay_static', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-                                {type:'button_rectangle', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
-                                {type:'button_rectangle', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
-                                {type:'text', name:'gainLabel_name', data:{x:30, y:42, text:'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'gainLabel_0',    data:{x:18, y:38, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gainLabel_1',    data:{x:30, y:8, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'gainLabel_2',    data:{x:41, y:38, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, style:style.dial, resetValue:0.5 }},
-                                {type:'path', name:'upArrow',   data:{pointsAsXYArray:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
-                                {type:'path', name:'downArrow', data:{pointsAsXYArray:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
-                                {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.audioIn,design);
-                    
-                        //keycapture
-                            object.elements.polygon.backing.onkeydown = function(x,y,event){
-                                switch(event.key){
-                                    case 'ArrowUp':    object.elements.button_rectangle.up.press(); break;
-                                    case 'ArrowDown':  object.elements.button_rectangle.down.press(); break;
-                                    case 'ArrowLeft':  object.elements.dial_continuous.outputGain.set(object.elements.dial_continuous.outputGain.get()-0.1); break;
-                                    case 'ArrowRight': object.elements.dial_continuous.outputGain.set(object.elements.dial_continuous.outputGain.get()+0.1); break;
-                                }
+                                ],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
+                                        {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
+                                        {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
+                                    ], colour:style.background }},
+                                    {type:'connectionNode_audio', name:'audioOut', data:{x: -10, y: 15, width: 10, height: 20, isAudioOutput:true }},
+                                    {type:'readout_sixteenSegmentDisplay_static', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
+                                    {type:'readout_sixteenSegmentDisplay_static', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
+                                    {type:'button_rectangle', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
+                                    {type:'button_rectangle', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
+                                    {type:'text', name:'gainLabel_name', data:{x:30, y:42, text:'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'gainLabel_0',    data:{x:18, y:38, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gainLabel_1',    data:{x:30, y:8, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'gainLabel_2',    data:{x:41, y:38, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, style:style.dial, resetValue:0.5 }},
+                                    {type:'path', name:'upArrow',   data:{pointsAsXYArray:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
+                                    {type:'path', name:'downArrow', data:{pointsAsXYArray:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
+                                    {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
+                                ]
                             };
-                    
-                        //circuitry
-                            object.circuitry = {
-                                unit: new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect)
-                            };
-                            object.circuitry.unit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
-                            object.circuitry.unit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
-                    
-                        //wiring
-                            object.elements.dial_continuous.outputGain.onchange = function(value){object.circuitry.unit.gain(value*2);}
-                    
-                        //internal functions
-                            function selectDevice(a){
-                                if(attributes.deviceList.length == 0){
-                                    object.elements.readout_sixteenSegmentDisplay_static.index.text(' n/a');
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.audioIn,design);
+                        
+                            //keycapture
+                                object.elements.polygon.backing.onkeydown = function(x,y,event){
+                                    switch(event.key){
+                                        case 'ArrowUp':    object.elements.button_rectangle.up.press(); break;
+                                        case 'ArrowDown':  object.elements.button_rectangle.down.press(); break;
+                                        case 'ArrowLeft':  object.elements.dial_continuous.outputGain.set(object.elements.dial_continuous.outputGain.get()-0.1); break;
+                                        case 'ArrowRight': object.elements.dial_continuous.outputGain.set(object.elements.dial_continuous.outputGain.get()+0.1); break;
+                                    }
+                                };
+                        
+                            //circuitry
+                                object.circuitry = {
+                                    unit: new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect)
+                                };
+                                object.circuitry.unit.out().connect( object.elements.connectionNode_audio.audioOut.in() );
+                                object.circuitry.unit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
+                        
+                            //wiring
+                                object.elements.dial_continuous.outputGain.onchange = function(value){object.circuitry.unit.gain(value*2);}
+                        
+                            //internal functions
+                                function selectDevice(a){
+                                    if(attributes.deviceList.length == 0){
+                                        object.elements.readout_sixteenSegmentDisplay_static.index.text(' n/a');
+                                        object.elements.readout_sixteenSegmentDisplay_static.index.print();
+                                        object.elements.readout_sixteenSegmentDisplay_static.text.text('no devices');
+                                        object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
+                                        return;
+                                    }
+                                    if( a < 0 || a >= attributes.deviceList.length ){return;}
+                                    attributes.currentSelection = a;
+                        
+                                    selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
+                                    totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
+                                    object.elements.readout_sixteenSegmentDisplay_static.index.text(selectionNum+'/'+totalNum);
                                     object.elements.readout_sixteenSegmentDisplay_static.index.print();
-                                    object.elements.readout_sixteenSegmentDisplay_static.text.text('no devices');
+                        
+                                    var text = attributes.deviceList[a].deviceId;
+                                    if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
+                                    object.elements.readout_sixteenSegmentDisplay_static.text.text(text);
                                     object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
-                                    return;
+                        
+                                    object.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
                                 }
-                                if( a < 0 || a >= attributes.deviceList.length ){return;}
-                                attributes.currentSelection = a;
-                    
-                                selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
-                                totalNum=''+attributes.deviceList.length;while(totalNum.length < 2){ totalNum = '0'+totalNum;}
-                                object.elements.readout_sixteenSegmentDisplay_static.index.text(selectionNum+'/'+totalNum);
-                                object.elements.readout_sixteenSegmentDisplay_static.index.print();
-                    
-                                var text = attributes.deviceList[a].deviceId;
-                                if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
-                                object.elements.readout_sixteenSegmentDisplay_static.text.text(text);
-                                object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
-                    
-                                object.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
-                            }
-                            function incSelection(){ selectDevice(attributes.currentSelection+1); }
-                            function decSelection(){ selectDevice(attributes.currentSelection-1); }
-                    
-                        //setup
-                            object.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
-                            if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
-                            object.elements.dial_continuous.outputGain.set(0.5);
-                            object.elements.audio_meter_level.audioIn.start();
-                    
-                        return object;
-                    };
-                    
-                    this.audioIn.metadata = {
-                        name:'Audio Input',
-                        category:'humanInputDevices',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/audioInput/'
-                    };
-                    this.musicalKeyboard = function(x,y,a){
-                        var state = {
-                            velocity:0.5,
+                                function incSelection(){ selectDevice(attributes.currentSelection+1); }
+                                function decSelection(){ selectDevice(attributes.currentSelection-1); }
+                        
+                            //setup
+                                object.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
+                                if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
+                                object.elements.dial_continuous.outputGain.set(0.5);
+                                object.elements.audio_meter_level.audioIn.start();
+                        
+                            return object;
                         };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            dial:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                needle:{r:250/255,g:150/255,b:150/255,a:1},
-                            },
-                            keys:{
-                                white:{
-                                    background__up__colour:{r:250/255,g:250/255,b:250/255,a:1},
-                                    background__press__colour:{r:230/255,g:230/255,b:230/255,a:1},
-                                    background__glow__colour:{r:220/255,g:200/255,b:220/255,a:1},
-                                    background__glow_press__colour:{r:200/255,g:150/255,b:200/255,a:1},
-                                },
-                                black:{
-                                    background__up__colour:{r:50/255,g:50/255,b:50/255,a:1},
-                                    background__press__colour:{r:100/255,g:100/255,b:100/255,a:1},
-                                    background__glow__colour:{r:220/255,g:200/255,b:220/255,a:1},
-                                    background__glow_press__colour:{r:200/255,g:150/255,b:200/255,a:1},
-                                }
-                            }
-                        };
-                        var design = {
-                            name: 'musicalKeyboard',
+                        
+                        this.audioIn.metadata = {
+                            name:'Audio Input',
                             category:'humanInputDevices',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}], colour:style.background }},
-                    
-                                {type:'connectionNode_data', name:'midiout', data:{ 
-                                    x: -5, y: 5, width: 5, height: 10,
-                                }},
-                                {type:'connectionNode_data', name:'midiin', data:{ 
-                                    x: 320, y: 5, width: 5, height: 10,
-                                    onreceive:function(address,data){
-                                        if(address != 'midinumber'){return;}
-                                        if(data.velocity > 0){ object.elements.button_rectangle[_canvas_.library.audio.num2name(data.num)].press();   }
-                                                         else{ object.elements.button_rectangle[_canvas_.library.audio.num2name(data.num)].release(); }
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/audioInput/'
+                        };
+                        this.musicalKeyboard = function(x,y,a){
+                            var state = {
+                                velocity:0.5,
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:150/255,g:150/255,b:150/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                dial:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    needle:{r:250/255,g:150/255,b:150/255,a:1},
+                                },
+                                keys:{
+                                    white:{
+                                        background__up__colour:{r:250/255,g:250/255,b:250/255,a:1},
+                                        background__press__colour:{r:230/255,g:230/255,b:230/255,a:1},
+                                        background__glow__colour:{r:220/255,g:200/255,b:220/255,a:1},
+                                        background__glow_press__colour:{r:200/255,g:150/255,b:200/255,a:1},
                                     },
-                                }},
-                    
-                                //velocity dial
-                                {type:'text', name:'velocity_title', data:{x:17.5, y:56, text:'velocity', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'velocity_0',     data:{x:8,    y:52, text:'0',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'velocity_1/2',   data:{x:17.5, y:28, text:'1/2',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'velocity_1',     data:{x:27,   y:52, text:'1',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'velocity_dial',data:{
-                                    x:17.5, y:42, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, value:0.5,
-                                    style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
-                                    onchange:function(value){ state.velocity = value; }
-                                }},
-                            ]
-                        };
-                        //dynamic design
-                            //placement of keys
-                                var glyphs = [ '\\','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ];
-                                var noteNames = [ '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B', '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B', '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B', '7C' ];
-                                var whiteX = 35;
-                                var whiteKeyWidth = 12.5;
-                                var blackX = 45;
-                    
-                                for(var a = 0; a < glyphs.length; a++){
-                                    if( noteNames[a].slice(-1) != '#' ){
-                                        design.elements.push(
-                                            {type:'button_rectangle', name:noteNames[a], data:{
-                                                x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
-                                                style:style.keys.white,
-                                                onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
-                                                onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
-                                            }}
-                                        );
-                                        whiteX += whiteKeyWidth;
+                                    black:{
+                                        background__up__colour:{r:50/255,g:50/255,b:50/255,a:1},
+                                        background__press__colour:{r:100/255,g:100/255,b:100/255,a:1},
+                                        background__glow__colour:{r:220/255,g:200/255,b:220/255,a:1},
+                                        background__glow_press__colour:{r:200/255,g:150/255,b:200/255,a:1},
                                     }
                                 }
-                    
-                                var count = 0;
-                                for(var a = 0; a < glyphs.length; a++){
-                                    if( noteNames[a].slice(-1) == '#' ){
-                                        design.elements.push(
-                                            {type:'button_rectangle', name:noteNames[a], data:{
-                                                x:blackX, y:12.5, width:5, height:30, hoverable:false,
-                                                style:style.keys.black,
-                                                onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
-                                                onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
-                                            }}
-                                        );
-                                        blackX += whiteKeyWidth;
-                                        count = 0;
-                                    }else{ count++; }
-                                    
-                                    if(count > 1){ blackX += whiteKeyWidth; }
-                                }
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
-                    
-                        //keycapture
-                            object.elements.polygon.backing.onkeydown = function(event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].press();
-                                }
                             };
-                            object.elements.polygon.backing.onkeyup = function(event){
-                                if( glyphs.includes(event.key) ){
-                                    object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].release();
-                                }
+                            var design = {
+                                name: 'musicalKeyboard',
+                                category:'humanInputDevices',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}], colour:style.background }},
+                        
+                                    {type:'connectionNode_data', name:'midiout', data:{ 
+                                        x: -5, y: 5, width: 5, height: 10,
+                                    }},
+                                    {type:'connectionNode_data', name:'midiin', data:{ 
+                                        x: 320, y: 5, width: 5, height: 10,
+                                        onreceive:function(address,data){
+                                            if(address != 'midinumber'){return;}
+                                            if(data.velocity > 0){ object.elements.button_rectangle[_canvas_.library.audio.num2name(data.num)].press();   }
+                                                             else{ object.elements.button_rectangle[_canvas_.library.audio.num2name(data.num)].release(); }
+                                        },
+                                    }},
+                        
+                                    //velocity dial
+                                    {type:'text', name:'velocity_title', data:{x:17.5, y:56, text:'velocity', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'velocity_0',     data:{x:8,    y:52, text:'0',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'velocity_1/2',   data:{x:17.5, y:28, text:'1/2',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'velocity_1',     data:{x:27,   y:52, text:'1',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'velocity_dial',data:{
+                                        x:17.5, y:42, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, value:0.5,
+                                        style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
+                                        onchange:function(value){ state.velocity = value; }
+                                    }},
+                                ]
                             };
-                    
-                        //wiring
-                            
-                    
-                        //interface
-                            object.i = {
-                                velocity:function(a){object.elements.dial_continuous.velocity.set(a);},
-                            };
-                    
-                        return object;
-                    };
-                    
-                    this.musicalKeyboard.metadata = {
-                        name:'Musical Keyboard',
-                        category:'humanInputDevices',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/musicalKeyboard/'
-                    };
-                    this.recorder = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                        };
-                        var design = {
-                            name: 'recorder',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'inRight', data: {x:175, y:2.5, width:10, height:15}},
-                                {type:'connectionNode_audio', name:'inLeft', data: {x:175, y:22.5, width:10, height:15}},
-                    
-                    
-                                //logo label
-                                    {type:'rectangle', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, colour:{r:230/255,g:230/255,b:230/255,a:1}}},
-                                    {type:'text', name:'logo_label', data:{x:154, y:28, angle:-0.25, text:'REcorder', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                    
-                                //rec
-                                    {type:'button_rectangle', name:'rec', data: {
-                                        x:5, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){
-                                            if(state == 'paused'){object.recorder.resume();}
-                                            else{object.recorder.start();}
-                                            updateLights('rec');
+                            //dynamic design
+                                //placement of keys
+                                    var glyphs = [ '\\','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ];
+                                    var noteNames = [ '4C', '4C#', '4D', '4D#', '4E', '4F', '4F#', '4G', '4G#', '4A', '4A#', '4B', '5C', '5C#', '5D', '5D#', '5E', '5F', '5F#', '5G', '5G#', '5A', '5A#', '5B', '6C', '6C#', '6D', '6D#', '6E', '6F', '6F#', '6G', '6G#', '6A', '6A#', '6B', '7C' ];
+                                    var whiteX = 35;
+                                    var whiteKeyWidth = 12.5;
+                                    var blackX = 45;
+                        
+                                    for(var a = 0; a < glyphs.length; a++){
+                                        if( noteNames[a].slice(-1) != '#' ){
+                                            design.elements.push(
+                                                {type:'button_rectangle', name:noteNames[a], data:{
+                                                    x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
+                                                    style:style.keys.white,
+                                                    onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
+                                                    onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
+                                                }}
+                                            );
+                                            whiteX += whiteKeyWidth;
                                         }
-                                    }},
-                                    {type:'text', name:'button_rectangle_text', data:{x:15, y:30 - style.h2.size/4, text:'rec', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                //pause/resume
-                                    {type:'button_rectangle', name:'pause/resume', data: {
-                                        x:27.5, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){
-                                            if(state == 'paused'){object.recorder.resume();}
-                                            else{object.recorder.pause();}
-                                            updateLights('pause/resume');
-                                        }
-                                    }},
-                                    {type:'text', name:'button_pause/resume_text', data:{x:37.7, y:30 - style.h2.size/4, text:'pause', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                //stop
-                                    {type:'button_rectangle', name:'stop', data: {
-                                        x:50, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){updateLights('stop');object.recorder.stop();}
-                                    }},
-                                    {type:'text', name:'button_stop_text', data:{x:60, y:30 - style.h2.size/4, text:'stop', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                //save
-                                    {type:'button_rectangle', name:'save', data: {
-                                        x:72.5, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){
-                                            updateLights('save');
-                                            if(state != 'empty'){ object.recorder.save(); }
-                                        }
-                                    }},
-                                    {type:'text', name:'button_save_text', data:{x:82.5, y:30 - style.h2.size/4, text:'save', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                //clear
-                                    {type:'button_rectangle', name:'clear', data: {
-                                        x:95, y: 25, width:20, height:10, style:style.button,
-                                        onpress: function(){updateLights('clear');object.recorder.clear();}
-                                    }},
-                                    {type:'text', name:'button_clear_text', data:{x:105, y:30 - style.h2.size/4, text:'clear', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                    
-                                //time readout
-                                    {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 70, y: 5, angle:0, width:100, height:15, count:11 }},
-                    
-                                //activity lights
-                                    //recording
-                                        {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:{r:255/255,g:63/255,b:63/255,a:1}, dim:{r:25/255,g:6/255,b:6/255,a:1}}}},
-                                        {type:'text', name:'activityLight_recording_text', data:{x:12.5, y:12.5 - style.h2.size/4, text:'rec', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    //paused
-                                        {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:{r:126/255,g:186/255,b:247/255,a:1}, dim:{r:12/255,g:18/255,b:24/255,a:1}}}},
-                                        {type:'text', name:'activityLight_paused_text', data:{x:27.5, y:12.5 - style.h2.size/4, text:'pau', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    //empty
-                                        {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:{r:199/255,g:249/255,b:244/255,a:1}, dim:{r:19/255,g:24/255,b:24/255,a:1}}}},
-                                        {type:'text', name:'activityLight_empty_text', data:{x:42.5, y:12.5 - style.h2.size/4, text:'emp', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                    //ready to save
-                                        {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:{r:61/255,g:224/255,b:35/255,a:1}, dim:{r:6/255,g:22/255,b:3/255,a:1}}}},
-                                        {type:'text', name:'activityLight_full_text', data:{x:57.5, y:12.5 - style.h2.size/4, text:'ful', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.recorder,design);
-                    
-                        //circuitry
-                            //update functions
-                                //time readout
-                                    setInterval(function(){
-                                        var time = object.recorder.recordingTime();
-                                        var decimalValues = time % 1;
-                                        time = _canvas_.library.math.seconds2time( Math.round(time) );
-                    
-                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                            _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                                            _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                                            _canvas_.library.misc.padString(time.s,2,'0')+'.'+
-                                            _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
-                                        );
-                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                    },100);
-                                //lights
-                                    var state = 'empty'; //empty - recording - paused - full
-                                    function updateLights(action){
-                                        if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
-                                        if( action == 'stop' || action == 'save' ){ state = 'full'; }
-                                        if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
-                                        if( action == 'clear' ){ state = 'empty'; }
-                                        if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
-                                        else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
-                    
-                                        if(state == 'empty'){object.elements.glowbox_rect.activityLight_empty.on();}else{object.elements.glowbox_rect.activityLight_empty.off();}
-                                        if(state == 'recording'){object.elements.glowbox_rect.activityLight_recording.on();}else{object.elements.glowbox_rect.activityLight_recording.off();}
-                                        if(state == 'paused'){object.elements.glowbox_rect.activityLight_paused.on();}else{object.elements.glowbox_rect.activityLight_paused.off();}
-                                        if(state == 'full'){object.elements.glowbox_rect.activityLight_full.on();}else{object.elements.glowbox_rect.activityLight_full.off();}
                                     }
-                                    updateLights('clear');
-                                    object.elements.glowbox_rect.activityLight_empty.on();
-                    
-                            //audio recorder
-                                object.recorder = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.inRight.out().connect( object.recorder.in_right() );
-                                object.elements.connectionNode_audio.inLeft.out().connect( object.recorder.in_left() );
-                    
-                        return object;
-                    };
-                    
-                    this.recorder.metadata = {
-                        name:'Recorder',
-                        category:'audioFile',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/recorder/'
-                    };
-
-                    this.looper = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                            fire_button:{
-                                background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
-                            },
-                            stop_button:{
-                                background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
-                            },
-                        };
-                        var design = {
-                            name: 'looper',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_data', name:'trigger', data:{
-                                    x: 220, y: 17.5, width: 10, height: 20,
-                                    onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); }
-                                }},
-                    
-                                //symbol
-                                    {type:'circleWithOutline', name:'symbol_outterCircle1', data:{ x:11.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'circleWithOutline', name:'symbol_outterCircle2', data:{ x:18.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, colour:style.background }},
-                                    {type:'path', name:'symbol_upperarrow', data:{ pointsAsXYArray:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'path', name:'symbol_lowerarrow', data:{ pointsAsXYArray:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                    
-                                {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
-                                    onpress: function(){
-                                        object.looper.load('file',function(data){
-                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.looper.waveformSegment() );
-                                        });
-                                    }
-                                }},
-                                {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
-                                    onpress:function(){
-                                        //no file -> don't bother
-                                            if(object.looper.duration() < 0){return;}
-                    
-                                        //actually start the audio
-                                            object.looper.start();
+                        
+                                    var count = 0;
+                                    for(var a = 0; a < glyphs.length; a++){
+                                        if( noteNames[a].slice(-1) == '#' ){
+                                            design.elements.push(
+                                                {type:'button_rectangle', name:noteNames[a], data:{
+                                                    x:blackX, y:12.5, width:5, height:30, hoverable:false,
+                                                    style:style.keys.black,
+                                                    onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
+                                                    onrelease:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:0 } ); },
+                                                }}
+                                            );
+                                            blackX += whiteKeyWidth;
+                                            count = 0;
+                                        }else{ count++; }
                                         
-                                        //perform graphical movements
-                                            var duration = object.looper.duration();
-                    
-                                        //if there's already a needle; delete it
-                                            if(needleExists){
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                clearTimeout(needleInterval);
-                                            }
-                    
-                                        //create new needle, and send it on its way
-                                            previousPosition = undefined;
-                                            currentPosition = 0;
-                                            var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
-                                            var step = stepTime/(duration*1000);
-                                            needleInterval = setInterval(function(){
-                                                //remove previous mark
-                                                    if(previousPosition != undefined){
-                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                    }
-                    
-                                                previousPosition = currentPosition;
-                                                currentPosition += step;
-                    
-                                                //add new mark
-                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                    
-                                                //check for ending
-                                                    if( currentPosition > 1 ){
-                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                        currentPosition = 0;
-                                                        previousPosition = undefined;
-                                                    }
-                    
-                                            },stepTime);
-                                            needleExists = true;
-                                    },
-                                }},
-                                {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
-                                    onpress:function(){
-                                        object.looper.stop();
-                    
-                                        //if there's a needle, remove it
-                                            if(needleExists){
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                needleExists = false;
-                                                currentPosition = undefined;
-                                                clearTimeout(needleInterval);
-                                            }
-                    
-                                    },
-                                }},
-                    
-                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.looper,design);
-                    
-                        //circuitry
-                            var needleExists = false;
-                            var needleInterval = undefined;
-                            var currentPosition = undefined;
-                            var previousPosition = undefined;
-                    
-                            //audioFilePlayer
-                                object.looper = new _canvas_.interface.circuit.looper(_canvas_.library.audio.context);
-                                object.looper.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
-                                object.looper.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
-                    
-                        return object;
-                    };
-                    
-                    this.looper.metadata = {
-                        name:'Looper',
-                        category:'audioFile',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/looper/'
-                    };
-                    this.oneShot_single = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                            fire_button:{
-                                background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
-                            },
-                            stop_button:{
-                                background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
-                            },
-                        };
-                        var design = {
-                            name: 'oneShot_single',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_data', name:'trigger', data:{
-                                    x:220, y:17.5, width:10, height:20,
-                                    onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
-                                }},
-                    
-                                //symbol
-                                    {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
-                                    {type:'circleWithOutline', name:'symbol_outerCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, colour:style.markings.colour }},
-                    
-                                {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
-                                    onpress: function(){
-                                        object.oneShot.load('file',function(data){
-                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
-                                        });
+                                        if(count > 1){ blackX += whiteKeyWidth; }
                                     }
-                                }},
-                                {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
-                                    onpress:function(){
-                                        //no file = don't bother
-                                            if(object.oneShot.duration() < 0){return;}
+                        
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
+                        
+                            //keycapture
+                                object.elements.polygon.backing.onkeydown = function(event){
+                                    if( glyphs.includes(event.key) ){
+                                        object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].press();
+                                    }
+                                };
+                                object.elements.polygon.backing.onkeyup = function(event){
+                                    if( glyphs.includes(event.key) ){
+                                        object.elements.button_rectangle[noteNames[glyphs.indexOf(event.key)]].release();
+                                    }
+                                };
+                        
+                            //wiring
                                 
-                                        //actually start the audio
-                                            object.oneShot.fire();
-                    
-                                        //perform graphical movements
-                                            var duration = object.oneShot.duration();
-                    
-                                        //if there's a playhead, remove it
-                                            if(needleExists){
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                clearTimeout(needleInterval);
+                        
+                            //interface
+                                object.i = {
+                                    velocity:function(a){object.elements.dial_continuous.velocity.set(a);},
+                                };
+                        
+                            return object;
+                        };
+                        
+                        this.musicalKeyboard.metadata = {
+                            name:'Musical Keyboard',
+                            category:'humanInputDevices',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/musicalKeyboard/'
+                        };
+                        this.recorder = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:4, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                            };
+                            var design = {
+                                name: 'recorder',
+                                category: 'audioFile',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:175,y:0},{x:175,y:40},{x:0,y:40}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'inRight', data: {x:175, y:2.5, width:10, height:15}},
+                                    {type:'connectionNode_audio', name:'inLeft', data: {x:175, y:22.5, width:10, height:15}},
+                        
+                        
+                                    //logo label
+                                        {type:'rectangle', name:'logo_rect', data:{x:135, y:27.5, angle:-0.25, width:35, height:10, colour:{r:230/255,g:230/255,b:230/255,a:1}}},
+                                        {type:'text', name:'logo_label', data:{x:154, y:28, angle:-0.25, text:'REcorder', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                        
+                                    //rec
+                                        {type:'button_rectangle', name:'rec', data: {
+                                            x:5, y: 25, width:20, height:10, style:style.button,
+                                            onpress: function(){
+                                                if(state == 'paused'){object.recorder.resume();}
+                                                else{object.recorder.start();}
+                                                updateLights('rec');
                                             }
-                    
-                                        //create new needle, and send it on its way
-                                            previousPosition = undefined;
-                                            currentPosition = 0;
-                    
-                                            var desiredIntervalTime = 10;
-                                            var step = desiredIntervalTime/(duration*1000)
-                                            needleInterval = setInterval(function(){
-                                                //remove previous mark
-                                                    if(previousPosition != undefined){
-                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                    }
-                    
-                                                previousPosition = currentPosition;
-                                                currentPosition += step;
-                    
-                                                //add new mark
-                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                    
-                                                //check for ending
-                                                    if( currentPosition > 1 ){
-                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
-                                                        currentPosition = 0;
-                                                        previousPosition = undefined;
-                                                        clearInterval(needleInterval);
-                                                    }
-                                            },desiredIntervalTime);
-                                            
-                                            needleExists = true;
-                                    },
-                                }},
-                    
-                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
-                            ]
+                                        }},
+                                        {type:'text', name:'button_rectangle_text', data:{x:15, y:30 - style.h2.size/4, text:'rec', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    //pause/resume
+                                        {type:'button_rectangle', name:'pause/resume', data: {
+                                            x:27.5, y: 25, width:20, height:10, style:style.button,
+                                            onpress: function(){
+                                                if(state == 'paused'){object.recorder.resume();}
+                                                else{object.recorder.pause();}
+                                                updateLights('pause/resume');
+                                            }
+                                        }},
+                                        {type:'text', name:'button_pause/resume_text', data:{x:37.7, y:30 - style.h2.size/4, text:'pause', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    //stop
+                                        {type:'button_rectangle', name:'stop', data: {
+                                            x:50, y: 25, width:20, height:10, style:style.button,
+                                            onpress: function(){updateLights('stop');object.recorder.stop();}
+                                        }},
+                                        {type:'text', name:'button_stop_text', data:{x:60, y:30 - style.h2.size/4, text:'stop', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    //save
+                                        {type:'button_rectangle', name:'save', data: {
+                                            x:72.5, y: 25, width:20, height:10, style:style.button,
+                                            onpress: function(){
+                                                updateLights('save');
+                                                if(state != 'empty'){ object.recorder.save(); }
+                                            }
+                                        }},
+                                        {type:'text', name:'button_save_text', data:{x:82.5, y:30 - style.h2.size/4, text:'save', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    //clear
+                                        {type:'button_rectangle', name:'clear', data: {
+                                            x:95, y: 25, width:20, height:10, style:style.button,
+                                            onpress: function(){updateLights('clear');object.recorder.clear();}
+                                        }},
+                                        {type:'text', name:'button_clear_text', data:{x:105, y:30 - style.h2.size/4, text:'clear', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                        
+                                    //time readout
+                                        {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 70, y: 5, angle:0, width:100, height:15, count:11 }},
+                        
+                                    //activity lights
+                                        //recording
+                                            {type:'glowbox_rect', name:'activityLight_recording', data:{x:5, y:5, width:15, height:15, style:{glow:{r:255/255,g:63/255,b:63/255,a:1}, dim:{r:25/255,g:6/255,b:6/255,a:1}}}},
+                                            {type:'text', name:'activityLight_recording_text', data:{x:12.5, y:12.5 - style.h2.size/4, text:'rec', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        //paused
+                                            {type:'glowbox_rect', name:'activityLight_paused', data:{x:20, y:5, width:15, height:15, style:{glow:{r:126/255,g:186/255,b:247/255,a:1}, dim:{r:12/255,g:18/255,b:24/255,a:1}}}},
+                                            {type:'text', name:'activityLight_paused_text', data:{x:27.5, y:12.5 - style.h2.size/4, text:'pau', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        //empty
+                                            {type:'glowbox_rect', name:'activityLight_empty', data:{x:35, y:5, width:15, height:15, style:{glow:{r:199/255,g:249/255,b:244/255,a:1}, dim:{r:19/255,g:24/255,b:24/255,a:1}}}},
+                                            {type:'text', name:'activityLight_empty_text', data:{x:42.5, y:12.5 - style.h2.size/4, text:'emp', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                        //ready to save
+                                            {type:'glowbox_rect', name:'activityLight_full', data:{x:50, y:5, width:15, height:15, style:{glow:{r:61/255,g:224/255,b:35/255,a:1}, dim:{r:6/255,g:22/255,b:3/255,a:1}}}},
+                                            {type:'text', name:'activityLight_full_text', data:{x:57.5, y:12.5 - style.h2.size/4, text:'ful', angle:0, width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.recorder,design);
+                        
+                            //circuitry
+                                //update functions
+                                    //time readout
+                                        setInterval(function(){
+                                            var time = object.recorder.recordingTime();
+                                            var decimalValues = time % 1;
+                                            time = _canvas_.library.math.seconds2time( Math.round(time) );
+                        
+                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                                _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                                                _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                                                _canvas_.library.misc.padString(time.s,2,'0')+'.'+
+                                                _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
+                                            );
+                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                        },100);
+                                    //lights
+                                        var state = 'empty'; //empty - recording - paused - full
+                                        function updateLights(action){
+                                            if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
+                                            if( action == 'stop' || action == 'save' ){ state = 'full'; }
+                                            if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
+                                            if( action == 'clear' ){ state = 'empty'; }
+                                            if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
+                                            else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+                        
+                                            if(state == 'empty'){object.elements.glowbox_rect.activityLight_empty.on();}else{object.elements.glowbox_rect.activityLight_empty.off();}
+                                            if(state == 'recording'){object.elements.glowbox_rect.activityLight_recording.on();}else{object.elements.glowbox_rect.activityLight_recording.off();}
+                                            if(state == 'paused'){object.elements.glowbox_rect.activityLight_paused.on();}else{object.elements.glowbox_rect.activityLight_paused.off();}
+                                            if(state == 'full'){object.elements.glowbox_rect.activityLight_full.on();}else{object.elements.glowbox_rect.activityLight_full.off();}
+                                        }
+                                        updateLights('clear');
+                                        object.elements.glowbox_rect.activityLight_empty.on();
+                        
+                                //audio recorder
+                                    object.recorder = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.inRight.out().connect( object.recorder.in_right() );
+                                    object.elements.connectionNode_audio.inLeft.out().connect( object.recorder.in_left() );
+                        
+                            return object;
                         };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.oneShot_single,design);
-                    
-                        //circuitry
-                            var needleExists = undefined;
-                            var needleInterval = undefined;
-                            var currentPosition = undefined;
-                            var previousPosition = undefined;
-                    
-                            //audioFilePlayer
-                                object.oneShot = new _canvas_.interface.circuit.oneShot_single(_canvas_.library.audio.context);
-                                object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
-                                object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
-                    
-                        return object;
-                    };
-                    
-                    this.oneShot_single.metadata = {
-                        name:'One Shot (Single)',
-                        category:'audioFile',
-                        helpURL:'https://curve.metasophiea.com/help/objects/units/oneShot_single/'
-                    };
-                    
+                        
+                        this.recorder.metadata = {
+                            name:'Recorder',
+                            category:'audioFile',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/recorder/'
+                        };
 
-                    this.oneShot_multi = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                            fire_button:{
-                                background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
-                            },
-                            stop_button:{
-                                background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
-                            },
-                            slide:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1}
-                            },
+                        this.looper = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                                fire_button:{
+                                    background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
+                                },
+                                stop_button:{
+                                    background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
+                                },
+                            };
+                            var design = {
+                                name: 'looper',
+                                category: 'audioFile',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_data', name:'trigger', data:{
+                                        x: 220, y: 17.5, width: 10, height: 20,
+                                        onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); }
+                                    }},
+                        
+                                    //symbol
+                                        {type:'circleWithOutline', name:'symbol_outterCircle1', data:{ x:11.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'circleWithOutline', name:'symbol_outterCircle2', data:{ x:18.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, colour:style.background }},
+                                        {type:'path', name:'symbol_upperarrow', data:{ pointsAsXYArray:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'path', name:'symbol_lowerarrow', data:{ pointsAsXYArray:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                        
+                                    {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+                                        onpress: function(){
+                                            object.looper.load('file',function(data){
+                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.looper.waveformSegment() );
+                                            });
+                                        }
+                                    }},
+                                    {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
+                                        onpress:function(){
+                                            //no file -> don't bother
+                                                if(object.looper.duration() < 0){return;}
+                        
+                                            //actually start the audio
+                                                object.looper.start();
+                                            
+                                            //perform graphical movements
+                                                var duration = object.looper.duration();
+                        
+                                            //if there's already a needle; delete it
+                                                if(needleExists){
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                    clearTimeout(needleInterval);
+                                                }
+                        
+                                            //create new needle, and send it on its way
+                                                previousPosition = undefined;
+                                                currentPosition = 0;
+                                                var stepTime = Math.floor(duration); //funky math to adjust the interval time proportional to the length of the file
+                                                var step = stepTime/(duration*1000);
+                                                needleInterval = setInterval(function(){
+                                                    //remove previous mark
+                                                        if(previousPosition != undefined){
+                                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                        }
+                        
+                                                    previousPosition = currentPosition;
+                                                    currentPosition += step;
+                        
+                                                    //add new mark
+                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                        
+                                                    //check for ending
+                                                        if( currentPosition > 1 ){
+                                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                            currentPosition = 0;
+                                                            previousPosition = undefined;
+                                                        }
+                        
+                                                },stepTime);
+                                                needleExists = true;
+                                        },
+                                    }},
+                                    {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
+                                        onpress:function(){
+                                            object.looper.stop();
+                        
+                                            //if there's a needle, remove it
+                                                if(needleExists){
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                    needleExists = false;
+                                                    currentPosition = undefined;
+                                                    clearTimeout(needleInterval);
+                                                }
+                        
+                                        },
+                                    }},
+                        
+                                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.looper,design);
+                        
+                            //circuitry
+                                var needleExists = false;
+                                var needleInterval = undefined;
+                                var currentPosition = undefined;
+                                var previousPosition = undefined;
+                        
+                                //audioFilePlayer
+                                    object.looper = new _canvas_.interface.circuit.looper(_canvas_.library.audio.context);
+                                    object.looper.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
+                                    object.looper.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
+                        
+                            return object;
                         };
-                        var design = {
-                            name: 'oneShot_multi',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
-                    
-                                //connection nodes
+                        
+                        this.looper.metadata = {
+                            name:'Looper',
+                            category:'audioFile',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/looper/'
+                        };
+                        this.oneShot_single = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                                fire_button:{
+                                    background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
+                                },
+                                stop_button:{
+                                    background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
+                                },
+                            };
+                            var design = {
+                                name: 'oneShot_single',
+                                category: 'audioFile',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
+                        
                                     {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
                                     {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
                                     {type:'connectionNode_data', name:'trigger', data:{
                                         x:220, y:17.5, width:10, height:20,
                                         onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
                                     }},
-                    
-                                //symbol
-                                    {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
-                                    {type:'circleWithOutline', name:'symbol_outterCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'circleWithOutline', name:'symbol_infCircle1', data:{ x:8.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'circleWithOutline', name:'symbol_infCircle2', data:{ x:11.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                    
-                                //load/fire/panic buttons
+                        
+                                    //symbol
+                                        {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
+                                        {type:'circleWithOutline', name:'symbol_outerCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, colour:style.markings.colour }},
+                        
                                     {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                                         onpress: function(){
                                             object.oneShot.load('file',function(data){
@@ -36948,259 +36820,172 @@
                                             });
                                         }
                                     }},
-                                    {type:'button_rectangle', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
+                                    {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
                                         onpress:function(){
-                                            var filePlayer = object.oneShot;
-                                            var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
-                    
                                             //no file = don't bother
-                                                if(filePlayer.duration() < 0){return;}
-                    
-                                            //determine start, end and duration values
-                                                var start = waveport.area().A != undefined ? waveport.area().A : 0;
-                                                var end = waveport.area().B != undefined ? waveport.area().B : 1;
-                                                if(start > end){var tmp = start; start = end; end = tmp;} //the 'ol switcheroo
-                                                var duration = filePlayer.duration();
-                    
-                                                var startTime = start*duration;
-                                                var subduration = end*duration - startTime;
-                    
+                                                if(object.oneShot.duration() < 0){return;}
+                                    
                                             //actually start the audio
-                                                filePlayer.fire(startTime, subduration);
-                    
-                                            //determine needle number
-                                                var needleNumber = 0;
-                                                while(needleNumber in needles){needleNumber++;}
-                                                needles[needleNumber] = {};
-                    
-                                            //flash light
-                                                object.elements.glowbox_rect.glowbox_rect.on();
-                                                setTimeout(object.elements.glowbox_rect.glowbox_rect.off, 100);
-                    
+                                                object.oneShot.fire();
+                        
                                             //perform graphical movements
-                                                needles[needleNumber].previousPosition = undefined;
-                                                needles[needleNumber].currentPosition = start;
-                                                needles[needleNumber].endPosition = end;
-                    
+                                                var duration = object.oneShot.duration();
+                        
+                                            //if there's a playhead, remove it
+                                                if(needleExists){
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                    clearTimeout(needleInterval);
+                                                }
+                        
+                                            //create new needle, and send it on its way
+                                                previousPosition = undefined;
+                                                currentPosition = 0;
+                        
                                                 var desiredIntervalTime = 10;
-                                                var step = (desiredIntervalTime*(end-start))/(subduration*1000);
-                                                needles[needleNumber].needleInterval = setInterval(function(nN){
+                                                var step = desiredIntervalTime/(duration*1000)
+                                                needleInterval = setInterval(function(){
                                                     //remove previous mark
-                                                        if(needles[nN].previousPosition != undefined){
-                                                            waveport.mark(needles[nN].currentPosition);
+                                                        if(previousPosition != undefined){
+                                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
                                                         }
-                    
-                                                    //update position
-                                                        needles[nN].previousPosition = needles[nN].currentPosition;
-                                                        needles[nN].currentPosition += step;
-                    
+                        
+                                                    previousPosition = currentPosition;
+                                                    currentPosition += step;
+                        
                                                     //add new mark
-                                                        waveport.mark(needles[nN].currentPosition);
-                    
+                                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                        
                                                     //check for ending
-                                                        if( needles[nN].currentPosition > needles[nN].endPosition ){
-                                                            waveport.mark(needles[nN].currentPosition);
-                                                            clearInterval(needles[nN].needleInterval);
-                                                            delete needles[nN];
+                                                        if( currentPosition > 1 ){
+                                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                                            currentPosition = 0;
+                                                            previousPosition = undefined;
+                                                            clearInterval(needleInterval);
                                                         }
-                                                },desiredIntervalTime,needleNumber);
+                                                },desiredIntervalTime);
+                                                
+                                                needleExists = true;
                                         },
                                     }},
-                                    {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
-                                        onpress:function(){
-                                            var filePlayer = object.oneShot;
-                                            var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
-                    
-                                            filePlayer.panic();
-                    
-                                            var keys = Object.keys(needles);
-                                            for(var a = 0; a < keys.length; a++){
-                                                if(needles[a] == undefined){continue;}
-                                                clearTimeout(needles[a].needleInterval);
-                                                delete needles[a];
-                                            }
-                                            waveport.removeAllMarks();
-                                        },
-                                    }},
-                    
-                                //rate adjust
-                                    {type:'slide', name:'rate', data:{ x:26.25, y:5, width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
-                                        onchange:function(value){object.oneShot.rate((1-value)*2);}
-                                    }},
-                    
-                                //fire light
-                                    {type:'glowbox_rect', name:'glowbox_rect', data:{ x:32.5, y:5, width:2.5, height:45 }},
-                    
-                                //waveport
-                                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true }},
-                            ]
+                        
+                                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.oneShot_single,design);
+                        
+                            //circuitry
+                                var needleExists = undefined;
+                                var needleInterval = undefined;
+                                var currentPosition = undefined;
+                                var previousPosition = undefined;
+                        
+                                //audioFilePlayer
+                                    object.oneShot = new _canvas_.interface.circuit.oneShot_single(_canvas_.library.audio.context);
+                                    object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
+                                    object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
+                        
+                            return object;
                         };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.oneShot_multi,design);
-                    
-                        //circuitry
-                            var needles = [];
-                    
-                            //audioFilePlayer
-                                object.oneShot = new _canvas_.interface.circuit.oneShot_multi(_canvas_.library.audio.context);
-                                object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
-                                object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
-                    
-                        //interface
-                            object.i = {};
-                            object.i.loadURL = function(url, callback){
-                                object.oneShot.load('url', function(){
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw(object.oneShot.waveformSegment());
-                                    if(callback != undefined){callback();}
-                                }, url);
-                            };
-                            object.i.area = function(a,b){
-                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
-                            };
-                            
-                        return object;
-                    };
-                    
-                    this.oneShot_multi.metadata = {
-                        name:'One Shot (Multi)',
-                        category:'audioFile',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi/'
-                    };
+                        
+                        this.oneShot_single.metadata = {
+                            name:'One Shot (Single)',
+                            category:'audioFile',
+                            helpURL:'https://curve.metasophiea.com/help/objects/units/oneShot_single/'
+                        };
+                        
 
-                    this.oneShot_multi_multiTrack = function(x,y,a){
-                        var trackCount = 8;
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                            fire_button:{
-                                background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
-                            },
-                            stop_button:{
-                                background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
-                            },
-                            slide:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1}
-                            },
-                        };
-                        var design = {
-                            name: 'oneShot_multi_multiTrack',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-                            ]
-                        };
-                        //dynamic design
-                            for(var a = 0; a < trackCount; a++){
-                                //symbols
-                                    design.elements = design.elements.concat([
-                                        {type:'path', name:'symbol_'+a+'_arrow', data:{ pointsAsXYArray:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                                        {type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, colour:style.markings.colour }},
-                                        {type:'circleWithOutline', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                        {type:'circleWithOutline', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                        {type:'circleWithOutline', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                                    ]);
-                    
-                                //rate adjust
-                                    design.elements.push(
-                                        {type:'slide', name:'rate_'+a, data:{
-                                            x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
-                                            onchange:function(instance){
-                                                return function(value){
-                                                    object.oneShot_multi_array[instance].rate((1-value)*2);
-                                                }
-                                            }(a)
-                                        }}
-                                    );
-                    
-                                //activation light
-                                    design.elements.push(
-                                        {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{ x:32.5, y:5+a*(2+45), width:2.5, height:45 }}
-                                    );
-                    
-                                //waveport
-                                    design.elements.push(
-                                        {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{ x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true }}
-                                    );
-                    
-                                //load button
-                                    design.elements.push(
-                                        {type:'button_rectangle', name:'loadFile_'+a, data: { x:5, y: 5+a*(2+45), width:20, height:10, style:style.button,
-                                            onpress:function(instance){
-                                                return function(){
-                                                    object.oneShot_multi_array[instance].load('file',
-                                                        function(instance){
-                                                            return function(data){
-                                                                object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+instance].draw( object.oneShot_multi_array[instance].waveformSegment() );
-                                                            }
-                                                        }(instance)
-                                                    );
-                                                }
-                                            }(a)
-                                        }}
-                                    );
-                    
-                                //fire button
-                                    design.elements.push(
-                                        {type:'button_rectangle',name:'fire_'+a,data:{ x:5, y: 17.5+a*(2+45), width:10, height:10, style:style.fire_button,
-                                            onpress:function(instance){
-                                                return function(){
-                                                    var filePlayer = object.oneShot_multi_array[instance];
-                                                    var waveport = object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
-                                                    var needles = object.players[instance];
-                            
-                                                    //no file = don't bother
-                                                        if(filePlayer.duration() < 0){return;}
-                                            
-                                                    //determine start, end and duration values
-                                                        var start = waveport.area().A != undefined ? waveport.area().A : 0;
-                                                        var end = waveport.area().B != undefined ? waveport.area().B : 1;
-                                                        if(start > end){var temp=start;start=end; end=temp;}
-                                                        var duration = filePlayer.duration();
-                            
-                                                        var startTime = start*duration;
-                                                        var subduration = end*duration - startTime;
-                            
-                                                    //actually start the audio
-                                                        filePlayer.fire(startTime, subduration);
-                            
-                                                    //determine needle number
-                                                        var needleNumber = 0;
-                                                        while(needleNumber in needles){needleNumber++;}
-                                                        needles[needleNumber] = {};
-                            
-                                                    //flash light
-                                                        object.elements.glowbox_rect['glowbox_rect_'+instance].on();
-                                                        setTimeout(
-                                                            function(a){
-                                                                return function(){
-                                                                    object.elements.glowbox_rect['glowbox_rect_'+a].off();
-                                                                }
-                                                            }(instance)
-                                                        ,100);
-                            
+                        this.oneShot_multi = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                                fire_button:{
+                                    background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
+                                },
+                                stop_button:{
+                                    background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
+                                },
+                                slide:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1}
+                                },
+                            };
+                            var design = {
+                                name: 'oneShot_multi',
+                                category: 'audioFile',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
+                        
+                                    //connection nodes
+                                        {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                        {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                                        {type:'connectionNode_data', name:'trigger', data:{
+                                            x:220, y:17.5, width:10, height:20,
+                                            onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
+                                        }},
+                        
+                                    //symbol
+                                        {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
+                                        {type:'circleWithOutline', name:'symbol_outterCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'circleWithOutline', name:'symbol_infCircle1', data:{ x:8.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'circleWithOutline', name:'symbol_infCircle2', data:{ x:11.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                        
+                                    //load/fire/panic buttons
+                                        {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+                                            onpress: function(){
+                                                object.oneShot.load('file',function(data){
+                                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
+                                                });
+                                            }
+                                        }},
+                                        {type:'button_rectangle', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
+                                            onpress:function(){
+                                                var filePlayer = object.oneShot;
+                                                var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
+                        
+                                                //no file = don't bother
+                                                    if(filePlayer.duration() < 0){return;}
+                        
+                                                //determine start, end and duration values
+                                                    var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                                                    var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                                                    if(start > end){var tmp = start; start = end; end = tmp;} //the 'ol switcheroo
+                                                    var duration = filePlayer.duration();
+                        
+                                                    var startTime = start*duration;
+                                                    var subduration = end*duration - startTime;
+                        
+                                                //actually start the audio
+                                                    filePlayer.fire(startTime, subduration);
+                        
+                                                //determine needle number
+                                                    var needleNumber = 0;
+                                                    while(needleNumber in needles){needleNumber++;}
+                                                    needles[needleNumber] = {};
+                        
+                                                //flash light
+                                                    object.elements.glowbox_rect.glowbox_rect.on();
+                                                    setTimeout(object.elements.glowbox_rect.glowbox_rect.off, 100);
+                        
                                                 //perform graphical movements
                                                     needles[needleNumber].previousPosition = undefined;
                                                     needles[needleNumber].currentPosition = start;
                                                     needles[needleNumber].endPosition = end;
-                    
+                        
                                                     var desiredIntervalTime = 10;
                                                     var step = (desiredIntervalTime*(end-start))/(subduration*1000);
                                                     needles[needleNumber].needleInterval = setInterval(function(nN){
@@ -37222,1009 +37007,1380 @@
                                                                 clearInterval(needles[nN].needleInterval);
                                                                 delete needles[nN];
                                                             }
-                        
                                                     },desiredIntervalTime,needleNumber);
+                                            },
+                                        }},
+                                        {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
+                                            onpress:function(){
+                                                var filePlayer = object.oneShot;
+                                                var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
+                        
+                                                filePlayer.panic();
+                        
+                                                var keys = Object.keys(needles);
+                                                for(var a = 0; a < keys.length; a++){
+                                                    if(needles[a] == undefined){continue;}
+                                                    clearTimeout(needles[a].needleInterval);
+                                                    delete needles[a];
                                                 }
-                                            }(a)
-                                        }}
-                                    );
-                    
-                                //panic button
-                                    design.elements.push(
-                                        {type:'button_rectangle',name:'panic_'+a,data:{ x:15, y: 17.5+a*(2+45), width:10, height:10, style:style.stop_button,
-                                            onpress:function(instance){
-                                                return function(value){
-                                                    var filePlayer = object.oneShot_multi_array[instance];
-                                                    var waveport = object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
-                                                    var needles = object.players[instance];
-                            
-                                                    filePlayer.panic();
-                            
-                                                    var keys = Object.keys(needles);
-                                                    for(var a = 0; a < keys.length; a++){
-                                                        if(needles[a] == undefined){continue;}
-                                                        clearTimeout(needles[a].needleInterval);
-                                                        delete needles[a];
+                                                waveport.removeAllMarks();
+                                            },
+                                        }},
+                        
+                                    //rate adjust
+                                        {type:'slide', name:'rate', data:{ x:26.25, y:5, width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
+                                            onchange:function(value){object.oneShot.rate((1-value)*2);}
+                                        }},
+                        
+                                    //fire light
+                                        {type:'glowbox_rect', name:'glowbox_rect', data:{ x:32.5, y:5, width:2.5, height:45 }},
+                        
+                                    //waveport
+                                        {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.oneShot_multi,design);
+                        
+                            //circuitry
+                                var needles = [];
+                        
+                                //audioFilePlayer
+                                    object.oneShot = new _canvas_.interface.circuit.oneShot_multi(_canvas_.library.audio.context);
+                                    object.oneShot.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
+                                    object.oneShot.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
+                        
+                            //interface
+                                object.i = {};
+                                object.i.loadURL = function(url, callback){
+                                    object.oneShot.load('url', function(){
+                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw(object.oneShot.waveformSegment());
+                                        if(callback != undefined){callback();}
+                                    }, url);
+                                };
+                                object.i.area = function(a,b){
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
+                                };
+                                
+                            return object;
+                        };
+                        
+                        this.oneShot_multi.metadata = {
+                            name:'One Shot (Multi)',
+                            category:'audioFile',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi/'
+                        };
+
+                        this.oneShot_multi_multiTrack = function(x,y,a){
+                            var trackCount = 8;
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                                fire_button:{
+                                    background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
+                                },
+                                stop_button:{
+                                    background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
+                                },
+                                slide:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1}
+                                },
+                            };
+                            var design = {
+                                name: 'oneShot_multi_multiTrack',
+                                category: 'audioFile',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                                ]
+                            };
+                            //dynamic design
+                                for(var a = 0; a < trackCount; a++){
+                                    //symbols
+                                        design.elements = design.elements.concat([
+                                            {type:'path', name:'symbol_'+a+'_arrow', data:{ pointsAsXYArray:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                            {type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, colour:style.markings.colour }},
+                                            {type:'circleWithOutline', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                            {type:'circleWithOutline', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                            {type:'circleWithOutline', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                                        ]);
+                        
+                                    //rate adjust
+                                        design.elements.push(
+                                            {type:'slide', name:'rate_'+a, data:{
+                                                x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
+                                                onchange:function(instance){
+                                                    return function(value){
+                                                        object.oneShot_multi_array[instance].rate((1-value)*2);
                                                     }
-                                                    waveport.removeAllMarks();
-                                                }
-                                            }(a)
-                                        }}
-                                    );
-                    
-                                //fire connection
-                                    design.elements.push(
-                                        {type:'connectionNode_data', name:'trigger_'+a, data:{ x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
-                                            onreceive:function(instance){
-                                                return function(address,data){
-                                                    if(address == 'pulse'){ 
-                                                        object.elements.button_rectangle['fire_'+instance].press();
-                                                        object.elements.button_rectangle['fire_'+instance].release();
+                                                }(a)
+                                            }}
+                                        );
+                        
+                                    //activation light
+                                        design.elements.push(
+                                            {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{ x:32.5, y:5+a*(2+45), width:2.5, height:45 }}
+                                        );
+                        
+                                    //waveport
+                                        design.elements.push(
+                                            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{ x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true }}
+                                        );
+                        
+                                    //load button
+                                        design.elements.push(
+                                            {type:'button_rectangle', name:'loadFile_'+a, data: { x:5, y: 5+a*(2+45), width:20, height:10, style:style.button,
+                                                onpress:function(instance){
+                                                    return function(){
+                                                        object.oneShot_multi_array[instance].load('file',
+                                                            function(instance){
+                                                                return function(data){
+                                                                    object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+instance].draw( object.oneShot_multi_array[instance].waveformSegment() );
+                                                                }
+                                                            }(instance)
+                                                        );
                                                     }
-                                                    else if(address == 'hit'){
-                                                        if(data.velocity > 0.49){
+                                                }(a)
+                                            }}
+                                        );
+                        
+                                    //fire button
+                                        design.elements.push(
+                                            {type:'button_rectangle',name:'fire_'+a,data:{ x:5, y: 17.5+a*(2+45), width:10, height:10, style:style.fire_button,
+                                                onpress:function(instance){
+                                                    return function(){
+                                                        var filePlayer = object.oneShot_multi_array[instance];
+                                                        var waveport = object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                                                        var needles = object.players[instance];
+                                
+                                                        //no file = don't bother
+                                                            if(filePlayer.duration() < 0){return;}
+                                                
+                                                        //determine start, end and duration values
+                                                            var start = waveport.area().A != undefined ? waveport.area().A : 0;
+                                                            var end = waveport.area().B != undefined ? waveport.area().B : 1;
+                                                            if(start > end){var temp=start;start=end; end=temp;}
+                                                            var duration = filePlayer.duration();
+                                
+                                                            var startTime = start*duration;
+                                                            var subduration = end*duration - startTime;
+                                
+                                                        //actually start the audio
+                                                            filePlayer.fire(startTime, subduration);
+                                
+                                                        //determine needle number
+                                                            var needleNumber = 0;
+                                                            while(needleNumber in needles){needleNumber++;}
+                                                            needles[needleNumber] = {};
+                                
+                                                        //flash light
+                                                            object.elements.glowbox_rect['glowbox_rect_'+instance].on();
+                                                            setTimeout(
+                                                                function(a){
+                                                                    return function(){
+                                                                        object.elements.glowbox_rect['glowbox_rect_'+a].off();
+                                                                    }
+                                                                }(instance)
+                                                            ,100);
+                                
+                                                    //perform graphical movements
+                                                        needles[needleNumber].previousPosition = undefined;
+                                                        needles[needleNumber].currentPosition = start;
+                                                        needles[needleNumber].endPosition = end;
+                        
+                                                        var desiredIntervalTime = 10;
+                                                        var step = (desiredIntervalTime*(end-start))/(subduration*1000);
+                                                        needles[needleNumber].needleInterval = setInterval(function(nN){
+                                                            //remove previous mark
+                                                                if(needles[nN].previousPosition != undefined){
+                                                                    waveport.mark(needles[nN].currentPosition);
+                                                                }
+                            
+                                                            //update position
+                                                                needles[nN].previousPosition = needles[nN].currentPosition;
+                                                                needles[nN].currentPosition += step;
+                            
+                                                            //add new mark
+                                                                waveport.mark(needles[nN].currentPosition);
+                            
+                                                            //check for ending
+                                                                if( needles[nN].currentPosition > needles[nN].endPosition ){
+                                                                    waveport.mark(needles[nN].currentPosition);
+                                                                    clearInterval(needles[nN].needleInterval);
+                                                                    delete needles[nN];
+                                                                }
+                            
+                                                        },desiredIntervalTime,needleNumber);
+                                                    }
+                                                }(a)
+                                            }}
+                                        );
+                        
+                                    //panic button
+                                        design.elements.push(
+                                            {type:'button_rectangle',name:'panic_'+a,data:{ x:15, y: 17.5+a*(2+45), width:10, height:10, style:style.stop_button,
+                                                onpress:function(instance){
+                                                    return function(value){
+                                                        var filePlayer = object.oneShot_multi_array[instance];
+                                                        var waveport = object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+instance];
+                                                        var needles = object.players[instance];
+                                
+                                                        filePlayer.panic();
+                                
+                                                        var keys = Object.keys(needles);
+                                                        for(var a = 0; a < keys.length; a++){
+                                                            if(needles[a] == undefined){continue;}
+                                                            clearTimeout(needles[a].needleInterval);
+                                                            delete needles[a];
+                                                        }
+                                                        waveport.removeAllMarks();
+                                                    }
+                                                }(a)
+                                            }}
+                                        );
+                        
+                                    //fire connection
+                                        design.elements.push(
+                                            {type:'connectionNode_data', name:'trigger_'+a, data:{ x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
+                                                onreceive:function(instance){
+                                                    return function(address,data){
+                                                        if(address == 'pulse'){ 
                                                             object.elements.button_rectangle['fire_'+instance].press();
                                                             object.elements.button_rectangle['fire_'+instance].release();
                                                         }
+                                                        else if(address == 'hit'){
+                                                            if(data.velocity > 0.49){
+                                                                object.elements.button_rectangle['fire_'+instance].press();
+                                                                object.elements.button_rectangle['fire_'+instance].release();
+                                                            }
+                                                        }
                                                     }
+                                                }(a)
+                                            }}
+                                        );
+                        
+                                }
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.oneShot_multi_multiTrack,design);
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    var data = {
+                                        tracks:[],
+                                        areas:[],
+                                    };
+                        
+                                    for(var a = 0; a < trackCount; a++){
+                                        data.tracks.push(
+                                            object.oneShot_multi_array[a].unloadRaw()
+                                        );
+                                        data.areas.push(
+                                            object.i.area(a)
+                                        );
+                                    }
+                        
+                                    return data;
+                                };
+                                object.importData = function(data){
+                                    for(var a = 0; a < trackCount; a++){
+                                        object.i.loadRaw(a,data.tracks[a]);
+                                        object.i.area(a,data.areas[a].A,data.areas[a].B);
+                                    }
+                                };
+                        
+                            //circuitry
+                                //audioFilePlayers
+                                    object.players = [];
+                        
+                                    object.oneShot_multi_array = [];
+                                    for(var a = 0; a < trackCount; a++){
+                                        object.oneShot_multi_array.push( new _canvas_.interface.circuit.oneShot_multi(_canvas_.library.audio.context) );
+                                        object.oneShot_multi_array[a].out_right().connect( object.elements.connectionNode_audio.outRight.in() );
+                                        object.oneShot_multi_array[a].out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
+                        
+                                        object.players.push([]);
+                                    }
+                        
+                            //interface
+                                object.i = {
+                                    loadURL:function(trackNumber, url, callback){
+                                        object.oneShot_multi_array[trackNumber].load('url', 
+                                            function(a){
+                                                return function(){
+                                                    document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_'+a].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].waveformSegment());
+                                                };
+                                            }(trackNumber)
+                                        ,url);
+                                    },
+                                    loadRaw:function(trackNumber, data){
+                                        object.oneShot_multi_array[trackNumber].loadRaw(data);
+                                        object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].draw(
+                                            object.oneShot_multi_array[trackNumber].waveformSegment()
+                                        );
+                                    },
+                                    area:function(trackNumber,a,b){
+                                        return object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
+                                    }
+                                };
+                            
+                            return object;
+                        };
+                        
+                        this.oneShot_multi_multiTrack.metadata = {
+                            name:'One Shot (Multi)(8 Track)',
+                            category:'audioFile',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi_multiTrack/'
+                        };
+                        this.player = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                                readout_sixteenSegmentDisplay_static:{background:{r:0/255,g:0/255,b:0/255,a:1}, glow:{r:200/255,g:200/255,b:200/255,a:1},dim:{r:20/255,g:20/255,b:20/255,a:1}},
+                                button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                                load_button:{
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                                start_button:{
+                                    background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
+                                },
+                                stop_button:{
+                                    background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
+                                },
+                                slide:{
+                                    handle:{r:220/255,g:220/255,b:220/255,a:1}
+                                },
+                            };
+                            var design = {
+                                name: 'player',
+                                category: 'audioFile',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], colour:style.background }},
+                        
+                                    {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                                    {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                        
+                                    //symbol
+                                        {type:'rectangle', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
+                                        {type:'rectangle', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  colour:style.markings.colour }},
+                                        
+                                    {type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, count:10, style:style.readout_sixteenSegmentDisplay_static }},
+                                    {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
+                        
+                                    {type:'button_rectangle', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
+                                    {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
+                                    {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
+                        
+                                    {type:'text', name:'rate_label_name', data:{ x:15, y:77.5, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+                                    {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'rate_label_1', data:{ x:15, y:51.5, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+                                    {type:'dial_continuous',name:'rate_dial',data:{ x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, resetValue:0.5 }},
+                        
+                                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ 
+                                        console.log(bool); 
+                                        object.player.loop({active:bool}); 
+                                    } }},
+                                ]
+                            };
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.player,design);
+                        
+                            //internal 
+                                function loadProcess(data){
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );                   
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
+                                
+                                    object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
+                                    object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
+                                }
+                                
+                            //circuitry
+                                //audio file player
+                                    object.player = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
+                                    object.player.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
+                                    object.player.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
+                        
+                                //data refresh
+                                    function refresh(){
+                                        //check if there's a track at all
+                                            if( !object.player.isLoaded() ){return;}
+                        
+                                        //time readout
+                                            var time = _canvas_.library.math.seconds2time( Math.round(object.player.currentTime()));
+                        
+                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                                _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                                                _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                                                _canvas_.library.misc.padString(time.s,2,'0')
+                                            );
+                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                        
+                                        //wave box
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(object.player.progress(),false);
+                                    }
+                                    setInterval(refresh,1000/30);
+                            
+                            //import/export
+                                object.exportData = function(){
+                                    var data = {
+                                        track: object.player.unloadRaw(),
+                                    };
+                        
+                                    return data;
+                                };
+                                object.importData = function(data){
+                                    object.i.loadRaw(data.track);
+                                };
+                        
+                            //wiring
+                                object.elements.dial_continuous.rate_dial.onchange = function(data){ object.player.rate( 2*data ); };
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
+                                    if(needle == 'lead'){ object.player.jumpTo(value); }
+                                    else if(needle == 'selection_A' || needle == 'selection_B'){
+                                        var temp = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                                        if(temp.A < temp.B){ object.player.loop({start:temp.A,end:temp.B}); }
+                                        else{ object.player.loop({start:temp.B,end:temp.A}); }
+                                    }
+                                };
+                        
+                            //interface
+                                object.i = {
+                                    loadRaw:function(data){
+                                        object.player.loadRaw(data,loadProcess);
+                                    },
+                                    loadByFile:function(){
+                                        object.player.load('file',loadProcess);
+                                    },
+                                    loadByURL:function(url){
+                                        object.player.load('url',loadProcess,url);
+                                    },
+                                };
+                        
+                            //setup
+                                object.elements.dial_continuous.rate_dial.set(0.5);
+                        
+                            return object;
+                        };
+                        
+                        this.player.metadata = {
+                            name:'Player',
+                            category:'audioFile',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/player/'
+                        };
+                        this.basicSequencer = function(x,y,a){
+                            var vals = {
+                                sequencer:{
+                                    width:64, height:10,
+                                }
+                            };
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
+                                rangeslide:{
+                                    handle:{r:240/255,g:240/255,b:240/255,a:1},
+                                    backing:{r:150/255,g:150/255,b:150/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
+                                    span:{r:220/255,g:220/255,b:220/255,a:1},
+                                },
+                                rangeslide_loop:{
+                                    handle:{r:240/255,g:240/255,b:240/255,a:1},
+                                    backing:{r:150/255,g:150/255,b:150/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    span:{r:255/255,g:247/255,b:145/255,a:0.5},
+                                },
+                                button:{
+                                    background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                    background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
+                                },
+                                checkbox:{
+                                    backing:{r:229/255,g: 229/255,b: 229/255,a:1},
+                                    check:{r:252/255,g:252/255,b:252/255,a:1},
+                                },
+                                checkbox_loop:{
+                                    backing:{r:229/255,g: 221/255,b: 112/255,a:1},
+                                    check:{r:252/255,g:244/255,b:128/255,a:1},
+                                },
+                            };
+                        
+                            var design = {
+                                name: 'basicSequencer',
+                                category:'sequencers',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
+                        
+                                    //main sequencer
+                                        {type:'sequencer', name:'main', data:{ x:10, y:20, width:780, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                            event:function(event){
+                                                for(var a = 0; a < event.length; a++){
+                                                    object.elements.connectionNode_data['output_'+event[a].line].send('hit',{velocity:event[a].strength});
                                                 }
-                                            }(a)
+                                            },
+                                            onchangeviewarea:function(data){ object.elements.rangeslide.viewselect.set( {start:data.left, end:data.right}, false ); },
+                                        }},
+                                        {type:'rangeslide', name:'viewselect', data:{ x:10, y:20, height:780, width:10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},    
+                        
+                                    //follow playhead
+                                        {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
+                                            onchange:function(value){object.elements.sequencer.main.automove(value);},
+                                        }},
+                        
+                                    //loop control
+                                        {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
+                                            onchange:function(value){object.elements.sequencer.main.loopActive(value);},
+                                        }},
+                                        {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
+                        
+                                    //progression
+                                        {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
+                                            onreceive:function(){object.elements.sequencer.main.progress();},
+                                        }},
+                                        {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
+                                            onpress:function(){object.elements.sequencer.main.progress();},
+                                        }},
+                                        {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                        
+                                    //reset
+                                        {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
+                                            onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                        }},
+                                        {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
+                                            onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                        }},
+                                        {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                ]
+                            };
+                            //dynamic design
+                                for(var a = 0; a < vals.sequencer.height; a++){
+                                    design.elements.push(
+                                        {type:'connectionNode_data', name:'output_'+a, data:{ 
+                                            x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
+                                            onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                        }},
+                                    );
+                                }
+                        
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
+                        
+                            //wiring
+                                object.elements.rangeslide.viewselect.onchange = function(values){
+                                    object.elements.sequencer.main.viewarea({topLeft:{x:values.start, y:0}, bottomRight:{x:values.end, y:1}},false); 
+                                };
+                                object.elements.rangeslide.loopSelect.onchange = function(values){ 
+                                    var a = Math.round(values.start*vals.sequencer.width);
+                                    var b = Math.round(values.end*vals.sequencer.width);
+                                    if(b == 0){b = 1;}
+                                    object.elements.sequencer.main.loopPeriod(a,b);
+                                };
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        loop:{
+                                            active: object.elements.checkbox_rect.loopActive.get(),
+                                            range: object.elements.rangeslide.loopSelect.get(),
+                                        },
+                                        autofollow: object.elements.checkbox_rect.followPlayhead.get(),
+                                        notes: object.elements.sequencer.main.getAllSignals(),
+                                        viewarea:{
+                                            horizontal: object.elements.rangeslide.viewselect.get(),
+                                        }
+                                    };
+                                };
+                                object.importData = function(data){
+                                    object.elements.sequencer.main.addSignals(data.notes);
+                                    object.i.loopActive(data.loop.active);
+                                    object.elements.rangeslide.loopSelect.set(data.loop.range);
+                                    object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+                                    object.elements.rangeslide.viewselect.set(data.viewarea.horizontal);
+                                };
+                        
+                            //interface
+                                object.i = {
+                                    addNote:function(line, position, length, strength=1){object.elements.sequencer.main.addSignal(line, position, length, strength);},
+                                    addNotes:function(data){object.elements.sequencer.main.addSignal(data);},
+                                    getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
+                                    loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
+                                    step: object.elements.sequencer.step,
+                                };
+                        
+                            return object;
+                        };
+                        this.basicSequencer.metadata = {
+                            name:'Basic Sequencer (Data) (Multi Pulse Out)',
+                            category:'sequencer',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_pulseOut/'
+                        };
+                        
+                        this.basicSequencer2 = function(x,y,a){
+                            var vals = {
+                                sequencer:{
+                                    width:64, height:10,
+                                }
+                            };
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
+                                rangeslide:{
+                                    handle:{r:240/255,g:240/255,b:240/255,a:1},
+                                    backing:{r:150/255,g:150/255,b:150/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
+                                    span:{r:220/255,g:220/255,b:220/255,a:1},
+                                },
+                                rangeslide_loop:{
+                                    handle:{r:240/255,g:240/255,b:240/255,a:1},
+                                    backing:{r:150/255,g:150/255,b:150/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    span:{r:255/255,g:247/255,b:145/255,a:0.5},
+                                },
+                                button:{
+                                    background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                    background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
+                                },
+                                checkbox:{
+                                    backing:{r:229/255,g: 229/255,b: 229/255,a:1},
+                                    check:{r:252/255,g:252/255,b:252/255,a:1},
+                                },
+                                checkbox_loop:{
+                                    backing:{r:229/255,g: 221/255,b: 112/255,a:1},
+                                    check:{r:252/255,g:244/255,b:128/255,a:1},
+                                },
+                            };
+                        
+                            var design = {
+                                name: 'basicSequencer2',
+                                category:'sequencers',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
+                        
+                                    //main sequencer
+                                        {type:'sequencer', name:'main', data:{ x:10, y:20, width:780, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                            event:function(event){
+                                                for(var a = 0; a < event.length; a++){
+                                                    object.elements.connectionNode_voltage['output_'+event[a].line].set(event[a].strength);
+                                                }
+                                            },
+                                            onchangeviewarea:function(data){ object.elements.rangeslide.viewselect.set( {start:data.left, end:data.right}, false ); },
+                                        }},
+                                        {type:'rangeslide', name:'viewselect', data:{ x:10, y:20, height:780, width:10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},    
+                        
+                                    //follow playhead
+                                        {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
+                                            onchange:function(value){object.elements.sequencer.main.automove(value);},
+                                        }},
+                        
+                                    //loop control
+                                        {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
+                                            onchange:function(value){object.elements.sequencer.main.loopActive(value);},
+                                        }},
+                                        {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
+                        
+                                    //progression
+                                        {type:'connectionNode_signal', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
+                                            onchange:function(val){if(!val){return;}object.elements.sequencer.main.progress();},
+                                        }},
+                                        {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
+                                            onpress:function(){object.elements.sequencer.main.progress();},
+                                        }},
+                                        {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                        
+                                    //reset
+                                        {type:'connectionNode_signal', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
+                                            onchange:function(val){if(!val){return;}object.elements.sequencer.main.playheadPosition(0);},
+                                        }},
+                                        {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
+                                            onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                        }},
+                                        {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                ]
+                            };
+                            //dynamic design
+                                for(var a = 0; a < vals.sequencer.height; a++){
+                                    design.elements.push(
+                                        {type:'connectionNode_voltage', name:'output_'+a, data:{ 
+                                            x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
+                                        }},
+                                    );
+                                }
+                        
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
+                        
+                            //wiring
+                                object.elements.rangeslide.viewselect.onchange = function(values){
+                                    object.elements.sequencer.main.viewarea({topLeft:{x:values.start, y:0}, bottomRight:{x:values.end, y:1}},false); 
+                                };
+                                object.elements.rangeslide.loopSelect.onchange = function(values){ 
+                                    var a = Math.round(values.start*vals.sequencer.width);
+                                    var b = Math.round(values.end*vals.sequencer.width);
+                                    if(b == 0){b = 1;}
+                                    object.elements.sequencer.main.loopPeriod(a,b);
+                                };
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        loop:{
+                                            active: object.elements.checkbox_rect.loopActive.get(),
+                                            range: object.elements.rangeslide.loopSelect.get(),
+                                        },
+                                        autofollow: object.elements.checkbox_rect.followPlayhead.get(),
+                                        notes: object.elements.sequencer.main.getAllSignals(),
+                                        viewarea:{
+                                            horizontal: object.elements.rangeslide.viewselect.get(),
+                                        }
+                                    };
+                                };
+                                object.importData = function(data){
+                                    object.elements.sequencer.main.addSignals(data.notes);
+                                    object.i.loopActive(data.loop.active);
+                                    object.elements.rangeslide.loopSelect.set(data.loop.range);
+                                    object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+                                    object.elements.rangeslide.viewselect.set(data.viewarea.horizontal);
+                                };
+                        
+                            //interface
+                                object.i = {
+                                    addNote:function(line, position, length, strength=1){object.elements.sequencer.main.addSignal(line, position, length, strength);},
+                                    addNotes:function(data){object.elements.sequencer.main.addSignal(data);},
+                                    getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
+                                    loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
+                                    step: object.elements.sequencer.step,
+                                };
+                        
+                            return object;
+                        };
+                        this.basicSequencer2.metadata = {
+                            name:'Basic Sequencer (Voltage) (Multi Pulse Out)',
+                            category:'sequencer',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_pulseOut/'
+                        };
+                        this.launchpad = function(x,y,a){
+                            var values = {
+                                xCount:8, yCount:8,
+                            };
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
+                        
+                                button: {
+                                    background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
+                                    background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
+                                },
+                                grid: {
+                                    backing:{r:200/255,g:175/255,b:200/255,a:1},
+                                    check:{r:150/255,g:125/255,b:150/255,a:1},
+                                    backingGlow:{r:225/255,g:175/255,b:225/255,a:1},
+                                    checkGlow:{r:200/255,g:125/255,b:200/255,a:1}
+                                },
+                            };
+                            var design = {
+                                name: 'launchpad',
+                                category:'sequencers',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], colour:style.background }},
+                        
+                                    //input data
+                                        {type:'connectionNode_data', name:'pulse_input', data:{ x: 125, y: 5, width: 5, height: 10 }},
+                                        {type:'connectionNode_data', name:'nextPage_input', data:{ x: 125, y: 22.5, width: 5, height: 10 }},
+                                        {type:'connectionNode_data', name:'prevPage_input', data:{ x: 125, y: 35, width: 5, height: 10 }},
+                                    //pulse
+                                        {type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
+                                    //rastorgrid
+                                        {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, colour:style.grid.backing}},
+                                        {type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
+                                    //page select
+                                        {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5}},
+                                        {type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
+                                        {type:'button_rectangle',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
+                                ]
+                            };
+                            //dynamic design
+                                for(var a = 0; a < values.yCount; a++){
+                                    design.elements.push( {type:'connectionNode_data', name:'out_'+a, data:{ x: -5, y: a*12.5 + 2.5, width: 5, height: 7.5 }} );
+                                }
+                        
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.launchpad,design);
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        currentPage: object.internalCircuits.page(),
+                                        data: object.internalCircuits.exportPages(),
+                                    };
+                                };
+                                object.importData = function(data){
+                                    if(data.data != undefined){ object.internalCircuits.importPages(data.data); }
+                                    if(data.currentPage){ object.internalCircuits.page(data.currentPage); }
+                                };
+                        
+                            //internal functions
+                                function lightLine(){
+                                    for(var a = 0; a < values.yCount; a++){
+                                        object.elements.rastorgrid.rastorgrid.light(object.internalCircuits.previousPosition(),a,false);
+                                        object.elements.rastorgrid.rastorgrid.light(object.internalCircuits.position(),a,true);
+                                    }
+                                }
+                                function pageChange(data){
+                                    object.elements.sevenSegmentDisplay.pageNumber.enterCharacter(''+data);
+                                    var newPage = object.internalCircuits.exportPage();
+                        
+                                    if(newPage == undefined){
+                                        object.elements.rastorgrid.rastorgrid.clear();
+                                    }else{
+                                        object.elements.rastorgrid.rastorgrid.set(newPage);
+                                    }
+                                }
+                        
+                            //circuitry
+                                object.internalCircuits = new this.launchpad.sequencer(values.xCount, values.yCount);
+                                object.internalCircuits.commands = function(data){
+                                    for(var a = 0; a < values.yCount; a++){
+                                        if(data[a]){ object.io.data['out_'+a].send('pulse'); }
+                                    }
+                                };
+                                object.internalCircuits.pageChange = pageChange;
+                        
+                            //wiring
+                                object.elements.connectionNode_data.pulse_input.onreceivedata = function(){object.internalCircuits.inc();lightLine();};
+                                object.elements.connectionNode_data.nextPage_input.onreceivedata = function(){object.internalCircuits.incPage();};
+                                object.elements.connectionNode_data.prevPage_input.onreceivedata = function(){object.internalCircuits.decPage();};
+                                object.elements.button_rectangle.pulse_button.onpress = function(){object.internalCircuits.inc();lightLine();};
+                                object.elements.rastorgrid.rastorgrid.onchange = function(data){object.internalCircuits.importPage(data);};
+                                object.elements.button_rectangle.nextPage.onpress = function(){object.internalCircuits.incPage();};
+                                object.elements.button_rectangle.prevPage.onpress = function(){object.internalCircuits.decPage();};
+                        
+                            //interface
+                                object.i = {
+                                    importPage:function(data,a){object.internalCircuits.importPage(data,a);},
+                                    exportPage:function(a){return object.internalCircuits.exportPage(a);},
+                                    importPages:function(data){object.internalCircuits.importPages(data);},
+                                    exportPages:function(){return object.internalCircuits.exportPages();},
+                                    setPage:function(a){object.internalCircuits.page(a);}
+                                };
+                        
+                            //setup 
+                                lightLine();
+                                object.elements.sevenSegmentDisplay.pageNumber.enterCharacter('0');
+                        
+                            return object;
+                        };
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.launchpad.metadata = {
+                            name:'Launchpad',
+                            category:'sequencer',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/launchpad/'
+                        };
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        this.launchpad.sequencer = function(xCount,yCount){
+                            var pages = [];
+                            var pageCount = 10;
+                            var currentPage = 0;
+                            var position = 0;
+                            var previousPosition = xCount-1;
+                        
+                            //internal functions
+                                function makePage(xCount,yCount,fill){
+                                    return Array(xCount).fill(Array(yCount).fill(fill));
+                                }
+                        
+                            //controls
+                                //getting/setting a square or a column
+                                    this.square = function(x,y,value){
+                                        if(x < 0){x = 0;}else if(x > xCount-1){x = xCount-1;}
+                                        if(y < 0){y = 0;}else if(x > yCount-1){x = yCount-1;}
+                        
+                                        if(value == undefined){return pages[currentPage][y][x];}
+                        
+                                        pages[currentPage][y][x] = value;
+                                    };
+                                    this.line = function(a,data){
+                                        if(a == undefined){a = position;}
+                        
+                                        if(data == undefined){
+                                            var line = [];
+                                            for(var a = 0; a < yCount; a++){
+                                                if( 
+                                                    pages[currentPage] == undefined || 
+                                                    pages[currentPage][a] == undefined || 
+                                                    pages[currentPage][a][position] == undefined
+                                                ){ line.push(false); }
+                                                else{ line.push(pages[currentPage][a][position]); }
+                                            }
+                                            return line;
+                                        }else{
+                                            for(var a = 0; a < yCount; a++){
+                                                pages[currentPage][a][position] = data[a];
+                                            }
+                                        }
+                                    };
+                        
+                                //getting/setting the playhead position
+                                    this.position = function(a,react=true){
+                                        if(a == undefined){return position;}
+                                        previousPosition = position;
+                        
+                                        if(a > xCount-1){a = 0;}
+                                        else if(a < 0){a = xCount-1;}
+                        
+                                        position = a;
+                                        if(react){this.commands(this.line());}
+                                    };
+                                    this.previousPosition = function(){return previousPosition;};
+                                    this.inc = function(){ this.position(position+1); };
+                                    this.dec = function(){ this.position(position-1); };
+                        
+                                //getting/setting the page number
+                                    this.page = function(a){
+                                        if(a == undefined){return currentPage;}
+                        
+                                        if(a == -1){a = pageCount-1;}
+                                        else if(a < 0){a = 0;}
+                                        else if(a == pageCount){a = 0;}
+                                        else if(a >= pageCount){a = pageCount-1;}
+                                        currentPage = a;
+                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
+                                    };
+                                    this.incPage = function(){ this.page(currentPage+1); };
+                                    this.decPage = function(){ this.page(currentPage-1); };
+                        
+                        
+                                //getting/setting the data ina page or all pages
+                                    this.exportPages = function(){
+                                        return JSON.parse(JSON.stringify(pages));
+                                    };
+                                    this.importPages = function(data){
+                                        pages = data;
+                                        this.pageChange(currentPage);
+                                    };
+                                    this.exportPage = function(a){
+                                        if(a == undefined){a = currentPage;}
+                                        if(pages[a] == undefined){ return makePage(xCount,yCount,false); }
+                                        return JSON.parse(JSON.stringify(pages[a]));
+                                    };
+                                    this.importPage = function(data,a){
+                                        if(a == undefined){a = currentPage;}
+                                        pages[a] = data;
+                                        if(this.pageChange != undefined){this.pageChange(currentPage);}
+                                    };
+                                
+                        
+                            //callbacks
+                                this.commands = function(){};
+                                this.pageChange = function(){};
+                        };
+                        this.basicSequencer_midiOut = function(x,y,a){
+                            var vals = {
+                                sequencer:{
+                                    width:64, height:undefined,
+                                    midiRange:{ bottom:24, top:131 },
+                                    pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
+                                }
+                            };
+                            vals.sequencer.height = vals.sequencer.midiRange.top - vals.sequencer.midiRange.bottom + 1;
+                            //calculate pattern based on midi range
+                                var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(_canvas_.library.audio.num2name(vals.sequencer.midiRange.top).slice(1))
+                                vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
+                        
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
+                                rangeslide:{
+                                    handle:{r:240/255,g:240/255,b:240/255,a:1},
+                                    backing:{r:150/255,g:150/255,b:150/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
+                                    span:{r:220/255,g:220/255,b:220/255,a:1},
+                                },
+                                rangeslide_loop:{
+                                    handle:{r:240/255,g:240/255,b:240/255,a:1},
+                                    backing:{r:150/255,g:150/255,b:150/255,a:1},
+                                    slot:{r:50/255,g:50/255,b:50/255,a:1},
+                                    span:{r:255/255,g:247/255,b:145/255,a:0.5},
+                                },
+                                button:{
+                                    background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
+                                    background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                    background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
+                                },
+                                checkbox:{
+                                    backing:{r:229/255,g: 229/255,b: 229/255,a:1},
+                                    check:{r:252/255,g:252/255,b:252/255,a:1},
+                                },
+                                checkbox_loop:{
+                                    backing:{r:229/255,g: 221/255,b: 112/255,a:1},
+                                    check:{r:252/255,g:244/255,b:128/255,a:1},
+                                },
+                            };
+                        
+                            var design = {
+                                name: 'basicSequencer_midiOut',
+                                category:'sequencers',
+                                collection: 'alpha',
+                                x:x, y:y, a:a,
+                                space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
+                                // spaceOutline:true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
+                        
+                                    //midi out
+                                        {type:'connectionNode_data', name:'midiout', data:{ x: -5, y: 11.25, width: 5, height: 17.5 }},
+                        
+                                    //main sequencer
+                                        {type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                                            horizontalStripStyle_pattern:vals.sequencer.pattern,
+                                            event:function(event){
+                                                for(var a = 0; a < event.length; a++){
+                                                    object.elements.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
+                                                }
+                                            },
+                                            onpan:function(data){
+                                                object.elements.rangeslide.viewselect_y.set( {start:data.topLeft.y, end:data.bottomRight.y}, false );
+                                                object.elements.rangeslide.viewselect_x.set( {start:data.topLeft.x, end:data.bottomRight.x}, false );
+                                            },
+                                        }},
+                                        {type:'rangeslide', name:'viewselect_y', data:{ x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1, style:style.rangeslide }},
+                                        {type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
+                        
+                                    //follow playhead
+                                        {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
+                                            onchange:function(value){object.elements.sequencer.main.automove(value);},
+                                        }},
+                        
+                                    //loop control
+                                        {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
+                                            onchange:function(value){object.elements.sequencer.main.loopActive(value);},
+                                        }},
+                                        {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
+                        
+                                    //progression
+                                        {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
+                                            onreceive:function(){object.elements.sequencer.main.progress();},
+                                        }},
+                                        {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
+                                            onpress:function(){object.elements.sequencer.main.progress();},
+                                        }},
+                                        {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                        
+                                    //reset
+                                        {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
+                                            onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                        }},
+                                        {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
+                                            onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
+                                        }},
+                                        {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                        {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                                ]
+                            };
+                        
+                            //internal functions
+                                function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
+                        
+                            //wiring
+                                object.elements.rangeslide.viewselect_y.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{y:values.start}, bottomRight:{y:values.end}},false); };
+                                object.elements.rangeslide.viewselect_x.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{x:values.start}, bottomRight:{x:values.end}},false); };
+                                object.elements.rangeslide.loopSelect.onchange = function(values){ 
+                                    var a = Math.round(values.start*vals.sequencer.width);
+                                    var b = Math.round(values.end*vals.sequencer.width);
+                                    if(b == 0){b = 1;}
+                                    object.elements.sequencer.main.loopPeriod(a,b);
+                                };
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        loop:{
+                                            active: object.elements.checkbox_rect.loopActive.get(),
+                                            range: object.elements.rangeslide.loopSelect.get(),
+                                        },
+                                        autofollow: object.elements.checkbox_rect.followPlayhead.get(),
+                                        notes: object.elements.sequencer.main.getAllSignals(),
+                                        viewarea:{
+                                            horizontal: object.elements.rangeslide.viewselect_y.get(),
+                                            vertical: object.elements.rangeslide.viewselect_x.get(),
+                                        }
+                                    };
+                                };
+                                object.importData = function(data){
+                                    object.elements.sequencer.main.addSignals(data.notes);
+                                    object.i.loopActive(data.loop.active);
+                                    object.elements.rangeslide.loopSelect.set(data.loop.range);
+                                    object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+                                    object.elements.rangeslide.viewselect_y.set(data.viewarea.horizontal);
+                                    object.elements.rangeslide.viewselect_x.set(data.viewarea.vertical);
+                                };
+                        
+                            //interface
+                                object.i = {
+                                    addNote:function(number, position, length, strength=1){object.elements.sequencer.main.addSignal(midiNumber_line_converter(number), position, length, strength);},
+                                    addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength); } },
+                                    getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
+                                    loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
+                                    step:object.elements.sequencer.step,
+                                };
+                        
+                            //setup
+                                object.elements.rangeslide.viewselect_y.set({start:0.3, end:0.7});
+                                
+                            return object;
+                        };
+                        
+                        this.basicSequencer_midiOut.metadata = {
+                            name:'Basic Sequencer (Midi Out)',
+                            category:'sequencer',
+                            helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_midiOut/'
+                        };
+                        
+                        this._categoryData = {
+                            audioFile:{ printingName:'Audio File' },
+                            audioEffectUnits:{ printingName:'Audio Effect Units' },
+                            humanOutputDevices:{ printingName:'Human Output Devices' },
+                            humanInputDevices:{ printingName:'Human Input Devices' },
+                            misc:{ printingName:'Miscellaneous' },
+                            sequencer:{ printingName:'Sequencers' },
+                            synthesizer:{ printingName:'Synthesizers' },
+                        };
+
+                    };
+                    this.beta = new function(){
+                        // -- -- -- -- -- still to add -- -- -- -- -- //
+                        // ruler
+                        //
+                        // pulse generator (signal)
+                        // musical keyboard (data:midi)
+                        //
+                        // launchpad (1 signal in, 8 signal out)
+                        // basicSequencer (mode select: signal/voltage)
+                        // basicSequencer (data:midi)
+                        //
+                        // signal duplicator
+                        // voltage duplicator
+                        // data duplicator
+                        // audio duplicator
+                        //
+                        // LED board readout (signal readout)
+                        // voltmeter readout (voltage readout)
+                        // data logger readout (data readout)
+                        // audio scope readout (audio readout)
+                        //
+                        // audio in (microphone)
+                        // audio sink (stereo audio connections)(looks like a speaker)
+                        //
+                        // basic synthesizer
+                        //
+                        // distortion unit (mono)
+                        // filter unit (mono)(high-med-low)
+                        // reverb unit (mono)
+                        //
+                        // basic 8 track mixer (8 mono to 1 stereo)
+                        //
+                        // audio file player
+                        // audio file one shot player
+                        //
+                        // audio recorder
+                        //  -- -- -- -- -- -- -- -- -- -- -- -- -- -- //
+                        
+                        this.ruler = function(x,y,a){
+                            var style = {
+                                background:{r:200/255,g:200/255,b:200/255,a:1},
+                                markings:{r:150/255,g:150/255,b:150/255,a:1},
+                            };
+                            var design = {
+                                name:'ruler',
+                                category:'tools',
+                                collection:'beta',
+                                x:x, y:y, angle:a,
+                                space:[{x:0,y:0},{x:50,y:0},{x:50,y:1000},{x:0,y:1000}],
+                                // spaceOutline: true,
+                                elements:[
+                                    {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:50,y:0},{x:50,y:1000},{x:0,y:1000}], colour:style.background }},
+                                ]
+                            };
+                        
+                            //add markings
+                                for(var a = 1; a < 100; a++){
+                        
+                                    //centimetres
+                                    design.elements.push(
+                                        {type:'rectangle', name:'centimetre_line_L_'+a, data:{
+                                            x:0, y:a*10 - 0.5, width:5, height:1, 
+                                            colour:style.markings,
                                         }}
                                     );
-                    
-                            }
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.oneShot_multi_multiTrack,design);
-                    
-                        //import/export
-                            object.exportData = function(){
-                                var data = {
-                                    tracks:[],
-                                    areas:[],
-                                };
-                    
-                                for(var a = 0; a < trackCount; a++){
-                                    data.tracks.push(
-                                        object.oneShot_multi_array[a].unloadRaw()
+                                    design.elements.push(
+                                        {type:'rectangle', name:'centimetre_line_R_'+a, data:{
+                                            x:50-5, y:a*10 - 0.5, width:5, height:1, 
+                                            colour:style.markings,
+                                        }}
                                     );
-                                    data.areas.push(
-                                        object.i.area(a)
-                                    );
-                                }
-                    
-                                return data;
-                            };
-                            object.importData = function(data){
-                                for(var a = 0; a < trackCount; a++){
-                                    object.i.loadRaw(a,data.tracks[a]);
-                                    object.i.area(a,data.areas[a].A,data.areas[a].B);
-                                }
-                            };
-                    
-                        //circuitry
-                            //audioFilePlayers
-                                object.players = [];
-                    
-                                object.oneShot_multi_array = [];
-                                for(var a = 0; a < trackCount; a++){
-                                    object.oneShot_multi_array.push( new _canvas_.interface.circuit.oneShot_multi(_canvas_.library.audio.context) );
-                                    object.oneShot_multi_array[a].out_right().connect( object.elements.connectionNode_audio.outRight.in() );
-                                    object.oneShot_multi_array[a].out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
-                    
-                                    object.players.push([]);
-                                }
-                    
-                        //interface
-                            object.i = {
-                                loadURL:function(trackNumber, url, callback){
-                                    object.oneShot_multi_array[trackNumber].load('url', 
-                                        function(a){
-                                            return function(){
-                                                document.getElementById('oneShot_multi_multiTrack').children['grapher_waveWorkspace_'+a].draw(document.getElementById('oneShot_multi_multiTrack').oneShot_multi_array[a].waveformSegment());
-                                            };
-                                        }(trackNumber)
-                                    ,url);
-                                },
-                                loadRaw:function(trackNumber, data){
-                                    object.oneShot_multi_array[trackNumber].loadRaw(data);
-                                    object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].draw(
-                                        object.oneShot_multi_array[trackNumber].waveformSegment()
-                                    );
-                                },
-                                area:function(trackNumber,a,b){
-                                    return object.elements.grapher_waveWorkspace['grapher_waveWorkspace_'+trackNumber].area(a,b);
-                                }
-                            };
-                        
-                        return object;
-                    };
-                    
-                    this.oneShot_multi_multiTrack.metadata = {
-                        name:'One Shot (Multi)(8 Track)',
-                        category:'audioFile',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/oneShot_multi_multiTrack/'
-                    };
-                    this.player = function(x,y,a){
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3, ratio:1, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            h2:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:2, ratio:1.5, font:'defaultThin', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                            readout_sixteenSegmentDisplay_static:{background:{r:0/255,g:0/255,b:0/255,a:1}, glow:{r:200/255,g:200/255,b:200/255,a:1},dim:{r:20/255,g:20/255,b:20/255,a:1}},
-                            button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                            load_button:{
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                            start_button:{
-                                background__up__colour:{r:175/255,g:195/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:240/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:170/255,b:150/255,a:1},
-                            },
-                            stop_button:{
-                                background__up__colour:{r:195/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:170/255,g:150/255,b:150/255,a:1},
-                            },
-                            slide:{
-                                handle:{r:220/255,g:220/255,b:220/255,a:1}
-                            },
-                        };
-                        var design = {
-                            name: 'player',
-                            category: 'audioFile',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], colour:style.background }},
-                    
-                                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-                    
-                                //symbol
-                                    {type:'rectangle', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
-                                    {type:'rectangle', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  colour:style.markings.colour }},
-                                    
-                                {type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, count:10, style:style.readout_sixteenSegmentDisplay_static }},
-                                {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
-                    
-                                {type:'button_rectangle', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
-                                {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
-                                {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
-                    
-                                {type:'text', name:'rate_label_name', data:{ x:15, y:77.5, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-                                {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'rate_label_1', data:{ x:15, y:51.5, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-                                {type:'dial_continuous',name:'rate_dial',data:{ x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, resetValue:0.5 }},
-                    
-                                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ 
-                                    console.log(bool); 
-                                    object.player.loop({active:bool}); 
-                                } }},
-                            ]
-                        };
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.player,design);
-                    
-                        //internal 
-                            function loadProcess(data){
-                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );                   
-                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
-                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
-                            
-                                object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
-                                object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
-                            }
-                            
-                        //circuitry
-                            //audio file player
-                                object.player = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
-                                object.player.out_right().connect( object.elements.connectionNode_audio.outRight.in() );
-                                object.player.out_left().connect( object.elements.connectionNode_audio.outLeft.in() );
-                    
-                            //data refresh
-                                function refresh(){
-                                    //check if there's a track at all
-                                        if( !object.player.isLoaded() ){return;}
-                    
-                                    //time readout
-                                        var time = _canvas_.library.math.seconds2time( Math.round(object.player.currentTime()));
-                    
-                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                            _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                                            _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                                            _canvas_.library.misc.padString(time.s,2,'0')
+                                    if( a%5 != 0 && a%10 != 0 ){
+                                        design.elements.push(
+                                            {type:'text', name:'pentimetre_line_text_'+a, data:{
+                                                x:50/2, y:a*10, text:a,
+                                                width:2.5,height:2.5,
+                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                colour:style.markings, font:'defaultThin',
+                                            }}
                                         );
-                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                    
-                                    //wave box
-                                        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(object.player.progress(),false);
-                                }
-                                setInterval(refresh,1000/30);
+                                    }
                         
-                        //import/export
-                            object.exportData = function(){
-                                var data = {
-                                    track: object.player.unloadRaw(),
-                                };
-                    
-                                return data;
-                            };
-                            object.importData = function(data){
-                                object.i.loadRaw(data.track);
-                            };
-                    
-                        //wiring
-                            object.elements.dial_continuous.rate_dial.onchange = function(data){ object.player.rate( 2*data ); };
-                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-                                if(needle == 'lead'){ object.player.jumpTo(value); }
-                                else if(needle == 'selection_A' || needle == 'selection_B'){
-                                    var temp = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
-                                    if(temp.A < temp.B){ object.player.loop({start:temp.A,end:temp.B}); }
-                                    else{ object.player.loop({start:temp.B,end:temp.A}); }
-                                }
-                            };
-                    
-                        //interface
-                            object.i = {
-                                loadRaw:function(data){
-                                    object.player.loadRaw(data,loadProcess);
-                                },
-                                loadByFile:function(){
-                                    object.player.load('file',loadProcess);
-                                },
-                                loadByURL:function(url){
-                                    object.player.load('url',loadProcess,url);
-                                },
-                            };
-                    
-                        //setup
-                            object.elements.dial_continuous.rate_dial.set(0.5);
-                    
-                        return object;
-                    };
-                    
-                    this.player.metadata = {
-                        name:'Player',
-                        category:'audioFile',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/player/'
-                    };
-                    this.basicSequencer = function(x,y,a){
-                        var vals = {
-                            sequencer:{
-                                width:64, height:10,
-                            }
-                        };
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
-                            rangeslide:{
-                                handle:{r:240/255,g:240/255,b:240/255,a:1},
-                                backing:{r:150/255,g:150/255,b:150/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
-                                span:{r:220/255,g:220/255,b:220/255,a:1},
-                            },
-                            rangeslide_loop:{
-                                handle:{r:240/255,g:240/255,b:240/255,a:1},
-                                backing:{r:150/255,g:150/255,b:150/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                span:{r:255/255,g:247/255,b:145/255,a:0.5},
-                            },
-                            button:{
-                                background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
-                                background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
-                            },
-                            checkbox:{
-                                backing:{r:229/255,g: 229/255,b: 229/255,a:1},
-                                check:{r:252/255,g:252/255,b:252/255,a:1},
-                            },
-                            checkbox_loop:{
-                                backing:{r:229/255,g: 221/255,b: 112/255,a:1},
-                                check:{r:252/255,g:244/255,b:128/255,a:1},
-                            },
-                        };
-                    
-                        var design = {
-                            name: 'basicSequencer',
-                            category:'sequencers',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
-                    
-                                //main sequencer
-                                    {type:'sequencer', name:'main', data:{ x:10, y:20, width:780, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
-                                        event:function(event){
-                                            for(var a = 0; a < event.length; a++){
-                                                object.elements.connectionNode_data['output_'+event[a].line].send('hit',{velocity:event[a].strength});
-                                            }
-                                        },
-                                        onchangeviewarea:function(data){ object.elements.rangeslide.viewselect.set( {start:data.left, end:data.right}, false ); },
-                                    }},
-                                    {type:'rangeslide', name:'viewselect', data:{ x:10, y:20, height:780, width:10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},    
-                    
-                                //follow playhead
-                                    {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
-                                        onchange:function(value){object.elements.sequencer.main.automove(value);},
-                                    }},
-                    
-                                //loop control
-                                    {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
-                                        onchange:function(value){object.elements.sequencer.main.loopActive(value);},
-                                    }},
-                                    {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
-                    
-                                //progression
-                                    {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
-                                        onreceive:function(){object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                    
-                                //reset
-                                    {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
-                                        onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                            ]
-                        };
-                        //dynamic design
-                            for(var a = 0; a < vals.sequencer.height; a++){
-                                design.elements.push(
-                                    {type:'connectionNode_data', name:'output_'+a, data:{ 
-                                        x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
-                                        onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                );
-                            }
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
-                    
-                        //wiring
-                            object.elements.rangeslide.viewselect.onchange = function(values){
-                                object.elements.sequencer.main.viewarea({topLeft:{x:values.start, y:0}, bottomRight:{x:values.end, y:1}},false); 
-                            };
-                            object.elements.rangeslide.loopSelect.onchange = function(values){ 
-                                var a = Math.round(values.start*vals.sequencer.width);
-                                var b = Math.round(values.end*vals.sequencer.width);
-                                if(b == 0){b = 1;}
-                                object.elements.sequencer.main.loopPeriod(a,b);
-                            };
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    loop:{
-                                        active: object.elements.checkbox_rect.loopActive.get(),
-                                        range: object.elements.rangeslide.loopSelect.get(),
-                                    },
-                                    autofollow: object.elements.checkbox_rect.followPlayhead.get(),
-                                    notes: object.elements.sequencer.main.getAllSignals(),
-                                    viewarea:{
-                                        horizontal: object.elements.rangeslide.viewselect.get(),
-                                    }
-                                };
-                            };
-                            object.importData = function(data){
-                                object.elements.sequencer.main.addSignals(data.notes);
-                                object.i.loopActive(data.loop.active);
-                                object.elements.rangeslide.loopSelect.set(data.loop.range);
-                                object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
-                                object.elements.rangeslide.viewselect.set(data.viewarea.horizontal);
-                            };
-                    
-                        //interface
-                            object.i = {
-                                addNote:function(line, position, length, strength=1){object.elements.sequencer.main.addSignal(line, position, length, strength);},
-                                addNotes:function(data){object.elements.sequencer.main.addSignal(data);},
-                                getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
-                                loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
-                                step: object.elements.sequencer.step,
-                            };
-                    
-                        return object;
-                    };
-                    this.basicSequencer.metadata = {
-                        name:'Basic Sequencer (Data) (Multi Pulse Out)',
-                        category:'sequencer',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_pulseOut/'
-                    };
-                    
-                    this.basicSequencer2 = function(x,y,a){
-                        var vals = {
-                            sequencer:{
-                                width:64, height:10,
-                            }
-                        };
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
-                            rangeslide:{
-                                handle:{r:240/255,g:240/255,b:240/255,a:1},
-                                backing:{r:150/255,g:150/255,b:150/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
-                                span:{r:220/255,g:220/255,b:220/255,a:1},
-                            },
-                            rangeslide_loop:{
-                                handle:{r:240/255,g:240/255,b:240/255,a:1},
-                                backing:{r:150/255,g:150/255,b:150/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                span:{r:255/255,g:247/255,b:145/255,a:0.5},
-                            },
-                            button:{
-                                background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
-                                background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
-                            },
-                            checkbox:{
-                                backing:{r:229/255,g: 229/255,b: 229/255,a:1},
-                                check:{r:252/255,g:252/255,b:252/255,a:1},
-                            },
-                            checkbox_loop:{
-                                backing:{r:229/255,g: 221/255,b: 112/255,a:1},
-                                check:{r:252/255,g:244/255,b:128/255,a:1},
-                            },
-                        };
-                    
-                        var design = {
-                            name: 'basicSequencer2',
-                            category:'sequencers',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
-                    
-                                //main sequencer
-                                    {type:'sequencer', name:'main', data:{ x:10, y:20, width:780, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
-                                        event:function(event){
-                                            for(var a = 0; a < event.length; a++){
-                                                object.elements.connectionNode_voltage['output_'+event[a].line].set(event[a].strength);
-                                            }
-                                        },
-                                        onchangeviewarea:function(data){ object.elements.rangeslide.viewselect.set( {start:data.left, end:data.right}, false ); },
-                                    }},
-                                    {type:'rangeslide', name:'viewselect', data:{ x:10, y:20, height:780, width:10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},    
-                    
-                                //follow playhead
-                                    {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
-                                        onchange:function(value){object.elements.sequencer.main.automove(value);},
-                                    }},
-                    
-                                //loop control
-                                    {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
-                                        onchange:function(value){object.elements.sequencer.main.loopActive(value);},
-                                    }},
-                                    {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
-                    
-                                //progression
-                                    {type:'connectionNode_signal', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
-                                        onchange:function(val){if(!val){return;}object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                    
-                                //reset
-                                    {type:'connectionNode_signal', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
-                                        onchange:function(val){if(!val){return;}object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                            ]
-                        };
-                        //dynamic design
-                            for(var a = 0; a < vals.sequencer.height; a++){
-                                design.elements.push(
-                                    {type:'connectionNode_voltage', name:'output_'+a, data:{ 
-                                        x: -5, y: 11+a*(180/vals.sequencer.height), width: 5, height:(180/vals.sequencer.height)-2,
-                                    }},
-                                );
-                            }
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
-                    
-                        //wiring
-                            object.elements.rangeslide.viewselect.onchange = function(values){
-                                object.elements.sequencer.main.viewarea({topLeft:{x:values.start, y:0}, bottomRight:{x:values.end, y:1}},false); 
-                            };
-                            object.elements.rangeslide.loopSelect.onchange = function(values){ 
-                                var a = Math.round(values.start*vals.sequencer.width);
-                                var b = Math.round(values.end*vals.sequencer.width);
-                                if(b == 0){b = 1;}
-                                object.elements.sequencer.main.loopPeriod(a,b);
-                            };
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    loop:{
-                                        active: object.elements.checkbox_rect.loopActive.get(),
-                                        range: object.elements.rangeslide.loopSelect.get(),
-                                    },
-                                    autofollow: object.elements.checkbox_rect.followPlayhead.get(),
-                                    notes: object.elements.sequencer.main.getAllSignals(),
-                                    viewarea:{
-                                        horizontal: object.elements.rangeslide.viewselect.get(),
-                                    }
-                                };
-                            };
-                            object.importData = function(data){
-                                object.elements.sequencer.main.addSignals(data.notes);
-                                object.i.loopActive(data.loop.active);
-                                object.elements.rangeslide.loopSelect.set(data.loop.range);
-                                object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
-                                object.elements.rangeslide.viewselect.set(data.viewarea.horizontal);
-                            };
-                    
-                        //interface
-                            object.i = {
-                                addNote:function(line, position, length, strength=1){object.elements.sequencer.main.addSignal(line, position, length, strength);},
-                                addNotes:function(data){object.elements.sequencer.main.addSignal(data);},
-                                getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
-                                loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
-                                step: object.elements.sequencer.step,
-                            };
-                    
-                        return object;
-                    };
-                    this.basicSequencer2.metadata = {
-                        name:'Basic Sequencer (Voltage) (Multi Pulse Out)',
-                        category:'sequencer',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_pulseOut/'
-                    };
-                    this.launchpad = function(x,y,a){
-                        var values = {
-                            xCount:8, yCount:8,
-                        };
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            h1:{colour:{r:0/255,g:0/255,b:0/255,a:1}, size:3.5, ratio:1, font:'Courier New', printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'}},
-                    
-                            button: {
-                                background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
-                                background__hover__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover_press__colour:{r:150/255,g:150/255,b:150/255,a:1},
-                            },
-                            grid: {
-                                backing:{r:200/255,g:175/255,b:200/255,a:1},
-                                check:{r:150/255,g:125/255,b:150/255,a:1},
-                                backingGlow:{r:225/255,g:175/255,b:225/255,a:1},
-                                checkGlow:{r:200/255,g:125/255,b:200/255,a:1}
-                            },
-                        };
-                        var design = {
-                            name: 'launchpad',
-                            category:'sequencers',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], colour:style.background }},
-                    
-                                //input data
-                                    {type:'connectionNode_data', name:'pulse_input', data:{ x: 125, y: 5, width: 5, height: 10 }},
-                                    {type:'connectionNode_data', name:'nextPage_input', data:{ x: 125, y: 22.5, width: 5, height: 10 }},
-                                    {type:'connectionNode_data', name:'prevPage_input', data:{ x: 125, y: 35, width: 5, height: 10 }},
-                                //pulse
-                                    {type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
-                                //rastorgrid
-                                    {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, colour:style.grid.backing}},
-                                    {type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
-                                //page select
-                                    {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5}},
-                                    {type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
-                                    {type:'button_rectangle',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
-                            ]
-                        };
-                        //dynamic design
-                            for(var a = 0; a < values.yCount; a++){
-                                design.elements.push( {type:'connectionNode_data', name:'out_'+a, data:{ x: -5, y: a*12.5 + 2.5, width: 5, height: 7.5 }} );
-                            }
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.launchpad,design);
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    currentPage: object.internalCircuits.page(),
-                                    data: object.internalCircuits.exportPages(),
-                                };
-                            };
-                            object.importData = function(data){
-                                if(data.data != undefined){ object.internalCircuits.importPages(data.data); }
-                                if(data.currentPage){ object.internalCircuits.page(data.currentPage); }
-                            };
-                    
-                        //internal functions
-                            function lightLine(){
-                                for(var a = 0; a < values.yCount; a++){
-                                    object.elements.rastorgrid.rastorgrid.light(object.internalCircuits.previousPosition(),a,false);
-                                    object.elements.rastorgrid.rastorgrid.light(object.internalCircuits.position(),a,true);
-                                }
-                            }
-                            function pageChange(data){
-                                object.elements.sevenSegmentDisplay.pageNumber.enterCharacter(''+data);
-                                var newPage = object.internalCircuits.exportPage();
-                    
-                                if(newPage == undefined){
-                                    object.elements.rastorgrid.rastorgrid.clear();
-                                }else{
-                                    object.elements.rastorgrid.rastorgrid.set(newPage);
-                                }
-                            }
-                    
-                        //circuitry
-                            object.internalCircuits = new this.launchpad.sequencer(values.xCount, values.yCount);
-                            object.internalCircuits.commands = function(data){
-                                for(var a = 0; a < values.yCount; a++){
-                                    if(data[a]){ object.io.data['out_'+a].send('pulse'); }
-                                }
-                            };
-                            object.internalCircuits.pageChange = pageChange;
-                    
-                        //wiring
-                            object.elements.connectionNode_data.pulse_input.onreceivedata = function(){object.internalCircuits.inc();lightLine();};
-                            object.elements.connectionNode_data.nextPage_input.onreceivedata = function(){object.internalCircuits.incPage();};
-                            object.elements.connectionNode_data.prevPage_input.onreceivedata = function(){object.internalCircuits.decPage();};
-                            object.elements.button_rectangle.pulse_button.onpress = function(){object.internalCircuits.inc();lightLine();};
-                            object.elements.rastorgrid.rastorgrid.onchange = function(data){object.internalCircuits.importPage(data);};
-                            object.elements.button_rectangle.nextPage.onpress = function(){object.internalCircuits.incPage();};
-                            object.elements.button_rectangle.prevPage.onpress = function(){object.internalCircuits.decPage();};
-                    
-                        //interface
-                            object.i = {
-                                importPage:function(data,a){object.internalCircuits.importPage(data,a);},
-                                exportPage:function(a){return object.internalCircuits.exportPage(a);},
-                                importPages:function(data){object.internalCircuits.importPages(data);},
-                                exportPages:function(){return object.internalCircuits.exportPages();},
-                                setPage:function(a){object.internalCircuits.page(a);}
-                            };
-                    
-                        //setup 
-                            lightLine();
-                            object.elements.sevenSegmentDisplay.pageNumber.enterCharacter('0');
-                    
-                        return object;
-                    };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.launchpad.metadata = {
-                        name:'Launchpad',
-                        category:'sequencer',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/launchpad/'
-                    };
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    this.launchpad.sequencer = function(xCount,yCount){
-                        var pages = [];
-                        var pageCount = 10;
-                        var currentPage = 0;
-                        var position = 0;
-                        var previousPosition = xCount-1;
-                    
-                        //internal functions
-                            function makePage(xCount,yCount,fill){
-                                return Array(xCount).fill(Array(yCount).fill(fill));
-                            }
-                    
-                        //controls
-                            //getting/setting a square or a column
-                                this.square = function(x,y,value){
-                                    if(x < 0){x = 0;}else if(x > xCount-1){x = xCount-1;}
-                                    if(y < 0){y = 0;}else if(x > yCount-1){x = yCount-1;}
-                    
-                                    if(value == undefined){return pages[currentPage][y][x];}
-                    
-                                    pages[currentPage][y][x] = value;
-                                };
-                                this.line = function(a,data){
-                                    if(a == undefined){a = position;}
-                    
-                                    if(data == undefined){
-                                        var line = [];
-                                        for(var a = 0; a < yCount; a++){
-                                            if( 
-                                                pages[currentPage] == undefined || 
-                                                pages[currentPage][a] == undefined || 
-                                                pages[currentPage][a][position] == undefined
-                                            ){ line.push(false); }
-                                            else{ line.push(pages[currentPage][a][position]); }
-                                        }
-                                        return line;
-                                    }else{
-                                        for(var a = 0; a < yCount; a++){
-                                            pages[currentPage][a][position] = data[a];
+                                    //pentimetres
+                                    if( a%5 == 0 ){
+                                        design.elements.push(
+                                            {type:'rectangle', name:'pentimetre_line_L_'+a, data:{
+                                                x:0, y:a*10 - 0.5, width:10, height:1, 
+                                                colour:style.markings,
+                                            }}
+                                        );
+                                        design.elements.push(
+                                            {type:'rectangle', name:'pentimetre_line_R_'+a, data:{
+                                                x:50-10, y:a*10 - 0.5, width:10, height:1, 
+                                                colour:style.markings,
+                                            }}
+                                        );
+                                        if( a%10 != 0 ){
+                                            design.elements.push(
+                                                {type:'text', name:'pentimetre_line_text_'+a, data:{
+                                                    x:50/2, y:a*10, text:a,
+                                                    width:5,height:5,
+                                                    printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                    colour:style.markings, font:'defaultThin',
+                                                }}
+                                            );
                                         }
                                     }
-                                };
-                    
-                            //getting/setting the playhead position
-                                this.position = function(a,react=true){
-                                    if(a == undefined){return position;}
-                                    previousPosition = position;
-                    
-                                    if(a > xCount-1){a = 0;}
-                                    else if(a < 0){a = xCount-1;}
-                    
-                                    position = a;
-                                    if(react){this.commands(this.line());}
-                                };
-                                this.previousPosition = function(){return previousPosition;};
-                                this.inc = function(){ this.position(position+1); };
-                                this.dec = function(){ this.position(position-1); };
-                    
-                            //getting/setting the page number
-                                this.page = function(a){
-                                    if(a == undefined){return currentPage;}
-                    
-                                    if(a == -1){a = pageCount-1;}
-                                    else if(a < 0){a = 0;}
-                                    else if(a == pageCount){a = 0;}
-                                    else if(a >= pageCount){a = pageCount-1;}
-                                    currentPage = a;
-                                    if(this.pageChange != undefined){this.pageChange(currentPage);}
-                                };
-                                this.incPage = function(){ this.page(currentPage+1); };
-                                this.decPage = function(){ this.page(currentPage-1); };
-                    
-                    
-                            //getting/setting the data ina page or all pages
-                                this.exportPages = function(){
-                                    return JSON.parse(JSON.stringify(pages));
-                                };
-                                this.importPages = function(data){
-                                    pages = data;
-                                    this.pageChange(currentPage);
-                                };
-                                this.exportPage = function(a){
-                                    if(a == undefined){a = currentPage;}
-                                    if(pages[a] == undefined){ return makePage(xCount,yCount,false); }
-                                    return JSON.parse(JSON.stringify(pages[a]));
-                                };
-                                this.importPage = function(data,a){
-                                    if(a == undefined){a = currentPage;}
-                                    pages[a] = data;
-                                    if(this.pageChange != undefined){this.pageChange(currentPage);}
-                                };
-                            
-                    
-                        //callbacks
-                            this.commands = function(){};
-                            this.pageChange = function(){};
-                    };
-                    this.basicSequencer_midiOut = function(x,y,a){
-                        var vals = {
-                            sequencer:{
-                                width:64, height:undefined,
-                                midiRange:{ bottom:24, top:131 },
-                                pattern:[0,0,1,0,1,0,1,0,0,1,0,1],
-                            }
-                        };
-                        vals.sequencer.height = vals.sequencer.midiRange.top - vals.sequencer.midiRange.bottom + 1;
-                        //calculate pattern based on midi range
-                            var temp = vals.sequencer.pattern.length - ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(_canvas_.library.audio.num2name(vals.sequencer.midiRange.top).slice(1))
-                            vals.sequencer.pattern = vals.sequencer.pattern.slice(temp).concat(vals.sequencer.pattern.slice(0,temp));
-                    
-                        var style = {
-                            background:{r:200/255,g:200/255,b:200/255,a:1},
-                            markings:{ colour:{r:150/255,g:150/255,b:150/255,a:1}, thickness:0.5},
-                            rangeslide:{
-                                handle:{r:240/255,g:240/255,b:240/255,a:1},
-                                backing:{r:150/255,g:150/255,b:150/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                invisibleHandle:{r:0/255,g:0/255,b:0/255,a:0},
-                                span:{r:220/255,g:220/255,b:220/255,a:1},
-                            },
-                            rangeslide_loop:{
-                                handle:{r:240/255,g:240/255,b:240/255,a:1},
-                                backing:{r:150/255,g:150/255,b:150/255,a:1},
-                                slot:{r:50/255,g:50/255,b:50/255,a:1},
-                                span:{r:255/255,g:247/255,b:145/255,a:0.5},
-                            },
-                            button:{
-                                background__up__colour:{r:220/255,g:220/255,b:220/255,a:1}, 
-                                background__hover__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
-                                background__hover_press__colour:{r:180/255,g:180/255,b:180/255,a:1},
-                            },
-                            checkbox:{
-                                backing:{r:229/255,g: 229/255,b: 229/255,a:1},
-                                check:{r:252/255,g:252/255,b:252/255,a:1},
-                            },
-                            checkbox_loop:{
-                                backing:{r:229/255,g: 221/255,b: 112/255,a:1},
-                                check:{r:252/255,g:244/255,b:128/255,a:1},
-                            },
-                        };
-                    
-                        var design = {
-                            name: 'basicSequencer_midiOut',
-                            category:'sequencers',
-                            collection: 'alpha',
-                            x:x, y:y, a:a,
-                            space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
-                            // spaceOutline:true,
-                            elements:[
-                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
-                    
-                                //midi out
-                                    {type:'connectionNode_data', name:'midiout', data:{ x: -5, y: 11.25, width: 5, height: 17.5 }},
-                    
-                                //main sequencer
-                                    {type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
-                                        horizontalStripStyle_pattern:vals.sequencer.pattern,
-                                        event:function(event){
-                                            for(var a = 0; a < event.length; a++){
-                                                object.elements.connectionNode_data.midiout.send('midinumber',{num:midiNumber_line_converter(event[a].line), velocity:event[a].strength});
-                                            }
-                                        },
-                                        onpan:function(data){
-                                            object.elements.rangeslide.viewselect_y.set( {start:data.topLeft.y, end:data.bottomRight.y}, false );
-                                            object.elements.rangeslide.viewselect_x.set( {start:data.topLeft.x, end:data.bottomRight.x}, false );
-                                        },
-                                    }},
-                                    {type:'rangeslide', name:'viewselect_y', data:{ x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1, style:style.rangeslide }},
-                                    {type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
-                    
-                                //follow playhead
-                                    {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
-                                        onchange:function(value){object.elements.sequencer.main.automove(value);},
-                                    }},
-                    
-                                //loop control
-                                    {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
-                                        onchange:function(value){object.elements.sequencer.main.loopActive(value);},
-                                    }},
-                                    {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
-                    
-                                //progression
-                                    {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
-                                        onreceive:function(){object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.progress();},
-                                    }},
-                                    {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                    
-                                //reset
-                                    {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
-                                        onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
-                                        onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
-                                    }},
-                                    {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                                    {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                            ]
-                        };
-                    
-                        //internal functions
-                            function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
-                    
-                        //wiring
-                            object.elements.rangeslide.viewselect_y.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{y:values.start}, bottomRight:{y:values.end}},false); };
-                            object.elements.rangeslide.viewselect_x.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{x:values.start}, bottomRight:{x:values.end}},false); };
-                            object.elements.rangeslide.loopSelect.onchange = function(values){ 
-                                var a = Math.round(values.start*vals.sequencer.width);
-                                var b = Math.round(values.end*vals.sequencer.width);
-                                if(b == 0){b = 1;}
-                                object.elements.sequencer.main.loopPeriod(a,b);
-                            };
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    loop:{
-                                        active: object.elements.checkbox_rect.loopActive.get(),
-                                        range: object.elements.rangeslide.loopSelect.get(),
-                                    },
-                                    autofollow: object.elements.checkbox_rect.followPlayhead.get(),
-                                    notes: object.elements.sequencer.main.getAllSignals(),
-                                    viewarea:{
-                                        horizontal: object.elements.rangeslide.viewselect_y.get(),
-                                        vertical: object.elements.rangeslide.viewselect_x.get(),
+                        
+                                    //decimetres
+                                    if( a%10 == 0 ){
+                                        design.elements.push(
+                                            {type:'rectangle', name:'decimetre_line_L_'+a, data:{
+                                                x:0, y:a*10 - 0.5, width:15, height:1, 
+                                                colour:style.markings,
+                                            }}
+                                        );
+                                        design.elements.push(
+                                            {type:'rectangle', name:'decimetre_line_R_'+a, data:{
+                                                x:50-15, y:a*10 - 0.5, width:15, height:1, 
+                                                colour:style.markings,
+                                            }}
+                                        );
+                                        design.elements.push(
+                                            {type:'text', name:'decimetre_line_text_'+a, data:{
+                                                x:50/2, y:a*10, text:a,
+                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                colour:style.markings, font:'defaultThin',
+                                            }}
+                                        );
                                     }
-                                };
-                            };
-                            object.importData = function(data){
-                                object.elements.sequencer.main.addSignals(data.notes);
-                                object.i.loopActive(data.loop.active);
-                                object.elements.rangeslide.loopSelect.set(data.loop.range);
-                                object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
-                                object.elements.rangeslide.viewselect_y.set(data.viewarea.horizontal);
-                                object.elements.rangeslide.viewselect_x.set(data.viewarea.vertical);
-                            };
-                    
-                        //interface
-                            object.i = {
-                                addNote:function(number, position, length, strength=1){object.elements.sequencer.main.addSignal(midiNumber_line_converter(number), position, length, strength);},
-                                addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength); } },
-                                getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
-                                loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
-                                step:object.elements.sequencer.step,
-                            };
-                    
-                        //setup
-                            object.elements.rangeslide.viewselect_y.set({start:0.3, end:0.7});
+                        
+                                }
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
                             
-                        return object;
+                            return object;
+                        };
+                        
+                        this.ruler.metadata = {
+                            name:'Ruler',
+                            category:'tools',
+                            helpURL:'https://curve.metasophiea.com/help/units/beta/ruler/'
+                        };
+                        
+                        this._categoryData = {
+                            tools:{ printingName:'Tools' },
+                        };
+
                     };
-                    
-                    this.basicSequencer_midiOut.metadata = {
-                        name:'Basic Sequencer (Midi Out)',
-                        category:'sequencer',
-                        helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSequencer_midiOut/'
-                    };
-                };
-                
-                _canvas_.interface.unit.collection.alpha._categoryData = {
-                    audioFile:{ printingName:'Audio File' },
-                    audioEffectUnits:{ printingName:'Audio Effect Units' },
-                    humanOutputDevices:{ printingName:'Human Output Devices' },
-                    humanInputDevices:{ printingName:'Human Input Devices' },
-                    misc:{ printingName:'Miscellaneous' },
-                    sequencer:{ printingName:'Sequencers' },
-                    synthesizer:{ printingName:'Synthesizers' },
                 };
                 //a design object for the menubar options and their respective dropdown menu items
                 _canvas_.control.gui.elements.menubar.dropdowns = [
@@ -38264,42 +38420,98 @@
                         breakHeight: 0.5,
                         spaceHeight: 1,
                         itemList:(function(){
-                            var collection = {};
-                            var outputArray = [];
+                            var requestedCollection = (new URL(window.location.href)).searchParams.get("collection");
+                            if( requestedCollection == undefined ){ requestedCollection = 'alpha'; }
                 
-                            for(design in _canvas_.interface.unit.collection.alpha){
-                                if(design == '_categoryData'){continue;}
+                            if(_canvas_.control.interaction.devMode()){
+                                ////populate create dropdown with all units from all categories
                 
-                                var metadata = _canvas_.interface.unit.collection.alpha[design].metadata;
-                                if(metadata.dev){continue;}
-                                
-                                if(!collection.hasOwnProperty(metadata.category)){
-                                    collection[metadata.category] = [];
-                                }
-                                collection[metadata.category].push(design);
-                            }
+                                var collections = _canvas_.interface.unit.collection;
+                                var outputItemList = [];
                 
-                            for(category in collection){
-                                var printingName = _canvas_.interface.unit.collection.alpha._categoryData[category] ? _canvas_.interface.unit.collection.alpha._categoryData[category].printingName : category;
-                                var sublist = { type:'list', text:printingName, list:[] };
-                
-                                collection[category].forEach(design => {
-                                    var metadata = _canvas_.interface.unit.collection.alpha[design].metadata;
-                                    sublist.list.push(
-                                        {
-                                            type:'item', text_left: metadata.name,
-                                            function:function(design){return function(){
-                                                var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                                _canvas_.control.scene.addUnit(p.x,p.y,0,design,'alpha');
-                                            }}(design),
+                                Object.keys(collections).sort().forEach(collectionKey => {
+                                    //for this collection, sort models into their categories
+                                    var categorySortingList = {};
+                                    Object.keys(collections[collectionKey]).sort().filter(a => a[0]!='_').forEach(modelKey => {
+                                        var model = collections[collectionKey][modelKey];
+                                        if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
+                                        if(!categorySortingList.hasOwnProperty(model.metadata.category)){
+                                            categorySortingList[model.metadata.category] = [];
                                         }
-                                    );
+                                        categorySortingList[model.metadata.category].push(modelKey);
+                                    });
+                
+                                    //run though categories and generate item list for this collection
+                                    var collectionItemList = {type:'list', text:collectionKey, list:[]};
+                                    Object.keys(categorySortingList).sort().forEach(categoryKey => {
+                                        var categoryPrintingName = categoryKey;
+                                        if(collections[collectionKey]._categoryData != undefined && collections[collectionKey]._categoryData[categoryKey] != undefined){
+                                            categoryPrintingName = collections[collectionKey]._categoryData[categoryKey].printingName;
+                                        }
+                
+                                        var categoryList = { type:'list', text:categoryPrintingName, list:[] };
+                                        categorySortingList[categoryKey].forEach(model => {
+                                            categoryList.list.push(
+                                                {
+                                                    type:'item', text_left:collections[collectionKey][model].metadata.name,
+                                                    function:function(design){return function(){
+                                                        var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
+                                                        _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
+                                                    }}(model),
+                                                }
+                                            );
+                                        });
+                
+                                        collectionItemList.list.push(categoryList);
+                                    });
+                
+                                    //add this item list to the output array
+                                    outputItemList.push(collectionItemList);
                                 });
                 
-                                outputArray.push(sublist);
+                                return outputItemList;
+                            }else{
+                                ////populate create dropdown with units from only the alpha category
+                                var categoryName = requestedCollection;
+                
+                                var collection = {};
+                                var outputItemList = [];
+                
+                                for(design in _canvas_.interface.unit.collection[categoryName]){
+                                    if(design[0] == '_'){continue;}
+                
+                                    var metadata = _canvas_.interface.unit.collection[categoryName][design].metadata;
+                                    if(metadata.dev){continue;}
+                                    
+                                    if(!collection.hasOwnProperty(metadata.category)){
+                                        collection[metadata.category] = [];
+                                    }
+                                    collection[metadata.category].push(design);
+                                }
+                
+                                Object.keys(collection).sort().forEach(category => {
+                                    var printingName = _canvas_.interface.unit.collection[categoryName]._categoryData[category] ? _canvas_.interface.unit.collection[categoryName]._categoryData[category].printingName : category;
+                                    var sublist = { type:'list', text:printingName, list:[] };
+                
+                                    collection[category].forEach(design => {
+                                        var metadata = _canvas_.interface.unit.collection[categoryName][design].metadata;
+                                        sublist.list.push(
+                                            {
+                                                type:'item', text_left: metadata.name,
+                                                function:function(design,categoryName){return function(){
+                                                    var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
+                                                    _canvas_.control.scene.addUnit(p.x,p.y,0,design,categoryName);
+                                                }}(design,categoryName),
+                                            }
+                                        );
+                                    });
+                
+                                    outputItemList.push(sublist);
+                                });
+                
+                                return outputItemList;
                             }
                 
-                            return outputArray;
                         })(),
                     },
                     {

@@ -94,10 +94,12 @@ this.list = function(
         var position = 0;
         var calculatedListHeight = 0;
 
-    //genrate list content
+    //generate list content
         function generateListContent(listItems=[]){
             var output = {elements:[], calculatedListHeight:0};
             var xOffset = limitWidthTo < 0 ? 0 : (limitWidthTo-itemWidth)/2;
+
+            if(listItems.length == 0){ listItems = [{type:'item', text:'-empty-'}]; }
 
             listItems.forEach((item,index) => {
                 if(index != 0){output.calculatedListHeight += itemSpacingHeight;}
@@ -296,6 +298,7 @@ this.list = function(
                                         itemHeight:itemHeight, itemWidth:itemWidth, itemSpacingHeight:itemSpacingHeight, spacingHeight:spacingHeight, breakHeight:breakHeight,
                                         textbreak_fontSize:textbreak_fontSize, textbreak_colour:textbreak_colour,
                                         item_textSize:item_textSize, item_textColour:item_textColour, item_textFont:item_textFont, item_textSpacing:item_textSpacing, item_textInterCharacterSpacing:item_textInterCharacterSpacing,
+                                        sublist_arrowSize:sublist_arrowSize, sublist_arrowColour:sublist_arrowColour,
                                         item_textVerticalOffsetMux:item_textVerticalOffsetMux, item_textHorizontalOffsetMux:item_textHorizontalOffsetMux,
                     
                                         active:active, multiSelect:multiSelect, hoverable:hoverable, selectable:selectable, pressable:pressable,

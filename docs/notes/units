@@ -49,6 +49,8 @@ current units
 
 collecions
     brandon walsh's essentials
+        ruler
+
         pulse generator (signal)
         musical keyboard (data:midi)
 
@@ -72,7 +74,7 @@ collecions
         basic synthesizer
 
         distortion unit (mono)
-        filter unit (mono)
+        filter unit (mono)(high-med-low)
         reverb unit (mono)
 
         basic 8 track mixer (8 mono to 1 stereo)

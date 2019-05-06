@@ -1,8 +1,24 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-05-06
+  - 'create' dropdown menu order is now sorted alphabetically
+  - list part's sublists weren't receiving the data needed to scale the sublist
+    arrows correctly. Fixed that
+  - updated the create menu in curve, so that when devMode is active, the drop
+    down lists all units in all categories.
+  - if a list part is created with no content; a single item is displayed
+    reading "-empty-"
+  - updated the way unit collections are stored, setting things up for the beta
+    collection
+  - first unit of the beta collection: a 100cm ruler
+  
+
 2019-05-05
   - fixed issue with adjusting the audioFilePlayer play head. It was entering a
     loop of some kind. Caused by the builder not lining up with all the
     arguments of the part's creator function
+
+  ideas
+  - make the order of the 'create' dropdown menu consistent
 
 
 2019-05-03

@@ -36,42 +36,98 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
         breakHeight: 0.5,
         spaceHeight: 1,
         itemList:(function(){
-            var collection = {};
-            var outputArray = [];
+            var requestedCollection = (new URL(window.location.href)).searchParams.get("collection");
+            if( requestedCollection == undefined ){ requestedCollection = 'alpha'; }
 
-            for(design in _canvas_.interface.unit.collection.alpha){
-                if(design == '_categoryData'){continue;}
+            if(_canvas_.control.interaction.devMode()){
+                ////populate create dropdown with all units from all categories
 
-                var metadata = _canvas_.interface.unit.collection.alpha[design].metadata;
-                if(metadata.dev){continue;}
-                
-                if(!collection.hasOwnProperty(metadata.category)){
-                    collection[metadata.category] = [];
-                }
-                collection[metadata.category].push(design);
-            }
+                var collections = _canvas_.interface.unit.collection;
+                var outputItemList = [];
 
-            for(category in collection){
-                var printingName = _canvas_.interface.unit.collection.alpha._categoryData[category] ? _canvas_.interface.unit.collection.alpha._categoryData[category].printingName : category;
-                var sublist = { type:'list', text:printingName, list:[] };
-
-                collection[category].forEach(design => {
-                    var metadata = _canvas_.interface.unit.collection.alpha[design].metadata;
-                    sublist.list.push(
-                        {
-                            type:'item', text_left: metadata.name,
-                            function:function(design){return function(){
-                                var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                _canvas_.control.scene.addUnit(p.x,p.y,0,design,'alpha');
-                            }}(design),
+                Object.keys(collections).sort().forEach(collectionKey => {
+                    //for this collection, sort models into their categories
+                    var categorySortingList = {};
+                    Object.keys(collections[collectionKey]).sort().filter(a => a[0]!='_').forEach(modelKey => {
+                        var model = collections[collectionKey][modelKey];
+                        if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
+                        if(!categorySortingList.hasOwnProperty(model.metadata.category)){
+                            categorySortingList[model.metadata.category] = [];
                         }
-                    );
+                        categorySortingList[model.metadata.category].push(modelKey);
+                    });
+
+                    //run though categories and generate item list for this collection
+                    var collectionItemList = {type:'list', text:collectionKey, list:[]};
+                    Object.keys(categorySortingList).sort().forEach(categoryKey => {
+                        var categoryPrintingName = categoryKey;
+                        if(collections[collectionKey]._categoryData != undefined && collections[collectionKey]._categoryData[categoryKey] != undefined){
+                            categoryPrintingName = collections[collectionKey]._categoryData[categoryKey].printingName;
+                        }
+
+                        var categoryList = { type:'list', text:categoryPrintingName, list:[] };
+                        categorySortingList[categoryKey].forEach(model => {
+                            categoryList.list.push(
+                                {
+                                    type:'item', text_left:collections[collectionKey][model].metadata.name,
+                                    function:function(design){return function(){
+                                        var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
+                                        _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
+                                    }}(model),
+                                }
+                            );
+                        });
+
+                        collectionItemList.list.push(categoryList);
+                    });
+
+                    //add this item list to the output array
+                    outputItemList.push(collectionItemList);
                 });
 
-                outputArray.push(sublist);
+                return outputItemList;
+            }else{
+                ////populate create dropdown with units from only the alpha category
+                var categoryName = requestedCollection;
+
+                var collection = {};
+                var outputItemList = [];
+
+                for(design in _canvas_.interface.unit.collection[categoryName]){
+                    if(design[0] == '_'){continue;}
+
+                    var metadata = _canvas_.interface.unit.collection[categoryName][design].metadata;
+                    if(metadata.dev){continue;}
+                    
+                    if(!collection.hasOwnProperty(metadata.category)){
+                        collection[metadata.category] = [];
+                    }
+                    collection[metadata.category].push(design);
+                }
+
+                Object.keys(collection).sort().forEach(category => {
+                    var printingName = _canvas_.interface.unit.collection[categoryName]._categoryData[category] ? _canvas_.interface.unit.collection[categoryName]._categoryData[category].printingName : category;
+                    var sublist = { type:'list', text:printingName, list:[] };
+
+                    collection[category].forEach(design => {
+                        var metadata = _canvas_.interface.unit.collection[categoryName][design].metadata;
+                        sublist.list.push(
+                            {
+                                type:'item', text_left: metadata.name,
+                                function:function(design,categoryName){return function(){
+                                    var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
+                                    _canvas_.control.scene.addUnit(p.x,p.y,0,design,categoryName);
+                                }}(design,categoryName),
+                            }
+                        );
+                    });
+
+                    outputItemList.push(sublist);
+                });
+
+                return outputItemList;
             }
 
-            return outputArray;
         })(),
     },
     {
