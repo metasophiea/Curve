@@ -53,7 +53,7 @@ this.characterString = function(){
             var printingMode = {
                 widthCalculation:'absolute', //filling / absolute
                 horizontal:'left',           //left    / middle   / right
-                vertical:'bottom',           //top     / middle   / bottom
+                vertical:'bottom',           //top     / middle   / verymiddle / bottom
             };
                 this.printingMode = function(a){
                     if(a==undefined){return printingMode;} 
@@ -93,16 +93,24 @@ this.characterString = function(){
                 //vertical
                     var verticalOffset = 0;
                     var highestPoint = 0;
-                    if( printingMode.vertical == 'top' || printingMode.vertical == 'middle' ){ 
+                    if( printingMode.vertical == 'top'){ 
                         tmpString.forEach(a => {
                             var tmp = vectorLibrary[font][a] ? vectorLibrary[font][a].top : 0;
                             highestPoint = highestPoint > tmp ? tmp : highestPoint;
                         });
                         verticalOffset = height*-highestPoint;
                     }
-                    if(printingMode.vertical == 'middle'){
+                    if( printingMode.vertical == 'verymiddle' ){
+                        tmpString.forEach(a => {
+                            var tmp = vectorLibrary[font][a] ? vectorLibrary[font][a].top : 0;
+                            highestPoint = highestPoint > tmp ? tmp : highestPoint;
+                        });
                         verticalOffset = -(height/2)*highestPoint;
-                    }                   
+                    }                 
+                    if( printingMode.vertical == 'middle' ){
+                        highestPoint = vectorLibrary[font]['o'] ? vectorLibrary[font]['o'].top : 0;
+                        verticalOffset = -(height/2)*highestPoint;
+                    }                 
 
             //create character and add it to the group
                 var cumulativeWidth = 0;

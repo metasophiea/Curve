@@ -27,14 +27,26 @@ console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
     
 //cartesianAngleAdjust
     console.log('%c- cartesianAngleAdjust', 'font-weight: bold;');
+    tester(_canvas_.library.math.cartesianAngleAdjust(0,0,0),{x:0,y:0});
+    tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI),{x:-10,y:0});
+    tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI*2),{x:10,y:0});
+    tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI/2),{x:0,y:10});
+    tester(_canvas_.library.math.cartesianAngleAdjust(10,0,-Math.PI/2),{x:0,y:-10});
+    tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI/4),{x:7.0710678118654755,y:7.0710678118654755});
     console.log('');
 
 //convertColour
     console.log('%c- convertColour', 'font-weight: bold;');
     //obj2rgba
         console.log('%c-- obj2rgba', 'font-weight: bold;');
+        tester(_canvas_.library.math.convertColour.obj2rgba({r:0,g:0,b:0,a:0}),"rgba(0,0,0,0)");
+        tester(_canvas_.library.math.convertColour.obj2rgba({r:1,g:0,b:0,a:0}),"rgba(255,0,0,0)");
+        tester(_canvas_.library.math.convertColour.obj2rgba({r:0.5,g:0.5,b:0.5,a:0.5}),"rgba(127.5,127.5,127.5,0.5)");
     //rgba2obj
         console.log('%c-- rgba2obj', 'font-weight: bold;');
+        tester(_canvas_.library.math.convertColour.rgba2obj("rgba(0,0,0,0)"),{r:0,g:0,b:0,a:0});
+        tester(_canvas_.library.math.convertColour.rgba2obj("rgba(255,0,0,0)"),{r:1,g:0,b:0,a:0});
+        tester(_canvas_.library.math.convertColour.rgba2obj("rgba(127.5,127.5,127.5,0.5)"),{r:0.5,g:0.5,b:0.5,a:0.5});
     console.log('');
 
 //curveGenerator
@@ -138,10 +150,29 @@ console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
     console.log('%c- detectOverlap', 'font-weight: bold;');
     //boundingBoxes
         console.log('%c-- boundingBoxes', 'font-weight: bold;');
+        tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:5,y:5},bottomRight:{x:15,y:15}}),true);
+        tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:15,y:15},bottomRight:{x:25,y:25}}),false);
+        tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
+        tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:10,y:0},bottomRight:{x:20,y:10}}),true);
+        tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:11,y:0},bottomRight:{x:20,y:10}}),false);
     //pointWithinBoundingBox
         console.log('%c-- pointWithinBoundingBox', 'font-weight: bold;');
+        tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:5,y:5},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:50,y:5},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),false);
+        tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:0,y:0},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:10,y:0},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:10,y:10},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:0,y:10},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:-0.000000000000001,y:0},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),false);
     //pointWithinPoly
         console.log('%c-- pointWithinPoly', 'font-weight: bold;');
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:0,y:0},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:-0.000000000000001,y:0},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),false);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:1,y:1},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:2.5,y:0},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:4.9999,y:4.9999},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:5,y:5},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:5.0001,y:5.0001},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),false);
     //lineSegments
         console.log('%c-- lineSegments', 'font-weight: bold;');
             //the function tells where the lines would intersect if they were infinitely long in both directions,

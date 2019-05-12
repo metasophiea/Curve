@@ -166,16 +166,16 @@ this.list = function(
                                 return function(){
                                     var value = !checkbox.get();
                                     checkbox.set(value);
-                                    listItem.function(value);
+                                    listItem.onclickFunction(value);
                                 }
                             })(item);
                                 
-                            var radius = itemHeight/2;
                             var checkbox = interfacePart.builder( 'checkbox_circle', 'checkbox', {
-                                x:xOffset+itemWidth-radius, y:output.calculatedListHeight + radius,
-                                radius:radius, interactable:false, style:{backing:{r:0,g:0,b:0,a:0}}
+                                x:xOffset+itemWidth-itemHeight/2, y:output.calculatedListHeight + itemHeight/2,
+                                radius:itemHeight/3, interactable:false, style:{backing:{r:0,g:0,b:0,a:0}, check:break_style}
                             });
                             checkbox_group.append(checkbox);
+                            if(item.updateFunction != undefined){checkbox.set(item.updateFunction());}
 
                             var text = interfacePart.builder('text', 'text', {
                                 x:xOffset + item_textHorizontalOffsetMux*itemWidth,

@@ -9,5 +9,5 @@
 // {{include:5.js}}
 // {{include:6.js}}
 // {{include:7.js}}
-// {{include:8.js}}
-{{include:9.js}}
+{{include:8.js}}
+// {{include:9.js}}

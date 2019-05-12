@@ -80,7 +80,7 @@ var sceneValues = {
 //correct polygon location
     //perform calculation
         console.time('_canvas_.library.math.fitPolyIn');
-        var data = _canvas_.library.math.fitPolyIn(testPoly,environmentPolys,true);
+        var data = _canvas_.library.math.fitPolyIn(testPoly,environmentPolys,undefined,true);
         console.timeEnd('_canvas_.library.math.fitPolyIn');
     //adjust
         testPoly.points = testPoly.points.map(a => { return{x:a.x+data.offset.x,y:a.y+data.offset.y} } );
@@ -111,6 +111,7 @@ var sceneValues = {
         temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
         temp.thickness(2);
         _canvas_.core.arrangement.append(temp);
+
     }
 
 

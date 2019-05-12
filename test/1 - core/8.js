@@ -1,5 +1,7 @@
 var fontName = new URL(window.location.href).searchParams.get("fontName");
 if(fontName == undefined){fontName = 'Roboto-Regular';}
+var customText = new URL(window.location.href).searchParams.get("text");
+if(customText == undefined){customText = 'How are you today?';}
 
 
 
@@ -83,8 +85,42 @@ var tmp = _canvas_.core.shape.create('character');
     tmp.stopAttributeStartedExtremityUpdate = false;
     tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
     _canvas_.core.arrangement.append(tmp);
-
-
+var tmp = _canvas_.core.shape.create('rectangle');
+    tmp.name = 'rectangle_4';
+    tmp.stopAttributeStartedExtremityUpdate = true;
+    tmp.x(600);
+    tmp.y(370);
+    tmp.width(300);
+    tmp.height(100);
+    tmp.stopAttributeStartedExtremityUpdate = false;
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    _canvas_.core.arrangement.append(tmp);
+var tmp = _canvas_.core.shape.create('characterString');
+    tmp.name = 'characterString_1';
+    tmp.stopAttributeStartedExtremityUpdate = true;
+    tmp.string('hcave');
+    tmp.x(600);
+    tmp.y(370);
+    tmp.width(200)
+    tmp.height(100);
+    tmp.font(fontName);
+    tmp.printingMode({ widthCalculation:'filling', horizontal:'left', vertical:'middle' });
+    tmp.stopAttributeStartedExtremityUpdate = false;
+    tmp.colour({r:Math.random(),g:Math.random(),b:Math.random(),a:1});
+    _canvas_.core.arrangement.append(tmp);
+var tmp = _canvas_.core.shape.create('characterString');
+    tmp.name = 'characterString_2';
+    tmp.stopAttributeStartedExtremityUpdate = true;
+    tmp.string('cave');
+    tmp.x(800);
+    tmp.y(370);
+    tmp.width(200)
+    tmp.height(100);
+    tmp.font(fontName);
+    tmp.printingMode({ widthCalculation:'filling', horizontal:'left', vertical:'middle' });
+    tmp.stopAttributeStartedExtremityUpdate = false;
+    tmp.colour({r:Math.random(),g:Math.random(),b:Math.random(),a:1});
+    _canvas_.core.arrangement.append(tmp);
 
 
 
@@ -100,7 +136,7 @@ var tmp = _canvas_.core.shape.create('character');
 
 
 var tmp = _canvas_.core.shape.create('rectangle');
-    tmp.name = 'rectangle_4';
+    tmp.name = 'rectangle_5';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.x(10); 
     tmp.y(400);
@@ -110,7 +146,7 @@ var tmp = _canvas_.core.shape.create('rectangle');
     tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
     _canvas_.core.arrangement.append(tmp);
 var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_1';
+    tmp.name = 'characterString_3';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
     tmp.x(10);
@@ -124,7 +160,7 @@ var tmp = _canvas_.core.shape.create('characterString');
     _canvas_.core.arrangement.append(tmp);
 
 var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_2';
+    tmp.name = 'characterString_4';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string('abcdefghijklmnopqrstuvwxyz');
     tmp.x(10);
@@ -138,7 +174,7 @@ var tmp = _canvas_.core.shape.create('characterString');
     _canvas_.core.arrangement.append(tmp);
 
 var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_3';
+    tmp.name = 'characterString_5';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string('0123456789');
     tmp.x(10);
@@ -152,7 +188,7 @@ var tmp = _canvas_.core.shape.create('characterString');
     _canvas_.core.arrangement.append(tmp);
 
 var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_4';
+    tmp.name = 'characterString_6';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string('.,:;?!/\\()[]{}#-_\'"|><+=&*~%');
     tmp.x(10);
@@ -166,7 +202,7 @@ var tmp = _canvas_.core.shape.create('characterString');
     _canvas_.core.arrangement.append(tmp);
 
 var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_5';
+    tmp.name = 'characterString_7';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string('Look');
     tmp.x(10);
@@ -194,7 +230,7 @@ var tmp = _canvas_.core.shape.create('characterString');
 
     
 var tmp = _canvas_.core.shape.create('rectangle');
-    tmp.name = 'rectangle_5';
+    tmp.name = 'rectangle_6';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.x(350);
     tmp.y(100);
@@ -204,9 +240,9 @@ var tmp = _canvas_.core.shape.create('rectangle');
     tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
     _canvas_.core.arrangement.append(tmp);
 var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_6';
+    tmp.name = 'characterString_8';
     tmp.stopAttributeStartedExtremityUpdate = true;
-    tmp.string('How are you today?');
+    tmp.string(customText);
     tmp.x(350);
     tmp.y(100);
     tmp.width(100);
@@ -218,7 +254,7 @@ var tmp = _canvas_.core.shape.create('characterString');
     _canvas_.core.arrangement.append(tmp);
 
 var tmp = _canvas_.core.shape.create('rectangle');
-    tmp.name = 'rectangle_6';
+    tmp.name = 'rectangle_7';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.x(350);
     tmp.y(200);
@@ -228,7 +264,7 @@ var tmp = _canvas_.core.shape.create('rectangle');
     tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
     _canvas_.core.arrangement.append(tmp);
 var tmp = _canvas_.core.shape.create('characterString');
-    tmp.name = 'characterString_7';
+    tmp.name = 'characterString_9';
     tmp.stopAttributeStartedExtremityUpdate = true;
     tmp.string('How are you today?');
     tmp.x(350);

@@ -240,7 +240,11 @@ this.addUnit = function(x,y,a,model,collection='alpha'){
 
         var tmp = _canvas_.interface.unit.collection[collection][model](x,y,a);
         tmp.name = ''+name;
+        tmp.collection = collection;
         tmp = _canvas_.control.grapple.declare(tmp);
+
+    //if snapping is active in the scene, don't forget to activate it for this new unit too
+    if(_canvas_.control.scene.activeSnapping()){ tmp.snappingActive(true); }
 
     //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
         this.rectifyUnitPosition(tmp);
@@ -277,16 +281,26 @@ this.getUnitsWithinPoly = function(points){
     return pane.children().filter(function(a){ return !a._isCable && _canvas_.library.math.detectOverlap.boundingBoxes(box, a.space.boundingBox) && _canvas_.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
 };
 
+var snapping = {active:false,x:10,y:10,angle:Math.PI/8};
+this.activeSnapping = function(bool){
+    if(bool == undefined){return snapping.active;}
+
+    snapping.active = bool;
+    this.getAllUnits().forEach(unit => unit.snappingActive(bool));
+};
 this.rectifyUnitPosition = function(unit){
     //control switch
         if(!_canvas_.control.interaction.enableUnitCollision()){return;}
 
+    //if this unit is to ignore any collision, just bail
+        if(!unit.collisionActive){return false;}
+
     //discover if there's an overlap; if not skip all this
-        var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit).map(a => { return a.space; });
+        var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit && a.collisionActive).map(a => { return a.space; });
         if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
 
     //get the offset which will allow this unit to fit
-        var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits );
+        var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits, snapping );
         
     //apply offset
         unit.x(unit.x() + offset.x);
@@ -294,3 +308,4 @@ this.rectifyUnitPosition = function(unit){
     
     return true; //false: no change was made - true: a change was made
 };
+

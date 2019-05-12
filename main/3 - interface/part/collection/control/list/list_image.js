@@ -104,6 +104,12 @@ this.list_image = function(
                             uncheckGlowURL:checkbox_uncheckGlowURL,
                             checkGlowURL:checkbox_checkGlowURL,
                         });
+                        if(item.onclickFunction != undefined){
+                            checkbox.onchange = (function(listItem){
+                                return function(value){ listItem.onclickFunction(value);  }
+                            })(item);
+                        }
+                        if(item.updateFunction != undefined){checkbox.set(item.updateFunction());}
 
                         output.elements.push(checkbox);
                         output.calculatedListHeight += itemHeight;

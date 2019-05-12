@@ -168,12 +168,38 @@ this.detectOverlap = new function(){
         );
     };
     this.pointWithinPoly = function(point,points){
+        //Ray casting algorithm
+
         var inside = false;
-        for(var a = 0, b = points.length - 1; a < points.length; b = a++) {
-            if(
-                ((points[a].y > point.y) != (points[b].y > point.y)) && 
-                (point.x < ((((points[b].x-points[a].x)*(point.y-points[a].y)) / (points[b].y-points[a].y)) + points[a].x))
-            ){inside = !inside;}
+        for(var a = 0, b = points.length - 1; a < points.length; b = a++){
+            //if the point is on a point of the poly; bail and return true
+            if( point.x == points[a].x && point.y == points[a].y ){ return true; }
+
+            //discover if point is on the same level (y) as the poly, if both these tests return the same result, it is not
+            if( (points[a].y > point.y) != (points[b].y > point.y) ){
+                //discover if the point is on the far right of the line
+                if( points[a].x < point.x && points[b].x < point.x ){
+                    inside = !inside;
+                }else{
+                    var X = points[a].x < points[b].x ? {big:points[a].x,little:points[b].x} : {big:points[b].x,little:points[a].x};
+                    var Y = points[a].y < points[b].y ? {big:points[a].y,little:points[b].y} : {big:points[b].y,little:points[a].y};
+                    var areaLocation = (point.x-X.big)/(X.little-X.big) + (point.y-Y.big)/(Y.little-Y.big);
+
+                    //is this point on the line (if so, bail and return true)
+                    //if it's in the right side area; do the flip
+                    if( areaLocation == 1 ){
+                        return true;
+                    }else if(areaLocation > 1){
+                        inside = !inside;
+                    }
+                }
+            }
+
+            //old method (kinda magic)
+            // if(
+            //     ((points[a].y > point.y) != (points[b].y > point.y)) && 
+            //     (point.x < ((((points[b].x-points[a].x)*(point.y-points[a].y)) / (points[b].y-points[a].y)) + points[a].x))
+            // ){inside = !inside;}
         }
         return inside;
     };
@@ -333,6 +359,7 @@ this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
 
             //joining angles
                 var joiningAngle = item.departAngle == undefined || item.implimentAngle == undefined ? Math.PI : item.departAngle - item.implimentAngle + Math.PI;
+                if( Math.abs(joiningAngle) == Math.PI*2 ){ joiningAngle = Math.PI; }
 
             //angle
                 var segmentAngle = item.implimentAngle != undefined ? item.implimentAngle : item.departAngle;
@@ -437,7 +464,7 @@ this.multiBlendColours = function(rgbaList,ratio){//console.log(rgbaList,ratio);
 
 
 
-this.fitPolyIn = function(freshPoly,environmentPolys,dev=false){
+this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},dev=false){
     function applyOffsetToPoints(offset,points){
         return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
     };
@@ -470,6 +497,9 @@ this.fitPolyIn = function(freshPoly,environmentPolys,dev=false){
                 for(var a = 0; a < stepsInThisCircle; a++){
                     //calculate the current offset
                         var tmpOffset = library.math.polar2cartesian( circularStepSizeInRad*a, radius );
+                        tmpOffset.x = snapping.active ? Math.round(tmpOffset.x/snapping.x)*snapping.x : tmpOffset.x;
+                        tmpOffset.y = snapping.active ? Math.round(tmpOffset.y/snapping.y)*snapping.y : tmpOffset.y;
+
                         if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                     
                     //if offsetting the shape in this way results in no collision; save this offset in 'sucessfulOffsets'
@@ -505,6 +535,8 @@ this.fitPolyIn = function(freshPoly,environmentPolys,dev=false){
                     for(var a = 0; a < sucessfulOffsets.length; a++){
                         //calculate the current offset using the midpoint value
                             var tmpOffset = library.math.polar2cartesian( sucessfulOffsets[a].ang, midRadius );
+                            tmpOffset.x = snapping.active ? Math.round(tmpOffset.x/snapping.x)*snapping.x : tmpOffset.x;
+                            tmpOffset.y = snapping.active ? Math.round(tmpOffset.y/snapping.y)*snapping.y : tmpOffset.y;
                             if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                     
                         //if offsetting the shape in this way results in no collision; save this offset in 'tmpSucessfulOffsets'
@@ -540,6 +572,8 @@ this.fitPolyIn = function(freshPoly,environmentPolys,dev=false){
         //use midpoint methods to edge the shape (over x and y) to as close as it can be to the original point
             for(var i = 0; i < maxItrationCount; i++){
                 var midpoint = { x:(max.x-min.x)/2 + min.x, y:(max.y-min.y)/2 + min.y };
+                midpoint.x = snapping.active ? Math.round(midpoint.x/snapping.x)*snapping.x : midpoint.x;
+                midpoint.y = snapping.active ? Math.round(midpoint.y/snapping.y)*snapping.y : midpoint.y;
 
                 //can you make a x movement? you can? then do it
                     if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}

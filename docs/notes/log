@@ -1,4 +1,92 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-05-12
+  - more design work
+  
+
+2019-05-11
+  - fixed up detectOverlap.pointWithinPoly
+  - started designing the new units
+  
+
+2019-05-10
+  - reduced the size changed the colour of the checkbox circle in list's
+    checkbox item (its a little smaller and lighter now)
+  - added more tests for the library.math code (having some issue with 
+    detectOverlap.pointWithinPoly)
+
+  bugs
+  - audio player needle isn't right. If you're playing slow for a while then
+    speed it up, the needle goes too quickly
+
+  ideas
+  - ctrl-z
+
+
+2019-05-09
+  - updated the way characterString calculates the vertically central point of
+    text, using the character 'o' as the guide. Also added 'verymiddle' so one
+    can still access the old way the calculation was done.
+  - fixed the audio player unit's play-stop button overlap thing. The play
+    button extended under the stop button
+
+  ideas
+  - Rust/WebAssembly for ultra speed? from what I understand, parts of the code
+    could be rewritten and would work with the existing JS code...could be a
+    great speed boost for core.
+
+
+2019-05-08
+  - pre-computed the vector values for the font 'defaultThick'
+  - added unit position snapping (along with a new place in the menubar for it
+    under "scene")
+  - updated list's checkbox's 'function' name to 'onclickFunction' and added
+    'updateFunction' which is run during item creation to set the state of the
+    checkbox
+  - unit adder now sets it's snapping on if necessary
+  - updated library.math.fitPolyIn to allow for snapping
+  - updated control.scene.rectifyUnitPosition to request 'fitPolyIn' use
+    snapping, and provide it with the data
+  - drawing a path back over itself (the way it came) caused the corner maker
+    code to freak out. Fixed by adding a safty to the
+    library.math.pathToPolygonGenerator function, which watches the
+    'joiningAngle' to see if it becomes 2PI, and if so, changes it to PI,
+    resulting in a flat ending (as if there was no third point at all) Probably
+    need a nicer system in future.
+  - list_image's checkbox item wasn't handling update or onclick callbacks. Now
+    it does
+
+  bugs
+  - the way text centres itself vertically needs to be looked at (we need some
+    form of "middle"/"middleOfBodyOfLetterIgnoringTheStemBitLikeOnTheLetter'h'")
+  - collision with snapping, doesn't allow units to be placed right next to
+    eachother (probably because they're taking up the same x or y value) (it's
+    probably fine though)
+
+  ideas
+  - make list's checkbox item look better
+  
+
+2019-05-07
+  - update the unit design description object thing, so that one can define if
+    a unit should collide with others or not
+  - removed parts of the unit builder which collects the designs category and
+    collection name. If they ever come into use, I'll put them back. Collection
+    name is now added automatically by the 'control.scene.addUnit' function  
+  - pre-computed the vector values for the font 'defaultThin' (have began on
+    'defaultThick')
+
+  ideas
+  - some kind of placement snapping
+  - pre-calculate the default characters (instead of putting them through earcut
+    during every start-up)
+  - only calculate character points when that character is first used? (as
+    opposed to calculating all the characters of a font, when that font is first
+    used)
+
+  bugs
+  - mousing over the stop button on the player lights up the play button too
+
+
 2019-05-06
   - 'create' dropdown menu order is now sorted alphabetically
   - list part's sublists weren't receiving the data needed to scale the sublist

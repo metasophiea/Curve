@@ -78,6 +78,14 @@ var tmp = _canvas_.core.shape.create('path');
     _canvas_.core.arrangement.append(tmp);
     console.log('');
 
+var tmp = _canvas_.core.shape.create('path');
+    tmp.name = 'path_2';
+    tmp.pointsAsXYArray([ {x:150,y:160}, {x:210,y:160}, {x:150,y:160}, ]);
+    tmp.thickness(8);
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    _canvas_.core.arrangement.append(tmp);
+    console.log('');
+
 var tmp = _canvas_.core.shape.create('loopedPath');
     tmp.name = 'loopedPath_1';
     tmp.pointsAsXYArray([ {x:230,y:80}, {x:230,y:140}, {x:260,y:90}, {x:290,y:140}, {x:290,y:80} ]);

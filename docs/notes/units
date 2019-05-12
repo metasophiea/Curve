@@ -1,4 +1,4 @@
-current units
+alpha units
     audioEffectUnits
         distortionUnit
         filterUnit
@@ -47,8 +47,8 @@ current units
 
 
 
-collecions
-    brandon walsh's essentials
+beta units
+    the essentials
         ruler
 
         pulse generator (signal)
@@ -69,7 +69,7 @@ collecions
         audio scope readout (audio readout)
 
         audio in (microphone)
-        audio sink (stereo audio connections)
+        audio sink (stereo audio connections)(looks like a speaker or amp)
 
         basic synthesizer
 
@@ -77,9 +77,67 @@ collecions
         filter unit (mono)(high-med-low)
         reverb unit (mono)
 
-        basic 8 track mixer (8 mono to 1 stereo)
+        basic 8 track mixer (8 mono to 1 stereo)(panning and volume)
 
         audio file player
         audio file one shot player
 
         audio recorder
+
+
+
+
+    potential brand or model names
+        walsh electronics
+        [BLOCK]
+        VERB
+        life
+        Riven
+
+        Fysical Untilities (PH.U.) : effect boxes
+        CoLoUR : effect boxes
+        curveTech : logical units
+        Rua : computational units
+
+        Myckleson (Marshal) : ampliphiers
+        Purple (Orange) : ampliphiers
+        MUX (Vox) : ampliphiers
+        wing (Fender) : ampliphiers
+
+        Supernova : synthesizer
+        Kizboc : synthesizer
+
+    potential units
+        (aside from variations on the above)
+
+        disk
+        equalizer
+
+        signal delay / echo
+        voltage delay / echo
+        data delay / echo
+        audio delay / echo
+
+        custom wave designer (with disks that you can slot into other units)
+
+        audio waveshaper
+        overdrive audio effect unit
+        fuzz audio effect unit
+        flange audio effect unit
+        chorus audio effect unit
+        compressor audio effect unit
+        multi-band distortion box
+        bit crusher
+
+        tuner (like the one on the phone)
+
+        frequency/magnitude response analyser
+
+        computation unit
+            like a programmable FPGA for dealing with signals
+            could also include actual programmable elements
+
+        signal tempo devider (eg. 8 on-offs go in, before 1 on-off comes out)
+        signal tempo multiplier (predictive tempo generator from input)
+
+

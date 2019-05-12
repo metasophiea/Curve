@@ -30,7 +30,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
     },
     {
         text:'create',
-        width:70,
+        width:65,
         listWidth:260,
         listItemHeight:22.5,
         breakHeight: 0.5,
@@ -129,6 +129,17 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
             }
 
         })(),
+    },
+    {
+        text:'tools',
+        width:50,
+        listWidth:150,
+        listItemHeight:22.5,
+        breakHeight: 0.5,
+        spaceHeight: 1,
+        itemList:[
+            { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
+        ]
     },
     {
         text:'help',

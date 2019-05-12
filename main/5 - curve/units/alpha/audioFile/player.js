@@ -60,7 +60,7 @@ this.player = function(x,y,a){
             {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
 
             {type:'button_rectangle', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
-            {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:20, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
+            {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:10, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
             {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
 
             {type:'text', name:'rate_label_name', data:{ x:15, y:77.5, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
