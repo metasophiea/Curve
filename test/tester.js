@@ -8,7 +8,7 @@ function tester(item1,item2){
         if(typeof item1 == 'number'){
             if( Math.abs(item1) < 1.0e-14 ){item1 = 0;}
             if( Math.abs(item2) < 1.0e-14 ){item2 = 0;}
-            if( Math.abs(item1 - item2) < 1.0e-15 ){return true;}
+            if( Math.abs(item1 - item2) < 1.0e-14 ){return true;}
             return item1 === item2;
         }
         if(typeof item1 === 'undefined' || typeof item2 === 'undefined' || item1 === null || item2 === null){ return item1 === item2;  }
@@ -27,12 +27,14 @@ function tester(item1,item2){
             return item1_functionHead.trim() == item2_functionHead.trim() && item1_functionBody.trim() == item2_functionBody.trim();
         }
         if(typeof item1 == 'object'){
-            var keys = Object.keys(item1);
-            var result = true;
-            for(var a = 0; a < keys.length; a++){
-                result = result && comparer(item1[keys[a]],item2[keys[a]]);
+            var keys1 = Object.keys(item1);
+            var keys2 = Object.keys(item2);
+            if(keys1.length != keys2.length){return false;}
+
+            for(var a = 0; a < keys1.length; a++){ 
+                if( keys1.indexOf(keys2[a]) == -1 || !comparer(item1[keys1[a]],item2[keys1[a]])){return false;}
             }
-            return result;
+            return true;
         }
         return false;
     }

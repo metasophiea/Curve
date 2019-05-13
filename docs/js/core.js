@@ -265,8 +265,56 @@
                                 }
                                 return false;
                             };
+                        
+                            function overlappingLineWithPolygon(line,poly){
+                                //go through every side of the poly, and if one of them collides with the line, return true
+                                for(var a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
+                                    var tmp = library.math.detectOverlap.lineSegments(
+                                        [
+                                            { x:line.x1, y:line.y1 },
+                                            { x:line.x2, y:line.y2 }
+                                        ],
+                                        [
+                                            { x:poly.points[a].x, y:poly.points[a].y },
+                                            { x:poly.points[b].x, y:poly.points[b].y }
+                                        ],
+                                    );
+                                    if(tmp != null && tmp.inSeg1 && tmp.inSeg2){ return true; }
+                                }
+                        
+                                return false;
+                            };
+                            this.overlappingLineWithPolygons = function(line,polys){
+                                //generate a bounding box for the line
+                                    var line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
+                                    if(line.x1 > line.x2){
+                                        line_boundingBox.topLeft.x = line.x2;
+                                        line_boundingBox.bottomRight.x = line.x1;
+                                    }else{
+                                        line_boundingBox.topLeft.x = line.x1;
+                                        line_boundingBox.bottomRight.x = line.x2;
+                                    }
+                                    if(line.y1 > line.y2){
+                                        line_boundingBox.topLeft.y = line.y2;
+                                        line_boundingBox.bottomRight.y = line.y1;
+                                    }else{
+                                        line_boundingBox.topLeft.y = line.y1;
+                                        line_boundingBox.bottomRight.y = line.y2;
+                                    }
+                        
+                                //gather the indexes of the polys that collide with this line
+                                    var collidingPolyIndexes = [];
+                                    polys.forEach((poly,index) => {
+                                        if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
+                                        if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
+                                    });
+                        
+                                return collidingPolyIndexes;
+                            };
                         };
                         this.getAngleOfTwoPoints = function(point_1,point_2){
+                            if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
+                        
                             var xDelta = point_2.x - point_1.x;
                             var yDelta = point_2.y - point_1.y;
                             var angle = Math.atan( yDelta/xDelta );
@@ -277,17 +325,18 @@
                             return angle;
                         };
                         this.getDifferenceOfArrays = function(array_a,array_b){
-                            var out_a = []; var out_b = [];
-                        
-                            for(var a = 0; a < array_a.length; a++){
-                                if(array_b.indexOf(array_a[a]) == -1){ out_a.push(array_a[a]); }
+                            function arrayRemovals(a,b){
+                                a.forEach(item => {
+                                    var i = b.indexOf(item);
+                                    if(i != -1){ b.splice(i,1); }
+                                });
+                                return b;
                             }
                         
-                            for(var b = 0; b < array_b.length; b++){
-                                if(array_a.indexOf(array_b[b]) == -1){ out_b.push(array_b[b]); }
-                            }
-                        
-                            return {a:out_a,b:out_b};
+                            return {
+                                a:arrayRemovals(array_b,array_a.slice()),
+                                b:arrayRemovals(array_a,array_b.slice())
+                            };
                         };
                         this.getIndexOfSequence = function(array,sequence){ 
                             function comp(thing_A,thing_B){
@@ -300,6 +349,8 @@
                                 }
                                 return true;
                             }
+                        
+                            if(array.length == 0 || sequence.length == 0){return undefined;}
                         
                             var index = 0;
                             for(index = 0; index < array.length - sequence.length + 1; index++){
@@ -318,6 +369,7 @@
                             return undefined;
                         };
                         this.largestValueFound = function(array){
+                            if(array.length == 0){return undefined;}
                             return array.reduce(function(max,current){
                                 return Math.abs(max) > Math.abs(current) ? max : current;
                             });
@@ -350,8 +402,9 @@
                         
                             return array;
                         };
-                        this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
+                        this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat='TRIANGLE_STRIP'){
                             var jointData = [];
+                            var joinMuxLimit = 5;
                         
                             //parse path
                                 for(var a = 0; a < path.length/2; a++){
@@ -379,7 +432,8 @@
                         
                                     //width
                                         var div = a == 0 || a == jointData.length-1 ? 1 : Math.sin(joiningAngle/2);
-                                        var wingWidth = thickness / div;
+                                        var wingWidth = thickness / div; 
+                                        if(Math.abs(wingWidth) > thickness*joinMuxLimit){ wingWidth = Math.sign(wingWidth)*thickness*joinMuxLimit; }
                         
                                     //wing points
                                         var plus =  _canvas_.library.math.cartesianAngleAdjust(0,  wingWidth, Math.PI/2 + wingAngle);
@@ -387,7 +441,6 @@
                                         outputPoints.push( plus.x+ item.point.x, plus.y+ item.point.y );
                                         outputPoints.push( minus.x+item.point.x, minus.y+item.point.y );
                                 }
-                        
                         
                             if(returnedPointsFormat == 'TRIANGLE_STRIP'){
                                 return outputPoints;

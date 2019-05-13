@@ -1,5 +1,5 @@
 this.connectionNode = function(
-    name='connectionNode2',
+    name='connectionNode',
     x, y, angle=0, width=20, height=20, type='none', direction='',
     allowConnections=true, allowDisconnections=true,
     dimStyle={r:0.86,g:0.86,b:0.86,a:1},
@@ -93,7 +93,8 @@ this.connectionNode = function(
         var cable;
 
         object._addCable = function(){
-            cable = interfacePart.builder('cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+            // cable = interfacePart.builder('cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+            cable = interfacePart.builder('cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
             foreignNode._receiveCable(cable);
             _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
             this.draw();
@@ -115,7 +116,9 @@ this.connectionNode = function(
             var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
             var collectedAngle = offset.angle + Math.atan( height/width );
 
-            return _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x+(diagonalLength*Math.cos(collectedAngle)), offset.y+(diagonalLength*Math.sin(collectedAngle)) );
+            var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x+(diagonalLength*Math.cos(collectedAngle)), offset.y+(diagonalLength*Math.sin(collectedAngle)) );
+            tmp.angle = offset.angle;
+            return tmp;
         };
         object.draw = function(){
             if( cable == undefined ){return;}
@@ -123,7 +126,7 @@ this.connectionNode = function(
             var pointA = this.getCablePoint();
             var pointB = foreignNode.getCablePoint();
 
-            cable.draw(pointA.x,pointA.y,pointB.x,pointB.y);
+            cable.draw(pointA.x,pointA.y,pointB.x,pointB.y,pointA.angle,pointB.angle);
         };
 
     //graphical

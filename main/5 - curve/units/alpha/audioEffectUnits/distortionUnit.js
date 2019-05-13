@@ -54,8 +54,8 @@ this.distortionUnit = function(x,y,a){
                 { x:0,           y:95-10  }
             ], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:61.5, width:10, height:20 }},
-            {type:'connectionNode_audio', name:'audioOut', data:{ x:-10, y:61.5, width:10, height:20, isAudioOutput:true }},
+            {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:61.5, width:10, height:20}},
+            {type:'connectionNode_audio', name:'audioOut', data:{ x:0, y:81.5, width:10, height:20, isAudioOutput:true, angle:Math.PI }},
         
             {type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
             {type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},

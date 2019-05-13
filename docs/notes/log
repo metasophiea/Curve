@@ -1,4 +1,17 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-05-13
+  - added more tests for the library.math section
+  - improved the tester funtions's ability to detect differences between arrays
+    (and in turn, objects)
+  - fixed up library.math.getDifferenceOfArrays
+  - added library.math.detectOverlap.overlappingLineWithPolygons and a private
+    function beside it "overlappingLineWithPolygon"
+  - updated library.math.pathToPolygonGenerator to not blow up when drawing an
+    overlapping path
+  - began work on a more advanced cable (it's a little difficult)
+  - painting
+  
+
 2019-05-12
   - more design work
   

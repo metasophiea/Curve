@@ -460,7 +460,16 @@ this.builder = function(type,name,data){
                 name, data.x1, data.y1, data.x2, data.y2,
                 data.style.dim, data.style.glow,
             );
+            case 'cable2': return this.collection.dynamic.cable2(
+                name, data.x1, data.y1, data.x2, data.y2,
+                data.style.dim, data.style.glow,
+            );
             case 'connectionNode': return this.collection.dynamic.connectionNode(
+                name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
+                data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                data.onconnect, data.ondisconnect,
+            );
+            case 'connectionNode2': return this.collection.dynamic.connectionNode2(
                 name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
                 data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                 data.onconnect, data.ondisconnect,

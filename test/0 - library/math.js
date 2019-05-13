@@ -290,30 +290,75 @@ console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
                 tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
     //overlappingPolygonWithPolygons
         console.log('%c-- overlappingPolygonWithPolygons', 'font-weight: bold;');
+        var polygon = { points:[{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}] };
+        polygon.boundingBox = _canvas_.library.math.boundingBoxFromPoints(polygon.points);
+        var polygons = [
+            {points:[{"x":50,"y":50},{"x":105,"y":50},{"x":105,"y":105},{"x":50,"y":105}]},
+            {points:[{"x":875,"y":50},{"x":930,"y":50},{"x":930,"y":105},{"x":875,"y":105}]},
+        ];
+        polygons.forEach(polygon => { polygon.boundingBox = _canvas_.library.math.boundingBoxFromPoints(polygon.points); });
+        tester( _canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons(polygon,polygons),true );
     console.log('');
 
 //getAngleOfTwoPoints
     console.log('%c- getAngleOfTwoPoints', 'font-weight: bold;');
+        tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:0}),0);
+        tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:0}),0);
+        tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:10}),Math.PI/2);
+        tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:0}),Math.PI);
+        tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:-10}),Math.PI*1.5);
+        tester(_canvas_.library.math.getAngleOfTwoPoints({x:52,y:-13.5},{x:10,y:650}),1.6340126596091948);
     console.log('');
 
 //getDifferenceOfArrays
     console.log('%c- getDifferenceOfArrays', 'font-weight: bold;');
+        tester( _canvas_.library.math.getDifferenceOfArrays([1,2,3,4],[3,4,5,6]),{a:[1,2],b:[5,6]} );
+        tester( _canvas_.library.math.getDifferenceOfArrays([],[3,4,5,6]),{a:[],b:[3,4,5,6]} );
+        tester( _canvas_.library.math.getDifferenceOfArrays([1,2,3,4],[]),{a:[1,2,3,4],b:[]} );
+        tester( _canvas_.library.math.getDifferenceOfArrays([],[]),{a:[],b:[]} );
+        tester( _canvas_.library.math.getDifferenceOfArrays([5,9,4,1,8,0,4,0,65],[14,85,960,1,8,40,0,0,0,0]),{a:[5,9,4,4,65],b:[14,85,960,40,0,0]} );
     console.log('');
 
 //getIndexOfSequence
     console.log('%c- getIndexOfSequence', 'font-weight: bold;');
+        tester( _canvas_.library.math.getIndexOfSequence([],[]),undefined );
+        tester( _canvas_.library.math.getIndexOfSequence([],[1,2,3,4,5,6]),undefined );
+        tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6],[]),undefined );
+        tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6],[3,4,5,6]),2 );
+        tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],[5,6]),4 );
+        tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],[6,18]),undefined );
     console.log('');
 
 //largestValueFound
     console.log('%c- largestValueFound', 'font-weight: bold;');
+        tester(_canvas_.library.math.largestValueFound([1,2,3,4,5,6,10,0,9]),10);
+        tester(_canvas_.library.math.largestValueFound([1]),1);
+        tester(_canvas_.library.math.largestValueFound([]),undefined);
+        tester(_canvas_.library.math.largestValueFound([-1,-2,-3,-4,-5,-6,-10,-0,-9]),-10);
     console.log('');
 
 //pathToPolygonGenerator
     console.log('%c- pathToPolygonGenerator', 'font-weight: bold;');
+        tester(
+            _canvas_.library.math.pathToPolygonGenerator([1027,34,1027,355,68,355,68,34],5),
+            [1032,34,1022,34,1032,360,1022,350,63,360,73,350,63,34,73,34]
+        );
+        tester(
+            _canvas_.library.math.pathToPolygonGenerator([0,0,10,0,10,10,0,10],0),
+            [0,0,0,0,10,0,10,0,10,10,10,10,0,10,0,10]
+        );
     console.log('');
 
 //loopedPathToPolygonGenerator
     console.log('%c- loopedPathToPolygonGenerator', 'font-weight: bold;');
+        tester(
+            _canvas_.library.math.loopedPathToPolygonGenerator([1027,34,1027,355,68,355,68,34],5),
+            [1032,194.5,1022,194.5,1032,360,1022,350,63,360,73,350,63,29,73,39,1032,29,1022,39,1032,194.5,1022,194.5]
+        );
+        tester(
+            _canvas_.library.math.loopedPathToPolygonGenerator([0,0,10,0,10,10,0,10],0),
+            [5,0,5,0,10,0,10,0,10,10,10,10,0,10,0,10,0,0,0,0,5,0,5,0]
+        );
     console.log('');
 
 //normalizeStretchArray

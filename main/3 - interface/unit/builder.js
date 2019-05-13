@@ -51,6 +51,7 @@ this.builder = function(creatorMethod,design){
         unit.io = {};
         [
             {key:'_', name:'connectionNode'},
+            {key:'_', name:'connectionNode2'},
             {key:'signal', name:'connectionNode_signal'},
             {key:'voltage', name:'connectionNode_voltage'},
             {key:'data', name:'connectionNode_data'},
