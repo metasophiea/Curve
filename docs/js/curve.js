@@ -39682,8 +39682,6 @@
                                 x:x, y:y, angle:a,
                                 space:shape,
                                 elements:[
-                                    // {type:'image', name:'main', data:{width:45, height:40, url:'http://0.0.0.0:8000/images/units/beta/duplicator_signal.png'}},
-                        
                                     { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
                                     { type:'text', name:'label', data:{
                                         x:16, y:34, 
