@@ -1,4 +1,86 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-05-19
+  - more drawing
+  - started adding the new designs to the system. Currently the images directly,
+    I think I'll convert them to vector designs in future
+  - created the pathWithRoundJointsAndEnds core shape.. the rounds are produced
+    by just adding circles, so transparent colouring of this shape don't look
+    great, but with solid colours it looks just fine.
+  - redid the signal duplicator in vector. Looking pretty good
+
+  bugs
+  - attaching a data duplicator to itself causes a "Maximum call stack size
+    exceeded" error
+
+  ideas
+  - round-end/joint path/polygon
+    
+
+2019-05-18
+  - some drawing
+
+
+2019-05-17
+  - expanded two of the tests to include examples of custom shape addition and
+    usage
+  - fixed issue with discrete dials not responding to the moouse wheel
+
+
+2019-05-16
+  - made a new type of dial; "dial_2_continuous" renaming the old one 
+    "dial_1_continuous", while keeping 'dial_continuous' referencing it
+  - opened up the interface parts builder library, to allow new parts to be
+    added. Allowing future units to define their own parts and use them with the
+    unit builder. #extensible
+
+
+2019-05-14
+  - added functions control.scene.absolute_documentUnit and 
+    control.scene.printUnit (which are similar to, but different from their
+    plural counterparts. I'd like to try and rectify that in future) 
+  - renamed 'documentUnit' and 'printUnit' to 'absolute_documentUnit' and
+    'absolute_printUnit' respectivly. Also renamed 'documentUnits' and
+    'printUnits' to 'relative_documentUnits' and 'relative_printUnits' in a bid
+    to clarify and distinguish what each function does
+  - added the undo feature (adding the control.actionRegistry section) with a
+    modular nature, so it should be possible to easily expand it in future.
+    Currently it only covers:
+      control.scene.addUnit
+      control.scene.removeUnit
+      control.selection.delete
+      control.selection.duplicate
+    to expand, one has to add a action registration function to the function
+    they'd like to add the undo functionality too, then expand the switch
+    statement with what actions to perform to undo it. Pretty straightforward.
+  - control.scene.addUnit now has a new argument, which allows one ot force the
+    name of the created unit (though if that name collides with another group,
+    it won't be allowed)
+  - added the redo function (which changes how undo works now too, but they both
+    function together pretty nicely)
+  - opened up the undo/redo method lists so that new actions can be added easily
+    to both from anywhere (this is away from the original switch statement)
+  - added undo/redo command buttons to curve's edit dropdown list on the menubar
+
+  notes
+  - this new code feels a little messy to me..I had to add new function into
+    control.scene that are very like other functions that are already in there,
+    so, that makes me uncomfortable. Also the control functions already have to
+    deal with ability switches, and now actionRegistry commands, which makes 
+    those function look rather rough...its all very contained though; none of 
+    this new stuff touches any other layer, and they're kinda like parts of a 
+    script anyway, so I can't think of a more elegant way of putting this 
+    functionality in.
+  - if there's any part of all this that we should accelerate with WebAssembly,
+    its the extremity updating code. Then probably audio things, but maybe other
+    parts of core before that.
+
+  ideas
+  - in light of the fact that making advanced dynamic cables is hard; what if 
+    (for now) we add in little relay units? Tiny two-node items that are just
+    used to pin cables to certian locations. They'd help clean up any confusing
+    mess a bundle of the current cables would create
+
+
 2019-05-13
   - added more tests for the library.math section
   - improved the tester funtions's ability to detect differences between arrays
@@ -1361,7 +1443,7 @@
       shapes, now it selects all the units and deletes them)
     - fixed connectionNode_data flashing (classic timeout with things changing
       issue)
-    - fixed problem with documentUnits and unit connections (the way they were 
+    - fixed problem with relative_documentUnits and unit connections (the way they were 
       being documented was wrong (and over-complicated))
     - system now stops you from leaving the page with a little alert
     - new demo mode (which currently just skips the leave-page alert)

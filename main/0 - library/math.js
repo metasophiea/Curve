@@ -362,19 +362,6 @@ this.largestValueFound = function(array){
         return Math.abs(max) > Math.abs(current) ? max : current;
     });
 };
-this.loopedPathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
-    var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
-    var loopingPath = [];
-
-    loopingPath = loopingPath.concat(joinPoint);
-    for(var a = 2; a < path.length; a+=2){
-        loopingPath = loopingPath.concat( [path[a], path[a+1]] );
-    }
-    loopingPath = loopingPath.concat( [path[0], path[1]] );
-    loopingPath = loopingPath.concat(joinPoint);
-
-    return this.pathToPolygonGenerator(loopingPath,thickness,returnedPointsFormat);
-};
 this.normalizeStretchArray = function(array){
     //discover the largest number
         var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
@@ -389,6 +376,38 @@ this.normalizeStretchArray = function(array){
         array = array.map(x => (x-pertinentValue)/(1-pertinentValue) );
 
     return array;
+};
+this.pathToRectangleSeriesGenerator = function(path,thickness){
+    var jointData = [];
+
+    //parse path
+        for(var a = 0; a < path.length/2; a++){
+            jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
+        }
+
+    var outputPoints = [];
+    for(var a = 1; a < jointData.length; a++){
+        var tmp = {
+            startPoint:jointData[a-1].point,
+            endPoint:jointData[a].point,
+            angle:_canvas_.library.math.getAngleOfTwoPoints( jointData[a-1].point, jointData[a].point ),
+        };
+
+        var left =  _canvas_.library.math.cartesianAngleAdjust(thickness, 0, Math.PI/2 + tmp.angle);
+        var right = _canvas_.library.math.cartesianAngleAdjust(-thickness, 0, Math.PI/2 + tmp.angle);
+
+        outputPoints.push(
+            tmp.startPoint.x+left.x,  tmp.startPoint.y+left.y,
+            tmp.startPoint.x+right.x, tmp.startPoint.y+right.y,
+            tmp.endPoint.x+left.x,    tmp.endPoint.y+left.y,
+
+            tmp.startPoint.x+right.x, tmp.startPoint.y+right.y,
+            tmp.endPoint.x+left.x,    tmp.endPoint.y+left.y,
+            tmp.endPoint.x+right.x,   tmp.endPoint.y+right.y,
+        );
+    }
+
+    return outputPoints;
 };
 this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat='TRIANGLE_STRIP'){
     var jointData = [];
@@ -407,15 +426,15 @@ this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat='TRIA
                 if( a != jointData.length-1 ){
                     var tmp = _canvas_.library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
                     if(jointData[a] != undefined){jointData[a].departAngle = tmp;}
-                    if(jointData[a+1] != undefined){jointData[a+1].implimentAngle = tmp;}
+                    if(jointData[a+1] != undefined){jointData[a+1].implementAngle = tmp;}
                 }
 
             //joining angles
-                var joiningAngle = item.departAngle == undefined || item.implimentAngle == undefined ? Math.PI : item.departAngle - item.implimentAngle + Math.PI;
+                var joiningAngle = item.departAngle == undefined || item.implementAngle == undefined ? Math.PI : item.departAngle - item.implementAngle + Math.PI;
                 if( Math.abs(joiningAngle) == Math.PI*2 ){ joiningAngle = Math.PI; }
 
             //angle
-                var segmentAngle = item.implimentAngle != undefined ? item.implimentAngle : item.departAngle;
+                var segmentAngle = item.implementAngle != undefined ? item.implementAngle : item.departAngle;
                 var wingAngle = segmentAngle + joiningAngle/2;
 
             //width
@@ -445,6 +464,19 @@ this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat='TRIA
     }
 
     return outputPoints;
+};
+this.loopedPathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
+    var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
+    var loopingPath = [];
+
+    loopingPath = loopingPath.concat(joinPoint);
+    for(var a = 2; a < path.length; a+=2){
+        loopingPath = loopingPath.concat( [path[a], path[a+1]] );
+    }
+    loopingPath = loopingPath.concat( [path[0], path[1]] );
+    loopingPath = loopingPath.concat(joinPoint);
+
+    return this.pathToPolygonGenerator(loopingPath,thickness,returnedPointsFormat);
 };
 this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
     var mux = (d - start)/(end - start);
@@ -537,11 +569,11 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
 
     //circle out to find initial offsets
         var stepCount = 1;
-        var maxItrationCount = 100;
+        var maxIterationCount = 100;
 
-        var sucessfulOffsets = [];
-        for(stepCount = 1; stepCount < maxItrationCount+1; stepCount++){
-            sucessfulOffsets = [];
+        var successfulOffsets = [];
+        for(stepCount = 1; stepCount < maxIterationCount+1; stepCount++){
+            successfulOffsets = [];
             var stepsInThisCircle = 2*stepCount + 1;
             var circularStepSizeInRad = (2*Math.PI) / stepsInThisCircle;
             var radius = Math.pow(stepCount,2);
@@ -555,23 +587,23 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
 
                         if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                     
-                    //if offsetting the shape in this way results in no collision; save this offset in 'sucessfulOffsets'
+                    //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
                         if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
-                            sucessfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
+                            successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
                         }
                 }
 
             //if on this circle we've found at least one possible location; break out of this section and move on to the next
-                if( sucessfulOffsets.length != 0 ){break;}
+                if( successfulOffsets.length != 0 ){break;}
         }
 
 
     //use midpointing from these points to find the single closest circular offset
-        var maxItrationCount = 10;
-        var sucessfulOffset;
+        var maxIterationCount = 10;
+        var successfulOffset;
 
-        if(sucessfulOffsets.length == 1){
-            sucessfulOffset = sucessfulOffsets[0];
+        if(successfulOffsets.length == 1){
+            successfulOffset = successfulOffsets[0];
         }else{
             //there was more than one possible offset for this radius, so we need to edge each of them closer
             //to the original point, to whittle them down to the one angle that can provide the smallest radius
@@ -580,30 +612,30 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
             var minRadius = Math.pow(stepCount-1,2);
 
             var provenFunctionalOffsets = [];
-            for(var i = 0; i < maxItrationCount; i++){
-                var tmpSucessfulOffsets = [];
+            for(var i = 0; i < maxIterationCount; i++){
+                var tmpsuccessfulOffsets = [];
                 var midRadius = (maxRadius - minRadius)/2 + minRadius;
 
-                //check this new midpoint radius with the sucessfulOffset values 
-                    for(var a = 0; a < sucessfulOffsets.length; a++){
+                //check this new midpoint radius with the successfulOffset values 
+                    for(var a = 0; a < successfulOffsets.length; a++){
                         //calculate the current offset using the midpoint value
-                            var tmpOffset = library.math.polar2cartesian( sucessfulOffsets[a].ang, midRadius );
+                            var tmpOffset = library.math.polar2cartesian( successfulOffsets[a].ang, midRadius );
                             tmpOffset.x = snapping.active ? Math.round(tmpOffset.x/snapping.x)*snapping.x : tmpOffset.x;
                             tmpOffset.y = snapping.active ? Math.round(tmpOffset.y/snapping.y)*snapping.y : tmpOffset.y;
                             if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                     
-                        //if offsetting the shape in this way results in no collision; save this offset in 'tmpSucessfulOffsets'
+                        //if offsetting the shape in this way results in no collision; save this offset in 'tmpsuccessfulOffsets'
                             if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
-                                tmpSucessfulOffsets.push( {ang:sucessfulOffsets[a].ang, dis:midRadius} );
-                                provenFunctionalOffsets.push( {ang:sucessfulOffsets[a].ang, dis:midRadius} );
+                                tmpsuccessfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
+                                provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                             }
                     }
 
                 //check if there's only one offset left
-                    if( tmpSucessfulOffsets.length == 1 ){ sucessfulOffset = tmpSucessfulOffsets[0]; break; }
+                    if( tmpsuccessfulOffsets.length == 1 ){ successfulOffset = tmpsuccessfulOffsets[0]; break; }
 
                 //decide whether to check further out or closer in
-                    if( tmpSucessfulOffsets.length == 0 ){
+                    if( tmpsuccessfulOffsets.length == 0 ){
                         minRadius = midRadius; //somewhere further out
                     }else{
                         maxRadius = midRadius; //somewhere further in
@@ -611,19 +643,19 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
             }
 
             //if everything goes wrong with the midpoint method; and we end up with no offsets, use whatever the last proven functional offset was
-                if(sucessfulOffset == undefined){ sucessfulOffset = provenFunctionalOffsets.pop(); }
+                if(successfulOffset == undefined){ successfulOffset = provenFunctionalOffsets.pop(); }
         }
 
     //adjust along x and y to find the closest offset
-        var maxItrationCount = 10;
+        var maxIterationCount = 10;
 
-        var offset = library.math.polar2cartesian( sucessfulOffset.ang, sucessfulOffset.dis );
+        var offset = library.math.polar2cartesian( successfulOffset.ang, successfulOffset.dis );
         if(dev){paths[2].push( {x:offset.x+middlePoint.x, y:offset.y+middlePoint.y} );}
         var max = {x:offset.x, y:offset.y};
         var min = {x:0, y:0};
         
         //use midpoint methods to edge the shape (over x and y) to as close as it can be to the original point
-            for(var i = 0; i < maxItrationCount; i++){
+            for(var i = 0; i < maxIterationCount; i++){
                 var midpoint = { x:(max.x-min.x)/2 + min.x, y:(max.y-min.y)/2 + min.y };
                 midpoint.x = snapping.active ? Math.round(midpoint.x/snapping.x)*snapping.x : midpoint.x;
                 midpoint.y = snapping.active ? Math.round(midpoint.y/snapping.y)*snapping.y : midpoint.y;

@@ -14775,7 +14775,7 @@
                         control.viewport.position(0,0);
                         control.viewport.scale(0);
                     };
-                    this.documentUnits = function(units){
+                    this.relative_documentUnits = function(units){
                         // position             -   the X, Y and angle of the original object
                         // details              -   data on the unit's type
                         //      collection
@@ -14837,7 +14837,7 @@
                     
                         return outputData;  
                     };
-                    this.printUnits = function(units){
+                    this.relative_printUnits = function(units){
                         var printedUnits = [];
                     
                         for(var a = 0; a < units.length; a++){
@@ -14871,9 +14871,9 @@
                     this.export = function(){
                         //creating an array of all units to be saved (strip out all the cable units)
                         //document all units in the main pane
-                        return this.documentUnits( Array.from(pane.children).filter(a => !a._isCable) );
+                        return this.relative_documentUnits( Array.from(pane.children).filter(a => !a._isCable) );
                     };
-                    this.import = function(data){ this.printUnits( data ); };
+                    this.import = function(data){ this.relative_printUnits( data ); };
                     this.save = function(filename='project',compress=true){
                         //control switch
                             if(!workspace.control.interaction.enableSceneSave()){return;}
@@ -15137,7 +15137,7 @@
                     
                     
                     
-                        this.clipboard = workspace.control.scene.documentUnits(this.selectedUnits);
+                        this.clipboard = workspace.control.scene.relative_documentUnits(this.selectedUnits);
                     };
                     this.paste = function(position){
                         //control switch
@@ -15178,7 +15178,7 @@
                             }
                     
                         //unit printing
-                            workspace.control.scene.printUnits( this.clipboard );
+                            workspace.control.scene.relative_printUnits( this.clipboard );
                     
                     };
                     this.duplicate = function(){

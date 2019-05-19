@@ -1,0 +1,130 @@
+Audio Spectrum 
+    Frequency Range	    Frequency Values
+    Sub-bass	        20 to 60 Hz
+    Bass	            60 to 250 Hz
+    Low midrange	    250 to 500 Hz
+    Midrange	        500 Hz to 2 kHz
+    Upper midrange	    2 to 4 kHz
+    Presence	        4 to 6 kHz
+    Brilliance	        6 to 20 kHz
+
+
+    
+
+Instrument Enhancement Frequencies
+    Bass Drum
+        Low Cut: None
+
+        Frequency	    Description
+        50-80 Hz	    Bottom, boom
+        100-200 Hz	    Roundness
+        250-800 Hz	    Mud, clarity
+        2500-5000 Hz	Attack
+
+        Boost around 5kHz to increase attack
+
+    Snare Drum
+        Low Cut: 80Hz
+
+        Frequency	    Description
+        100-300 Hz	    Fat, full
+        900 Hz	        Boing
+        5000 Hz	        Snap
+        6000-9000 Hz	Presence
+
+        Cut around 60-120 Hz to thin the snare
+        Boost around 5-6 kHz for a snappy sound
+
+    Hi Hats/Cymbals
+        Low Cut: 200Hz
+
+        Frequency	    Description
+        250-500 Hz	    Clang, mud
+        1000-5000 Hz	Presence, attack
+        8000 Hz	        Sparkle, Hardness
+        9000 Hz	        Presence
+        15,000 Hz	    Air
+
+        Cut around 800 Hz if the cymbals sound clangy
+        Boost around 3 kHz to add brightness
+
+    Toms
+        Low Cut: None
+
+        Frequency	    Description
+        200 - 400 Hz	Fullness
+        5000 - 7000Hz	Attack
+
+        Cut around 100 Hz to eliminate a muddy sound
+        To increase attack, try a small boost around 6 kHz
+
+    Vocals
+        Low Cut: 80Hz
+
+        Frequency	    Description
+        150 Hz	        Fullness
+        1000-5000 Hz	Presence
+        6000 Hz	        Clarity, sibilance
+        10,000 Hz	    Brightness/Air
+
+        Cut around 100 Hz to eliminate a muddy sound
+        Boost around to 6000 Hz to increase clarity
+
+    Violin
+        Low Cut: 100Hz
+
+        Frequency	    Description
+        250-500 Hz	    Bottom, boom
+        800-1000 Hz	    Roundness
+        5000 Hz	        Mud, clarity
+        7000-10,000Hz	Attack
+        12,000 Hz	    Air
+
+        Boost around 6000 Hz to add crunch sound
+
+    Piano
+        Low Cut: None
+
+        Frequency	    Description
+        100 Hz	        Bottom
+        100-250 Hz	    Body
+        250-1000 Hz	    Mud
+        1000-5000 Hz	Presence, honk
+        10,000 Hz	    Brightness
+
+        Cut around 80 Hz to eliminate excess boom
+        Boost around to 4 kHz to increase presence
+
+
+    Bass Guitar
+        Low Cut: None
+
+        Frequency	    Description
+        50-80 Hz	    Bottom, body
+        100-500 Hz	    Fullness, mud
+        700 Hz	        Attack
+        1000-6000 Hz	Presence, pluck
+
+        Roll off around 300 Hz to increase clarity if muddy
+        Boost around to 60 to increase body
+
+    Electric Guitar
+        Low Cut: 80Hz
+        
+        Frequency	    Description
+        150 Hz	        Body
+        300-500 Hz	    Fullness, mud
+        1500-3000 Hz	Presence
+        6000 Hz	    Brightness
+
+        Cut around 100 Hz to increase mix clarity
+
+    Acoustic Guitar
+        Low Cut: 80Hz
+
+        Frequency	    Description
+        80 Hz	        Bottom
+        200-300 Hz	    Body
+        2000-5000 Hz	Brightness
+
+        Boost around 5 kHz for increased presence

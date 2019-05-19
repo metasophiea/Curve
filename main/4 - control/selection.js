@@ -73,7 +73,7 @@ this.copy = function(){
 
 
 
-    this.clipboard = _canvas_.control.scene.documentUnits(this.selectedUnits);
+    this.clipboard = _canvas_.control.scene.relative_documentUnits(this.selectedUnits);
 };
 this.paste = function(position){
     //control switch
@@ -115,36 +115,63 @@ this.paste = function(position){
         }
 
     //unit printing
-        _canvas_.control.scene.printUnits( this.clipboard );
+        _canvas_.control.scene.relative_printUnits( this.clipboard );
 
 };
 this.duplicate = function(){
     //control switch
         if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
-
-
+    //register bookend action
+        control.actionRegistry.registerAction(
+            {
+                functionName:'control.selection.duplicate',
+                count:this.selectedUnits.length,
+                bookendPosition:'start',
+            }
+        );
+        
     this.copy();
     this.paste('duplicate');
     this.clipboard = [];
+
+    //register bookend action
+        control.actionRegistry.registerAction(
+            {
+                functionName:'control.selection.duplicate',
+                count:this.selectedUnits.length,
+                bookendPosition:'end',
+            }
+        );
 };
 this.delete = function(){
     //control switch
         if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
+    //if there's nothing to delete, then don't bother trying
+    if(this.selectedUnits.length == 0){return;}
 
+    //register bookend action
+        control.actionRegistry.registerAction(
+            {
+                functionName:'control.selection.delete',
+                count:this.selectedUnits.length,
+                bookendPosition:'start',
+            }
+        );
 
+    var selectedUnitCount = this.selectedUnits.length;
     while(this.selectedUnits.length > 0){
-        var unit = this.selectedUnits[0];
-        //delete object
-            //run the unit's onDelete method
-                if(unit.ondelete){unit.ondelete();}
-            //run disconnect on every connection node of this unit
-                unit.disconnectEverything();
-            //remove the object from the pane it's in
-                _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
-        //remove object from selected array
-            this.selectedUnits.shift();
+        control.scene.removeUnit(this.selectedUnits.shift());
     }
     this.lastSelectedUnits = null;
+
+    //register bookend action
+        control.actionRegistry.registerAction(
+            {
+                functionName:'control.selection.delete',
+                count:selectedUnitCount,
+                bookendPosition:'end',
+            }
+        );
 };

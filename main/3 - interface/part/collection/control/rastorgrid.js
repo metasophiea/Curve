@@ -15,7 +15,7 @@ this.rastorgrid = function(
         //checkboxes
             for(var y = 0; y < ycount; y++){
                 for(var x = 0; x < xcount; x++){
-                    var temp = interfacePart.builder('checkbox_rect',y+'_'+x,{
+                    var temp = interfacePart.builder('checkbox_rectangle',y+'_'+x,{
                         x:x*(width/xcount), y:y*(height/ycount), 
                         width:width/xcount, height:height/ycount, interactable:interactable,
                         style:{ check:checkStyle, backing:backingStyle, checkGlow:checkGlowStyle, backingGlow:backingGlowStyle },

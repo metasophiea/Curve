@@ -12,7 +12,62 @@ this.new = function(askForConfirmation=false){
     control.viewport.position(0,0);
     control.viewport.scale(0);
 };
-this.documentUnits = function(units){
+
+
+this.absolute_documentUnit = function(unit){
+    // position             -   the X, Y and angle of the original object
+    // details              -   data on the unit's type
+    //      collection
+    //      model
+    // data                 -   the exported data from the original object
+    // connections          -   an array of where to connect what
+    //      typeAndNameOfSourcePort
+    //      nameOfDestinationUnit
+    //      typeAndNameOfDestinationPort
+
+    var entry = {};
+
+    //get the units position
+        entry.position = {
+            x: unit.x(),
+            y: unit.y(),
+            angle: unit.angle(),
+        };
+
+    //unitDetails
+        entry.details = {
+            collection: unit.collection,
+            model: unit.model,
+        };
+
+    //export the unit's state
+        entry.data = unit.exportData ? unit.exportData() : null;
+
+    //log all connections
+        entry.connections = [];
+            for(var connectionType in unit.io){
+                for(var connection in unit.io[connectionType]){
+                    var foreignNode = unit.io[connectionType][connection].getForeignNode();
+                    if(foreignNode == undefined){continue;} //this node isn't connected to anything, so just bail
+            
+                    var newConnectionEntry = {};
+
+                    //typeAndNameOfSourcePort
+                        newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
+
+                    //indexOfDestinationUnit
+                        newConnectionEntry.nameOfDestinationUnit = foreignNode.parent.name;
+
+                    //typeAndNameOfDestinationPort
+                        newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignNode.name };
+
+                    entry.connections.push(newConnectionEntry);
+                }
+            }
+
+    return entry;
+};
+this.relative_documentUnits = function(units){
     // position             -   the X, Y and angle of the original object
     // details              -   data on the unit's type
     //      collection
@@ -27,6 +82,7 @@ this.documentUnits = function(units){
 
     //cycle through this array, and create the scene data
         for(var a = 0; a < units.length; a++){
+            // outputData.push(this.absolute_documentUnit(units[a]));
             var unit = units[a];
             var entry = {};
 
@@ -74,10 +130,34 @@ this.documentUnits = function(units){
 
     return outputData;  
 };
-this.printUnits = function(units){
+this.absolute_printUnit = function(unitData,forceName){
+    //create the object with its new position adding it to the pane
+        var unit = control.scene.addUnit(unitData.position.x, unitData.position.y,  unitData.position.angle, unitData.details.model, unitData.details.collection, forceName);
+
+    //import data
+        if(unit.importData){unit.importData(unitData.data);}
+
+    //go through its connections, and attempt to connect them to everything they should be connected to
+    // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
+        for(var b = 0; b < unitData.connections.length; b++){
+            var connection = unitData.connections[b];
+
+            var destinationUnit = control.scene.getUnitByName(connection.nameOfDestinationUnit);
+            if(destinationUnit == undefined){continue;}
+
+            var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
+            var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
+            
+            sourceNode.connectTo(destinationNode);
+        }
+
+    return unit;
+};
+this.relative_printUnits = function(units){
     var printedUnits = [];
 
     for(var a = 0; a < units.length; a++){
+        // printedUnits.push(this.absolute_printUnit(units[a]));
         var item = units[a];
 
         //create the object with its new position adding it to the pane
@@ -105,12 +185,14 @@ this.printUnits = function(units){
 
     return printedUnits;
 };
+
+
 this.export = function(){
     //creating an array of all units to be saved (strip out all the cable units)
     //document all units in the main pane
-    return this.documentUnits( Array.from(pane.children()).filter(a => !a._isCable) );
+    return this.relative_documentUnits( Array.from(pane.children()).filter(a => !a._isCable) );
 };
-this.import = function(data){ this.printUnits( data ); };
+this.import = function(data){ this.relative_printUnits( data ); };
 this.save = function(filename='project',compress=true){
     //control switch
         if(!_canvas_.control.interaction.enableSceneSave()){return;}
@@ -202,6 +284,9 @@ this.load = function(url,callback,askForConfirmation=false){
             //deselect all units
                 control.selection.deselectEverything();
 
+            //clear the actionReigister
+                control.actionRegistry.clearRegistry();
+
             //callback
                 if(callback){callback(metadata);}
         }
@@ -218,15 +303,16 @@ this.load = function(url,callback,askForConfirmation=false){
         }
 };
 
+
 this.generateUnitName = function(){ return IDcounter++; };
-this.addUnit = function(x,y,a,model,collection='alpha'){
+this.addUnit = function(x,y,a,model,collection='alpha',forceName){
     //control switch
         if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
 
 
     //generate new name for unit
-        var name = this.generateUnitName();
+        var name = forceName==undefined ? this.generateUnitName() : forceName;
 
     //produce unit, assign its name and add grapple code
         if( _canvas_.interface.unit.collection[collection] == undefined ){
@@ -252,14 +338,40 @@ this.addUnit = function(x,y,a,model,collection='alpha'){
     //add it to the main pane
         pane.append( tmp );
 
+
+
+    //register action
+        control.actionRegistry.registerAction(
+            {
+                functionName:'control.scene.addUnit',
+                arguments:[x,y,a,model,collection],
+                name:tmp.name,
+            }
+        );
+
     return tmp;
 };
 this.removeUnit = function(unit){
     //control switch
         if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+
+    //register action
+        control.actionRegistry.registerAction(
+            {
+                functionName:'control.scene.removeUnit',
+                name:unit.name,
+                data:this.absolute_documentUnit(unit),
+            }
+        );
         
-        pane.remove(unit);
+        //run the unit's onDelete method
+            if(unit.ondelete){unit.ondelete();}
+        //run disconnect on every connection node of this unit
+            unit.disconnectEverything();
+        //remove the object from the middleground pane
+            pane.remove(unit);
 };
+
 
 this.getAllUnits = function(){ return pane.children().filter( a => !a._isCable ); };
 this.getUnitByName = function(name){ return pane.getChildByName(name); };

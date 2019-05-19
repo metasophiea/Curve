@@ -91,7 +91,7 @@ this.testUnit_1 = function(x,y,angle){
                     { type:'item', text_left:'item15', text_centre:'', text_right:'', function:function(){console.log('item15 function');} },
                     { type:'space' },
                 ]}},
-                {type:'checkbox_rect', name:'test_checkbox_rect1', data:{x:150,y:145}},
+                {type:'checkbox_rectangle', name:'test_checkbox_rect1', data:{x:150,y:145}},
                 {type:'rastorgrid', name:'test_rastorgrid1', data:{x:100,y:225}},
                 {type:'needleOverlay', name:'test_needleOverlay1', data:{x:0,y:310}},
                 {type:'grapher_waveWorkspace', name:'test_grapher_waveWorkspace1', data:{x:0,y:375}},

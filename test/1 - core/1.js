@@ -84,5 +84,15 @@
 
 //rendering controls
     _canvas_.core.render.active(true);
-    // _canvas_.core.stats.active(true);
-    // setInterval(function(){console.log(_canvas_.core.stats.getReport());},1000);
+    _canvas_.core.render.activeLimitToFrameRate(true);
+    _canvas_.core.render.frameRateLimit(10);
+
+    _canvas_.core.stats.active(true);
+    var averages = [];
+    var rollingAverage = 0;
+    var rollingAverageIndex = 1;
+    setInterval(function(){
+        var tmp = _canvas_.core.stats.getReport();
+        averages.push(tmp.framesPerSecond);
+        console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
+    },1000);

@@ -156,6 +156,10 @@ _canvas_.control = new function(){
     this.selection = new function(){
         {{include:selection.js}}
     };
+
+    this.actionRegistry = new function(){
+        {{include:actionRegistry.js}}
+    };
 };
 
 {{include:grapple.js}}

@@ -80,7 +80,7 @@ this.copy = function(){
 
 
 
-    this.clipboard = _canvas_.control.scene.documentUnits(this.selectedUnits);
+    this.clipboard = _canvas_.control.scene.relative_documentUnits(this.selectedUnits);
 };
 this.paste = function(position){
     //control switch
@@ -121,7 +121,7 @@ this.paste = function(position){
         }
 
     //unit printing
-        _canvas_.control.scene.printUnits( this.clipboard );
+        _canvas_.control.scene.relative_printUnits( this.clipboard );
 
 };
 this.duplicate = function(){

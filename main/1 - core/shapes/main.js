@@ -8,6 +8,7 @@
 {{include:polygonWithOutline.js}}
 
 {{include:path.js}}
+{{include:pathWithRoundJointsAndEnds.js}}
 {{include:loopedPath.js}}
 
 {{include:image.js}}

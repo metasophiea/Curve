@@ -30,6 +30,8 @@ const fontFileNames = [
     'Cute_Font/CuteFont-Regular.ttf',
 
     'Lobster/Lobster-Regular.ttf',
+
+    'AppleGaramond/AppleGaramond.ttf',
 ];
 //create locations in the vector library for these fonts
 fontFileNames.forEach(name => {

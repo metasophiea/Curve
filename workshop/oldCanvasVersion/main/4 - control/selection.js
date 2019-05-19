@@ -79,7 +79,7 @@ this.copy = function(){
 
 
 
-    this.clipboard = workspace.control.scene.documentUnits(this.selectedUnits);
+    this.clipboard = workspace.control.scene.relative_documentUnits(this.selectedUnits);
 };
 this.paste = function(position){
     //control switch
@@ -120,7 +120,7 @@ this.paste = function(position){
         }
 
     //unit printing
-        workspace.control.scene.printUnits( this.clipboard );
+        workspace.control.scene.relative_printUnits( this.clipboard );
 
 };
 this.duplicate = function(){

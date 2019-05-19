@@ -12,6 +12,18 @@ _canvas_.system.keyboard.functionList.onkeydown.push(
 );
 _canvas_.system.keyboard.functionList.onkeydown.push(
     {
+        requiredKeys:[['shift','control','KeyZ'],['shift','command','KeyZ']],
+        function:function(data){ _canvas_.control.actionRegistry.redo(); return true; }
+    }
+);
+_canvas_.system.keyboard.functionList.onkeydown.push(
+    {
+        requiredKeys:[['control','KeyZ'],['command','KeyZ']],
+        function:function(data){ _canvas_.control.actionRegistry.undo(); return true; }
+    }
+);
+_canvas_.system.keyboard.functionList.onkeydown.push(
+    {
         requiredKeys:[['control','KeyX'],['command','KeyX']],
         function:function(data){ _canvas_.system.keyboard.releaseAll(); _canvas_.control.selection.cut(); return true; }
     }
