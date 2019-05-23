@@ -72,12 +72,12 @@ this.basicSequencer_midiOut = function(x,y,a){
                 {type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
 
             //follow playhead
-                {type:'checkbox_rect', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
+                {type:'checkbox_rectangle', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
                     onchange:function(value){object.elements.sequencer.main.automove(value);},
                 }},
 
             //loop control
-                {type:'checkbox_rect', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
+                {type:'checkbox_rectangle', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
                     onchange:function(value){object.elements.sequencer.main.loopActive(value);},
                 }},
                 {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
@@ -123,10 +123,10 @@ this.basicSequencer_midiOut = function(x,y,a){
         object.exportData = function(){
             return {
                 loop:{
-                    active: object.elements.checkbox_rect.loopActive.get(),
+                    active: object.elements.checkbox_rectangle.loopActive.get(),
                     range: object.elements.rangeslide.loopSelect.get(),
                 },
-                autofollow: object.elements.checkbox_rect.followPlayhead.get(),
+                autofollow: object.elements.checkbox_rectangle.followPlayhead.get(),
                 notes: object.elements.sequencer.main.getAllSignals(),
                 viewarea:{
                     horizontal: object.elements.rangeslide.viewselect_y.get(),
@@ -138,7 +138,7 @@ this.basicSequencer_midiOut = function(x,y,a){
             object.elements.sequencer.main.addSignals(data.notes);
             object.i.loopActive(data.loop.active);
             object.elements.rangeslide.loopSelect.set(data.loop.range);
-            object.elements.checkbox_rect.followPlayhead.set(data.autofollow);
+            object.elements.checkbox_rectangle.followPlayhead.set(data.autofollow);
             object.elements.rangeslide.viewselect_y.set(data.viewarea.horizontal);
             object.elements.rangeslide.viewselect_x.set(data.viewarea.vertical);
         };
@@ -148,7 +148,7 @@ this.basicSequencer_midiOut = function(x,y,a){
             addNote:function(number, position, length, strength=1){object.elements.sequencer.main.addSignal(midiNumber_line_converter(number), position, length, strength);},
             addNotes:function(data){ for(var a = 0; a < data.length; a++){ this.addSignal(data[a].line, data[a].position, data[a].length, data[a].strength); } },
             getNotes:function(){return object.elements.sequencer.main.getAllSignals();},
-            loopActive:function(a){object.elements.checkbox_rect.loopActive.set(a);},
+            loopActive:function(a){object.elements.checkbox_rectangle.loopActive.set(a);},
             step:object.elements.sequencer.step,
         };
 
