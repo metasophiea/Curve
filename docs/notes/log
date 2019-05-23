@@ -1,10 +1,24 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-05-22
+  - emergency fixes to units that used the checkbox_rectangle (as they were
+    still calling it the checkbox_rect)
+
+
+2019-05-21
+  - rounded edge path working pretty well now, I think
+
+
+2019-05-20
+  - work on improving the state of line drawing. Things continue on the rounded
+    edge path
+
+
 2019-05-19
   - more drawing
   - started adding the new designs to the system. Currently the images directly,
     I think I'll convert them to vector designs in future
   - created the pathWithRoundJointsAndEnds core shape.. the rounds are produced
-    by just adding circles, so transparent colouring of this shape don't look
+    by just adding circles, so transparent colouring of this shape doesn't look
     great, but with solid colours it looks just fine.
   - redid the signal duplicator in vector. Looking pretty good
 

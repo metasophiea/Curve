@@ -23,94 +23,7 @@ this.pathWithRoundJointsAndEnds = function(){
             var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
             var detail = 25;   this.detail =    function(a){ if(a==undefined){return detail;} detail = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::detail');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
 
-            function lineGenerator(){
-                //generate rectangle series
-                    var triangles = _canvas_.library.math.pathToRectangleSeriesGenerator( points, thickness );
-
-                //add circle ends and joints
-                    for(var a = 0; a < points.length; a+=2){
-
-                        var circlePoints = [];
-                        for(var b = 0; b < detail; b++){
-                            circlePoints.push(
-                                Math.sin( 2*Math.PI*(b/detail))*thickness + points[a],
-                                Math.cos( 2*Math.PI*(b/detail))*thickness + points[a+1],
-
-                                Math.sin( 2*Math.PI*((b+1)/detail))*thickness + points[a],
-                                Math.cos( 2*Math.PI*((b+1)/detail))*thickness + points[a+1],
-
-                                points[a], points[a+1]
-                            );
-                        }
-
-                        triangles = triangles.concat(circlePoints);
-                    }
-
-                // //add circle start
-                //     var angle = _canvas_.library.math.getAngleOfTwoPoints( {x:points[0], y:points[1]},{x:points[2], y:points[3]} );
-
-                //     var a = 0;
-                //     var subDetail = Math.floor(detail/2);
-                //     circlePoints = [];
-                //     for(var b = 0; b < subDetail; b++){
-                //         circlePoints.push(
-                //             points[a], points[a+1],
-
-                //             Math.sin( Math.PI * (b/subDetail) + angle)*thickness + points[a],
-                //             Math.cos( Math.PI * (b/subDetail) + angle)*thickness + points[a+1],
-
-                //             Math.sin( Math.PI * ((b+1)/subDetail) + angle)*thickness + points[a],
-                //             Math.cos( Math.PI * ((b+1)/subDetail) + angle)*thickness + points[a+1],
-                //         );
-                //     }
-
-                //     triangles = triangles.concat(circlePoints);
-
-                // //add circle end
-                //     var angle = -_canvas_.library.math.getAngleOfTwoPoints( {x:points[points.length-4], y:points[points.length-3]},{x:points[points.length-2], y:points[points.length-1]} );
-
-                //     var a = points.length-2;
-                //     var subDetail = Math.floor(detail/2);
-                //     var circlePoints = [];
-                //     for(var b = 0; b < subDetail; b++){
-                //         circlePoints.push(
-                //             points[a], points[a+1],
-
-                //             Math.sin( Math.PI * (b/subDetail) + angle)*thickness + points[a],
-                //             Math.cos( Math.PI * (b/subDetail) + angle)*thickness + points[a+1],
-
-                //             Math.sin( Math.PI * ((b+1)/subDetail) + angle)*thickness + points[a],
-                //             Math.cos( Math.PI * ((b+1)/subDetail) + angle)*thickness + points[a+1],
-                //         );
-                //     }
-
-                //     triangles = triangles.concat(circlePoints);
-
-                // //add circle joints
-                //     for(var a = 2; a < points.length-2; a+=2){
-
-                //         var angle_im = _canvas_.library.math.getAngleOfTwoPoints( {x:points[a-2], y:points[a-1]},{x:points[a+0], y:points[a+1]} );
-                //         var angle_de = _canvas_.library.math.getAngleOfTwoPoints( {x:points[a+0], y:points[a+1]},{x:points[a+2], y:points[a+3]} );
-
-
-                //         var circlePoints = [];
-                //         for(var b = 0; b < detail; b++){
-                //             circlePoints.push(
-                //                 Math.sin( (angle_im-angle_de) * (b/detail) - angle_im)*thickness + points[a],
-                //                 Math.cos( (angle_im-angle_de) * (b/detail) - angle_im)*thickness + points[a+1],
-
-                //                 Math.sin( (angle_im-angle_de) * ((b+1)/detail) - angle_im)*thickness + points[a],
-                //                 Math.cos( (angle_im-angle_de) * ((b+1)/detail) - angle_im)*thickness + points[a+1],
-
-                //                 points[a], points[a+1]
-                //             );
-                //         }
-
-                //         triangles = triangles.concat(circlePoints);
-                //     }
-
-                return triangles;
-            }
+            function lineGenerator(){ return _canvas_.library.math.pathExtrapolation.pathToPolygonWithRoundJointsAndEndsGenerator(points,thickness,detail); }
             this.pointsAsXYArray = function(a){
                 if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
 
@@ -197,6 +110,7 @@ this.pathWithRoundJointsAndEnds = function(){
             context.useProgram(program);
             updateGLAttributes(context,adjust);
             context.drawArrays(context.TRIANGLES, 0, generatedPathPolygon.length/2);
+            // context.drawArrays(context.LINE_STRIP, 0, generatedPathPolygon.length/2);
         }
 
     //extremities

@@ -80,11 +80,9 @@ var tmp = _canvas_.core.shape.create('path');
 
 var tmp = _canvas_.core.shape.create('pathWithRoundJointsAndEnds');
     tmp.name = 'path_2';
-    tmp.pointsAsXYArray([ {x:80+150,y:80}, {x:80+150,y:140}, {x:80+180,y:90}, {x:80+210,y:140}, {x:80+210,y:80} ]);
+    tmp.pointsAsXYArray([ {x:230,y:80}, {x:230,y:140}, {x:260,y:90}, {x:290,y:140}, {x:290,y:80} ]);
     tmp.thickness(8);
-    // tmp.pointsAsXYArray([ {x:50,y:300}, {x:50,y:500}, {x:250,y:600} ]);
-    // tmp.thickness(80);
-    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
+    tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
     _canvas_.core.arrangement.append(tmp);
     console.log('');
 
@@ -219,4 +217,4 @@ var clippingGroup_2 = _canvas_.core.shape.create('group');
 
 
 _canvas_.core.render.frame();
-setTimeout(_canvas_.core.render.frame,1000);
+// setTimeout(_canvas_.core.render.frame,1000);

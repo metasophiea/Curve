@@ -23,7 +23,7 @@ this.polygonWithOutline = function(){
             var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2;   generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
             var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                             if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
             
-            function loopedLineGenerator(){ return _canvas_.library.math.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }
+            function loopedLineGenerator(){ return _canvas_.library.math.pathExtrapolation.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }
             this.pointsAsXYArray = function(a){
                 if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
 
