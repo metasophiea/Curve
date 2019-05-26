@@ -20885,6 +20885,7 @@
                             x:undefined, 
                             y:undefined, 
                             stopScrollActive:false,
+                            clickVisibility:false,
                         };
                     
                         //adapter
@@ -20988,6 +20989,7 @@
                                 //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
                                 if(!bool){ document.body.style.overflow = ''; }
                             };
+                            this.clickVisibility = function(a){ if(a==undefined){return mouseData.clickVisibility;} mouseData.clickVisibility=a; };
                     };
                     this.viewport.refresh();
                     
@@ -20997,22 +20999,19 @@
                             'onkeydown', 'onkeyup',
                         ];
                         function gatherDetails(event,callback,count){
-                            var shapes = undefined;
-                            if(count > 1){
-                                //get the shapes under this point that have this callback, in order of front to back
-                                shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a[callback]!=undefined);
-                            }
                             var point = undefined;
-                            if(count > 2){
+                            if(count > 0){
                                 //calculate the workspace point
                                 point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                             }
-                    
+                            var shapes = undefined;
+                            if(count > 3){
+                                //get the shapes under this point that have this callback, in order of front to back
+                                shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a[callback]!=undefined);
+                            }
+                     
                             return {shapes:shapes, point:point};
                         }
-                    
-                        var clickVisibility = false;
-                        this.clickVisibility = function(a){ if(a==undefined){return clickVisibility;} clickVisibility=a; };
                     
                         //default
                             for(var a = 0; a < callbacks.length; a++){
@@ -21024,11 +21023,11 @@
                                         //generate rectified XY position
                                             event.X = event.offsetX; event.Y = event.offsetY;
                     
-                                        //depending on how many arguments the  callback has, calculate more data for it
+                                        //depending on how many arguments the callback has, calculate more data for it
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                                 
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                     }
                                 }(callbacks[a]);
                             }
@@ -21063,11 +21062,11 @@
                                             //shapes only on shapeMouseoverList; run onmouseleave and remove from shapeMouseoverList
                                             var diff = _canvas_.library.math.getDifferenceOfArrays(shapeMouseoverList,shapes);
                                             diff.b.forEach(function(a){
-                                                if(a.onmouseenter){a.onmouseenter( event, shapes, point );}
+                                                if(a.onmouseenter){a.onmouseenter( point.x, point.y, event, shapes );}
                                                 shapeMouseoverList.push(a);
                                             });
                                             diff.a.forEach(function(a){
-                                                if(a.onmouseleave){a.onmouseleave( event, shapes, point );}
+                                                if(a.onmouseleave){a.onmouseleave( point.x, point.y, event, shapes );}
                                                 shapeMouseoverList.splice(shapeMouseoverList.indexOf(a),1);
                                             });
                     
@@ -21081,7 +21080,7 @@
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                                 
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                 };
                     
                             //onkeydown / onkeyup
@@ -21112,7 +21111,7 @@
                                             //activate core's callback, providing the point, original event, and shapes
                                                 var p = core.viewport.mousePosition();
                                                 event.X = p.x; event.Y = p.y;
-                                                core.callback[callback]( event, shapes, point );
+                                                core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                         }
                                     }(tmp[a]);
                                 }
@@ -21125,7 +21124,7 @@
                                         event.X = event.offsetX; event.Y = event.offsetY;
                     
                                     //dev functions
-                                        if(clickVisibility){ core.render.drawDot(event.X,event.Y); }
+                                        if(core.viewport.clickVisibility()){ core.render.drawDot(event.X,event.Y); }
                     
                                     var callback = 'onmousedown';
                                     
@@ -21140,7 +21139,7 @@
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                             
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                 };
                                 _canvas_.onmouseup = function(event){
                                     //generate rectified XY position
@@ -21151,6 +21150,8 @@
                                     //for the shapes under the mouse that are also on the shapeMouseclickList, activate their "onclick" callback
                                         var shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onclick!=undefined);
                                         shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ 
+                                            //if core doesn't have this callback set up, just bail
+                                                if( !core.callback[callback] ){return;}
                     
                                             //depending on how many arguments the  callback has, calculate more data for it
                                                 var data = gatherDetails(event,callback,core.callback[callback].length);
@@ -21167,7 +21168,7 @@
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                             
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                 };
                     };
                 };
@@ -21215,8 +21216,8 @@
                     
                     //connect callbacks to mouse function lists
                         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(function(callback){
-                            _canvas_.core.callback[callback] = function(event,shapes){
-                                if(shapes.length > 0){ shapes[0][callback](event,shapes); }
+                            _canvas_.core.callback[callback] = function(x,y,event,shapes){
+                                if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
                                 else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
                             }
                         });
@@ -39673,62 +39674,103 @@
                         };
                     };
                     this.beta = new function(){
-                        // this.duplicator_data = function(x,y,a){
-                        //     var style = {
-                        //         background:{r:70/255,g:70/255,b:70/255,a:1},
-                        //         markings:{r:150/255,g:150/255,b:150/255,a:1},
-                        //     };
-                        //     var shape = [
-                        //         {x:3,y:2},
-                        //         {x:26,y:2},
-                        //         {x:42,y:9.5},
-                        //         {x:42,y:30.5},
-                        //         {x:26,y:38},
-                        //         {x:3,y:38}
-                        //     ];
-                        //     var design = {
-                        //         name:'duplicator_data',
-                        //         x:x, y:y, angle:a,
-                        //         space:shape,
-                        //         elements:[
-                        //             {type:'image', name:'main', data:{width:45, height:40, url:'http://0.0.0.0:8000/images/units/beta/duplicator_data.png'}},
+                        this.duplicator_data = function(x,y,a){
+                            var shape = [
+                                {x:0,y:0},
+                                {x:30,y:0},
+                                {x:50,y:10},
+                                {x:50,y:40},
+                                {x:30,y:50},
+                                {x:0,y:50}
+                            ];
+                            var design = {
+                                name:'duplicator_data',
+                                x:x, y:y, angle:a,
+                                space:shape,
+                                elements:[
+                                    { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                                    { type:'text', name:'label', data:{
+                                        x:29, y:47.5, 
+                                        width:3,height:3,
+                                        angle:-0.475,
+                                        text:'data duplicator',
+                                        font:'AppleGaramond', 
+                                        printingMode:{widthCalculation:'absolute'},
+                                        colour:style.textColour}
+                                    },
                         
-                        //             {type:'connectionNode_data', name:'input', data:{ 
-                        //                 type:0, x:40, y:13, width:5, height:16, 
-                        //                 style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },
-                        //                 onreceive:function(address,data){
-                        //                     object.io.data.output_1.send(address,data);
-                        //                     object.io.data.output_2.send(address,data);
-                        //                 } 
-                        //             }},
-                        //             {type:'connectionNode_data', name:'output_1', data:{ type:1, x:0, y:5, width:5, height:15, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-                        //             {type:'connectionNode_data', name:'output_2', data:{ type:1, x:0, y:21, width:5, height:15, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-                        //         ]
-                        //     };
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
+                                        {x:45,y:25}, {x:20,y:25}, {x:10,y:35}, {x:5,y:35}, {x:7.5,y:32},
+                                    ], thickness:1.25, colour:style.marking.data} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
+                                        {x:5,y:35}, {x:7.5,y:38},
+                                    ], thickness:1.25, colour:style.marking.data} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
+                                        {x:35,y:25}, {x:25,y:15}, {x:5,y:15}, {x:7.5,y:12},
+                                    ], thickness:1.25, colour:style.marking.data} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
+                                        {x:5,y:15}, {x:7.5,y:18},
+                                    ], thickness:1.25, colour:style.marking.data} },
                         
-                        //     //main object
-                        //         var object = _canvas_.interface.unit.builder(this.ruler,design);
-                            
-                        //     return object;
-                        // };
-                        
-                        // this.duplicator_data.metadata = {
-                        //     name:'Data Duplicator',
-                        //     category:'misc',
-                        //     helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_data/'
-                        // };
-                        this.duplicator_signal = function(x,y,a){
-                            var style = {
-                                background:{r:70/255,g:70/255,b:70/255,a:1},
-                                marking:{r:235/255,g:98/255,b:61/255,a:1},
-                                bumper:{r:0.125,g:0.125,b:0.125,a:1},
-                                textColour:{r:0.7,g:0.7,b:0.7,a:1},
-                                connectionNode_signal_colour:{
-                                    dim:{r:235/255,g:98/255,b:61/255,a:1},
-                                    glow:{r:237/255,g:154/255,b:132/255,a:1},
-                                },
+                                    {type:'connectionNode_data', name:'input', data:{ 
+                                        x:50, y:17.5, width:5, height:15, 
+                                        style:{ 
+                                            dim:style.connectionNode.data.dim, 
+                                            glow:style.connectionNode.data.glow,
+                                            cable_dim:style.connectionCable.data.dim, 
+                                            cable_glow:style.connectionCable.data.glow,
+                                        },
+                                        onreceive:function(address,data){
+                                            object.io.data.output_1.send(address,data);
+                                            object.io.data.output_2.send(address,data);
+                                        } 
+                                    }},
+                                    {type:'connectionNode_data', name:'output_1', data:{ 
+                                        x:-5, y:7.5, width:5, height:15, 
+                                        style:{ 
+                                            dim:style.connectionNode.data.dim, 
+                                            glow:style.connectionNode.data.glow, 
+                                            cable_dim:style.connectionCable.data.dim, 
+                                            cable_glow:style.connectionCable.data.glow 
+                                        }
+                                    }},
+                                    {type:'connectionNode_data', name:'output_2', data:{ 
+                                        x:-5, y:27.5, width:5, height:15, 
+                                        style:{ 
+                                            dim:style.connectionNode.data.dim, 
+                                            glow:style.connectionNode.data.glow, 
+                                            cable_dim:style.connectionCable.data.dim, 
+                                            cable_glow:style.connectionCable.data.glow 
+                                        }
+                                    }},
+                                ]
                             };
-                            var bumperCoverage = 5;
+                            //add bumpers
+                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                                if(c == shape.length){c = 0;}
+                        
+                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                        
+                                design.elements.push( {type:'pathWithRoundJointsAndEnds', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                                ], thickness:2.5, colour:style.bumper }} );
+                            }
+                        
+                        
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            
+                            return object;
+                        };
+                        
+                        this.duplicator_data.metadata = {
+                            name:'Data Duplicator',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_data/'
+                        };
+                        this.duplicator_signal = function(x,y,a){
                             var shape = [
                                 {x:0,y:0},
                                 {x:40,y:10},
@@ -39742,7 +39784,7 @@
                                 elements:[
                                     { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
                                     { type:'text', name:'label', data:{
-                                        x:16, y:34, 
+                                        x:15.75, y:33.5, 
                                         width:3,height:3,
                                         angle:-0.24497866312686423,
                                         text:'signal duplicator',
@@ -39753,28 +39795,49 @@
                         
                                     { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
                                         {x:35,y:20}, {x:27.5,y:20}, {x:17.5,y:12.5}, {x:5,y:12.5}, {x:7.5,y:9.5},
-                                    ], thickness:1.25, colour:style.marking} },
+                                    ], thickness:1.25, colour:style.marking.signal} },
                                     { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
                                         {x:5,y:12.5}, {x:7.5,y:15.5},
-                                    ], thickness:1.25, colour:style.marking} },
+                                    ], thickness:1.25, colour:style.marking.signal} },
                                     { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
                                         {x:27.5,y:20}, {x:17.5,y:27.5}, {x:5,y:27.5}, {x:7.5,y:30.5},
-                                    ], thickness:1.25, colour:style.marking} },
+                                    ], thickness:1.25, colour:style.marking.signal} },
                                     { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
                                         {x:5,y:27.5}, {x:7.5,y:24.5},
-                                    ], thickness:1.25, colour:style.marking} },
+                                    ], thickness:1.25, colour:style.marking.signal} },
                         
                         
                                     {type:'connectionNode_signal', name:'input', data:{ 
-                                        type:0, x:40, y:15, width:3, height:10, 
-                                        style:{ dim:style.connectionNode_signal_colour.dim, glow:style.connectionNode_signal_colour.glow, },
+                                        x:40, y:15, width:5, height:10, 
+                                        style:{ 
+                                            dim:style.connectionNode.signal.dim, 
+                                            glow:style.connectionNode.signal.glow,
+                                            cable_dim:style.connectionCable.signal.dim,
+                                            cable_glow:style.connectionCable.signal.glow,
+                                        },
                                         onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
                                     }},
-                                    {type:'connectionNode_signal', name:'output_1', data:{ type:1, x:-3, y:7.5, width:3, height:10, isAudioOutput:true, style:{ dim:style.connectionNode_signal_colour.dim, glow:style.connectionNode_signal_colour.glow, }}},
-                                    {type:'connectionNode_signal', name:'output_2', data:{ type:1, x:-3, y:22.5, width:3, height:10, isAudioOutput:true, style:{ dim:style.connectionNode_signal_colour.dim, glow:style.connectionNode_signal_colour.glow, }}},
+                                    {type:'connectionNode_signal', name:'output_1', data:{ 
+                                        x:-5, y:7.5, width:5, height:10, 
+                                        style:{ 
+                                            dim:style.connectionNode.signal.dim, 
+                                            glow:style.connectionNode.signal.glow, 
+                                            cable_dim:style.connectionCable.signal.dim, 
+                                            cable_glow:style.connectionCable.signal.glow 
+                                        }
+                                    }},
+                                    {type:'connectionNode_signal', name:'output_2', data:{
+                                        x:-5, y:22.5, width:5, height:10, 
+                                        style:{ 
+                                            dim:style.connectionNode.signal.dim, 
+                                            glow:style.connectionNode.signal.glow, 
+                                            cable_dim:style.connectionCable.signal.dim, 
+                                            cable_glow:style.connectionCable.signal.glow 
+                                        }
+                                    }},
                                 ]
                             };
-                        
+                            //add bumpers
                             for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
                                 if(c == shape.length){c = 0;}
                         
@@ -39799,10 +39862,6 @@
                             helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_signal/'
                         };
                         this.duplicator_voltage = function(x,y,a){
-                            var style = {
-                                background:{r:70/255,g:70/255,b:70/255,a:1},
-                                markings:{r:150/255,g:150/255,b:150/255,a:1},
-                            };
                             var shape = [
                                 {x:0,y:0},
                                 {x:40,y:20},
@@ -39815,17 +39874,71 @@
                                 space:shape,
                                 elements:[
                                     { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                                    // {type:'image', name:'main', data:{width:45, height:40, url:'http://0.0.0.0:8000/images/units/beta/duplicator_voltage.png'}},
+                                    { type:'text', name:'label', data:{
+                                        x:12.5, y:37.5, 
+                                        width:3,height:3,
+                                        text:'voltage duplicator',
+                                        font:'AppleGaramond', 
+                                        printingMode:{widthCalculation:'absolute'},
+                                        colour:style.textColour}
+                                    },
                         
-                                    // {type:'connectionNode_voltage', name:'input', data:{ 
-                                    //     type:0, x:40, y:24, width:5, height:12, 
-                                    //     style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },
-                                    //     onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
-                                    // }},
-                                    // {type:'connectionNode_voltage', name:'output_1', data:{ type:1, x:0, y:8.5, width:5, height:12, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-                                    // {type:'connectionNode_voltage', name:'output_2', data:{ type:1, x:0, y:23, width:5, height:12, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
+                                        {x:35,y:30}, {x:20,y:30}, {x:15,y:28.5}, {x:5,y:28.5}, {x:7.5,y:25.5},
+                                    ], thickness:1.25, colour:style.marking.voltage} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
+                                        {x:25,y:30}, {x:15,y:14}, {x:5,y:14}, {x:7.5,y:11},
+                                    ], thickness:1.25, colour:style.marking.voltage} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
+                                        {x:5,y:14}, {x:7.5,y:17},
+                                    ], thickness:1.25, colour:style.marking.voltage} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
+                                        {x:5,y:28.5}, {x:7.5,y:31.5},
+                                    ], thickness:1.25, colour:style.marking.voltage} },
+                        
+                                    {type:'connectionNode_signal', name:'input', data:{ 
+                                        x:40, y:23.75, width:5, height:12.5, 
+                                        style:{ 
+                                            dim:style.connectionNode.voltage.dim, 
+                                            glow:style.connectionNode.voltage.glow, 
+                                            cable_dim:style.connectionCable.voltage.dim, 
+                                            cable_glow:style.connectionCable.voltage.glow,
+                                        },
+                                        onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
+                                    }},
+                                    {type:'connectionNode_signal', name:'output_1', data:{ 
+                                        x:-5, y:7.5, width:5, height:12.5, 
+                                        style:{ 
+                                            dim:style.connectionNode.voltage.dim, 
+                                            glow:style.connectionNode.voltage.glow, 
+                                            cable_dim:style.connectionCable.voltage.dim, 
+                                            cable_glow:style.connectionCable.voltage.glow 
+                                        }
+                                    }},
+                                    {type:'connectionNode_signal', name:'output_2', data:{ 
+                                        x:-5, y:22.5, width:5, height:12.5, 
+                                        style:{ 
+                                            dim:style.connectionNode.voltage.dim, 
+                                            glow:style.connectionNode.voltage.glow, 
+                                            cable_dim:style.connectionCable.voltage.dim, 
+                                            cable_glow:style.connectionCable.voltage.glow 
+                                        }
+                                    }},
                                 ]
                             };
+                            //add bumpers
+                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                                if(c == shape.length){c = 0;}
+                        
+                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                        
+                                design.elements.push( {type:'pathWithRoundJointsAndEnds', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                                ], thickness:2.5, colour:style.bumper }} );
+                            }
+                        
+                        
                         
                             //main object
                                 var object = _canvas_.interface.unit.builder(this.ruler,design);
@@ -39838,53 +39951,109 @@
                             category:'misc',
                             helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_voltage/'
                         };
-                        // this.duplicator_audio = function(x,y,a){
-                        //     var style = {
-                        //         background:{r:70/255,g:70/255,b:70/255,a:1},
-                        //         markings:{r:150/255,g:150/255,b:150/255,a:1},
-                        //     };
-                        //     var shape = [
-                        //         {x:3.5,y:10},
-                        //         {x:6.5,y:2},
-                        //         {x:13,y:2},
-                        //         {x:42,y:9.5},
-                        //         {x:42,y:30.5},
-                        //         {x:13,y:38},
-                        //         {x:6.5,y:38},
-                        //         {x:3.5,y:30},
-                        //         {x:2,y:20},
-                        //     ];
-                        //     var design = {
-                        //         name:'duplicator_audio',
-                        //         x:x, y:y, angle:a,
-                        //         space:shape,
-                        //         elements:[
-                        //             {type:'image', name:'main', data:{width:45, height:40, url:'http://0.0.0.0:8000/images/units/beta/duplicator_audio.png'}},
+                        this.duplicator_audio = function(x,y,a){
+                            var shape = [
+                                {x:5,y:50},
+                                {x:15,y:50},
+                                {x:55,y:40},
+                                {x:55,y:10},
+                                {x:15,y:0},
+                                {x:5,y:0},
                         
-                        //             {type:'connectionNode_audio', name:'input', data:{ 
-                        //                 type:0, x:40, y:12.5, width:5, height:16, 
-                        //                 style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },
-                        //             }},
-                        //             {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:2.5, y:5, width:5, height:12, angle:0.2, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-                        //             {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:0, y:23, width:5, height:12, angle:-0.2, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-                        //         ]
-                        //     };
+                                {x:3,y:5},
+                                {x:0.75,y:15},
+                                {x:0,y:25},
+                                {x:0.75,y:35},
+                                {x:3,y:45},
+                            ];
+                            var design = {
+                                name:'duplicator_audio',
+                                x:x, y:y, angle:a,
+                                space:shape,
+                                elements:[
+                                    {type:'connectionNode_audio', name:'input', data:{ 
+                                        x:55, y:17.5, width:5, height:15, 
+                                        style:{ 
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow,
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        },
+                                    }},
+                                    {type:'connectionNode_audio', name:'output_1', data:{ 
+                                        x:-2.5, y:7.5, width:5, height:15, angle:0.15, isAudioOutput:true, 
+                                        style:{ 
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow 
+                                        }
+                                    }},
+                                    {type:'connectionNode_audio', name:'output_2', data:{ 
+                                        x:-4.75, y:27.5, width:5, height:15, angle:-0.15, isAudioOutput:true, 
+                                        style:{ 
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow 
+                                        }
+                                    }},
                         
-                        //     //main object
-                        //         var object = _canvas_.interface.unit.builder(this.ruler,design);
+                                    { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
                         
-                        //     //circuitry
-                        //         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                        //         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
+                                        {x:50,y:25}, {x:5,y:34}, {x:7,y:30}, 
+                                    ], thickness:1.25, colour:style.marking.audio} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
+                                        {x:5,y:34}, {x:8.5,y:37}, 
+                                    ], thickness:1.25, colour:style.marking.audio} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
+                                        {x:50,y:25}, {x:5,y:16}, {x:7,y:20},
+                                    ], thickness:1.25, colour:style.marking.audio} },
+                                    { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
+                                        {x:5,y:16}, {x:8.5,y:13}, 
+                                    ], thickness:1.25, colour:style.marking.audio} },
+                        
+                                    { type:'text', name:'label', data:{
+                                        x:30.5, y:43.5, 
+                                        width:3,height:3,
+                                        angle:-0.25,
+                                        text:'audio duplicator',
+                                        font:'AppleGaramond', 
+                                        printingMode:{widthCalculation:'absolute'},
+                                        colour:style.textColour}
+                                    },
+                                ]
+                            };
+                            //add bumpers
+                            for(var a = shape.length-1, b=0, c=1; b < 6; a=b, b++, c++){
+                                if(c == shape.length){c = 0;}
+                        
+                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                        
+                                design.elements.push( {type:'pathWithRoundJointsAndEnds', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                                ], thickness:2.5, colour:style.bumper }} );
+                            }
+                        
+                        
                             
-                        //     return object;
-                        // };
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
                         
-                        // this.duplicator_audio.metadata = {
-                        //     name:'Audio Duplicator',
-                        //     category:'misc',
-                        //     helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
-                        // };
+                            //circuitry
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                            
+                            return object;
+                        };
+                        
+                        this.duplicator_audio.metadata = {
+                            name:'Audio Duplicator',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
+                        };
                         this.ruler = function(x,y,a){
                             var style = {
                                 background:{r:200/255,g:200/255,b:200/255,a:1},
@@ -39993,7 +40162,57 @@
                             tools:{ printingName:'Tools' },
                             misc:{ printingName:'Miscellaneous' },
                         };
-
+                        
+                        var style = {
+                            background:{r:70/255,g:70/255,b:70/255,a:1},
+                            bumper:{r:0.125,g:0.125,b:0.125,a:1},
+                            textColour:{r:0.7,g:0.7,b:0.7,a:1},
+                        
+                            marking:{
+                                default:{r:235/255,g:98/255,b:61/255,a:1},
+                                signal:{r:235/255,g:98/255,b:61/255,a:1},
+                                voltage:{r:170/255,g:251/255,b:89/255,a:1},
+                                data:{r:114/255,g:176/255,b:248/255,a:1},
+                                audio:{r:243/255,g:173/255,b:61/255,a:1},
+                            },
+                            connectionNode:{
+                                signal:{
+                                    dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                },
+                                voltage:{
+                                    dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                },
+                                data:{
+                                    dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                },
+                                audio:{
+                                    dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                },
+                            },
+                            connectionCable:{
+                                signal:{
+                                    dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                },
+                                voltage:{
+                                    dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                },
+                                data:{
+                                    dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                },
+                                audio:{
+                                    dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                },
+                            },
+                        };
+                        var bumperCoverage = 5;
                     };
                 };
                 //a design object for the menubar options and their respective dropdown menu items

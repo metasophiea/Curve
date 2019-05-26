@@ -1,47 +1,103 @@
-// this.duplicator_audio = function(x,y,a){
-//     var style = {
-//         background:{r:70/255,g:70/255,b:70/255,a:1},
-//         markings:{r:150/255,g:150/255,b:150/255,a:1},
-//     };
-//     var shape = [
-//         {x:3.5,y:10},
-//         {x:6.5,y:2},
-//         {x:13,y:2},
-//         {x:42,y:9.5},
-//         {x:42,y:30.5},
-//         {x:13,y:38},
-//         {x:6.5,y:38},
-//         {x:3.5,y:30},
-//         {x:2,y:20},
-//     ];
-//     var design = {
-//         name:'duplicator_audio',
-//         x:x, y:y, angle:a,
-//         space:shape,
-//         elements:[
-//             {type:'image', name:'main', data:{width:45, height:40, url:'http://0.0.0.0:8000/images/units/beta/duplicator_audio.png'}},
+this.duplicator_audio = function(x,y,a){
+    var shape = [
+        {x:5,y:50},
+        {x:15,y:50},
+        {x:55,y:40},
+        {x:55,y:10},
+        {x:15,y:0},
+        {x:5,y:0},
 
-//             {type:'connectionNode_audio', name:'input', data:{ 
-//                 type:0, x:40, y:12.5, width:5, height:16, 
-//                 style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },
-//             }},
-//             {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:2.5, y:5, width:5, height:12, angle:0.2, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-//             {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:0, y:23, width:5, height:12, angle:-0.2, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-//         ]
-//     };
+        {x:3,y:5},
+        {x:0.75,y:15},
+        {x:0,y:25},
+        {x:0.75,y:35},
+        {x:3,y:45},
+    ];
+    var design = {
+        name:'duplicator_audio',
+        x:x, y:y, angle:a,
+        space:shape,
+        elements:[
+            {type:'connectionNode_audio', name:'input', data:{ 
+                x:55, y:17.5, width:5, height:15, 
+                style:{ 
+                    dim:style.connectionNode.audio.dim, 
+                    glow:style.connectionNode.audio.glow,
+                    cable_dim:style.connectionCable.audio.dim, 
+                    cable_glow:style.connectionCable.audio.glow,
+                },
+            }},
+            {type:'connectionNode_audio', name:'output_1', data:{ 
+                x:-2.5, y:7.5, width:5, height:15, angle:0.15, isAudioOutput:true, 
+                style:{ 
+                    dim:style.connectionNode.audio.dim, 
+                    glow:style.connectionNode.audio.glow, 
+                    cable_dim:style.connectionCable.audio.dim, 
+                    cable_glow:style.connectionCable.audio.glow 
+                }
+            }},
+            {type:'connectionNode_audio', name:'output_2', data:{ 
+                x:-4.75, y:27.5, width:5, height:15, angle:-0.15, isAudioOutput:true, 
+                style:{ 
+                    dim:style.connectionNode.audio.dim, 
+                    glow:style.connectionNode.audio.glow, 
+                    cable_dim:style.connectionCable.audio.dim, 
+                    cable_glow:style.connectionCable.audio.glow 
+                }
+            }},
 
-//     //main object
-//         var object = _canvas_.interface.unit.builder(this.ruler,design);
+            { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
 
-//     //circuitry
-//         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-//         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+            { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
+                {x:50,y:25}, {x:5,y:34}, {x:7,y:30}, 
+            ], thickness:1.25, colour:style.marking.audio} },
+            { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
+                {x:5,y:34}, {x:8.5,y:37}, 
+            ], thickness:1.25, colour:style.marking.audio} },
+            { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
+                {x:50,y:25}, {x:5,y:16}, {x:7,y:20},
+            ], thickness:1.25, colour:style.marking.audio} },
+            { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
+                {x:5,y:16}, {x:8.5,y:13}, 
+            ], thickness:1.25, colour:style.marking.audio} },
+
+            { type:'text', name:'label', data:{
+                x:30.5, y:43.5, 
+                width:3,height:3,
+                angle:-0.25,
+                text:'audio duplicator',
+                font:'AppleGaramond', 
+                printingMode:{widthCalculation:'absolute'},
+                colour:style.textColour}
+            },
+        ]
+    };
+    //add bumpers
+    for(var a = shape.length-1, b=0, c=1; b < 6; a=b, b++, c++){
+        if(c == shape.length){c = 0;}
+
+        var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+        var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+
+        design.elements.push( {type:'pathWithRoundJointsAndEnds', name:'bumper_'+b, data:{ pointsAsXYArray:[
+            { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+        ], thickness:2.5, colour:style.bumper }} );
+    }
+
+
     
-//     return object;
-// };
+    //main object
+        var object = _canvas_.interface.unit.builder(this.ruler,design);
 
-// this.duplicator_audio.metadata = {
-//     name:'Audio Duplicator',
-//     category:'misc',
-//     helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
-// };
+    //circuitry
+        object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+        object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+    
+    return object;
+};
+
+this.duplicator_audio.metadata = {
+    name:'Audio Duplicator',
+    category:'misc',
+    helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
+};

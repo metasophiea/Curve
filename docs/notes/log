@@ -1,4 +1,27 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-05-26
+  - added the audio duplicator unit
+  - finalized on all the duplicator units
+
+  bugs
+  - there's something up with mouse selection of units
+  - core's callback section is totally broken, yet somehow the rest of the
+    system still works
+
+  notes
+  - I don't know what I did with core shapes' callbacks. It seems like it only
+    activates the callbacks for 'onmouseenter' and 'onmouseleave'. But it will
+    perform the callbacks for the system at large, and then layer two actually
+    performs the callbacks for any of the shapes
+    ..I think it's something to do with not wanting every shape's callback
+    activated, but only the topmost shape...there needs to be a better way to
+    achieve this, and get the functionality with just the core layer
+
+
+2019-05-24
+  - added the voltage and data duplicator units
+
+
 2019-05-22
   - emergency fixes to units that used the checkbox_rectangle (as they were
     still calling it the checkbox_rect)

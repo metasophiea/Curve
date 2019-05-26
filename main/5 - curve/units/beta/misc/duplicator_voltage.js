@@ -1,8 +1,4 @@
 this.duplicator_voltage = function(x,y,a){
-    var style = {
-        background:{r:70/255,g:70/255,b:70/255,a:1},
-        markings:{r:150/255,g:150/255,b:150/255,a:1},
-    };
     var shape = [
         {x:0,y:0},
         {x:40,y:20},
@@ -15,17 +11,71 @@ this.duplicator_voltage = function(x,y,a){
         space:shape,
         elements:[
             { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-            // {type:'image', name:'main', data:{width:45, height:40, url:'http://0.0.0.0:8000/images/units/beta/duplicator_voltage.png'}},
+            { type:'text', name:'label', data:{
+                x:12.5, y:37.5, 
+                width:3,height:3,
+                text:'voltage duplicator',
+                font:'AppleGaramond', 
+                printingMode:{widthCalculation:'absolute'},
+                colour:style.textColour}
+            },
 
-            // {type:'connectionNode_voltage', name:'input', data:{ 
-            //     type:0, x:40, y:24, width:5, height:12, 
-            //     style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },
-            //     onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
-            // }},
-            // {type:'connectionNode_voltage', name:'output_1', data:{ type:1, x:0, y:8.5, width:5, height:12, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
-            // {type:'connectionNode_voltage', name:'output_2', data:{ type:1, x:0, y:23, width:5, height:12, isAudioOutput:true, style:{ dim:{r:1,g:0,b:0,a:0}, glow:{r:1,g:1,b:1,a:0.5}, },}},
+            { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
+                {x:35,y:30}, {x:20,y:30}, {x:15,y:28.5}, {x:5,y:28.5}, {x:7.5,y:25.5},
+            ], thickness:1.25, colour:style.marking.voltage} },
+            { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
+                {x:25,y:30}, {x:15,y:14}, {x:5,y:14}, {x:7.5,y:11},
+            ], thickness:1.25, colour:style.marking.voltage} },
+            { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
+                {x:5,y:14}, {x:7.5,y:17},
+            ], thickness:1.25, colour:style.marking.voltage} },
+            { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
+                {x:5,y:28.5}, {x:7.5,y:31.5},
+            ], thickness:1.25, colour:style.marking.voltage} },
+
+            {type:'connectionNode_signal', name:'input', data:{ 
+                x:40, y:23.75, width:5, height:12.5, 
+                style:{ 
+                    dim:style.connectionNode.voltage.dim, 
+                    glow:style.connectionNode.voltage.glow, 
+                    cable_dim:style.connectionCable.voltage.dim, 
+                    cable_glow:style.connectionCable.voltage.glow,
+                },
+                onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
+            }},
+            {type:'connectionNode_signal', name:'output_1', data:{ 
+                x:-5, y:7.5, width:5, height:12.5, 
+                style:{ 
+                    dim:style.connectionNode.voltage.dim, 
+                    glow:style.connectionNode.voltage.glow, 
+                    cable_dim:style.connectionCable.voltage.dim, 
+                    cable_glow:style.connectionCable.voltage.glow 
+                }
+            }},
+            {type:'connectionNode_signal', name:'output_2', data:{ 
+                x:-5, y:22.5, width:5, height:12.5, 
+                style:{ 
+                    dim:style.connectionNode.voltage.dim, 
+                    glow:style.connectionNode.voltage.glow, 
+                    cable_dim:style.connectionCable.voltage.dim, 
+                    cable_glow:style.connectionCable.voltage.glow 
+                }
+            }},
         ]
     };
+    //add bumpers
+    for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+        if(c == shape.length){c = 0;}
+
+        var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+        var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+
+        design.elements.push( {type:'pathWithRoundJointsAndEnds', name:'bumper_'+b, data:{ pointsAsXYArray:[
+            { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+        ], thickness:2.5, colour:style.bumper }} );
+    }
+
+
 
     //main object
         var object = _canvas_.interface.unit.builder(this.ruler,design);

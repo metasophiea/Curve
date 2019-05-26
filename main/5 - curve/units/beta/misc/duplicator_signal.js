@@ -1,15 +1,4 @@
 this.duplicator_signal = function(x,y,a){
-    var style = {
-        background:{r:70/255,g:70/255,b:70/255,a:1},
-        marking:{r:235/255,g:98/255,b:61/255,a:1},
-        bumper:{r:0.125,g:0.125,b:0.125,a:1},
-        textColour:{r:0.7,g:0.7,b:0.7,a:1},
-        connectionNode_signal_colour:{
-            dim:{r:235/255,g:98/255,b:61/255,a:1},
-            glow:{r:237/255,g:154/255,b:132/255,a:1},
-        },
-    };
-    var bumperCoverage = 5;
     var shape = [
         {x:0,y:0},
         {x:40,y:10},
@@ -23,7 +12,7 @@ this.duplicator_signal = function(x,y,a){
         elements:[
             { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
             { type:'text', name:'label', data:{
-                x:16, y:34, 
+                x:15.75, y:33.5, 
                 width:3,height:3,
                 angle:-0.24497866312686423,
                 text:'signal duplicator',
@@ -34,28 +23,49 @@ this.duplicator_signal = function(x,y,a){
 
             { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
                 {x:35,y:20}, {x:27.5,y:20}, {x:17.5,y:12.5}, {x:5,y:12.5}, {x:7.5,y:9.5},
-            ], thickness:1.25, colour:style.marking} },
+            ], thickness:1.25, colour:style.marking.signal} },
             { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
                 {x:5,y:12.5}, {x:7.5,y:15.5},
-            ], thickness:1.25, colour:style.marking} },
+            ], thickness:1.25, colour:style.marking.signal} },
             { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
                 {x:27.5,y:20}, {x:17.5,y:27.5}, {x:5,y:27.5}, {x:7.5,y:30.5},
-            ], thickness:1.25, colour:style.marking} },
+            ], thickness:1.25, colour:style.marking.signal} },
             { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
                 {x:5,y:27.5}, {x:7.5,y:24.5},
-            ], thickness:1.25, colour:style.marking} },
+            ], thickness:1.25, colour:style.marking.signal} },
 
 
             {type:'connectionNode_signal', name:'input', data:{ 
-                type:0, x:40, y:15, width:3, height:10, 
-                style:{ dim:style.connectionNode_signal_colour.dim, glow:style.connectionNode_signal_colour.glow, },
+                x:40, y:15, width:5, height:10, 
+                style:{ 
+                    dim:style.connectionNode.signal.dim, 
+                    glow:style.connectionNode.signal.glow,
+                    cable_dim:style.connectionCable.signal.dim,
+                    cable_glow:style.connectionCable.signal.glow,
+                },
                 onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
             }},
-            {type:'connectionNode_signal', name:'output_1', data:{ type:1, x:-3, y:7.5, width:3, height:10, isAudioOutput:true, style:{ dim:style.connectionNode_signal_colour.dim, glow:style.connectionNode_signal_colour.glow, }}},
-            {type:'connectionNode_signal', name:'output_2', data:{ type:1, x:-3, y:22.5, width:3, height:10, isAudioOutput:true, style:{ dim:style.connectionNode_signal_colour.dim, glow:style.connectionNode_signal_colour.glow, }}},
+            {type:'connectionNode_signal', name:'output_1', data:{ 
+                x:-5, y:7.5, width:5, height:10, 
+                style:{ 
+                    dim:style.connectionNode.signal.dim, 
+                    glow:style.connectionNode.signal.glow, 
+                    cable_dim:style.connectionCable.signal.dim, 
+                    cable_glow:style.connectionCable.signal.glow 
+                }
+            }},
+            {type:'connectionNode_signal', name:'output_2', data:{
+                x:-5, y:22.5, width:5, height:10, 
+                style:{ 
+                    dim:style.connectionNode.signal.dim, 
+                    glow:style.connectionNode.signal.glow, 
+                    cable_dim:style.connectionCable.signal.dim, 
+                    cable_glow:style.connectionCable.signal.glow 
+                }
+            }},
         ]
     };
-
+    //add bumpers
     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
         if(c == shape.length){c = 0;}
 

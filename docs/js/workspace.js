@@ -20885,6 +20885,7 @@
                             x:undefined, 
                             y:undefined, 
                             stopScrollActive:false,
+                            clickVisibility:false,
                         };
                     
                         //adapter
@@ -20988,6 +20989,7 @@
                                 //just incase; make sure that scrolling is allowed again when 'stopMouseScroll' is turned off
                                 if(!bool){ document.body.style.overflow = ''; }
                             };
+                            this.clickVisibility = function(a){ if(a==undefined){return mouseData.clickVisibility;} mouseData.clickVisibility=a; };
                     };
                     this.viewport.refresh();
                     
@@ -20997,22 +20999,19 @@
                             'onkeydown', 'onkeyup',
                         ];
                         function gatherDetails(event,callback,count){
-                            var shapes = undefined;
-                            if(count > 1){
-                                //get the shapes under this point that have this callback, in order of front to back
-                                shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a[callback]!=undefined);
-                            }
                             var point = undefined;
-                            if(count > 2){
+                            if(count > 0){
                                 //calculate the workspace point
                                 point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                             }
-                    
+                            var shapes = undefined;
+                            if(count > 3){
+                                //get the shapes under this point that have this callback, in order of front to back
+                                shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a[callback]!=undefined);
+                            }
+                     
                             return {shapes:shapes, point:point};
                         }
-                    
-                        var clickVisibility = false;
-                        this.clickVisibility = function(a){ if(a==undefined){return clickVisibility;} clickVisibility=a; };
                     
                         //default
                             for(var a = 0; a < callbacks.length; a++){
@@ -21024,11 +21023,11 @@
                                         //generate rectified XY position
                                             event.X = event.offsetX; event.Y = event.offsetY;
                     
-                                        //depending on how many arguments the  callback has, calculate more data for it
+                                        //depending on how many arguments the callback has, calculate more data for it
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                                 
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                     }
                                 }(callbacks[a]);
                             }
@@ -21063,11 +21062,11 @@
                                             //shapes only on shapeMouseoverList; run onmouseleave and remove from shapeMouseoverList
                                             var diff = _canvas_.library.math.getDifferenceOfArrays(shapeMouseoverList,shapes);
                                             diff.b.forEach(function(a){
-                                                if(a.onmouseenter){a.onmouseenter( event, shapes, point );}
+                                                if(a.onmouseenter){a.onmouseenter( point.x, point.y, event, shapes );}
                                                 shapeMouseoverList.push(a);
                                             });
                                             diff.a.forEach(function(a){
-                                                if(a.onmouseleave){a.onmouseleave( event, shapes, point );}
+                                                if(a.onmouseleave){a.onmouseleave( point.x, point.y, event, shapes );}
                                                 shapeMouseoverList.splice(shapeMouseoverList.indexOf(a),1);
                                             });
                     
@@ -21081,7 +21080,7 @@
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                                 
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                 };
                     
                             //onkeydown / onkeyup
@@ -21112,7 +21111,7 @@
                                             //activate core's callback, providing the point, original event, and shapes
                                                 var p = core.viewport.mousePosition();
                                                 event.X = p.x; event.Y = p.y;
-                                                core.callback[callback]( event, shapes, point );
+                                                core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                         }
                                     }(tmp[a]);
                                 }
@@ -21125,7 +21124,7 @@
                                         event.X = event.offsetX; event.Y = event.offsetY;
                     
                                     //dev functions
-                                        if(clickVisibility){ core.render.drawDot(event.X,event.Y); }
+                                        if(core.viewport.clickVisibility()){ core.render.drawDot(event.X,event.Y); }
                     
                                     var callback = 'onmousedown';
                                     
@@ -21140,7 +21139,7 @@
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                             
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                 };
                                 _canvas_.onmouseup = function(event){
                                     //generate rectified XY position
@@ -21151,6 +21150,8 @@
                                     //for the shapes under the mouse that are also on the shapeMouseclickList, activate their "onclick" callback
                                         var shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onclick!=undefined);
                                         shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ 
+                                            //if core doesn't have this callback set up, just bail
+                                                if( !core.callback[callback] ){return;}
                     
                                             //depending on how many arguments the  callback has, calculate more data for it
                                                 var data = gatherDetails(event,callback,core.callback[callback].length);
@@ -21167,7 +21168,7 @@
                                             var data = gatherDetails(event,callback,core.callback[callback].length);
                             
                                         //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( event, data.shapes, data.point );
+                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
                                 };
                     };
                 };
@@ -21215,8 +21216,8 @@
                     
                     //connect callbacks to mouse function lists
                         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(function(callback){
-                            _canvas_.core.callback[callback] = function(event,shapes){
-                                if(shapes.length > 0){ shapes[0][callback](event,shapes); }
+                            _canvas_.core.callback[callback] = function(x,y,event,shapes){
+                                if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
                                 else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
                             }
                         });
