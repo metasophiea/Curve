@@ -110,14 +110,14 @@ this.sequencer = function(
             //interaction pane back
                 var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:1,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_back);
-                interactionPlane_back.onwheel = function(event){};
+                interactionPlane_back.onwheel = function(){};
             //signal block area
                 var signalPane = interfacePart.builder('group','signalPane');
                 workarea.append(signalPane);
             //interaction pane front
                 var interactionPlane_front = interfacePart.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_front);
-                interactionPlane_front.onwheel = function(event){};
+                interactionPlane_front.onwheel = function(){};
     //internal
         object.__calculationAngle = angle;
         function currentMousePosition(event){
@@ -383,19 +383,19 @@ this.sequencer = function(
                 };
 
             //add interactions to graphical signal block
-                newSignalBlock.ondblclick = function(event){
+                newSignalBlock.ondblclick = function(){
                     if(!_canvas_.system.keyboard.pressedKeys.control && !_canvas_.system.keyboard.pressedKeys.command){return;}
                     for(var a = 0; a < signals.selectedSignals.length; a++){
                         signals.selectedSignals[a].strength(signals.defaultStrength);
                         signals.signalRegistry.update(parseInt(signals.selectedSignals[a].name), {strength: signals.defaultStrength});
                     }
                 };
-                newSignalBlock.body.onmousedown = function(event){
+                newSignalBlock.body.onmousedown = function(x,y,event){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                         if(_canvas_.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(event); return;
+                            interactionPlane_back.onmousedown(x,y,event); return;
                         }
 
                     //if the shift key is not pressed and this signal is not already selected; deselect everything
@@ -481,7 +481,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.body.onmousemove = function(event){
+                newSignalBlock.body.onmousemove = function(){
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'default';
@@ -490,29 +490,29 @@ this.sequencer = function(
 
                     _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.body.onkeydown = function(event){
+                newSignalBlock.body.onkeydown = function(){
                     if(!interactable){return;}
 
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                     if(pressedKeys.alt){ _canvas_.core.viewport.cursor('copy'); }
                 };
-                newSignalBlock.body.onkeyup = function(event){
+                newSignalBlock.body.onkeyup = function(){
                     if(!interactable){return;}
 
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
                     if(!(pressedKeys.alt)){ _canvas_.core.viewport.cursor('default'); }
                 };
-                newSignalBlock.leftHandle.onmousedown = function(event){
+                newSignalBlock.leftHandle.onmousedown = function(x,y,event){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                         if(_canvas_.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(event); return;
+                            interactionPlane_back.onmousedown(x,y,event); return;
                         }
                         
                     //cloning situation
                         if(_canvas_.system.keyboard.pressedKeys.alt){
-                            newSignalBlock.body.onmousedown(event);
+                            newSignalBlock.body.onmousedown(x,y,event);
                             return;
                         }
 
@@ -557,7 +557,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.leftHandle.onmousemove = function(event){
+                newSignalBlock.leftHandle.onmousemove = function(){
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'col-resize';
@@ -566,18 +566,18 @@ this.sequencer = function(
 
                     _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.leftHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
-                newSignalBlock.rightHandle.onmousedown = function(event,ignoreCloning=false){
+                newSignalBlock.leftHandle.onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
+                newSignalBlock.rightHandle.onmousedown = function(x,y,event,ignoreCloning=false){
                     if(!interactable){return;}
 
                     //if spacebar is pressed; ignore all of this, and redirect to the interaction pane (for panning)
                         if(_canvas_.system.keyboard.pressedKeys.Space){
-                            interactionPlane_back.onmousedown(event); return;
+                            interactionPlane_back.onmousedown(x,y,event); return;
                         }
 
                     //cloning situation
                         if(!ignoreCloning && _canvas_.system.keyboard.pressedKeys.alt){
-                            newSignalBlock.body.onmousedown(event);
+                            newSignalBlock.body.onmousedown(x,y,event);
                             return;
                         }
 
@@ -617,7 +617,7 @@ this.sequencer = function(
                             }
                         );
                 };
-                newSignalBlock.rightHandle.onmousemove = function(event){
+                newSignalBlock.rightHandle.onmousemove = function(){
                     var pressedKeys = _canvas_.system.keyboard.pressedKeys;
 
                     var cursor = 'col-resize';
@@ -626,7 +626,7 @@ this.sequencer = function(
 
                     _canvas_.core.viewport.cursor( cursor );
                 };
-                newSignalBlock.rightHandle.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
+                newSignalBlock.rightHandle.onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
 
             return {id:newID, signalBlock:newSignalBlock};
         }
@@ -665,9 +665,9 @@ this.sequencer = function(
                 );
             };
 
-            newPlayhead.invisibleHandle.onmouseenter = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-            newPlayhead.invisibleHandle.onmousemove = function(x,y,event){_canvas_.core.viewport.cursor('col-resize');};
-            newPlayhead.invisibleHandle.onmouseleave = function(x,y,event){_canvas_.core.viewport.cursor('default');};
+            newPlayhead.invisibleHandle.onmouseenter = function(){_canvas_.core.viewport.cursor('col-resize');};
+            newPlayhead.invisibleHandle.onmousemove = function(){_canvas_.core.viewport.cursor('col-resize');};
+            newPlayhead.invisibleHandle.onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
 
             playhead.present = true;
 
@@ -833,7 +833,7 @@ this.sequencer = function(
             };
 
     //interaction
-        interactionPlane_back.onmousedown = function(event){
+        interactionPlane_back.onmousedown = function(x,y,event){ 
             if(!interactable){return;}
             
             var pressedKeys = _canvas_.system.keyboard.pressedKeys;
@@ -945,7 +945,7 @@ this.sequencer = function(
 
                 //select this new block, and direct the mouse-down to the right handle (for user lengthening)
                     temp.signalBlock.select();
-                    temp.signalBlock.rightHandle.onmousedown(event,true);
+                    temp.signalBlock.rightHandle.onmousedown(x,y,event,true);
             }else if(pressedKeys.Space){//pan
                 _canvas_.core.viewport.cursor('grabbing');
 
@@ -981,7 +981,7 @@ this.sequencer = function(
                     }
             }
         };
-        interactionPlane_back.onmousemove = function(event){
+        interactionPlane_back.onmousemove = function(){
             if(!interactable){return;}
 
             var pressedKeys = _canvas_.system.keyboard.pressedKeys;
@@ -989,7 +989,7 @@ this.sequencer = function(
             else if( pressedKeys.Space ){ _canvas_.core.viewport.cursor('grab'); }
             else{ _canvas_.core.viewport.cursor('default'); }
         };
-        interactionPlane_front.onkeydown = function(event){
+        interactionPlane_front.onkeydown = function(x,y,event){
             if(!interactable){return;}
 
             var pressedKeys = _canvas_.system.keyboard.pressedKeys;
@@ -1003,7 +1003,7 @@ this.sequencer = function(
                 }
             }
         };
-        interactionPlane_front.onkeyup = function(event){
+        interactionPlane_front.onkeyup = function(){
             if(!interactable){return;}
 
             _canvas_.core.viewport.cursor('default');

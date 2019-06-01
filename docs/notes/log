@@ -1,4 +1,89 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-06-1
+  - connectionNode now has argument to select which version of the cable you
+    want
+    
+
+2019-05-31
+  - updated pathExtrapolation so that the joints and caps don't have that
+    double-colouring issue. Tis good code now
+  - updated polygonToSubTriangles and unionPolygons to cover more of the input
+    and adhere to a more standard input type
+  - moved "pathWithRoundJointsAndEnds" and "loopedPath" shapes to the trash
+
+  notes
+  - the new polygon union function works, but its a bit slow
+
+
+2019-05-30
+  - replacement library.math.pathExtrapolation going well, currently there's
+      private
+          function calculateJointData
+          function path_to_rectangleSeries
+          function rectangleSeries_to_sourcePoly
+          function sourcePoly_to_polyWithRoundJointsAndEnds
+          function sourcePoly_to_polyWithFlatJoints
+          function sourcePoly_to_polyWithSharpJoints
+      public
+          path_to_rectangleSeries
+          path_to_poly
+          path_to_polyWithRoundJointsAndEnds
+          path_to_polyWithCornerJoints
+    needs better naming, but there's good functionality here
+
+  - redid library.math.pathExtrapolation again, now there's only one function
+    with a number of arguments
+      function(path,thickness,capType,joinType,loopPath,detail,sharpLimit)
+    everything is working pretty well, expect when a joint or cap is atop another
+    joint or cap and there's some level of transparency.
+  - changed the library, so that no-where can access the thirdparty functions.
+    Instead, one must use a number of interface functions is different places for
+    the same functionality. In this way, we can control access to that code
+    someone else has written, potentially allowing us to replace it without much
+    hassle.
+  - upgraded the path shape to be able to do all the things the other variations
+    of it can do. Also added warning messages to the other forms, that tell you
+    to use path
+  - upgraded the polygonWithOutline shape to have arguments with joint type
+    (and detail, and sharpness limit)
+
+  ideas
+  - perhaps the shape "rectangleWithOutline" should use a path outline instead
+    of the double rectangle thing is currently has..
+  
+
+2019-05-29
+  - fixed up math.detectOverlap.pointWithinPoly
+  - added PolyBool to the thirdparty library section
+  - began work on a replacement library.math.pathExtrapolation
+
+  Compilation Results
+  - core.js                           1408 kB  (100%)
+  - core.min.js                        392 kB  (27.85%)
+  - workspace.js                      2392 kB  (100%)
+  - workspace.min.js                   634 kB  (26.54%)
+  - curve.js                          2863 kB  (100%)
+  - curve.min.js                       816 kB  (28.50%)
+
+  bugs
+  - "pathWithRoundJointsAndEnds" is borked. Needs unborking.
+
+
+2019-05-28
+  - reworking core's callback system
+  - updated all systems to use this new callback system (not a whole lot 
+    different, just things need to prepend their argument lists with "x,y,")
+
+  bugs
+  - math.detectOverlap.pointWithinPoly is broken
+
+
+2019-05-27
+  - reworking core's callback system. New system has the ability to switch on
+    and off shape callbacks for each type of callback. Along with just
+    solidifying things
+
+
 2019-05-26
   - added the audio duplicator unit
   - finalized on all the duplicator units

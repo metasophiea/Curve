@@ -187,31 +187,31 @@
                                     //if the point is on a point of the poly; bail and return true
                                     if( point.x == points[a].x && point.y == points[a].y ){ return true; }
                         
-                                    //discover if point is on the same level (y) as the poly, if both these tests return the same result, it is not
-                                    if( (points[a].y > point.y) != (points[b].y > point.y) ){
+                                    //point must be on the same level of the line
+                                    if( (points[b].y >= point.y && points[a].y <= point.y) || (points[a].y >= point.y && points[b].y <= point.y) ){
                                         //discover if the point is on the far right of the line
                                         if( points[a].x < point.x && points[b].x < point.x ){
                                             inside = !inside;
                                         }else{
-                                            var X = points[a].x < points[b].x ? {big:points[a].x,little:points[b].x} : {big:points[b].x,little:points[a].x};
-                                            var Y = points[a].y < points[b].y ? {big:points[a].y,little:points[b].y} : {big:points[b].y,little:points[a].y};
-                                            var areaLocation = (point.x-X.big)/(X.little-X.big) + (point.y-Y.big)/(Y.little-Y.big);
+                                            //calculate what side of the line this point is
+                                                if( points[b].y > points[a].y && points[b].x > points[a].x ){
+                                                    var areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
+                                                }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
+                                                    var areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
+                                                }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
+                                                    var areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
+                                                }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
+                                                    var areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
+                                                }
                         
-                                            //is this point on the line (if so, bail and return true)
-                                            //if it's in the right side area; do the flip
-                                            if( areaLocation == 1 ){
-                                                return true;
-                                            }else if(areaLocation > 1){
-                                                inside = !inside;
-                                            }
+                                            //if its on the line, return true immediatly, if it's just above 1 do a flip
+                                                if( areaLocation == 1 ){
+                                                    return true;
+                                                }else if(areaLocation > 1){
+                                                    inside = !inside;
+                                                }
                                         }
                                     }
-                        
-                                    //old method (kinda magic)
-                                    // if(
-                                    //     ((points[a].y > point.y) != (points[b].y > point.y)) && 
-                                    //     (point.x < ((((points[b].x-points[a].x)*(point.y-points[a].y)) / (points[b].y-points[a].y)) + points[a].x))
-                                    // ){inside = !inside;}
                                 }
                                 return inside;
                             };
@@ -450,40 +450,57 @@
                                 return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
                         };
                         
-                        this.pathExtrapolation = new function(){
-                            function path_to_overlappingRectangleSeries(path,thickness){
-                                var jointData = [];
-                            
-                                //parse path
-                                    for(var a = 0; a < path.length/2; a++){
-                                        jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
-                                    }
-                            
-                                var outputPoints = [];
-                                for(var a = 1; a < jointData.length; a++){
-                                    var tmp = {
-                                        startPoint:jointData[a-1].point,
-                                        endPoint:jointData[a].point,
-                                        angle:_canvas_.library.math.getAngleOfTwoPoints( jointData[a-1].point, jointData[a].point ),
-                                    };
-                            
-                                    var left =  _canvas_.library.math.cartesianAngleAdjust(thickness, 0, Math.PI/2 + tmp.angle);
-                                    var right = _canvas_.library.math.cartesianAngleAdjust(-thickness, 0, Math.PI/2 + tmp.angle);
-                            
-                                    outputPoints.push(
-                                        tmp.startPoint.x+left.x,  tmp.startPoint.y+left.y,
-                                        tmp.startPoint.x+right.x, tmp.startPoint.y+right.y,
-                                        tmp.endPoint.x+left.x,    tmp.endPoint.y+left.y,
-                            
-                                        tmp.startPoint.x+right.x, tmp.startPoint.y+right.y,
-                                        tmp.endPoint.x+left.x,    tmp.endPoint.y+left.y,
-                                        tmp.endPoint.x+right.x,   tmp.endPoint.y+right.y,
-                                    );
-                                }
-                            
-                                return outputPoints;
+                        
+                        
+                        this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+                            if(inputFormat == 'flatArray'){
+                                var tmp = [];
+                                for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
+                                regions = [tmp];
                             }
-                            function path_to_rectangleSeries(path,thickness,returnExtraData=false){
+                        
+                            var holes = regions.reverse().map(region => region.length);
+                            holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
+                            holes.pop();
+                        
+                            return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+                        };
+                        this.unionPolygons = function(polygon1,polygon2){
+                            //martinez (not working)
+                            // for(var a = 0; a < polygon1.length; a++){
+                            //     polygon1[a].push( polygon1[a][0] );
+                            // }
+                            // for(var a = 0; a < polygon2.length; a++){
+                            //     polygon2[a].push( polygon2[a][0] );
+                            // }
+                        
+                            // var ans = _thirdparty.martinez.union(
+                            //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
+                            //     polygon2.map(region => region.map(item => [item.x,item.y])  )
+                            // );
+                            // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
+                        
+                            //PolyBool
+                            return _thirdparty.PolyBool.union(
+                                {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
+                                {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
+                            ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
+                        }
+                        this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
+                            function loopThisPath(path){
+                                var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
+                                var loopingPath = [];
+                            
+                                loopingPath = loopingPath.concat(joinPoint);
+                                for(var a = 2; a < path.length; a+=2){
+                                    loopingPath = loopingPath.concat( [path[a], path[a+1]] );
+                                }
+                                loopingPath = loopingPath.concat( [path[0], path[1]] );
+                                loopingPath = loopingPath.concat(joinPoint);
+                        
+                                return loopingPath;
+                            }
+                            function calculateJointData(path,thickness){
                                 var jointData = [];
                                 //parse path
                                     for(var a = 0; a < path.length/2; a++){
@@ -501,209 +518,213 @@
                                             if( jointData[a].departAngle != undefined && jointData[a].implementAngle != undefined ){
                                                 jointData[a].joiningAngle = jointData[a].departAngle - jointData[a].implementAngle + Math.PI;
                                                 while(jointData[a].joiningAngle < 0){jointData[a].joiningAngle += Math.PI*2;}
-                                                while(jointData[a].joiningAngle > Math.PI*2){jointData[a].joiningAngle -= Math.PI*2;} 
+                                                while(jointData[a].joiningAngle >= Math.PI*2){jointData[a].joiningAngle -= Math.PI*2;} 
                                                 jointData[a].wingAngle = jointData[a].implementAngle + jointData[a].joiningAngle/2 - Math.PI;
                                                 while(jointData[a].wingAngle < 0){jointData[a].wingAngle += Math.PI*2;}
                                                 while(jointData[a].wingAngle > Math.PI*2){jointData[a].wingAngle -= Math.PI*2;} 
-                                                jointData[a].wingWidth = thickness / Math.sin(jointData[a].joiningAngle/2); 
+                                                jointData[a].wingWidth = thickness / Math.sin(jointData[a].joiningAngle/2);
                                             }
                                     }
                         
-                                //generation of outline poly
-                                    var polygonOutline = [];
-                                    var reverseSide = [];
-                        
-                                    //starting end
-                                        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
-                                        var perpenR = {x:-perpenL.x, y:-perpenL.y};
-                                        polygonOutline.push( jointData[0].point.x + perpenL.x, jointData[0].point.y + perpenL.y );
-                                        polygonOutline.push( jointData[0].point.x + perpenR.x, jointData[0].point.y + perpenR.y );
-                                    //joints
-                                        for(var a = 1; a < jointData.length-1; a++){
-                                            var pushL = _canvas_.library.math.cartesianAngleAdjust(jointData[a].wingWidth, 0, jointData[a].wingAngle);
-                                            var pushR = {x:-pushL.x, y:-pushL.y};
-                        
-                                            var last_perpenL = perpenL;
-                                            var last_perpenR = perpenR;
-                                            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
-                                            var perpenR = {x:-perpenL.x, y:-perpenL.y};
-                        
-                                            if(jointData[a].joiningAngle == Math.PI){
-                                                polygonOutline.push( jointData[a].point.x + last_perpenR.x, jointData[a].point.y + last_perpenR.y );
-                                                reverseSide.unshift( jointData[a].point.x + last_perpenL.x, jointData[a].point.y + last_perpenL.y );
-                                            }else if(jointData[a].joiningAngle < Math.PI){
-                                                polygonOutline.push( jointData[a].point.x + last_perpenR.x, jointData[a].point.y + last_perpenR.y );
-                                                polygonOutline.push( jointData[a].point.x, jointData[a].point.y );
-                                                polygonOutline.push( jointData[a].point.x + perpenR.x, jointData[a].point.y + perpenR.y );
-                                                reverseSide.unshift( jointData[a].point.x + pushL.x, jointData[a].point.y + pushL.y );
-                                            }else if(jointData[a].joiningAngle > Math.PI){
-                                                polygonOutline.push( jointData[a].point.x + pushR.x, jointData[a].point.y + pushR.y );
-                                                reverseSide.unshift( jointData[a].point.x + last_perpenL.x, jointData[a].point.y + last_perpenL.y );
-                                                reverseSide.unshift( jointData[a].point.x, jointData[a].point.y );
-                                                reverseSide.unshift( jointData[a].point.x + perpenL.x, jointData[a].point.y + perpenL.y );
-                                            }
-                                        }
-                                    //finishding end
-                                        polygonOutline.push( jointData[jointData.length-1].point.x + perpenR.x, jointData[jointData.length-1].point.y + perpenR.y );
-                                        polygonOutline.push( jointData[jointData.length-1].point.x + perpenL.x, jointData[jointData.length-1].point.y + perpenL.y );
-                        
-                                    //complete the polygon by adding the reverse side
-                                        polygonOutline = polygonOutline.concat(reverseSide);
-                        
-                                //return requested data
-                                    if(returnExtraData){
-                                        return { 
-                                            jointData:jointData, 
-                                            polygonOutline:polygonOutline,
-                                            triangles:_canvas_.library.thirdparty.earcut(polygonOutline),
-                                        };
-                                    }else{
-                                        return _canvas_.library.thirdparty.earcut(polygonOutline);
-                                    }
+                                return jointData;
                             }
-                        
-                            this.pathToRectangleSeriesGenerator = function(path,thickness){ return path_to_rectangleSeries(path,thickness); };
-                            this.pathToOverlappingRectangleSeriesGenerator = function(path,thickness){ return path_to_overlappingRectangleSeries(path,thickness); };
-                            this.pathToPolygonWithRoundJointsAndEndsGenerator = function(path,thickness,detail){
-                                var data = path_to_rectangleSeries(path,thickness,true);
-                                var outputTriangles = data.triangles;
-                        
-                                //add round ends
-                                    //top
-                                        for(var a = 0; a < detail+1; a++){
-                                            outputTriangles.push( data.jointData[0].point.x, data.jointData[0].point.y );
-                                            var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[0].departAngle + Math.PI/2 + (a/(detail+1))*(Math.PI) );
-                                            outputTriangles.push( data.jointData[0].point.x + p.x, data.jointData[0].point.y + p.y );
-                                            var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[0].departAngle + Math.PI/2 + ((a+1)/(detail+1))*(Math.PI) );
-                                            outputTriangles.push( data.jointData[0].point.x + p.x, data.jointData[0].point.y + p.y );
-                                        }
-                                    //bottom
-                                        for(var a = 0; a < detail+1; a++){
-                                            outputTriangles.push( data.jointData[data.jointData.length-1].point.x, data.jointData[data.jointData.length-1].point.y );
-                                            var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[data.jointData.length-1].implementAngle - Math.PI/2 + (a/(detail+1))*(Math.PI) );
-                                            outputTriangles.push( data.jointData[data.jointData.length-1].point.x + p.x, data.jointData[data.jointData.length-1].point.y + p.y );
-                                            var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[data.jointData.length-1].implementAngle - Math.PI/2 + ((a+1)/(detail+1))*(Math.PI) );
-                                            outputTriangles.push( data.jointData[data.jointData.length-1].point.x + p.x, data.jointData[data.jointData.length-1].point.y + p.y );
-                                        }
-                        
-                                //add round joints
-                                    var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[0].departAngle - Math.PI/2);
-                                    var perpenR = {x:-perpenL.x, y:-perpenL.y};
-                                    for(var a = 1; a < data.jointData.length-1; a++){
-                                        var last_perpenL = perpenL;
-                                        var last_perpenR = perpenR;
-                                        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[a].departAngle - Math.PI/2);
-                                        var perpenR = {x:-perpenL.x, y:-perpenL.y};
-                        
-                                        if(data.jointData[a].joiningAngle == Math.PI){
-                                        }else if(data.jointData[a].joiningAngle < Math.PI){
-                                            outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                                            outputTriangles.push( data.jointData[a].point.x + last_perpenR.x, data.jointData[a].point.y + last_perpenR.y );
-                        
-                                            var gapSize = Math.PI - data.jointData[a].joiningAngle;
-                                            var partialDetail = Math.floor(detail*(Math.abs(gapSize)/Math.PI)); 
-                                            if(partialDetail < 1){partialDetail = 1;}
-                                            for(var b = 1; b < partialDetail; b++){
-                                                var angle = b*(gapSize/partialDetail);
-                                                var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenR.x, last_perpenR.y, -angle);
-                                                outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                                                outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                                                outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                                            }
-                        
-                                            outputTriangles.push( data.jointData[a].point.x + perpenR.x, data.jointData[a].point.y + perpenR.y );
-                                        }else if(data.jointData[a].joiningAngle > Math.PI){
-                                            outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                                            outputTriangles.push( data.jointData[a].point.x + last_perpenL.x, data.jointData[a].point.y + last_perpenL.y );
-                        
-                                            var gapSize = Math.PI - data.jointData[a].joiningAngle;
-                                            var partialDetail = Math.floor(detail*(Math.abs(gapSize)/Math.PI)); 
-                                            if(partialDetail < 2){partialDetail = 2;}
-                                            for(var b = 1; b < partialDetail; b++){
-                                                var angle = b*(gapSize/partialDetail);
-                                                var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenL.x, last_perpenL.y, -angle);
-                                                outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                                                outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                                                outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                                            }
-                        
-                                            outputTriangles.push( data.jointData[a].point.x + perpenL.x, data.jointData[a].point.y + perpenL.y );
-                                        }
-                                    }
-                                    
-                                return outputTriangles;
-                            };
-                        
-                            this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat='TRIANGLE_STRIP'){
-                                var jointData = [];
-                                var joinMuxLimit = 5;
+                            function path_to_rectangleSeries(path,thickness){
+                                var outputPoints = [];
+                                for(var a = 1; a < path.length/2; a++){
+                                    var angle = _canvas_.library.math.getAngleOfTwoPoints( {x:path[a*2-2], y:path[a*2 -1]}, {x:path[a*2], y:path[a*2 +1]});
+                                    var left =  _canvas_.library.math.cartesianAngleAdjust(thickness, 0, Math.PI/2 + angle);
+                                    var right = { x:-left.x, y:-left.y };
                             
-                                //parse path
-                                    for(var a = 0; a < path.length/2; a++){
-                                        jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
-                                    }
-                                //calculate segment angles, joining angles, wing angles and wing widths; then generate wing points
-                                    var outputPoints = [];
-                                    for(var a = 0; a < jointData.length; a++){
-                                        var item = jointData[a];
-                            
-                                        //calculate segment angles
-                                            if( a != jointData.length-1 ){
-                                                var tmp = _canvas_.library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
-                                                if(jointData[a] != undefined){jointData[a].departAngle = tmp;}
-                                                if(jointData[a+1] != undefined){jointData[a+1].implementAngle = tmp;}
-                                            }
-                            
-                                        //joining angles
-                                            var joiningAngle = item.departAngle == undefined || item.implementAngle == undefined ? Math.PI : item.departAngle - item.implementAngle + Math.PI;
-                                            if( Math.abs(joiningAngle) == Math.PI*2 ){ joiningAngle = Math.PI; }
-                            
-                                        //angle
-                                            var segmentAngle = item.implementAngle != undefined ? item.implementAngle : item.departAngle;
-                                            var wingAngle = segmentAngle + joiningAngle/2;
-                            
-                                        //width
-                                            var div = a == 0 || a == jointData.length-1 ? 1 : Math.sin(joiningAngle/2);
-                                            var wingWidth = thickness / div; 
-                                            if(Math.abs(wingWidth) > thickness*joinMuxLimit){ wingWidth = Math.sign(wingWidth)*thickness*joinMuxLimit; }
-                            
-                                        //wing points
-                                            var plus =  _canvas_.library.math.cartesianAngleAdjust(0,  wingWidth, Math.PI/2 + wingAngle);
-                                            var minus = _canvas_.library.math.cartesianAngleAdjust(0, -wingWidth, Math.PI/2 + wingAngle);
-                                            outputPoints.push( plus.x+ item.point.x, plus.y+ item.point.y );
-                                            outputPoints.push( minus.x+item.point.x, minus.y+item.point.y );
-                                    }
-                            
-                                if(returnedPointsFormat == 'TRIANGLE_STRIP'){
-                                    return outputPoints;
-                                }else if(returnedPointsFormat == 'TRIANGLES'){
-                                    var replacementPoints = [];
-                            
-                                    for(var a = 0; a < outputPoints.length/2-2; a++){
-                                        replacementPoints.push( outputPoints[a*2+0],outputPoints[a*2+1] );
-                                        replacementPoints.push( outputPoints[a*2+2],outputPoints[a*2+3] );
-                                        replacementPoints.push( outputPoints[a*2+4],outputPoints[a*2+5] );
-                                    }
-                            
-                                    return replacementPoints;
+                                    outputPoints.push([
+                                        {x:path[a*2-2]+left.x,  y:path[a*2-1]+left.y},
+                                        {x:path[a*2-2]+right.x, y:path[a*2-1]+right.y},
+                                        {x:path[a*2]+right.x,   y:path[a*2+1]+right.y},
+                                        {x:path[a*2]+left.x,    y:path[a*2+1]+left.y},
+                                    ]);
                                 }
                             
                                 return outputPoints;
-                            };
-                            this.loopedPathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
-                                var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
-                                var loopingPath = [];
-                            
-                                loopingPath = loopingPath.concat(joinPoint);
-                                for(var a = 2; a < path.length; a+=2){
-                                    loopingPath = loopingPath.concat( [path[a], path[a+1]] );
+                            }
+                        
+                            function flatJoints(jointData,thickness){
+                                var polygons = [];
+                        
+                                var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+                                var perpenR = {x:-perpenL.x, y:-perpenL.y};
+                                for(var a = 1; a < jointData.length-1; a++){
+                                    var last_perpenL = perpenL;
+                                    var last_perpenR = perpenR;
+                                    var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+                                    var perpenR = {x:-perpenL.x, y:-perpenL.y};
+                        
+                                    if(jointData[a].joiningAngle == Math.PI){
+                                        //do nothing
+                                    }else if(jointData[a].joiningAngle < Math.PI){
+                                        polygons.push([
+                                            {x:jointData[a].point.x, y:jointData[a].point.y},
+                                            {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y},
+                                            {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y},
+                                        ]);
+                                    }else if(jointData[a].joiningAngle > Math.PI){
+                                        polygons.push([
+                                            {x:jointData[a].point.x, y:jointData[a].point.y},
+                                            {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y},
+                                            {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y},
+                                        ]);
+                                    }
                                 }
-                                loopingPath = loopingPath.concat( [path[0], path[1]] );
-                                loopingPath = loopingPath.concat(joinPoint);
-                            
-                                return this.pathToPolygonGenerator(loopingPath,thickness,returnedPointsFormat);
-                            };
+                        
+                                return polygons;
+                            }
+                            function roundJoints(jointData,thickness,detail=5){
+                                var polygons = [];
+                                if(detail < 1){detail = 1;}
+                        
+                                var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+                                var perpenR = {x:-perpenL.x, y:-perpenL.y};
+                                for(var a = 1; a < jointData.length-1; a++){
+                                    var newPolygon = [];
+                                    var last_perpenL = perpenL;
+                                    var last_perpenR = perpenR;
+                                    var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+                                    var perpenR = {x:-perpenL.x, y:-perpenL.y};
+                        
+                                    if(jointData[a].joiningAngle == Math.PI){
+                                        //do nothing
+                                    }else if(jointData[a].joiningAngle < Math.PI){
+                                        newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                                        newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
+                        
+                                        var gapSize = Math.PI - jointData[a].joiningAngle;
+                                        var partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
+                                        for(var b = 1; b < partialDetail; b++){
+                                            var angle = b*(gapSize/partialDetail);
+                                            var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenR.x, last_perpenR.y, -angle);
+                                            newPolygon.push( {x:jointData[a].point.x + p.x, y:jointData[a].point.y + p.y} );
+                                        }
+                        
+                                        newPolygon.push( {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y} );
+                                    }else if(jointData[a].joiningAngle > Math.PI){
+                                        newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                                        newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
+                        
+                                        var gapSize = Math.PI - jointData[a].joiningAngle;
+                                        var partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
+                                        for(var b = 1; b < partialDetail; b++){
+                                            var angle = b*(gapSize/partialDetail);
+                                            var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenL.x, last_perpenL.y, -angle);
+                                            newPolygon.push( {x:jointData[a].point.x + p.x, y:jointData[a].point.y + p.y} );
+                                        }
+                        
+                                        newPolygon.push( {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y} );
+                                    }
+                        
+                                    polygons.push(newPolygon);
+                                }
+                        
+                                return polygons;
+                            }
+                            function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
+                                var polygons = [];
+                        
+                                var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+                                var perpenR = {x:-perpenL.x, y:-perpenL.y};
+                                for(var a = 1; a < jointData.length-1; a++){
+                                    var newPolygon = [];
+                                    var last_perpenL = perpenL;
+                                    var last_perpenR = perpenR;
+                                    var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+                                    var perpenR = {x:-perpenL.x, y:-perpenL.y};
+                        
+                                    if(jointData[a].joiningAngle == Math.PI){
+                                        //do nothing
+                                    }else if(jointData[a].joiningAngle < Math.PI){
+                                        if( Math.abs(jointData[a].wingWidth) <= sharpLimit ){
+                                            var plus = _canvas_.library.math.cartesianAngleAdjust(0, jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
+                                            newPolygon.push( {x:plus.x + jointData[a].point.x, y:plus.y + jointData[a].point.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
+                                            newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y} );
+                                        }else{
+                                            var length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
+                                            var partialWingA = _canvas_.library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].implementAngle);
+                                            var partialWingB = _canvas_.library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].departAngle);
+                        
+                                            newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + last_perpenR.x + partialWingA.x, y:jointData[a].point.y + last_perpenR.y + partialWingA.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + perpenR.x + partialWingB.x, y:jointData[a].point.y + perpenR.y + partialWingB.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y} );
+                                        }
+                                    }else if(jointData[a].joiningAngle > Math.PI){
+                                        if( Math.abs(jointData[a].wingWidth) <= sharpLimit ){
+                                            var plus = _canvas_.library.math.cartesianAngleAdjust(0, -jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
+                                            newPolygon.push( {x:plus.x + jointData[a].point.x, y:plus.y + jointData[a].point.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
+                                            newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y} );
+                                        }else{
+                                            var length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
+                                            var partialWingA = _canvas_.library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].implementAngle);
+                                            var partialWingB = _canvas_.library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].departAngle);
+                        
+                                            newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + last_perpenL.x + partialWingA.x, y:jointData[a].point.y + last_perpenL.y + partialWingA.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + perpenL.x + partialWingB.x, y:jointData[a].point.y + perpenL.y + partialWingB.y} );
+                                            newPolygon.push( {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y} );
+                                        }
+                                    }
+                        
+                                    polygons.push(newPolygon);
+                                }
+                        
+                                return polygons;
+                            }
+                        
+                            function roundCaps(jointData,thickness,detail=5){
+                                if(detail < 1){detail = 1;}
+                        
+                                var polygons = [];
+                        
+                                //top
+                                    var newPolygon = [];
+                                    newPolygon.push( { x:jointData[0].point.x, y:jointData[0].point.y } );
+                                    for(var a = 0; a < detail+1; a++){
+                                        var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle + Math.PI/2 + (a/(detail))*(Math.PI) );
+                                        newPolygon.push( {x:jointData[0].point.x + p.x, y:jointData[0].point.y + p.y} );
+                                    }
+                                    polygons.push(newPolygon);
+                                //bottom
+                                    var newPolygon = [];
+                                    newPolygon.push( { x:jointData[jointData.length-1].point.x, y:jointData[jointData.length-1].point.y } );
+                                    for(var a = 0; a < detail+1; a++){
+                                        var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[jointData.length-1].implementAngle - Math.PI/2 + (a/(detail))*(Math.PI) );
+                                        newPolygon.push( {x:jointData[jointData.length-1].point.x + p.x, y:jointData[jointData.length-1].point.y + p.y} );
+                                    }
+                                    polygons.push(newPolygon);
+                        
+                                return polygons;
+                            }
+                        
+                        
+                            if(loopPath){path = loopThisPath(path);}
+                            var jointData = calculateJointData(path,thickness);
+                            if(jointData.length == 0){return [];}
+                        
+                            //generate polygons
+                                var polygons = path_to_rectangleSeries(path,thickness);
+                                //joints
+                                if(joinType == 'flat'){ polygons = polygons.concat(flatJoints(jointData,thickness)); }
+                                if(joinType == 'round'){ polygons = polygons.concat(roundJoints(jointData,thickness,detail)); }
+                                if(joinType == 'sharp'){ polygons = polygons.concat(sharpJoints(jointData,thickness,sharpLimit)); }
+                                //caps
+                                if(capType == 'round'){ polygons = polygons.concat(roundCaps(jointData,thickness,detail)); }
+                        
+                            //union all polygons, convert to triangles and return
+                                return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
                         };
+                        
                         
                         this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},dev=false){
                             function applyOffsetToPoints(offset,points){
@@ -1307,11 +1328,11 @@
                     };
                     this.font = new function(){
                         this.listAllAvailableGlyphs = function(fontFileData){
-                            var font = library.thirdparty.opentype.parse(fontFileData);
+                            var font = this.decodeFont(fontFileData);
                             return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                         };
                         this.decodeFont = function(fontFileData){
-                            return library.thirdparty.opentype.parse(fontFileData);
+                            return _thirdparty.opentype.parse(fontFileData);
                         };
                         this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
                             var glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
@@ -1403,20 +1424,18 @@
                                         var isHole = false;
                                         for(var a = 0; a < segments.length; a++){
                                             if( library.math.detectOverlap.overlappingPolygons(path,segments[a].path) ){
-                                                segments[a].holeIndexes.push( segments[a].path.length );
                                                 segments[a].path = segments[a].path.concat(path);
+                                                segments[a].regions.unshift(path);
                                                 isHole = true;
                                                 break;
                                             }
                                         }
-                                        if(!isHole){ segments.push({ path:path, holeIndexes:[] }); }
+                                        if(!isHole){ segments.push({ path:path, regions:[path] }); }
                                     });
                         
                             //produce triangles from points
                                 var triangles = [];
-                                segments.forEach(segment => {
-                                    triangles = triangles.concat( library.thirdparty.earcut(segment.path.map(a => [a.x,a.y]).flat(),segment.holeIndexes) );
-                                });
+                                segments.forEach(segment => { triangles = triangles.concat( library.math.polygonToSubTriangles(segment.regions) ); });
                         
                                 return triangles;
                         };
@@ -1498,8 +1517,8 @@
                         
                             return string;
                         };
-                        this.compressString = function(string){return library.thirdparty.lzString.compress(string);};
-                        this.decompressString = function(string){return library.thirdparty.lzString.decompress(string);};
+                        this.compressString = function(string){return _thirdparty.lzString.compress(string);};
+                        this.decompressString = function(string){return _thirdparty.lzString.decompress(string);};
                         this.serialize = function(data,compress=true){
                             function getType(obj){
                                 return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -1610,660 +1629,1726 @@
                             xhttp.send();
                         };
                     };
-                    this.thirdparty = new function(){
-                        this.earcut = function(points,holeIndices){
-                        	//https://github.com/mapbox/earcut
-                        	
-                            var outputPoints = [];
-                            earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
-                            return outputPoints;
+                    var _thirdparty = new function(){
+                        var thirdparty = this;
+                        /**
+                         * martinez v0.5.0
+                         * Martinez polygon clipping algorithm, does boolean operation on polygons (multipolygons, polygons with holes etc): intersection, union, difference, xor
+                         *
+                         * @author Alex Milevski <info@w8r.name>
+                         * @license MIT
+                         * @preserve
+                         */
                         
-                            function earcut(data, holeIndices, dim) {
-                        
-                                dim = dim || 2;
-                        
-                                var hasHoles = holeIndices && holeIndices.length,
-                                    outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-                                    outerNode = linkedList(data, 0, outerLen, dim, true),
-                                    triangles = [];
-                        
-                                if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-                        
-                                var minX, minY, maxX, maxY, x, y, invSize;
-                        
-                                if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
-                        
-                                // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-                                if (data.length > 80 * dim) {
-                                    minX = maxX = data[0];
-                                    minY = maxY = data[1];
-                        
-                                    for (var i = dim; i < outerLen; i += dim) {
-                                        x = data[i];
-                                        y = data[i + 1];
-                                        if (x < minX) minX = x;
-                                        if (y < minY) minY = y;
-                                        if (x > maxX) maxX = x;
-                                        if (y > maxY) maxY = y;
-                                    }
-                        
-                                    // minX, minY and invSize are later used to transform coords into integers for z-order calculation
-                                    invSize = Math.max(maxX - minX, maxY - minY);
-                                    invSize = invSize !== 0 ? 1 / invSize : 0;
-                                }
-                        
-                                earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
-                        
-                                return triangles;
-                            }
-                        
-                            // create a circular doubly linked list from polygon points in the specified winding order
-                            function linkedList(data, start, end, dim, clockwise) {
-                                var i, last;
-                        
-                                if (clockwise === (signedArea(data, start, end, dim) > 0)) {
-                                    for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+                        (function (global, factory) {
+                            typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+                            typeof define === 'function' && define.amd ? define(['exports'], factory) :
+                            (factory((global.martinez = {})));
+                          }(this, (function (exports) { 'use strict';
+                          
+                            function DEFAULT_COMPARE (a, b) { return a > b ? 1 : a < b ? -1 : 0; }
+                          
+                            var SplayTree = function SplayTree(compare, noDuplicates) {
+                              if ( compare === void 0 ) compare = DEFAULT_COMPARE;
+                              if ( noDuplicates === void 0 ) noDuplicates = false;
+                          
+                              this._compare = compare;
+                              this._root = null;
+                              this._size = 0;
+                              this._noDuplicates = !!noDuplicates;
+                            };
+                          
+                            var prototypeAccessors = { size: { configurable: true } };
+                          
+                          
+                            SplayTree.prototype.rotateLeft = function rotateLeft (x) {
+                              var y = x.right;
+                              if (y) {
+                                x.right = y.left;
+                                if (y.left) { y.left.parent = x; }
+                                y.parent = x.parent;
+                              }
+                          
+                              if (!x.parent)              { this._root = y; }
+                              else if (x === x.parent.left) { x.parent.left = y; }
+                              else                        { x.parent.right = y; }
+                              if (y) { y.left = x; }
+                              x.parent = y;
+                            };
+                          
+                          
+                            SplayTree.prototype.rotateRight = function rotateRight (x) {
+                              var y = x.left;
+                              if (y) {
+                                x.left = y.right;
+                                if (y.right) { y.right.parent = x; }
+                                y.parent = x.parent;
+                              }
+                          
+                              if (!x.parent)             { this._root = y; }
+                              else if(x === x.parent.left) { x.parent.left = y; }
+                              else                       { x.parent.right = y; }
+                              if (y) { y.right = x; }
+                              x.parent = y;
+                            };
+                          
+                          
+                            SplayTree.prototype._splay = function _splay (x) {
+                                var this$1 = this;
+                          
+                              while (x.parent) {
+                                var p = x.parent;
+                                if (!p.parent) {
+                                  if (p.left === x) { this$1.rotateRight(p); }
+                                  else            { this$1.rotateLeft(p); }
+                                } else if (p.left === x && p.parent.left === p) {
+                                  this$1.rotateRight(p.parent);
+                                  this$1.rotateRight(p);
+                                } else if (p.right === x && p.parent.right === p) {
+                                  this$1.rotateLeft(p.parent);
+                                  this$1.rotateLeft(p);
+                                } else if (p.left === x && p.parent.right === p) {
+                                  this$1.rotateRight(p);
+                                  this$1.rotateLeft(p);
                                 } else {
-                                    for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+                                  this$1.rotateLeft(p);
+                                  this$1.rotateRight(p);
                                 }
-                        
-                                if (last && equals(last, last.next)) {
-                                    removeNode(last);
-                                    last = last.next;
+                              }
+                            };
+                          
+                          
+                            SplayTree.prototype.splay = function splay (x) {
+                                var this$1 = this;
+                          
+                              var p, gp, ggp, l, r;
+                          
+                              while (x.parent) {
+                                p = x.parent;
+                                gp = p.parent;
+                          
+                                if (gp && gp.parent) {
+                                  ggp = gp.parent;
+                                  if (ggp.left === gp) { ggp.left= x; }
+                                  else               { ggp.right = x; }
+                                  x.parent = ggp;
+                                } else {
+                                  x.parent = null;
+                                  this$1._root = x;
                                 }
-                        
-                                return last;
-                            }
-                        
-                            // eliminate colinear or duplicate points
-                            function filterPoints(start, end) {
-                                if (!start) return start;
-                                if (!end) end = start;
-                        
-                                var p = start,
-                                    again;
-                                do {
-                                    again = false;
-                        
-                                    if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
-                                        removeNode(p);
-                                        p = end = p.prev;
-                                        if (p === p.next) break;
-                                        again = true;
-                        
+                          
+                                l = x.left; r = x.right;
+                          
+                                if (x === p.left) { // left
+                                  if (gp) {
+                                    if (gp.left === p) {
+                                      /* zig-zig */
+                                      if (p.right) {
+                                        gp.left = p.right;
+                                        gp.left.parent = gp;
+                                      } else { gp.left = null; }
+                          
+                                      p.right = gp;
+                                      gp.parent = p;
                                     } else {
-                                        p = p.next;
+                                      /* zig-zag */
+                                      if (l) {
+                                        gp.right = l;
+                                        l.parent = gp;
+                                      } else { gp.right = null; }
+                          
+                                      x.left  = gp;
+                                      gp.parent = x;
                                     }
-                                } while (again || p !== end);
-                        
-                                return end;
-                            }
-                        
-                            // main ear slicing loop which triangulates a polygon (given as a linked list)
-                            function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-                                if (!ear) return;
-                        
-                                // interlink polygon nodes in z-order
-                                if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-                        
-                                var stop = ear,
-                                    prev, next;
-                        
-                                // iterate through ears, slicing them one by one
-                                while (ear.prev !== ear.next) {
-                                    prev = ear.prev;
-                                    next = ear.next;
-                        
-                                    if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
-                                        // cut off the triangle
-                                        triangles.push(prev.i / dim);
-                                        triangles.push(ear.i / dim);
-                                        triangles.push(next.i / dim);
-                        
-                                        removeNode(ear);
-                        
-                                        // skipping the next vertex leads to less sliver triangles
-                                        ear = next.next;
-                                        stop = next.next;
-                        
-                                        continue;
+                                  }
+                                  if (r) {
+                                    p.left = r;
+                                    r.parent = p;
+                                  } else { p.left = null; }
+                          
+                                  x.right= p;
+                                  p.parent = x;
+                                } else { // right
+                                  if (gp) {
+                                    if (gp.right === p) {
+                                      /* zig-zig */
+                                      if (p.left) {
+                                        gp.right = p.left;
+                                        gp.right.parent = gp;
+                                      } else { gp.right = null; }
+                          
+                                      p.left = gp;
+                                      gp.parent = p;
+                                    } else {
+                                      /* zig-zag */
+                                      if (r) {
+                                        gp.left = r;
+                                        r.parent = gp;
+                                      } else { gp.left = null; }
+                          
+                                      x.right = gp;
+                                      gp.parent = x;
                                     }
-                        
-                                    ear = next;
-                        
-                                    // if we looped through the whole remaining polygon and can't find any more ears
-                                    if (ear === stop) {
-                                        // try filtering points and slicing again
-                                        if (!pass) {
-                                            earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-                        
-                                        // if this didn't work, try curing all small self-intersections locally
-                                        } else if (pass === 1) {
-                                            ear = cureLocalIntersections(ear, triangles, dim);
-                                            earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-                        
-                                        // as a last resort, try splitting the remaining polygon into two
-                                        } else if (pass === 2) {
-                                            splitEarcut(ear, triangles, dim, minX, minY, invSize);
-                                        }
-                        
-                                        break;
-                                    }
+                                  }
+                                  if (l) {
+                                    p.right = l;
+                                    l.parent = p;
+                                  } else { p.right = null; }
+                          
+                                  x.left = p;
+                                  p.parent = x;
                                 }
-                            }
-                        
-                            // check whether a polygon node forms a valid ear with adjacent nodes
-                            function isEar(ear) {
-                                var a = ear.prev,
-                                    b = ear,
-                                    c = ear.next;
-                        
-                                if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-                        
-                                // now make sure we don't have other points inside the potential ear
-                                var p = ear.next.next;
-                        
-                                while (p !== ear.prev) {
-                                    if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                                        area(p.prev, p, p.next) >= 0) return false;
-                                    p = p.next;
+                              }
+                            };
+                          
+                          
+                            SplayTree.prototype.replace = function replace (u, v) {
+                              if (!u.parent) { this._root = v; }
+                              else if (u === u.parent.left) { u.parent.left = v; }
+                              else { u.parent.right = v; }
+                              if (v) { v.parent = u.parent; }
+                            };
+                          
+                          
+                            SplayTree.prototype.minNode = function minNode (u) {
+                                if ( u === void 0 ) u = this._root;
+                          
+                              if (u) { while (u.left) { u = u.left; } }
+                              return u;
+                            };
+                          
+                          
+                            SplayTree.prototype.maxNode = function maxNode (u) {
+                                if ( u === void 0 ) u = this._root;
+                          
+                              if (u) { while (u.right) { u = u.right; } }
+                              return u;
+                            };
+                          
+                          
+                            SplayTree.prototype.insert = function insert (key, data) {
+                              var z = this._root;
+                              var p = null;
+                              var comp = this._compare;
+                              var cmp;
+                          
+                              if (this._noDuplicates) {
+                                while (z) {
+                                  p = z;
+                                  cmp = comp(z.key, key);
+                                  if (cmp === 0) { return; }
+                                  else if (comp(z.key, key) < 0) { z = z.right; }
+                                  else { z = z.left; }
                                 }
-                        
-                                return true;
-                            }
-                        
-                            function isEarHashed(ear, minX, minY, invSize) {
-                                var a = ear.prev,
-                                    b = ear,
-                                    c = ear.next;
-                        
-                                if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-                        
-                                // triangle bbox; min & max are calculated like this for speed
-                                var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
-                                    minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
-                                    maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
-                                    maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
-                        
-                                // z-order range for the current triangle bbox;
-                                var minZ = zOrder(minTX, minTY, minX, minY, invSize),
-                                    maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
-                        
-                                var p = ear.prevZ,
-                                    n = ear.nextZ;
-                        
-                                // look for points inside the triangle in both directions
-                                while (p && p.z >= minZ && n && n.z <= maxZ) {
-                                    if (p !== ear.prev && p !== ear.next &&
-                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                                        area(p.prev, p, p.next) >= 0) return false;
-                                    p = p.prevZ;
-                        
-                                    if (n !== ear.prev && n !== ear.next &&
-                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-                                        area(n.prev, n, n.next) >= 0) return false;
-                                    n = n.nextZ;
+                              } else {
+                                while (z) {
+                                  p = z;
+                                  if (comp(z.key, key) < 0) { z = z.right; }
+                                  else { z = z.left; }
                                 }
-                        
-                                // look for remaining points in decreasing z-order
-                                while (p && p.z >= minZ) {
-                                    if (p !== ear.prev && p !== ear.next &&
-                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-                                        area(p.prev, p, p.next) >= 0) return false;
-                                    p = p.prevZ;
+                              }
+                          
+                              z = { key: key, data: data, left: null, right: null, parent: p };
+                          
+                              if (!p)                        { this._root = z; }
+                              else if (comp(p.key, z.key) < 0) { p.right = z; }
+                              else                           { p.left= z; }
+                          
+                              this.splay(z);
+                              this._size++;
+                              return z;
+                            };
+                          
+                          
+                            SplayTree.prototype.find = function find (key) {
+                              var z  = this._root;
+                              var comp = this._compare;
+                              while (z) {
+                                var cmp = comp(z.key, key);
+                                if    (cmp < 0) { z = z.right; }
+                                else if (cmp > 0) { z = z.left; }
+                                else            { return z; }
+                              }
+                              return null;
+                            };
+                          
+                            /**
+                             * Whether the tree contains a node with the given key
+                             * @param{Key} key
+                             * @return {boolean} true/false
+                             */
+                            SplayTree.prototype.contains = function contains (key) {
+                              var node     = this._root;
+                              var comparator = this._compare;
+                              while (node){
+                                var cmp = comparator(key, node.key);
+                                if    (cmp === 0) { return true; }
+                                else if (cmp < 0) { node = node.left; }
+                                else              { node = node.right; }
+                              }
+                          
+                              return false;
+                            };
+                          
+                          
+                            SplayTree.prototype.remove = function remove (key) {
+                              var z = this.find(key);
+                          
+                              if (!z) { return false; }
+                          
+                              this.splay(z);
+                          
+                              if (!z.left) { this.replace(z, z.right); }
+                              else if (!z.right) { this.replace(z, z.left); }
+                              else {
+                                var y = this.minNode(z.right);
+                                if (y.parent !== z) {
+                                  this.replace(y, y.right);
+                                  y.right = z.right;
+                                  y.right.parent = y;
                                 }
-                        
-                                // look for remaining points in increasing z-order
-                                while (n && n.z <= maxZ) {
-                                    if (n !== ear.prev && n !== ear.next &&
-                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-                                        area(n.prev, n, n.next) >= 0) return false;
-                                    n = n.nextZ;
+                                this.replace(z, y);
+                                y.left = z.left;
+                                y.left.parent = y;
+                              }
+                          
+                              this._size--;
+                              return true;
+                            };
+                          
+                          
+                            SplayTree.prototype.removeNode = function removeNode (z) {
+                              if (!z) { return false; }
+                          
+                              this.splay(z);
+                          
+                              if (!z.left) { this.replace(z, z.right); }
+                              else if (!z.right) { this.replace(z, z.left); }
+                              else {
+                                var y = this.minNode(z.right);
+                                if (y.parent !== z) {
+                                  this.replace(y, y.right);
+                                  y.right = z.right;
+                                  y.right.parent = y;
                                 }
-                        
-                                return true;
-                            }
-                        
-                            // go through all polygon nodes and cure small local self-intersections
-                            function cureLocalIntersections(start, triangles, dim) {
-                                var p = start;
-                                do {
-                                    var a = p.prev,
-                                        b = p.next.next;
-                        
-                                    if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-                        
-                                        triangles.push(a.i / dim);
-                                        triangles.push(p.i / dim);
-                                        triangles.push(b.i / dim);
-                        
-                                        // remove two nodes involved
-                                        removeNode(p);
-                                        removeNode(p.next);
-                        
-                                        p = start = b;
-                                    }
-                                    p = p.next;
-                                } while (p !== start);
-                        
-                                return p;
-                            }
-                        
-                            // try splitting polygon into two and triangulate them independently
-                            function splitEarcut(start, triangles, dim, minX, minY, invSize) {
-                                // look for a valid diagonal that divides the polygon into two
-                                var a = start;
-                                do {
-                                    var b = a.next.next;
-                                    while (b !== a.prev) {
-                                        if (a.i !== b.i && isValidDiagonal(a, b)) {
-                                            // split the polygon in two by the diagonal
-                                            var c = splitPolygon(a, b);
-                        
-                                            // filter colinear points around the cuts
-                                            a = filterPoints(a, a.next);
-                                            c = filterPoints(c, c.next);
-                        
-                                            // run earcut on each half
-                                            earcutLinked(a, triangles, dim, minX, minY, invSize);
-                                            earcutLinked(c, triangles, dim, minX, minY, invSize);
-                                            return;
-                                        }
-                                        b = b.next;
-                                    }
-                                    a = a.next;
-                                } while (a !== start);
-                            }
-                        
-                            // link every hole into the outer loop, producing a single-ring polygon without holes
-                            function eliminateHoles(data, holeIndices, outerNode, dim) {
-                                var queue = [],
-                                    i, len, start, end, list;
-                        
-                                for (i = 0, len = holeIndices.length; i < len; i++) {
-                                    start = holeIndices[i] * dim;
-                                    end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-                                    list = linkedList(data, start, end, dim, false);
-                                    if (list === list.next) list.steiner = true;
-                                    queue.push(getLeftmost(list));
-                                }
-                        
-                                queue.sort(compareX);
-                        
-                                // process holes from left to right
-                                for (i = 0; i < queue.length; i++) {
-                                    eliminateHole(queue[i], outerNode);
-                                    outerNode = filterPoints(outerNode, outerNode.next);
-                                }
-                        
-                                return outerNode;
-                            }
-                        
-                            function compareX(a, b) {
-                                return a.x - b.x;
-                            }
-                        
-                            // find a bridge between vertices that connects hole with an outer ring and and link it
-                            function eliminateHole(hole, outerNode) {
-                                outerNode = findHoleBridge(hole, outerNode);
-                                if (outerNode) {
-                                    var b = splitPolygon(outerNode, hole);
-                                    filterPoints(b, b.next);
-                                }
-                            }
-                        
-                            // David Eberly's algorithm for finding a bridge between hole and outer polygon
-                            function findHoleBridge(hole, outerNode) {
-                                var p = outerNode,
-                                    hx = hole.x,
-                                    hy = hole.y,
-                                    qx = -Infinity,
-                                    m;
-                        
-                                // find a segment intersected by a ray from the hole's leftmost point to the left;
-                                // segment's endpoint with lesser x will be potential connection point
-                                do {
-                                    if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-                                        var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-                                        if (x <= hx && x > qx) {
-                                            qx = x;
-                                            if (x === hx) {
-                                                if (hy === p.y) return p;
-                                                if (hy === p.next.y) return p.next;
-                                            }
-                                            m = p.x < p.next.x ? p : p.next;
-                                        }
-                                    }
-                                    p = p.next;
-                                } while (p !== outerNode);
-                        
-                                if (!m) return null;
-                        
-                                if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
-                        
-                                // look for points inside the triangle of hole point, segment intersection and endpoint;
-                                // if there are no points found, we have a valid connection;
-                                // otherwise choose the point of the minimum angle with the ray as connection point
-                        
-                                var stop = m,
-                                    mx = m.x,
-                                    my = m.y,
-                                    tanMin = Infinity,
-                                    tan;
-                        
-                                p = m.next;
-                        
-                                while (p !== stop) {
-                                    if (hx >= p.x && p.x >= mx && hx !== p.x &&
-                                            pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-                        
-                                        tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-                        
-                                        if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
-                                            m = p;
-                                            tanMin = tan;
-                                        }
-                                    }
-                        
-                                    p = p.next;
-                                }
-                        
-                                return m;
-                            }
-                        
-                            // interlink polygon nodes in z-order
-                            function indexCurve(start, minX, minY, invSize) {
-                                var p = start;
-                                do {
-                                    if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-                                    p.prevZ = p.prev;
-                                    p.nextZ = p.next;
-                                    p = p.next;
-                                } while (p !== start);
-                        
-                                p.prevZ.nextZ = null;
-                                p.prevZ = null;
-                        
-                                sortLinked(p);
-                            }
-                        
-                            // Simon Tatham's linked list merge sort algorithm
-                            // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-                            function sortLinked(list) {
-                                var i, p, q, e, tail, numMerges, pSize, qSize,
-                                    inSize = 1;
-                        
-                                do {
-                                    p = list;
-                                    list = null;
-                                    tail = null;
-                                    numMerges = 0;
-                        
-                                    while (p) {
-                                        numMerges++;
-                                        q = p;
-                                        pSize = 0;
-                                        for (i = 0; i < inSize; i++) {
-                                            pSize++;
-                                            q = q.nextZ;
-                                            if (!q) break;
-                                        }
-                                        qSize = inSize;
-                        
-                                        while (pSize > 0 || (qSize > 0 && q)) {
-                        
-                                            if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-                                                e = p;
-                                                p = p.nextZ;
-                                                pSize--;
-                                            } else {
-                                                e = q;
-                                                q = q.nextZ;
-                                                qSize--;
-                                            }
-                        
-                                            if (tail) tail.nextZ = e;
-                                            else list = e;
-                        
-                                            e.prevZ = tail;
-                                            tail = e;
-                                        }
-                        
-                                        p = q;
-                                    }
-                        
-                                    tail.nextZ = null;
-                                    inSize *= 2;
-                        
-                                } while (numMerges > 1);
-                        
-                                return list;
-                            }
-                        
-                            // z-order of a point given coords and inverse of the longer side of data bbox
-                            function zOrder(x, y, minX, minY, invSize) {
-                                // coords are transformed into non-negative 15-bit integer range
-                                x = 32767 * (x - minX) * invSize;
-                                y = 32767 * (y - minY) * invSize;
-                        
-                                x = (x | (x << 8)) & 0x00FF00FF;
-                                x = (x | (x << 4)) & 0x0F0F0F0F;
-                                x = (x | (x << 2)) & 0x33333333;
-                                x = (x | (x << 1)) & 0x55555555;
-                        
-                                y = (y | (y << 8)) & 0x00FF00FF;
-                                y = (y | (y << 4)) & 0x0F0F0F0F;
-                                y = (y | (y << 2)) & 0x33333333;
-                                y = (y | (y << 1)) & 0x55555555;
-                        
-                                return x | (y << 1);
-                            }
-                        
-                            // find the leftmost node of a polygon ring
-                            function getLeftmost(start) {
-                                var p = start,
-                                    leftmost = start;
-                                do {
-                                    if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
-                                    p = p.next;
-                                } while (p !== start);
-                        
-                                return leftmost;
-                            }
-                        
-                            // check if a point lies within a convex triangle
-                            function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-                                return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
-                                    (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
-                                    (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
-                            }
-                        
-                            // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-                            function isValidDiagonal(a, b) {
-                                return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
-                                    locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
-                            }
-                        
-                            // signed area of a triangle
-                            function area(p, q, r) {
-                                return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-                            }
-                        
-                            // check if two points are equal
-                            function equals(p1, p2) {
-                                return p1.x === p2.x && p1.y === p2.y;
-                            }
-                        
-                            // check if two segments intersect
-                            function intersects(p1, q1, p2, q2) {
-                                if ((equals(p1, p2) && equals(q1, q2)) ||
-                                    (equals(p1, q2) && equals(p2, q1))) return true;
-                                return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-                                    area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
-                            }
-                        
-                            // check if a polygon diagonal intersects any polygon segments
-                            function intersectsPolygon(a, b) {
-                                var p = a;
-                                do {
-                                    if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-                                            intersects(p, p.next, a, b)) return true;
-                                    p = p.next;
-                                } while (p !== a);
-                        
-                                return false;
-                            }
-                        
-                            // check if a polygon diagonal is locally inside the polygon
-                            function locallyInside(a, b) {
-                                return area(a.prev, a, a.next) < 0 ?
-                                    area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
-                                    area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-                            }
-                        
-                            // check if the middle point of a polygon diagonal is inside the polygon
-                            function middleInside(a, b) {
-                                var p = a,
-                                    inside = false,
-                                    px = (a.x + b.x) / 2,
-                                    py = (a.y + b.y) / 2;
-                                do {
-                                    if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
-                                            (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
-                                        inside = !inside;
-                                    p = p.next;
-                                } while (p !== a);
-                        
-                                return inside;
-                            }
-                        
-                            // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-                            // if one belongs to the outer ring and another to a hole, it merges it into a single ring
-                            function splitPolygon(a, b) {
-                                var a2 = new Node(a.i, a.x, a.y),
-                                    b2 = new Node(b.i, b.x, b.y),
-                                    an = a.next,
-                                    bp = b.prev;
-                        
-                                a.next = b;
-                                b.prev = a;
-                        
-                                a2.next = an;
-                                an.prev = a2;
-                        
-                                b2.next = a2;
-                                a2.prev = b2;
-                        
-                                bp.next = b2;
-                                b2.prev = bp;
-                        
-                                return b2;
-                            }
-                        
-                            // create a node and optionally link it with previous one (in a circular doubly linked list)
-                            function insertNode(i, x, y, last) {
-                                var p = new Node(i, x, y);
-                        
-                                if (!last) {
-                                    p.prev = p;
-                                    p.next = p;
-                        
+                                this.replace(z, y);
+                                y.left = z.left;
+                                y.left.parent = y;
+                              }
+                          
+                              this._size--;
+                              return true;
+                            };
+                          
+                          
+                            SplayTree.prototype.erase = function erase (key) {
+                              var z = this.find(key);
+                              if (!z) { return; }
+                          
+                              this.splay(z);
+                          
+                              var s = z.left;
+                              var t = z.right;
+                          
+                              var sMax = null;
+                              if (s) {
+                                s.parent = null;
+                                sMax = this.maxNode(s);
+                                this.splay(sMax);
+                                this._root = sMax;
+                              }
+                              if (t) {
+                                if (s) { sMax.right = t; }
+                                else { this._root = t; }
+                                t.parent = sMax;
+                              }
+                          
+                              this._size--;
+                            };
+                          
+                            /**
+                             * Removes and returns the node with smallest key
+                             * @return {?Node}
+                             */
+                            SplayTree.prototype.pop = function pop () {
+                              var node = this._root, returnValue = null;
+                              if (node) {
+                                while (node.left) { node = node.left; }
+                                returnValue = { key: node.key, data: node.data };
+                                this.remove(node.key);
+                              }
+                              return returnValue;
+                            };
+                          
+                          
+                            /* eslint-disable class-methods-use-this */
+                          
+                            /**
+                             * Successor node
+                             * @param{Node} node
+                             * @return {?Node}
+                             */
+                            SplayTree.prototype.next = function next (node) {
+                              var successor = node;
+                              if (successor) {
+                                if (successor.right) {
+                                  successor = successor.right;
+                                  while (successor && successor.left) { successor = successor.left; }
                                 } else {
-                                    p.next = last.next;
-                                    p.prev = last;
-                                    last.next.prev = p;
-                                    last.next = p;
+                                  successor = node.parent;
+                                  while (successor && successor.right === node) {
+                                    node = successor; successor = successor.parent;
+                                  }
                                 }
-                                return p;
-                            }
-                        
-                            function removeNode(p) {
-                                p.next.prev = p.prev;
-                                p.prev.next = p.next;
-                        
-                                if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-                                if (p.nextZ) p.nextZ.prevZ = p.prevZ;
-                            }
-                        
-                            function Node(i, x, y) {
-                                // vertex index in coordinates array
-                                this.i = i;
-                        
-                                // vertex coordinates
-                                this.x = x;
-                                this.y = y;
-                        
-                                // previous and next vertex nodes in a polygon ring
-                                this.prev = null;
-                                this.next = null;
-                        
-                                // z-order curve value
-                                this.z = null;
-                        
-                                // previous and next nodes in z-order
-                                this.prevZ = null;
-                                this.nextZ = null;
-                        
-                                // indicates whether this is a steiner point
-                                this.steiner = false;
-                            }
-                        
-                            // // return a percentage difference between the polygon area and its triangulation area;
-                            // // used to verify correctness of triangulation
-                            // earcut.deviation = function (data, holeIndices, dim, triangles) {
-                            //     var hasHoles = holeIndices && holeIndices.length;
-                            //     var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-                        
-                            //     var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-                            //     if (hasHoles) {
-                            //         for (var i = 0, len = holeIndices.length; i < len; i++) {
-                            //             var start = holeIndices[i] * dim;
-                            //             var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-                            //             polygonArea -= Math.abs(signedArea(data, start, end, dim));
-                            //         }
-                            //     }
-                        
-                            //     var trianglesArea = 0;
-                            //     for (i = 0; i < triangles.length; i += 3) {
-                            //         var a = triangles[i] * dim;
-                            //         var b = triangles[i + 1] * dim;
-                            //         var c = triangles[i + 2] * dim;
-                            //         trianglesArea += Math.abs(
-                            //             (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
-                            //             (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-                            //     }
-                        
-                            //     return polygonArea === 0 && trianglesArea === 0 ? 0 :
-                            //         Math.abs((trianglesArea - polygonArea) / polygonArea);
-                            // };
-                        
-                            function signedArea(data, start, end, dim) {
-                                var sum = 0;
-                                for (var i = start, j = end - dim; i < end; i += dim) {
-                                    sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-                                    j = i;
+                              }
+                              return successor;
+                            };
+                          
+                          
+                            /**
+                             * Predecessor node
+                             * @param{Node} node
+                             * @return {?Node}
+                             */
+                            SplayTree.prototype.prev = function prev (node) {
+                              var predecessor = node;
+                              if (predecessor) {
+                                if (predecessor.left) {
+                                  predecessor = predecessor.left;
+                                  while (predecessor && predecessor.right) { predecessor = predecessor.right; }
+                                } else {
+                                  predecessor = node.parent;
+                                  while (predecessor && predecessor.left === node) {
+                                    node = predecessor;
+                                    predecessor = predecessor.parent;
+                                  }
                                 }
-                                return sum;
+                              }
+                              return predecessor;
+                            };
+                            /* eslint-enable class-methods-use-this */
+                          
+                          
+                            /**
+                             * @param{forEachCallback} callback
+                             * @return {SplayTree}
+                             */
+                            SplayTree.prototype.forEach = function forEach (callback) {
+                              var current = this._root;
+                              var s = [], done = false, i = 0;
+                          
+                              while (!done) {
+                                // Reach the left most Node of the current Node
+                                if (current) {
+                                  // Place pointer to a tree node on the stack
+                                  // before traversing the node's left subtree
+                                  s.push(current);
+                                  current = current.left;
+                                } else {
+                                  // BackTrack from the empty subtree and visit the Node
+                                  // at the top of the stack; however, if the stack is
+                                  // empty you are done
+                                  if (s.length > 0) {
+                                    current = s.pop();
+                                    callback(current, i++);
+                          
+                                    // We have visited the node and its left
+                                    // subtree. Now, it's right subtree's turn
+                                    current = current.right;
+                                  } else { done = true; }
+                                }
+                              }
+                              return this;
+                            };
+                          
+                          
+                            /**
+                             * Walk key range from `low` to `high`. Stops if `fn` returns a value.
+                             * @param{Key}    low
+                             * @param{Key}    high
+                             * @param{Function} fn
+                             * @param{*?}     ctx
+                             * @return {SplayTree}
+                             */
+                            SplayTree.prototype.range = function range (low, high, fn, ctx) {
+                                var this$1 = this;
+                          
+                              var Q = [];
+                              var compare = this._compare;
+                              var node = this._root, cmp;
+                          
+                              while (Q.length !== 0 || node) {
+                                if (node) {
+                                  Q.push(node);
+                                  node = node.left;
+                                } else {
+                                  node = Q.pop();
+                                  cmp = compare(node.key, high);
+                                  if (cmp > 0) {
+                                    break;
+                                  } else if (compare(node.key, low) >= 0) {
+                                    if (fn.call(ctx, node)) { return this$1; } // stop if smth is returned
+                                  }
+                                  node = node.right;
+                                }
+                              }
+                              return this;
+                            };
+                          
+                            /**
+                             * Returns all keys in order
+                             * @return {Array<Key>}
+                             */
+                            SplayTree.prototype.keys = function keys () {
+                              var current = this._root;
+                              var s = [], r = [], done = false;
+                          
+                              while (!done) {
+                                if (current) {
+                                  s.push(current);
+                                  current = current.left;
+                                } else {
+                                  if (s.length > 0) {
+                                    current = s.pop();
+                                    r.push(current.key);
+                                    current = current.right;
+                                  } else { done = true; }
+                                }
+                              }
+                              return r;
+                            };
+                          
+                          
+                            /**
+                             * Returns `data` fields of all nodes in order.
+                             * @return {Array<Value>}
+                             */
+                            SplayTree.prototype.values = function values () {
+                              var current = this._root;
+                              var s = [], r = [], done = false;
+                          
+                              while (!done) {
+                                if (current) {
+                                  s.push(current);
+                                  current = current.left;
+                                } else {
+                                  if (s.length > 0) {
+                                    current = s.pop();
+                                    r.push(current.data);
+                                    current = current.right;
+                                  } else { done = true; }
+                                }
+                              }
+                              return r;
+                            };
+                          
+                          
+                            /**
+                             * Returns node at given index
+                             * @param{number} index
+                             * @return {?Node}
+                             */
+                            SplayTree.prototype.at = function at (index) {
+                              // removed after a consideration, more misleading than useful
+                              // index = index % this.size;
+                              // if (index < 0) index = this.size - index;
+                          
+                              var current = this._root;
+                              var s = [], done = false, i = 0;
+                          
+                              while (!done) {
+                                if (current) {
+                                  s.push(current);
+                                  current = current.left;
+                                } else {
+                                  if (s.length > 0) {
+                                    current = s.pop();
+                                    if (i === index) { return current; }
+                                    i++;
+                                    current = current.right;
+                                  } else { done = true; }
+                                }
+                              }
+                              return null;
+                            };
+                          
+                            /**
+                             * Bulk-load items. Both array have to be same size
+                             * @param{Array<Key>}  keys
+                             * @param{Array<Value>}[values]
+                             * @param{Boolean}     [presort=false] Pre-sort keys and values, using
+                             *                                       tree's comparator. Sorting is done
+                             *                                       in-place
+                             * @return {AVLTree}
+                             */
+                            SplayTree.prototype.load = function load (keys, values, presort) {
+                                if ( keys === void 0 ) keys = [];
+                                if ( values === void 0 ) values = [];
+                                if ( presort === void 0 ) presort = false;
+                          
+                              if (this._size !== 0) { throw new Error('bulk-load: tree is not empty'); }
+                              var size = keys.length;
+                              if (presort) { sort(keys, values, 0, size - 1, this._compare); }
+                              this._root = loadRecursive(null, keys, values, 0, size);
+                              this._size = size;
+                              return this;
+                            };
+                          
+                          
+                            SplayTree.prototype.min = function min () {
+                              var node = this.minNode(this._root);
+                              if (node) { return node.key; }
+                              else    { return null; }
+                            };
+                          
+                          
+                            SplayTree.prototype.max = function max () {
+                              var node = this.maxNode(this._root);
+                              if (node) { return node.key; }
+                              else    { return null; }
+                            };
+                          
+                            SplayTree.prototype.isEmpty = function isEmpty () { return this._root === null; };
+                            prototypeAccessors.size.get = function () { return this._size; };
+                          
+                          
+                            /**
+                             * Create a tree and load it with items
+                             * @param{Array<Key>}        keys
+                             * @param{Array<Value>?}      [values]
+                          
+                             * @param{Function?}          [comparator]
+                             * @param{Boolean?}           [presort=false] Pre-sort keys and values, using
+                             *                                             tree's comparator. Sorting is done
+                             *                                             in-place
+                             * @param{Boolean?}           [noDuplicates=false] Allow duplicates
+                             * @return {SplayTree}
+                             */
+                            SplayTree.createTree = function createTree (keys, values, comparator, presort, noDuplicates) {
+                              return new SplayTree(comparator, noDuplicates).load(keys, values, presort);
+                            };
+                          
+                            Object.defineProperties( SplayTree.prototype, prototypeAccessors );
+                          
+                          
+                            function loadRecursive (parent, keys, values, start, end) {
+                              var size = end - start;
+                              if (size > 0) {
+                                var middle = start + Math.floor(size / 2);
+                                var key    = keys[middle];
+                                var data   = values[middle];
+                                var node   = { key: key, data: data, parent: parent };
+                                node.left    = loadRecursive(node, keys, values, start, middle);
+                                node.right   = loadRecursive(node, keys, values, middle + 1, end);
+                                return node;
+                              }
+                              return null;
                             }
-                        
-                            // // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-                            // earcut.flatten = function (data) {
-                            //     var dim = data[0][0].length,
-                            //         result = {vertices: [], holes: [], dimensions: dim},
-                            //         holeIndex = 0;
-                        
-                            //     for (var i = 0; i < data.length; i++) {
-                            //         for (var j = 0; j < data[i].length; j++) {
-                            //             for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-                            //         }
-                            //         if (i > 0) {
-                            //             holeIndex += data[i - 1].length;
-                            //             result.holes.push(holeIndex);
-                            //         }
-                            //     }
-                            //     return result;
+                          
+                          
+                            function sort(keys, values, left, right, compare) {
+                              if (left >= right) { return; }
+                          
+                              var pivot = keys[(left + right) >> 1];
+                              var i = left - 1;
+                              var j = right + 1;
+                          
+                              while (true) {
+                                do { i++; } while (compare(keys[i], pivot) < 0);
+                                do { j--; } while (compare(keys[j], pivot) > 0);
+                                if (i >= j) { break; }
+                          
+                                var tmp = keys[i];
+                                keys[i] = keys[j];
+                                keys[j] = tmp;
+                          
+                                tmp = values[i];
+                                values[i] = values[j];
+                                values[j] = tmp;
+                              }
+                          
+                              sort(keys, values,  left,     j, compare);
+                              sort(keys, values, j + 1, right, compare);
+                            }
+                          
+                            var NORMAL               = 0;
+                            var NON_CONTRIBUTING     = 1;
+                            var SAME_TRANSITION      = 2;
+                            var DIFFERENT_TRANSITION = 3;
+                          
+                            var INTERSECTION = 0;
+                            var UNION        = 1;
+                            var DIFFERENCE   = 2;
+                            var XOR          = 3;
+                          
+                            /**
+                             * @param  {SweepEvent} event
+                             * @param  {SweepEvent} prev
+                             * @param  {Operation} operation
+                             */
+                            function computeFields (event, prev, operation) {
+                              // compute inOut and otherInOut fields
+                              if (prev === null) {
+                                event.inOut      = false;
+                                event.otherInOut = true;
+                          
+                              // previous line segment in sweepline belongs to the same polygon
+                              } else {
+                                if (event.isSubject === prev.isSubject) {
+                                  event.inOut      = !prev.inOut;
+                                  event.otherInOut = prev.otherInOut;
+                          
+                                // previous line segment in sweepline belongs to the clipping polygon
+                                } else {
+                                  event.inOut      = !prev.otherInOut;
+                                  event.otherInOut = prev.isVertical() ? !prev.inOut : prev.inOut;
+                                }
+                          
+                                // compute prevInResult field
+                                if (prev) {
+                                  event.prevInResult = (!inResult(prev, operation) || prev.isVertical())
+                                    ? prev.prevInResult : prev;
+                                }
+                              }
+                          
+                              // check if the line segment belongs to the Boolean operation
+                              event.inResult = inResult(event, operation);
+                            }
+                          
+                          
+                            /* eslint-disable indent */
+                            function inResult(event, operation) {
+                              switch (event.type) {
+                                case NORMAL:
+                                  switch (operation) {
+                                    case INTERSECTION:
+                                      return !event.otherInOut;
+                                    case UNION:
+                                      return event.otherInOut;
+                                    case DIFFERENCE:
+                                      // return (event.isSubject && !event.otherInOut) ||
+                                      //         (!event.isSubject && event.otherInOut);
+                                      return (event.isSubject && event.otherInOut) ||
+                                              (!event.isSubject && !event.otherInOut);
+                                    case XOR:
+                                      return true;
+                                  }
+                                  break;
+                                case SAME_TRANSITION:
+                                  return operation === INTERSECTION || operation === UNION;
+                                case DIFFERENT_TRANSITION:
+                                  return operation === DIFFERENCE;
+                                case NON_CONTRIBUTING:
+                                  return false;
+                              }
+                              return false;
+                            }
+                            /* eslint-enable indent */
+                          
+                            var SweepEvent = function SweepEvent (point, left, otherEvent, isSubject, edgeType) {
+                          
+                              /**
+                               * Is left endpoint?
+                               * @type {Boolean}
+                               */
+                              this.left = left;
+                          
+                              /**
+                               * @type {Array.<Number>}
+                               */
+                              this.point = point;
+                          
+                              /**
+                               * Other edge reference
+                               * @type {SweepEvent}
+                               */
+                              this.otherEvent = otherEvent;
+                          
+                              /**
+                               * Belongs to source or clipping polygon
+                               * @type {Boolean}
+                               */
+                              this.isSubject = isSubject;
+                          
+                              /**
+                               * Edge contribution type
+                               * @type {Number}
+                               */
+                              this.type = edgeType || NORMAL;
+                          
+                          
+                              /**
+                               * In-out transition for the sweepline crossing polygon
+                               * @type {Boolean}
+                               */
+                              this.inOut = false;
+                          
+                          
+                              /**
+                               * @type {Boolean}
+                               */
+                              this.otherInOut = false;
+                          
+                              /**
+                               * Previous event in result?
+                               * @type {SweepEvent}
+                               */
+                              this.prevInResult = null;
+                          
+                              /**
+                               * Does event belong to result?
+                               * @type {Boolean}
+                               */
+                              this.inResult = false;
+                          
+                          
+                              // connection step
+                          
+                              /**
+                               * @type {Boolean}
+                               */
+                              this.resultInOut = false;
+                          
+                              this.isExteriorRing = true;
+                            };
+                          
+                          
+                            /**
+                             * @param{Array.<Number>}p
+                             * @return {Boolean}
+                             */
+                            SweepEvent.prototype.isBelow = function isBelow (p) {
+                              var p0 = this.point, p1 = this.otherEvent.point;
+                              return this.left
+                                ? (p0[0] - p[0]) * (p1[1] - p[1]) - (p1[0] - p[0]) * (p0[1] - p[1]) > 0
+                                // signedArea(this.point, this.otherEvent.point, p) > 0 :
+                                : (p1[0] - p[0]) * (p0[1] - p[1]) - (p0[0] - p[0]) * (p1[1] - p[1]) > 0;
+                                //signedArea(this.otherEvent.point, this.point, p) > 0;
+                            };
+                          
+                          
+                            /**
+                             * @param{Array.<Number>}p
+                             * @return {Boolean}
+                             */
+                            SweepEvent.prototype.isAbove = function isAbove (p) {
+                              return !this.isBelow(p);
+                            };
+                          
+                          
+                            /**
+                             * @return {Boolean}
+                             */
+                            SweepEvent.prototype.isVertical = function isVertical () {
+                              return this.point[0] === this.otherEvent.point[0];
+                            };
+                          
+                          
+                            SweepEvent.prototype.clone = function clone () {
+                              var copy = new SweepEvent(
+                                this.point, this.left, this.otherEvent, this.isSubject, this.type);
+                          
+                              copy.inResult     = this.inResult;
+                              copy.prevInResult = this.prevInResult;
+                              copy.isExteriorRing = this.isExteriorRing;
+                              copy.inOut        = this.inOut;
+                              copy.otherInOut   = this.otherInOut;
+                          
+                              return copy;
+                            };
+                          
+                            function equals(p1, p2) {
+                              if (p1[0] === p2[0]) {
+                                if (p1[1] === p2[1]) {
+                                  return true;
+                                } else {
+                                  return false;
+                                }
+                              }
+                              return false;
+                            }
+                          
+                            // const EPSILON = 1e-9;
+                            // const abs = Math.abs;
+                            // TODO https://github.com/w8r/martinez/issues/6#issuecomment-262847164
+                            // Precision problem.
+                            //
+                            // module.exports = function equals(p1, p2) {
+                            //   return abs(p1[0] - p2[0]) <= EPSILON && abs(p1[1] - p2[1]) <= EPSILON;
                             // };
-                        };
+                          
+                            /**
+                             * Signed area of the triangle (p0, p1, p2)
+                             * @param  {Array.<Number>} p0
+                             * @param  {Array.<Number>} p1
+                             * @param  {Array.<Number>} p2
+                             * @return {Number}
+                             */
+                            function signedArea(p0, p1, p2) {
+                              return (p0[0] - p2[0]) * (p1[1] - p2[1]) - (p1[0] - p2[0]) * (p0[1] - p2[1]);
+                            }
+                          
+                            /**
+                             * @param  {SweepEvent} e1
+                             * @param  {SweepEvent} e2
+                             * @return {Number}
+                             */
+                            function compareEvents(e1, e2) {
+                              var p1 = e1.point;
+                              var p2 = e2.point;
+                          
+                              // Different x-coordinate
+                              if (p1[0] > p2[0]) { return 1; }
+                              if (p1[0] < p2[0]) { return -1; }
+                          
+                              // Different points, but same x-coordinate
+                              // Event with lower y-coordinate is processed first
+                              if (p1[1] !== p2[1]) { return p1[1] > p2[1] ? 1 : -1; }
+                          
+                              return specialCases(e1, e2, p1, p2);
+                            }
+                          
+                          
+                            /* eslint-disable no-unused-vars */
+                            function specialCases(e1, e2, p1, p2) {
+                              // Same coordinates, but one is a left endpoint and the other is
+                              // a right endpoint. The right endpoint is processed first
+                              if (e1.left !== e2.left)
+                                { return e1.left ? 1 : -1; }
+                          
+                              // const p2 = e1.otherEvent.point, p3 = e2.otherEvent.point;
+                              // const sa = (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+                              // Same coordinates, both events
+                              // are left endpoints or right endpoints.
+                              // not collinear
+                              if (signedArea(p1, e1.otherEvent.point, e2.otherEvent.point) !== 0) {
+                                // the event associate to the bottom segment is processed first
+                                return (!e1.isBelow(e2.otherEvent.point)) ? 1 : -1;
+                              }
+                          
+                              return (!e1.isSubject && e2.isSubject) ? 1 : -1;
+                            }
+                            /* eslint-enable no-unused-vars */
+                          
+                            /**
+                             * @param  {SweepEvent} se
+                             * @param  {Array.<Number>} p
+                             * @param  {Queue} queue
+                             * @return {Queue}
+                             */
+                            function divideSegment(se, p, queue)  {
+                              var r = new SweepEvent(p, false, se,            se.isSubject);
+                              var l = new SweepEvent(p, true,  se.otherEvent, se.isSubject);
+                          
+                              /* eslint-disable no-console */
+                              if (equals(se.point, se.otherEvent.point)) {
+                          
+                                console.warn('what is that, a collapsed segment?', se);
+                              }
+                              /* eslint-enable no-console */
+                          
+                              r.contourId = l.contourId = se.contourId;
+                          
+                              // avoid a rounding error. The left event would be processed after the right event
+                              if (compareEvents(l, se.otherEvent) > 0) {
+                                se.otherEvent.left = true;
+                                l.left = false;
+                              }
+                          
+                              // avoid a rounding error. The left event would be processed after the right event
+                              // if (compareEvents(se, r) > 0) {}
+                          
+                              se.otherEvent.otherEvent = l;
+                              se.otherEvent = r;
+                          
+                              queue.push(l);
+                              queue.push(r);
+                          
+                              return queue;
+                            }
+                          
+                            //const EPS = 1e-9;
+                          
+                            /**
+                             * Finds the magnitude of the cross product of two vectors (if we pretend
+                             * they're in three dimensions)
+                             *
+                             * @param {Object} a First vector
+                             * @param {Object} b Second vector
+                             * @private
+                             * @returns {Number} The magnitude of the cross product
+                             */
+                            function crossProduct(a, b) {
+                              return (a[0] * b[1]) - (a[1] * b[0]);
+                            }
+                          
+                            /**
+                             * Finds the dot product of two vectors.
+                             *
+                             * @param {Object} a First vector
+                             * @param {Object} b Second vector
+                             * @private
+                             * @returns {Number} The dot product
+                             */
+                            function dotProduct(a, b) {
+                              return (a[0] * b[0]) + (a[1] * b[1]);
+                            }
+                          
+                            /**
+                             * Finds the intersection (if any) between two line segments a and b, given the
+                             * line segments' end points a1, a2 and b1, b2.
+                             *
+                             * This algorithm is based on Schneider and Eberly.
+                             * http://www.cimec.org.ar/~ncalvo/Schneider_Eberly.pdf
+                             * Page 244.
+                             *
+                             * @param {Array.<Number>} a1 point of first line
+                             * @param {Array.<Number>} a2 point of first line
+                             * @param {Array.<Number>} b1 point of second line
+                             * @param {Array.<Number>} b2 point of second line
+                             * @param {Boolean=}       noEndpointTouch whether to skip single touchpoints
+                             *                                         (meaning connected segments) as
+                             *                                         intersections
+                             * @returns {Array.<Array.<Number>>|Null} If the lines intersect, the point of
+                             * intersection. If they overlap, the two end points of the overlapping segment.
+                             * Otherwise, null.
+                             */
+                            function intersection (a1, a2, b1, b2, noEndpointTouch) {
+                              // The algorithm expects our lines in the form P + sd, where P is a point,
+                              // s is on the interval [0, 1], and d is a vector.
+                              // We are passed two points. P can be the first point of each pair. The
+                              // vector, then, could be thought of as the distance (in x and y components)
+                              // from the first point to the second point.
+                              // So first, let's make our vectors:
+                              var va = [a2[0] - a1[0], a2[1] - a1[1]];
+                              var vb = [b2[0] - b1[0], b2[1] - b1[1]];
+                              // We also define a function to convert back to regular point form:
+                          
+                              /* eslint-disable arrow-body-style */
+                          
+                              function toPoint(p, s, d) {
+                                return [
+                                  p[0] + s * d[0],
+                                  p[1] + s * d[1]
+                                ];
+                              }
+                          
+                              /* eslint-enable arrow-body-style */
+                          
+                              // The rest is pretty much a straight port of the algorithm.
+                              var e = [b1[0] - a1[0], b1[1] - a1[1]];
+                              var kross    = crossProduct(va, vb);
+                              var sqrKross = kross * kross;
+                              var sqrLenA  = dotProduct(va, va);
+                              //const sqrLenB  = dotProduct(vb, vb);
+                          
+                              // Check for line intersection. This works because of the properties of the
+                              // cross product -- specifically, two vectors are parallel if and only if the
+                              // cross product is the 0 vector. The full calculation involves relative error
+                              // to account for possible very small line segments. See Schneider & Eberly
+                              // for details.
+                              if (sqrKross > 0/* EPS * sqrLenB * sqLenA */) {
+                                // If they're not parallel, then (because these are line segments) they
+                                // still might not actually intersect. This code checks that the
+                                // intersection point of the lines is actually on both line segments.
+                                var s = crossProduct(e, vb) / kross;
+                                if (s < 0 || s > 1) {
+                                  // not on line segment a
+                                  return null;
+                                }
+                                var t = crossProduct(e, va) / kross;
+                                if (t < 0 || t > 1) {
+                                  // not on line segment b
+                                  return null;
+                                }
+                                if (s === 0 || s === 1) {
+                                  // on an endpoint of line segment a
+                                  return noEndpointTouch ? null : [toPoint(a1, s, va)];
+                                }
+                                if (t === 0 || t === 1) {
+                                  // on an endpoint of line segment b
+                                  return noEndpointTouch ? null : [toPoint(b1, t, vb)];
+                                }
+                                return [toPoint(a1, s, va)];
+                              }
+                          
+                              // If we've reached this point, then the lines are either parallel or the
+                              // same, but the segments could overlap partially or fully, or not at all.
+                              // So we need to find the overlap, if any. To do that, we can use e, which is
+                              // the (vector) difference between the two initial points. If this is parallel
+                              // with the line itself, then the two lines are the same line, and there will
+                              // be overlap.
+                              //const sqrLenE = dotProduct(e, e);
+                              kross = crossProduct(e, va);
+                              sqrKross = kross * kross;
+                          
+                              if (sqrKross > 0 /* EPS * sqLenB * sqLenE */) {
+                              // Lines are just parallel, not the same. No overlap.
+                                return null;
+                              }
+                          
+                              var sa = dotProduct(va, e) / sqrLenA;
+                              var sb = sa + dotProduct(va, vb) / sqrLenA;
+                              var smin = Math.min(sa, sb);
+                              var smax = Math.max(sa, sb);
+                          
+                              // this is, essentially, the FindIntersection acting on floats from
+                              // Schneider & Eberly, just inlined into this function.
+                              if (smin <= 1 && smax >= 0) {
+                          
+                                // overlap on an end point
+                                if (smin === 1) {
+                                  return noEndpointTouch ? null : [toPoint(a1, smin > 0 ? smin : 0, va)];
+                                }
+                          
+                                if (smax === 0) {
+                                  return noEndpointTouch ? null : [toPoint(a1, smax < 1 ? smax : 1, va)];
+                                }
+                          
+                                if (noEndpointTouch && smin === 0 && smax === 1) { return null; }
+                          
+                                // There's overlap on a segment -- two points of intersection. Return both.
+                                return [
+                                  toPoint(a1, smin > 0 ? smin : 0, va),
+                                  toPoint(a1, smax < 1 ? smax : 1, va)
+                                ];
+                              }
+                          
+                              return null;
+                            }
+                          
+                            /**
+                             * @param  {SweepEvent} se1
+                             * @param  {SweepEvent} se2
+                             * @param  {Queue}      queue
+                             * @return {Number}
+                             */
+                            function possibleIntersection (se1, se2, queue) {
+                              // that disallows self-intersecting polygons,
+                              // did cost us half a day, so I'll leave it
+                              // out of respect
+                              // if (se1.isSubject === se2.isSubject) return;
+                              var inter = intersection(
+                                se1.point, se1.otherEvent.point,
+                                se2.point, se2.otherEvent.point
+                              );
+                          
+                              var nintersections = inter ? inter.length : 0;
+                              if (nintersections === 0) { return 0; } // no intersection
+                          
+                              // the line segments intersect at an endpoint of both line segments
+                              if ((nintersections === 1) &&
+                                  (equals(se1.point, se2.point) ||
+                                   equals(se1.otherEvent.point, se2.otherEvent.point))) {
+                                return 0;
+                              }
+                          
+                              if (nintersections === 2 && se1.isSubject === se2.isSubject) {
+                                // if(se1.contourId === se2.contourId){
+                                // console.warn('Edges of the same polygon overlap',
+                                //   se1.point, se1.otherEvent.point, se2.point, se2.otherEvent.point);
+                                // }
+                                //throw new Error('Edges of the same polygon overlap');
+                                return 0;
+                              }
+                          
+                              // The line segments associated to se1 and se2 intersect
+                              if (nintersections === 1) {
+                          
+                                // if the intersection point is not an endpoint of se1
+                                if (!equals(se1.point, inter[0]) && !equals(se1.otherEvent.point, inter[0])) {
+                                  divideSegment(se1, inter[0], queue);
+                                }
+                          
+                                // if the intersection point is not an endpoint of se2
+                                if (!equals(se2.point, inter[0]) && !equals(se2.otherEvent.point, inter[0])) {
+                                  divideSegment(se2, inter[0], queue);
+                                }
+                                return 1;
+                              }
+                          
+                              // The line segments associated to se1 and se2 overlap
+                              var events        = [];
+                              var leftCoincide  = false;
+                              var rightCoincide = false;
+                          
+                              if (equals(se1.point, se2.point)) {
+                                leftCoincide = true; // linked
+                              } else if (compareEvents(se1, se2) === 1) {
+                                events.push(se2, se1);
+                              } else {
+                                events.push(se1, se2);
+                              }
+                          
+                              if (equals(se1.otherEvent.point, se2.otherEvent.point)) {
+                                rightCoincide = true;
+                              } else if (compareEvents(se1.otherEvent, se2.otherEvent) === 1) {
+                                events.push(se2.otherEvent, se1.otherEvent);
+                              } else {
+                                events.push(se1.otherEvent, se2.otherEvent);
+                              }
+                          
+                              if ((leftCoincide && rightCoincide) || leftCoincide) {
+                                // both line segments are equal or share the left endpoint
+                                se2.type = NON_CONTRIBUTING;
+                                se1.type = (se2.inOut === se1.inOut)
+                                  ? SAME_TRANSITION : DIFFERENT_TRANSITION;
+                          
+                                if (leftCoincide && !rightCoincide) {
+                                  // honestly no idea, but changing events selection from [2, 1]
+                                  // to [0, 1] fixes the overlapping self-intersecting polygons issue
+                                  divideSegment(events[1].otherEvent, events[0].point, queue);
+                                }
+                                return 2;
+                              }
+                          
+                              // the line segments share the right endpoint
+                              if (rightCoincide) {
+                                divideSegment(events[0], events[1].point, queue);
+                                return 3;
+                              }
+                          
+                              // no line segment includes totally the other one
+                              if (events[0] !== events[3].otherEvent) {
+                                divideSegment(events[0], events[1].point, queue);
+                                divideSegment(events[1], events[2].point, queue);
+                                return 3;
+                              }
+                          
+                              // one line segment includes the other one
+                              divideSegment(events[0], events[1].point, queue);
+                              divideSegment(events[3].otherEvent, events[2].point, queue);
+                          
+                              return 3;
+                            }
+                          
+                            /**
+                             * @param  {SweepEvent} le1
+                             * @param  {SweepEvent} le2
+                             * @return {Number}
+                             */
+                            function compareSegments(le1, le2) {
+                              if (le1 === le2) { return 0; }
+                          
+                              // Segments are not collinear
+                              if (signedArea(le1.point, le1.otherEvent.point, le2.point) !== 0 ||
+                                signedArea(le1.point, le1.otherEvent.point, le2.otherEvent.point) !== 0) {
+                          
+                                // If they share their left endpoint use the right endpoint to sort
+                                if (equals(le1.point, le2.point)) { return le1.isBelow(le2.otherEvent.point) ? -1 : 1; }
+                          
+                                // Different left endpoint: use the left endpoint to sort
+                                if (le1.point[0] === le2.point[0]) { return le1.point[1] < le2.point[1] ? -1 : 1; }
+                          
+                                // has the line segment associated to e1 been inserted
+                                // into S after the line segment associated to e2 ?
+                                if (compareEvents(le1, le2) === 1) { return le2.isAbove(le1.point) ? -1 : 1; }
+                          
+                                // The line segment associated to e2 has been inserted
+                                // into S after the line segment associated to e1
+                                return le1.isBelow(le2.point) ? -1 : 1;
+                              }
+                          
+                              if (le1.isSubject === le2.isSubject) { // same polygon
+                                var p1 = le1.point, p2 = le2.point;
+                                if (p1[0] === p2[0] && p1[1] === p2[1]/*equals(le1.point, le2.point)*/) {
+                                  p1 = le1.otherEvent.point; p2 = le2.otherEvent.point;
+                                  if (p1[0] === p2[0] && p1[1] === p2[1]) { return 0; }
+                                  else { return le1.contourId > le2.contourId ? 1 : -1; }
+                                }
+                              } else { // Segments are collinear, but belong to separate polygons
+                                return le1.isSubject ? -1 : 1;
+                              }
+                          
+                              return compareEvents(le1, le2) === 1 ? 1 : -1;
+                            }
+                          
+                            function subdivide(eventQueue, subject, clipping, sbbox, cbbox, operation) {
+                              var sweepLine = new SplayTree(compareSegments);
+                              var sortedEvents = [];
+                          
+                              var rightbound = Math.min(sbbox[2], cbbox[2]);
+                          
+                              var prev, next, begin;
+                          
+                              while (eventQueue.length !== 0) {
+                                var event = eventQueue.pop();
+                                sortedEvents.push(event);
+                          
+                                // optimization by bboxes for intersection and difference goes here
+                                if ((operation === INTERSECTION && event.point[0] > rightbound) ||
+                                    (operation === DIFFERENCE   && event.point[0] > sbbox[2])) {
+                                  break;
+                                }
+                          
+                                if (event.left) {
+                                  next  = prev = sweepLine.insert(event);
+                                  begin = sweepLine.minNode();
+                          
+                                  if (prev !== begin) { prev = sweepLine.prev(prev); }
+                                  else                { prev = null; }
+                          
+                                  next = sweepLine.next(next);
+                          
+                                  var prevEvent = prev ? prev.key : null;
+                                  var prevprevEvent = (void 0);
+                                  computeFields(event, prevEvent, operation);
+                                  if (next) {
+                                    if (possibleIntersection(event, next.key, eventQueue) === 2) {
+                                      computeFields(event, prevEvent, operation);
+                                      computeFields(event, next.key, operation);
+                                    }
+                                  }
+                          
+                                  if (prev) {
+                                    if (possibleIntersection(prev.key, event, eventQueue) === 2) {
+                                      var prevprev = prev;
+                                      if (prevprev !== begin) { prevprev = sweepLine.prev(prevprev); }
+                                      else                    { prevprev = null; }
+                          
+                                      prevprevEvent = prevprev ? prevprev.key : null;
+                                      computeFields(prevEvent, prevprevEvent, operation);
+                                      computeFields(event,     prevEvent,     operation);
+                                    }
+                                  }
+                                } else {
+                                  event = event.otherEvent;
+                                  next = prev = sweepLine.find(event);
+                          
+                                  if (prev && next) {
+                          
+                                    if (prev !== begin) { prev = sweepLine.prev(prev); }
+                                    else                { prev = null; }
+                          
+                                    next = sweepLine.next(next);
+                                    sweepLine.remove(event);
+                          
+                                    if (next && prev) {
+                                      possibleIntersection(prev.key, next.key, eventQueue);
+                                    }
+                                  }
+                                }
+                              }
+                              return sortedEvents;
+                            }
+                          
+                            /**
+                             * @param  {Array.<SweepEvent>} sortedEvents
+                             * @return {Array.<SweepEvent>}
+                             */
+                            function orderEvents(sortedEvents) {
+                              var event, i, len, tmp;
+                              var resultEvents = [];
+                              for (i = 0, len = sortedEvents.length; i < len; i++) {
+                                event = sortedEvents[i];
+                                if ((event.left && event.inResult) ||
+                                  (!event.left && event.otherEvent.inResult)) {
+                                  resultEvents.push(event);
+                                }
+                              }
+                              // Due to overlapping edges the resultEvents array can be not wholly sorted
+                              var sorted = false;
+                              while (!sorted) {
+                                sorted = true;
+                                for (i = 0, len = resultEvents.length; i < len; i++) {
+                                  if ((i + 1) < len &&
+                                    compareEvents(resultEvents[i], resultEvents[i + 1]) === 1) {
+                                    tmp = resultEvents[i];
+                                    resultEvents[i] = resultEvents[i + 1];
+                                    resultEvents[i + 1] = tmp;
+                                    sorted = false;
+                                  }
+                                }
+                              }
+                          
+                          
+                              for (i = 0, len = resultEvents.length; i < len; i++) {
+                                event = resultEvents[i];
+                                event.pos = i;
+                              }
+                          
+                              // imagine, the right event is found in the beginning of the queue,
+                              // when his left counterpart is not marked yet
+                              for (i = 0, len = resultEvents.length; i < len; i++) {
+                                event = resultEvents[i];
+                                if (!event.left) {
+                                  tmp = event.pos;
+                                  event.pos = event.otherEvent.pos;
+                                  event.otherEvent.pos = tmp;
+                                }
+                              }
+                          
+                              return resultEvents;
+                            }
+                          
+                          
+                            /**
+                             * @param  {Number} pos
+                             * @param  {Array.<SweepEvent>} resultEvents
+                             * @param  {Object>}    processed
+                             * @return {Number}
+                             */
+                            function nextPos(pos, resultEvents, processed, origIndex) {
+                              var p, p1;
+                              var newPos = pos + 1;
+                              var length = resultEvents.length;
+                          
+                              p  = resultEvents[pos].point;
+                          
+                              if (newPos < length)
+                                { p1 = resultEvents[newPos].point; }
+                          
+                          
+                              // while in range and not the current one by value
+                              while (newPos < length && p1[0] === p[0] && p1[1] === p[1]) {
+                                if (!processed[newPos]) {
+                                  return newPos;
+                                } else   {
+                                  newPos++;
+                                }
+                                p1 = resultEvents[newPos].point;
+                              }
+                          
+                              newPos = pos - 1;
+                          
+                              while (processed[newPos] && newPos >= origIndex) {
+                                newPos--;
+                              }
+                              return newPos;
+                            }
+                          
+                          
+                            /**
+                             * @param  {Array.<SweepEvent>} sortedEvents
+                             * @return {Array.<*>} polygons
+                             */
+                            function connectEdges(sortedEvents, operation) {
+                              var i, len;
+                              var resultEvents = orderEvents(sortedEvents);
+                          
+                              // "false"-filled array
+                              var processed = {};
+                              var result = [];
+                              var event;
+                          
+                              for (i = 0, len = resultEvents.length; i < len; i++) {
+                                if (processed[i]) { continue; }
+                                var contour = [[]];
+                          
+                                if (!resultEvents[i].isExteriorRing) {
+                                  if (operation === DIFFERENCE && !resultEvents[i].isSubject && result.length === 0) {
+                                    result.push(contour);
+                                  } else if (result.length === 0) {
+                                    result.push([[contour]]);
+                                  } else {
+                                    result[result.length - 1].push(contour[0]);
+                                  }
+                                } else if (operation === DIFFERENCE && !resultEvents[i].isSubject && result.length > 1) {
+                                  result[result.length - 1].push(contour[0]);
+                                } else {
+                                  result.push(contour);
+                                }
+                          
+                                var ringId = result.length - 1;
+                                var pos = i;
+                          
+                                var initial = resultEvents[i].point;
+                                contour[0].push(initial);
+                          
+                                while (pos >= i) {
+                                  event = resultEvents[pos];
+                                  processed[pos] = true;
+                          
+                                  if (event.left) {
+                                    event.resultInOut = false;
+                                    event.contourId   = ringId;
+                                  } else {
+                                    event.otherEvent.resultInOut = true;
+                                    event.otherEvent.contourId   = ringId;
+                                  }
+                          
+                                  pos = event.pos;
+                                  processed[pos] = true;
+                                  contour[0].push(resultEvents[pos].point);
+                                  pos = nextPos(pos, resultEvents, processed, i);
+                                }
+                          
+                                pos = pos === -1 ? i : pos;
+                          
+                                event = resultEvents[pos];
+                                processed[pos] = processed[event.pos] = true;
+                                event.otherEvent.resultInOut = true;
+                                event.otherEvent.contourId   = ringId;
+                              }
+                          
+                              // Handle if the result is a polygon (eg not multipoly)
+                              // Commented it again, let's see what do we mean by that
+                              // if (result.length === 1) result = result[0];
+                              return result;
+                            }
+                          
+                            var tinyqueue = TinyQueue;
+                            var default_1 = TinyQueue;
+                          
+                            function TinyQueue(data, compare) {
+                                var this$1 = this;
+                          
+                                if (!(this instanceof TinyQueue)) { return new TinyQueue(data, compare); }
+                          
+                                this.data = data || [];
+                                this.length = this.data.length;
+                                this.compare = compare || defaultCompare;
+                          
+                                if (this.length > 0) {
+                                    for (var i = (this.length >> 1) - 1; i >= 0; i--) { this$1._down(i); }
+                                }
+                            }
+                          
+                            function defaultCompare(a, b) {
+                                return a < b ? -1 : a > b ? 1 : 0;
+                            }
+                          
+                            TinyQueue.prototype = {
+                          
+                                push: function (item) {
+                                    this.data.push(item);
+                                    this.length++;
+                                    this._up(this.length - 1);
+                                },
+                          
+                                pop: function () {
+                                    if (this.length === 0) { return undefined; }
+                          
+                                    var top = this.data[0];
+                                    this.length--;
+                          
+                                    if (this.length > 0) {
+                                        this.data[0] = this.data[this.length];
+                                        this._down(0);
+                                    }
+                                    this.data.pop();
+                          
+                                    return top;
+                                },
+                          
+                                peek: function () {
+                                    return this.data[0];
+                                },
+                          
+                                _up: function (pos) {
+                                    var data = this.data;
+                                    var compare = this.compare;
+                                    var item = data[pos];
+                          
+                                    while (pos > 0) {
+                                        var parent = (pos - 1) >> 1;
+                                        var current = data[parent];
+                                        if (compare(item, current) >= 0) { break; }
+                                        data[pos] = current;
+                                        pos = parent;
+                                    }
+                          
+                                    data[pos] = item;
+                                },
+                          
+                                _down: function (pos) {
+                                    var this$1 = this;
+                          
+                                    var data = this.data;
+                                    var compare = this.compare;
+                                    var halfLength = this.length >> 1;
+                                    var item = data[pos];
+                          
+                                    while (pos < halfLength) {
+                                        var left = (pos << 1) + 1;
+                                        var right = left + 1;
+                                        var best = data[left];
+                          
+                                        if (right < this$1.length && compare(data[right], best) < 0) {
+                                            left = right;
+                                            best = data[right];
+                                        }
+                                        if (compare(best, item) >= 0) { break; }
+                          
+                                        data[pos] = best;
+                                        pos = left;
+                                    }
+                          
+                                    data[pos] = item;
+                                }
+                            };
+                            tinyqueue.default = default_1;
+                          
+                            var max = Math.max;
+                            var min = Math.min;
+                          
+                            var contourId = 0;
+                          
+                          
+                            function processPolygon(contourOrHole, isSubject, depth, Q, bbox, isExteriorRing) {
+                              var i, len, s1, s2, e1, e2;
+                              for (i = 0, len = contourOrHole.length - 1; i < len; i++) {
+                                s1 = contourOrHole[i];
+                                s2 = contourOrHole[i + 1];
+                                e1 = new SweepEvent(s1, false, undefined, isSubject);
+                                e2 = new SweepEvent(s2, false, e1,        isSubject);
+                                e1.otherEvent = e2;
+                          
+                                if (s1[0] === s2[0] && s1[1] === s2[1]) {
+                                  continue; // skip collapsed edges, or it breaks
+                                }
+                          
+                                e1.contourId = e2.contourId = depth;
+                                if (!isExteriorRing) {
+                                  e1.isExteriorRing = false;
+                                  e2.isExteriorRing = false;
+                                }
+                                if (compareEvents(e1, e2) > 0) {
+                                  e2.left = true;
+                                } else {
+                                  e1.left = true;
+                                }
+                          
+                                var x = s1[0], y = s1[1];
+                                bbox[0] = min(bbox[0], x);
+                                bbox[1] = min(bbox[1], y);
+                                bbox[2] = max(bbox[2], x);
+                                bbox[3] = max(bbox[3], y);
+                          
+                                // Pushing it so the queue is sorted from left to right,
+                                // with object on the left having the highest priority.
+                                Q.push(e1);
+                                Q.push(e2);
+                              }
+                            }
+                          
+                          
+                            function fillQueue(subject, clipping, sbbox, cbbox, operation) {
+                              var eventQueue = new tinyqueue(null, compareEvents);
+                              var polygonSet, isExteriorRing, i, ii, j, jj; //, k, kk;
+                          
+                              for (i = 0, ii = subject.length; i < ii; i++) {
+                                polygonSet = subject[i];
+                                for (j = 0, jj = polygonSet.length; j < jj; j++) {
+                                  isExteriorRing = j === 0;
+                                  if (isExteriorRing) { contourId++; }
+                                  processPolygon(polygonSet[j], true, contourId, eventQueue, sbbox, isExteriorRing);
+                                }
+                              }
+                          
+                              for (i = 0, ii = clipping.length; i < ii; i++) {
+                                polygonSet = clipping[i];
+                                for (j = 0, jj = polygonSet.length; j < jj; j++) {
+                                  isExteriorRing = j === 0;
+                                  if (operation === DIFFERENCE) { isExteriorRing = false; }
+                                  if (isExteriorRing) { contourId++; }
+                                  processPolygon(polygonSet[j], false, contourId, eventQueue, cbbox, isExteriorRing);
+                                }
+                              }
+                          
+                              return eventQueue;
+                            }
+                          
+                            var EMPTY = [];
+                          
+                          
+                            function trivialOperation(subject, clipping, operation) {
+                              var result = null;
+                              if (subject.length * clipping.length === 0) {
+                                if        (operation === INTERSECTION) {
+                                  result = EMPTY;
+                                } else if (operation === DIFFERENCE) {
+                                  result = subject;
+                                } else if (operation === UNION ||
+                                           operation === XOR) {
+                                  result = (subject.length === 0) ? clipping : subject;
+                                }
+                              }
+                              return result;
+                            }
+                          
+                          
+                            function compareBBoxes(subject, clipping, sbbox, cbbox, operation) {
+                              var result = null;
+                              if (sbbox[0] > cbbox[2] ||
+                                  cbbox[0] > sbbox[2] ||
+                                  sbbox[1] > cbbox[3] ||
+                                  cbbox[1] > sbbox[3]) {
+                                if        (operation === INTERSECTION) {
+                                  result = EMPTY;
+                                } else if (operation === DIFFERENCE) {
+                                  result = subject;
+                                } else if (operation === UNION ||
+                                           operation === XOR) {
+                                  result = subject.concat(clipping);
+                                }
+                              }
+                              return result;
+                            }
+                          
+                          
+                            function boolean(subject, clipping, operation) {
+                              if (typeof subject[0][0][0] === 'number') {
+                                subject = [subject];
+                              }
+                              if (typeof clipping[0][0][0] === 'number') {
+                                clipping = [clipping];
+                              }
+                              var trivial = trivialOperation(subject, clipping, operation);
+                              if (trivial) {
+                                return trivial === EMPTY ? null : trivial;
+                              }
+                              var sbbox = [Infinity, Infinity, -Infinity, -Infinity];
+                              var cbbox = [Infinity, Infinity, -Infinity, -Infinity];
+                          
+                              //console.time('fill queue');
+                              var eventQueue = fillQueue(subject, clipping, sbbox, cbbox, operation);
+                              //console.timeEnd('fill queue');
+                          
+                              trivial = compareBBoxes(subject, clipping, sbbox, cbbox, operation);
+                              if (trivial) {
+                                return trivial === EMPTY ? null : trivial;
+                              }
+                              //console.time('subdivide edges');
+                              var sortedEvents = subdivide(eventQueue, subject, clipping, sbbox, cbbox, operation);
+                              //console.timeEnd('subdivide edges');
+                          
+                              //console.time('connect vertices');
+                              var result = connectEdges(sortedEvents, operation);
+                              //console.timeEnd('connect vertices');
+                              return result;
+                            }
+                          
+                            function union (subject, clipping) {
+                              return boolean(subject, clipping, UNION);
+                            }
+                          
+                            function diff (subject, clipping) {
+                              return boolean(subject, clipping, DIFFERENCE);
+                            }
+                          
+                            function xor (subject, clipping){
+                              return boolean(subject, clipping, XOR);
+                            }
+                          
+                            function intersection$1 (subject, clipping) {
+                              return boolean(subject, clipping, INTERSECTION);
+                            }
+                          
+                            /**
+                             * @enum {Number}
+                             */
+                            var operations = { UNION: UNION, DIFFERENCE: DIFFERENCE, INTERSECTION: INTERSECTION, XOR: XOR };
+                          
+                            exports.union = union;
+                            exports.diff = diff;
+                            exports.xor = xor;
+                            exports.intersection = intersection$1;
+                            exports.operations = operations;
+                          
+                            Object.defineProperty(exports, '__esModule', { value: true });
+                          
+                          })));
                         this.lzString = (function(){
                             // Copyright (c) 2013 Pieroxy <pieroxy@pieroxy.net>
                             // This work is free. You can redistribute it and/or modify it
@@ -16555,7 +17640,2279 @@
                         	Object.defineProperty(exports, '__esModule', { value: true });
                         
                         })));
+                        this.earcut = function(points,holeIndices){
+                        	//https://github.com/mapbox/earcut
+                        	
+                            var outputPoints = [];
+                            earcut(points,holeIndices).forEach(function(a){ outputPoints = outputPoints.concat([ points[(a*2)],points[(a*2)+1] ]); });
+                            return outputPoints;
+                        
+                            function earcut(data, holeIndices, dim) {
+                        
+                                dim = dim || 2;
+                        
+                                var hasHoles = holeIndices && holeIndices.length,
+                                    outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+                                    outerNode = linkedList(data, 0, outerLen, dim, true),
+                                    triangles = [];
+                        
+                                if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+                        
+                                var minX, minY, maxX, maxY, x, y, invSize;
+                        
+                                if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+                        
+                                // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+                                if (data.length > 80 * dim) {
+                                    minX = maxX = data[0];
+                                    minY = maxY = data[1];
+                        
+                                    for (var i = dim; i < outerLen; i += dim) {
+                                        x = data[i];
+                                        y = data[i + 1];
+                                        if (x < minX) minX = x;
+                                        if (y < minY) minY = y;
+                                        if (x > maxX) maxX = x;
+                                        if (y > maxY) maxY = y;
+                                    }
+                        
+                                    // minX, minY and invSize are later used to transform coords into integers for z-order calculation
+                                    invSize = Math.max(maxX - minX, maxY - minY);
+                                    invSize = invSize !== 0 ? 1 / invSize : 0;
+                                }
+                        
+                                earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
+                        
+                                return triangles;
+                            }
+                        
+                            // create a circular doubly linked list from polygon points in the specified winding order
+                            function linkedList(data, start, end, dim, clockwise) {
+                                var i, last;
+                        
+                                if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+                                    for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+                                } else {
+                                    for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+                                }
+                        
+                                if (last && equals(last, last.next)) {
+                                    removeNode(last);
+                                    last = last.next;
+                                }
+                        
+                                return last;
+                            }
+                        
+                            // eliminate colinear or duplicate points
+                            function filterPoints(start, end) {
+                                if (!start) return start;
+                                if (!end) end = start;
+                        
+                                var p = start,
+                                    again;
+                                do {
+                                    again = false;
+                        
+                                    if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+                                        removeNode(p);
+                                        p = end = p.prev;
+                                        if (p === p.next) break;
+                                        again = true;
+                        
+                                    } else {
+                                        p = p.next;
+                                    }
+                                } while (again || p !== end);
+                        
+                                return end;
+                            }
+                        
+                            // main ear slicing loop which triangulates a polygon (given as a linked list)
+                            function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+                                if (!ear) return;
+                        
+                                // interlink polygon nodes in z-order
+                                if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+                        
+                                var stop = ear,
+                                    prev, next;
+                        
+                                // iterate through ears, slicing them one by one
+                                while (ear.prev !== ear.next) {
+                                    prev = ear.prev;
+                                    next = ear.next;
+                        
+                                    if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+                                        // cut off the triangle
+                                        triangles.push(prev.i / dim);
+                                        triangles.push(ear.i / dim);
+                                        triangles.push(next.i / dim);
+                        
+                                        removeNode(ear);
+                        
+                                        // skipping the next vertex leads to less sliver triangles
+                                        ear = next.next;
+                                        stop = next.next;
+                        
+                                        continue;
+                                    }
+                        
+                                    ear = next;
+                        
+                                    // if we looped through the whole remaining polygon and can't find any more ears
+                                    if (ear === stop) {
+                                        // try filtering points and slicing again
+                                        if (!pass) {
+                                            earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+                        
+                                        // if this didn't work, try curing all small self-intersections locally
+                                        } else if (pass === 1) {
+                                            ear = cureLocalIntersections(ear, triangles, dim);
+                                            earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+                        
+                                        // as a last resort, try splitting the remaining polygon into two
+                                        } else if (pass === 2) {
+                                            splitEarcut(ear, triangles, dim, minX, minY, invSize);
+                                        }
+                        
+                                        break;
+                                    }
+                                }
+                            }
+                        
+                            // check whether a polygon node forms a valid ear with adjacent nodes
+                            function isEar(ear) {
+                                var a = ear.prev,
+                                    b = ear,
+                                    c = ear.next;
+                        
+                                if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+                        
+                                // now make sure we don't have other points inside the potential ear
+                                var p = ear.next.next;
+                        
+                                while (p !== ear.prev) {
+                                    if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                        area(p.prev, p, p.next) >= 0) return false;
+                                    p = p.next;
+                                }
+                        
+                                return true;
+                            }
+                        
+                            function isEarHashed(ear, minX, minY, invSize) {
+                                var a = ear.prev,
+                                    b = ear,
+                                    c = ear.next;
+                        
+                                if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+                        
+                                // triangle bbox; min & max are calculated like this for speed
+                                var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
+                                    minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
+                                    maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
+                                    maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+                        
+                                // z-order range for the current triangle bbox;
+                                var minZ = zOrder(minTX, minTY, minX, minY, invSize),
+                                    maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
+                        
+                                var p = ear.prevZ,
+                                    n = ear.nextZ;
+                        
+                                // look for points inside the triangle in both directions
+                                while (p && p.z >= minZ && n && n.z <= maxZ) {
+                                    if (p !== ear.prev && p !== ear.next &&
+                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                        area(p.prev, p, p.next) >= 0) return false;
+                                    p = p.prevZ;
+                        
+                                    if (n !== ear.prev && n !== ear.next &&
+                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+                                        area(n.prev, n, n.next) >= 0) return false;
+                                    n = n.nextZ;
+                                }
+                        
+                                // look for remaining points in decreasing z-order
+                                while (p && p.z >= minZ) {
+                                    if (p !== ear.prev && p !== ear.next &&
+                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+                                        area(p.prev, p, p.next) >= 0) return false;
+                                    p = p.prevZ;
+                                }
+                        
+                                // look for remaining points in increasing z-order
+                                while (n && n.z <= maxZ) {
+                                    if (n !== ear.prev && n !== ear.next &&
+                                        pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+                                        area(n.prev, n, n.next) >= 0) return false;
+                                    n = n.nextZ;
+                                }
+                        
+                                return true;
+                            }
+                        
+                            // go through all polygon nodes and cure small local self-intersections
+                            function cureLocalIntersections(start, triangles, dim) {
+                                var p = start;
+                                do {
+                                    var a = p.prev,
+                                        b = p.next.next;
+                        
+                                    if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+                        
+                                        triangles.push(a.i / dim);
+                                        triangles.push(p.i / dim);
+                                        triangles.push(b.i / dim);
+                        
+                                        // remove two nodes involved
+                                        removeNode(p);
+                                        removeNode(p.next);
+                        
+                                        p = start = b;
+                                    }
+                                    p = p.next;
+                                } while (p !== start);
+                        
+                                return p;
+                            }
+                        
+                            // try splitting polygon into two and triangulate them independently
+                            function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+                                // look for a valid diagonal that divides the polygon into two
+                                var a = start;
+                                do {
+                                    var b = a.next.next;
+                                    while (b !== a.prev) {
+                                        if (a.i !== b.i && isValidDiagonal(a, b)) {
+                                            // split the polygon in two by the diagonal
+                                            var c = splitPolygon(a, b);
+                        
+                                            // filter colinear points around the cuts
+                                            a = filterPoints(a, a.next);
+                                            c = filterPoints(c, c.next);
+                        
+                                            // run earcut on each half
+                                            earcutLinked(a, triangles, dim, minX, minY, invSize);
+                                            earcutLinked(c, triangles, dim, minX, minY, invSize);
+                                            return;
+                                        }
+                                        b = b.next;
+                                    }
+                                    a = a.next;
+                                } while (a !== start);
+                            }
+                        
+                            // link every hole into the outer loop, producing a single-ring polygon without holes
+                            function eliminateHoles(data, holeIndices, outerNode, dim) {
+                                var queue = [],
+                                    i, len, start, end, list;
+                        
+                                for (i = 0, len = holeIndices.length; i < len; i++) {
+                                    start = holeIndices[i] * dim;
+                                    end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+                                    list = linkedList(data, start, end, dim, false);
+                                    if (list === list.next) list.steiner = true;
+                                    queue.push(getLeftmost(list));
+                                }
+                        
+                                queue.sort(compareX);
+                        
+                                // process holes from left to right
+                                for (i = 0; i < queue.length; i++) {
+                                    eliminateHole(queue[i], outerNode);
+                                    outerNode = filterPoints(outerNode, outerNode.next);
+                                }
+                        
+                                return outerNode;
+                            }
+                        
+                            function compareX(a, b) {
+                                return a.x - b.x;
+                            }
+                        
+                            // find a bridge between vertices that connects hole with an outer ring and and link it
+                            function eliminateHole(hole, outerNode) {
+                                outerNode = findHoleBridge(hole, outerNode);
+                                if (outerNode) {
+                                    var b = splitPolygon(outerNode, hole);
+                                    filterPoints(b, b.next);
+                                }
+                            }
+                        
+                            // David Eberly's algorithm for finding a bridge between hole and outer polygon
+                            function findHoleBridge(hole, outerNode) {
+                                var p = outerNode,
+                                    hx = hole.x,
+                                    hy = hole.y,
+                                    qx = -Infinity,
+                                    m;
+                        
+                                // find a segment intersected by a ray from the hole's leftmost point to the left;
+                                // segment's endpoint with lesser x will be potential connection point
+                                do {
+                                    if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+                                        var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+                                        if (x <= hx && x > qx) {
+                                            qx = x;
+                                            if (x === hx) {
+                                                if (hy === p.y) return p;
+                                                if (hy === p.next.y) return p.next;
+                                            }
+                                            m = p.x < p.next.x ? p : p.next;
+                                        }
+                                    }
+                                    p = p.next;
+                                } while (p !== outerNode);
+                        
+                                if (!m) return null;
+                        
+                                if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
+                        
+                                // look for points inside the triangle of hole point, segment intersection and endpoint;
+                                // if there are no points found, we have a valid connection;
+                                // otherwise choose the point of the minimum angle with the ray as connection point
+                        
+                                var stop = m,
+                                    mx = m.x,
+                                    my = m.y,
+                                    tanMin = Infinity,
+                                    tan;
+                        
+                                p = m.next;
+                        
+                                while (p !== stop) {
+                                    if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                                            pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+                        
+                                        tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+                        
+                                        if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+                                            m = p;
+                                            tanMin = tan;
+                                        }
+                                    }
+                        
+                                    p = p.next;
+                                }
+                        
+                                return m;
+                            }
+                        
+                            // interlink polygon nodes in z-order
+                            function indexCurve(start, minX, minY, invSize) {
+                                var p = start;
+                                do {
+                                    if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+                                    p.prevZ = p.prev;
+                                    p.nextZ = p.next;
+                                    p = p.next;
+                                } while (p !== start);
+                        
+                                p.prevZ.nextZ = null;
+                                p.prevZ = null;
+                        
+                                sortLinked(p);
+                            }
+                        
+                            // Simon Tatham's linked list merge sort algorithm
+                            // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+                            function sortLinked(list) {
+                                var i, p, q, e, tail, numMerges, pSize, qSize,
+                                    inSize = 1;
+                        
+                                do {
+                                    p = list;
+                                    list = null;
+                                    tail = null;
+                                    numMerges = 0;
+                        
+                                    while (p) {
+                                        numMerges++;
+                                        q = p;
+                                        pSize = 0;
+                                        for (i = 0; i < inSize; i++) {
+                                            pSize++;
+                                            q = q.nextZ;
+                                            if (!q) break;
+                                        }
+                                        qSize = inSize;
+                        
+                                        while (pSize > 0 || (qSize > 0 && q)) {
+                        
+                                            if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+                                                e = p;
+                                                p = p.nextZ;
+                                                pSize--;
+                                            } else {
+                                                e = q;
+                                                q = q.nextZ;
+                                                qSize--;
+                                            }
+                        
+                                            if (tail) tail.nextZ = e;
+                                            else list = e;
+                        
+                                            e.prevZ = tail;
+                                            tail = e;
+                                        }
+                        
+                                        p = q;
+                                    }
+                        
+                                    tail.nextZ = null;
+                                    inSize *= 2;
+                        
+                                } while (numMerges > 1);
+                        
+                                return list;
+                            }
+                        
+                            // z-order of a point given coords and inverse of the longer side of data bbox
+                            function zOrder(x, y, minX, minY, invSize) {
+                                // coords are transformed into non-negative 15-bit integer range
+                                x = 32767 * (x - minX) * invSize;
+                                y = 32767 * (y - minY) * invSize;
+                        
+                                x = (x | (x << 8)) & 0x00FF00FF;
+                                x = (x | (x << 4)) & 0x0F0F0F0F;
+                                x = (x | (x << 2)) & 0x33333333;
+                                x = (x | (x << 1)) & 0x55555555;
+                        
+                                y = (y | (y << 8)) & 0x00FF00FF;
+                                y = (y | (y << 4)) & 0x0F0F0F0F;
+                                y = (y | (y << 2)) & 0x33333333;
+                                y = (y | (y << 1)) & 0x55555555;
+                        
+                                return x | (y << 1);
+                            }
+                        
+                            // find the leftmost node of a polygon ring
+                            function getLeftmost(start) {
+                                var p = start,
+                                    leftmost = start;
+                                do {
+                                    if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
+                                    p = p.next;
+                                } while (p !== start);
+                        
+                                return leftmost;
+                            }
+                        
+                            // check if a point lies within a convex triangle
+                            function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+                                return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
+                                    (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
+                                    (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
+                            }
+                        
+                            // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+                            function isValidDiagonal(a, b) {
+                                return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
+                                    locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+                            }
+                        
+                            // signed area of a triangle
+                            function area(p, q, r) {
+                                return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+                            }
+                        
+                            // check if two points are equal
+                            function equals(p1, p2) {
+                                return p1.x === p2.x && p1.y === p2.y;
+                            }
+                        
+                            // check if two segments intersect
+                            function intersects(p1, q1, p2, q2) {
+                                if ((equals(p1, p2) && equals(q1, q2)) ||
+                                    (equals(p1, q2) && equals(p2, q1))) return true;
+                                return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
+                                    area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+                            }
+                        
+                            // check if a polygon diagonal intersects any polygon segments
+                            function intersectsPolygon(a, b) {
+                                var p = a;
+                                do {
+                                    if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                                            intersects(p, p.next, a, b)) return true;
+                                    p = p.next;
+                                } while (p !== a);
+                        
+                                return false;
+                            }
+                        
+                            // check if a polygon diagonal is locally inside the polygon
+                            function locallyInside(a, b) {
+                                return area(a.prev, a, a.next) < 0 ?
+                                    area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+                                    area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+                            }
+                        
+                            // check if the middle point of a polygon diagonal is inside the polygon
+                            function middleInside(a, b) {
+                                var p = a,
+                                    inside = false,
+                                    px = (a.x + b.x) / 2,
+                                    py = (a.y + b.y) / 2;
+                                do {
+                                    if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                                            (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+                                        inside = !inside;
+                                    p = p.next;
+                                } while (p !== a);
+                        
+                                return inside;
+                            }
+                        
+                            // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+                            // if one belongs to the outer ring and another to a hole, it merges it into a single ring
+                            function splitPolygon(a, b) {
+                                var a2 = new Node(a.i, a.x, a.y),
+                                    b2 = new Node(b.i, b.x, b.y),
+                                    an = a.next,
+                                    bp = b.prev;
+                        
+                                a.next = b;
+                                b.prev = a;
+                        
+                                a2.next = an;
+                                an.prev = a2;
+                        
+                                b2.next = a2;
+                                a2.prev = b2;
+                        
+                                bp.next = b2;
+                                b2.prev = bp;
+                        
+                                return b2;
+                            }
+                        
+                            // create a node and optionally link it with previous one (in a circular doubly linked list)
+                            function insertNode(i, x, y, last) {
+                                var p = new Node(i, x, y);
+                        
+                                if (!last) {
+                                    p.prev = p;
+                                    p.next = p;
+                        
+                                } else {
+                                    p.next = last.next;
+                                    p.prev = last;
+                                    last.next.prev = p;
+                                    last.next = p;
+                                }
+                                return p;
+                            }
+                        
+                            function removeNode(p) {
+                                p.next.prev = p.prev;
+                                p.prev.next = p.next;
+                        
+                                if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+                                if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+                            }
+                        
+                            function Node(i, x, y) {
+                                // vertex index in coordinates array
+                                this.i = i;
+                        
+                                // vertex coordinates
+                                this.x = x;
+                                this.y = y;
+                        
+                                // previous and next vertex nodes in a polygon ring
+                                this.prev = null;
+                                this.next = null;
+                        
+                                // z-order curve value
+                                this.z = null;
+                        
+                                // previous and next nodes in z-order
+                                this.prevZ = null;
+                                this.nextZ = null;
+                        
+                                // indicates whether this is a steiner point
+                                this.steiner = false;
+                            }
+                        
+                            // // return a percentage difference between the polygon area and its triangulation area;
+                            // // used to verify correctness of triangulation
+                            // earcut.deviation = function (data, holeIndices, dim, triangles) {
+                            //     var hasHoles = holeIndices && holeIndices.length;
+                            //     var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+                        
+                            //     var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+                            //     if (hasHoles) {
+                            //         for (var i = 0, len = holeIndices.length; i < len; i++) {
+                            //             var start = holeIndices[i] * dim;
+                            //             var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+                            //             polygonArea -= Math.abs(signedArea(data, start, end, dim));
+                            //         }
+                            //     }
+                        
+                            //     var trianglesArea = 0;
+                            //     for (i = 0; i < triangles.length; i += 3) {
+                            //         var a = triangles[i] * dim;
+                            //         var b = triangles[i + 1] * dim;
+                            //         var c = triangles[i + 2] * dim;
+                            //         trianglesArea += Math.abs(
+                            //             (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+                            //             (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+                            //     }
+                        
+                            //     return polygonArea === 0 && trianglesArea === 0 ? 0 :
+                            //         Math.abs((trianglesArea - polygonArea) / polygonArea);
+                            // };
+                        
+                            function signedArea(data, start, end, dim) {
+                                var sum = 0;
+                                for (var i = start, j = end - dim; i < end; i += dim) {
+                                    sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+                                    j = i;
+                                }
+                                return sum;
+                            }
+                        
+                            // // turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+                            // earcut.flatten = function (data) {
+                            //     var dim = data[0][0].length,
+                            //         result = {vertices: [], holes: [], dimensions: dim},
+                            //         holeIndex = 0;
+                        
+                            //     for (var i = 0; i < data.length; i++) {
+                            //         for (var j = 0; j < data[i].length; j++) {
+                            //             for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+                            //         }
+                            //         if (i > 0) {
+                            //             holeIndex += data[i - 1].length;
+                            //             result.holes.push(holeIndex);
+                            //         }
+                            //     }
+                            //     return result;
+                            // };
+                        };
+                        (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+                        	/*
+                        	 * @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+                        	 * @license MIT
+                        	 * @preserve Project Home: https://github.com/voidqk/polybooljs
+                        	 */
+                        	
+                            // Modified by Metasophiea <metasophiea@gmail.com>
+                        
+                        
+                        	var BuildLog = require('./lib/build-log');
+                        	var Epsilon = require('./lib/epsilon');
+                        	var Intersecter = require('./lib/intersecter');
+                        	var SegmentChainer = require('./lib/segment-chainer');
+                        	var SegmentSelector = require('./lib/segment-selector');
+                        	var GeoJSON = require('./lib/geojson');
+                        	
+                        	var buildLog = false;
+                        	var epsilon = Epsilon();
+                        	
+                        	var PolyBool;
+                        	PolyBool = {
+                        		// getter/setter for buildLog
+                        		buildLog: function(bl){
+                        			if (bl === true)
+                        				buildLog = BuildLog();
+                        			else if (bl === false)
+                        				buildLog = false;
+                        			return buildLog === false ? false : buildLog.list;
+                        		},
+                        		// getter/setter for epsilon
+                        		epsilon: function(v){
+                        			return epsilon.epsilon(v);
+                        		},
+                        	
+                        		// core API
+                        		segments: function(poly){
+                        			var i = Intersecter(true, epsilon, buildLog);
+                        			poly.regions.forEach(i.addRegion);
+                        			return {
+                        				segments: i.calculate(poly.inverted),
+                        				inverted: poly.inverted
+                        			};
+                        		},
+                        		combine: function(segments1, segments2){
+                        			var i3 = Intersecter(false, epsilon, buildLog);
+                        			return {
+                        				combined: i3.calculate(
+                        					segments1.segments, segments1.inverted,
+                        					segments2.segments, segments2.inverted
+                        				),
+                        				inverted1: segments1.inverted,
+                        				inverted2: segments2.inverted
+                        			};
+                        		},
+                        		selectUnion: function(combined){
+                        			return {
+                        				segments: SegmentSelector.union(combined.combined, buildLog),
+                        				inverted: combined.inverted1 || combined.inverted2
+                        			}
+                        		},
+                        		selectIntersect: function(combined){
+                        			return {
+                        				segments: SegmentSelector.intersect(combined.combined, buildLog),
+                        				inverted: combined.inverted1 && combined.inverted2
+                        			}
+                        		},
+                        		selectDifference: function(combined){
+                        			return {
+                        				segments: SegmentSelector.difference(combined.combined, buildLog),
+                        				inverted: combined.inverted1 && !combined.inverted2
+                        			}
+                        		},
+                        		selectDifferenceRev: function(combined){
+                        			return {
+                        				segments: SegmentSelector.differenceRev(combined.combined, buildLog),
+                        				inverted: !combined.inverted1 && combined.inverted2
+                        			}
+                        		},
+                        		selectXor: function(combined){
+                        			return {
+                        				segments: SegmentSelector.xor(combined.combined, buildLog),
+                        				inverted: combined.inverted1 !== combined.inverted2
+                        			}
+                        		},
+                        		polygon: function(segments){
+                        			return {
+                        				regions: SegmentChainer(segments.segments, epsilon, buildLog),
+                        				inverted: segments.inverted
+                        			};
+                        		},
+                        	
+                        		// GeoJSON converters
+                        		polygonFromGeoJSON: function(geojson){
+                        			return GeoJSON.toPolygon(PolyBool, geojson);
+                        		},
+                        		polygonToGeoJSON: function(poly){
+                        			return GeoJSON.fromPolygon(PolyBool, epsilon, poly);
+                        		},
+                        	
+                        		// helper functions for common operations
+                        		union: function(poly1, poly2){
+                        			return operate(poly1, poly2, PolyBool.selectUnion);
+                        		},
+                        		intersect: function(poly1, poly2){
+                        			return operate(poly1, poly2, PolyBool.selectIntersect);
+                        		},
+                        		difference: function(poly1, poly2){
+                        			return operate(poly1, poly2, PolyBool.selectDifference);
+                        		},
+                        		differenceRev: function(poly1, poly2){
+                        			return operate(poly1, poly2, PolyBool.selectDifferenceRev);
+                        		},
+                        		xor: function(poly1, poly2){
+                        			return operate(poly1, poly2, PolyBool.selectXor);
+                        		}
+                        	};
+                        
+                        	thirdparty.PolyBool = PolyBool;
+                        	
+                        	function operate(poly1, poly2, selector){
+                        		var seg1 = PolyBool.segments(poly1);
+                        		var seg2 = PolyBool.segments(poly2);
+                        		var comb = PolyBool.combine(seg1, seg2);
+                        		var seg3 = selector(comb);
+                        		return PolyBool.polygon(seg3);
+                        	}
+                        		
+                        	},{"./lib/build-log":2,"./lib/epsilon":3,"./lib/geojson":4,"./lib/intersecter":5,"./lib/segment-chainer":7,"./lib/segment-selector":8}],2:[function(require,module,exports){
+                        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                        	// MIT License
+                        	// Project Home: https://github.com/voidqk/polybooljs
+                        	
+                        	//
+                        	// used strictly for logging the processing of the algorithm... only useful if you intend on
+                        	// looking under the covers (for pretty UI's or debugging)
+                        	//
+                        	
+                        	function BuildLog(){
+                        		var my;
+                        		var nextSegmentId = 0;
+                        		var curVert = false;
+                        	
+                        		function push(type, data){
+                        			my.list.push({
+                        				type: type,
+                        				data: data ? JSON.parse(JSON.stringify(data)) : void 0
+                        			});
+                        			return my;
+                        		}
+                        	
+                        		my = {
+                        			list: [],
+                        			segmentId: function(){
+                        				return nextSegmentId++;
+                        			},
+                        			checkIntersection: function(seg1, seg2){
+                        				return push('check', { seg1: seg1, seg2: seg2 });
+                        			},
+                        			segmentChop: function(seg, end){
+                        				push('div_seg', { seg: seg, pt: end });
+                        				return push('chop', { seg: seg, pt: end });
+                        			},
+                        			statusRemove: function(seg){
+                        				return push('pop_seg', { seg: seg });
+                        			},
+                        			segmentUpdate: function(seg){
+                        				return push('seg_update', { seg: seg });
+                        			},
+                        			segmentNew: function(seg, primary){
+                        				return push('new_seg', { seg: seg, primary: primary });
+                        			},
+                        			segmentRemove: function(seg){
+                        				return push('rem_seg', { seg: seg });
+                        			},
+                        			tempStatus: function(seg, above, below){
+                        				return push('temp_status', { seg: seg, above: above, below: below });
+                        			},
+                        			rewind: function(seg){
+                        				return push('rewind', { seg: seg });
+                        			},
+                        			status: function(seg, above, below){
+                        				return push('status', { seg: seg, above: above, below: below });
+                        			},
+                        			vert: function(x){
+                        				if (x === curVert)
+                        					return my;
+                        				curVert = x;
+                        				return push('vert', { x: x });
+                        			},
+                        			log: function(data){
+                        				if (typeof data !== 'string')
+                        					data = JSON.stringify(data, false, '  ');
+                        				return push('log', { txt: data });
+                        			},
+                        			reset: function(){
+                        				return push('reset');
+                        			},
+                        			selected: function(segs){
+                        				return push('selected', { segs: segs });
+                        			},
+                        			chainStart: function(seg){
+                        				return push('chain_start', { seg: seg });
+                        			},
+                        			chainRemoveHead: function(index, pt){
+                        				return push('chain_rem_head', { index: index, pt: pt });
+                        			},
+                        			chainRemoveTail: function(index, pt){
+                        				return push('chain_rem_tail', { index: index, pt: pt });
+                        			},
+                        			chainNew: function(pt1, pt2){
+                        				return push('chain_new', { pt1: pt1, pt2: pt2 });
+                        			},
+                        			chainMatch: function(index){
+                        				return push('chain_match', { index: index });
+                        			},
+                        			chainClose: function(index){
+                        				return push('chain_close', { index: index });
+                        			},
+                        			chainAddHead: function(index, pt){
+                        				return push('chain_add_head', { index: index, pt: pt });
+                        			},
+                        			chainAddTail: function(index, pt){
+                        				return push('chain_add_tail', { index: index, pt: pt, });
+                        			},
+                        			chainConnect: function(index1, index2){
+                        				return push('chain_con', { index1: index1, index2: index2 });
+                        			},
+                        			chainReverse: function(index){
+                        				return push('chain_rev', { index: index });
+                        			},
+                        			chainJoin: function(index1, index2){
+                        				return push('chain_join', { index1: index1, index2: index2 });
+                        			},
+                        			done: function(){
+                        				return push('done');
+                        			}
+                        		};
+                        		return my;
+                        	}
+                        	
+                        	module.exports = BuildLog;
+                        	
+                        	},{}],3:[function(require,module,exports){
+                        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                        	// MIT License
+                        	// Project Home: https://github.com/voidqk/polybooljs
+                        	
+                        	//
+                        	// provides the raw computation functions that takes epsilon into account
+                        	//
+                        	// zero is defined to be between (-epsilon, epsilon) exclusive
+                        	//
+                        	
+                        	function Epsilon(eps){
+                        		if (typeof eps !== 'number')
+                        			eps = 0.0000000001; // sane default? sure why not
+                        		var my = {
+                        			epsilon: function(v){
+                        				if (typeof v === 'number')
+                        					eps = v;
+                        				return eps;
+                        			},
+                        			pointAboveOrOnLine: function(pt, left, right){
+                        				var Ax = left[0];
+                        				var Ay = left[1];
+                        				var Bx = right[0];
+                        				var By = right[1];
+                        				var Cx = pt[0];
+                        				var Cy = pt[1];
+                        				return (Bx - Ax) * (Cy - Ay) - (By - Ay) * (Cx - Ax) >= -eps;
+                        			},
+                        			pointBetween: function(p, left, right){
+                        				// p must be collinear with left->right
+                        				// returns false if p == left, p == right, or left == right
+                        				var d_py_ly = p[1] - left[1];
+                        				var d_rx_lx = right[0] - left[0];
+                        				var d_px_lx = p[0] - left[0];
+                        				var d_ry_ly = right[1] - left[1];
+                        	
+                        				var dot = d_px_lx * d_rx_lx + d_py_ly * d_ry_ly;
+                        				// if `dot` is 0, then `p` == `left` or `left` == `right` (reject)
+                        				// if `dot` is less than 0, then `p` is to the left of `left` (reject)
+                        				if (dot < eps)
+                        					return false;
+                        	
+                        				var sqlen = d_rx_lx * d_rx_lx + d_ry_ly * d_ry_ly;
+                        				// if `dot` > `sqlen`, then `p` is to the right of `right` (reject)
+                        				// therefore, if `dot - sqlen` is greater than 0, then `p` is to the right of `right` (reject)
+                        				if (dot - sqlen > -eps)
+                        					return false;
+                        	
+                        				return true;
+                        			},
+                        			pointsSameX: function(p1, p2){
+                        				return Math.abs(p1[0] - p2[0]) < eps;
+                        			},
+                        			pointsSameY: function(p1, p2){
+                        				return Math.abs(p1[1] - p2[1]) < eps;
+                        			},
+                        			pointsSame: function(p1, p2){
+                        				return my.pointsSameX(p1, p2) && my.pointsSameY(p1, p2);
+                        			},
+                        			pointsCompare: function(p1, p2){
+                        				// returns -1 if p1 is smaller, 1 if p2 is smaller, 0 if equal
+                        				if (my.pointsSameX(p1, p2))
+                        					return my.pointsSameY(p1, p2) ? 0 : (p1[1] < p2[1] ? -1 : 1);
+                        				return p1[0] < p2[0] ? -1 : 1;
+                        			},
+                        			pointsCollinear: function(pt1, pt2, pt3){
+                        				// does pt1->pt2->pt3 make a straight line?
+                        				// essentially this is just checking to see if the slope(pt1->pt2) === slope(pt2->pt3)
+                        				// if slopes are equal, then they must be collinear, because they share pt2
+                        				var dx1 = pt1[0] - pt2[0];
+                        				var dy1 = pt1[1] - pt2[1];
+                        				var dx2 = pt2[0] - pt3[0];
+                        				var dy2 = pt2[1] - pt3[1];
+                        				return Math.abs(dx1 * dy2 - dx2 * dy1) < eps;
+                        			},
+                        			linesIntersect: function(a0, a1, b0, b1){
+                        				// returns false if the lines are coincident (e.g., parallel or on top of each other)
+                        				//
+                        				// returns an object if the lines intersect:
+                        				//   {
+                        				//     pt: [x, y],    where the intersection point is at
+                        				//     alongA: where intersection point is along A,
+                        				//     alongB: where intersection point is along B
+                        				//   }
+                        				//
+                        				//  alongA and alongB will each be one of: -2, -1, 0, 1, 2
+                        				//
+                        				//  with the following meaning:
+                        				//
+                        				//    -2   intersection point is before segment's first point
+                        				//    -1   intersection point is directly on segment's first point
+                        				//     0   intersection point is between segment's first and second points (exclusive)
+                        				//     1   intersection point is directly on segment's second point
+                        				//     2   intersection point is after segment's second point
+                        				var adx = a1[0] - a0[0];
+                        				var ady = a1[1] - a0[1];
+                        				var bdx = b1[0] - b0[0];
+                        				var bdy = b1[1] - b0[1];
+                        	
+                        				var axb = adx * bdy - ady * bdx;
+                        				if (Math.abs(axb) < eps)
+                        					return false; // lines are coincident
+                        	
+                        				var dx = a0[0] - b0[0];
+                        				var dy = a0[1] - b0[1];
+                        	
+                        				var A = (bdx * dy - bdy * dx) / axb;
+                        				var B = (adx * dy - ady * dx) / axb;
+                        	
+                        				var ret = {
+                        					alongA: 0,
+                        					alongB: 0,
+                        					pt: [
+                        						a0[0] + A * adx,
+                        						a0[1] + A * ady
+                        					]
+                        				};
+                        	
+                        				// categorize where intersection point is along A and B
+                        	
+                        				if (A <= -eps)
+                        					ret.alongA = -2;
+                        				else if (A < eps)
+                        					ret.alongA = -1;
+                        				else if (A - 1 <= -eps)
+                        					ret.alongA = 0;
+                        				else if (A - 1 < eps)
+                        					ret.alongA = 1;
+                        				else
+                        					ret.alongA = 2;
+                        	
+                        				if (B <= -eps)
+                        					ret.alongB = -2;
+                        				else if (B < eps)
+                        					ret.alongB = -1;
+                        				else if (B - 1 <= -eps)
+                        					ret.alongB = 0;
+                        				else if (B - 1 < eps)
+                        					ret.alongB = 1;
+                        				else
+                        					ret.alongB = 2;
+                        	
+                        				return ret;
+                        			},
+                        			pointInsideRegion: function(pt, region){
+                        				var x = pt[0];
+                        				var y = pt[1];
+                        				var last_x = region[region.length - 1][0];
+                        				var last_y = region[region.length - 1][1];
+                        				var inside = false;
+                        				for (var i = 0; i < region.length; i++){
+                        					var curr_x = region[i][0];
+                        					var curr_y = region[i][1];
+                        	
+                        					// if y is between curr_y and last_y, and
+                        					// x is to the right of the boundary created by the line
+                        					if ((curr_y - y > eps) != (last_y - y > eps) &&
+                        						(last_x - curr_x) * (y - curr_y) / (last_y - curr_y) + curr_x - x > eps)
+                        						inside = !inside
+                        	
+                        					last_x = curr_x;
+                        					last_y = curr_y;
+                        				}
+                        				return inside;
+                        			}
+                        		};
+                        		return my;
+                        	}
+                        	
+                        	module.exports = Epsilon;
+                        	
+                        	},{}],4:[function(require,module,exports){
+                        	// (c) Copyright 2017, Sean Connelly (@voidqk), http://syntheti.cc
+                        	// MIT License
+                        	// Project Home: https://github.com/voidqk/polybooljs
+                        	
+                        	//
+                        	// convert between PolyBool polygon format and GeoJSON formats (Polygon and MultiPolygon)
+                        	//
+                        	
+                        	var GeoJSON = {
+                        		// convert a GeoJSON object to a PolyBool polygon
+                        		toPolygon: function(PolyBool, geojson){
+                        	
+                        			// converts list of LineString's to segments
+                        			function GeoPoly(coords){
+                        				// check for empty coords
+                        				if (coords.length <= 0)
+                        					return PolyBool.segments({ inverted: false, regions: [] });
+                        	
+                        				// convert LineString to segments
+                        				function LineString(ls){
+                        					// remove tail which should be the same as head
+                        					var reg = ls.slice(0, ls.length - 1);
+                        					return PolyBool.segments({ inverted: false, regions: [reg] });
+                        				}
+                        	
+                        				// the first LineString is considered the outside
+                        				var out = LineString(coords[0]);
+                        	
+                        				// the rest of the LineStrings are considered interior holes, so subtract them from the
+                        				// current result
+                        				for (var i = 1; i < coords.length; i++)
+                        					out = PolyBool.selectDifference(PolyBool.combine(out, LineString(coords[i])));
+                        	
+                        				return out;
+                        			}
+                        	
+                        			if (geojson.type === 'Polygon'){
+                        				// single polygon, so just convert it and we're done
+                        				return PolyBool.polygon(GeoPoly(geojson.coordinates));
+                        			}
+                        			else if (geojson.type === 'MultiPolygon'){
+                        				// multiple polygons, so union all the polygons together
+                        				var out = PolyBool.segments({ inverted: false, regions: [] });
+                        				for (var i = 0; i < geojson.coordinates.length; i++)
+                        					out = PolyBool.selectUnion(PolyBool.combine(out, GeoPoly(geojson.coordinates[i])));
+                        				return PolyBool.polygon(out);
+                        			}
+                        			throw new Error('PolyBool: Cannot convert GeoJSON object to PolyBool polygon');
+                        		},
+                        	
+                        		// convert a PolyBool polygon to a GeoJSON object
+                        		fromPolygon: function(PolyBool, eps, poly){
+                        			// make sure out polygon is clean
+                        			poly = PolyBool.polygon(PolyBool.segments(poly));
+                        	
+                        			// test if r1 is inside r2
+                        			function regionInsideRegion(r1, r2){
+                        				// we're guaranteed no lines intersect (because the polygon is clean), but a vertex
+                        				// could be on the edge -- so we just average pt[0] and pt[1] to produce a point on the
+                        				// edge of the first line, which cannot be on an edge
+                        				return eps.pointInsideRegion([
+                        					(r1[0][0] + r1[1][0]) * 0.5,
+                        					(r1[0][1] + r1[1][1]) * 0.5
+                        				], r2);
+                        			}
+                        	
+                        			// calculate inside heirarchy
+                        			//
+                        			//  _____________________   _______    roots -> A       -> F
+                        			// |          A          | |   F   |            |          |
+                        			// |  _______   _______  | |  ___  |            +-- B      +-- G
+                        			// | |   B   | |   C   | | | |   | |            |   |
+                        			// | |  ___  | |  ___  | | | |   | |            |   +-- D
+                        			// | | | D | | | | E | | | | | G | |            |
+                        			// | | |___| | | |___| | | | |   | |            +-- C
+                        			// | |_______| |_______| | | |___| |                |
+                        			// |_____________________| |_______|                +-- E
+                        	
+                        			function newNode(region){
+                        				return {
+                        					region: region,
+                        					children: []
+                        				};
+                        			}
+                        	
+                        			var roots = newNode(null);
+                        	
+                        			function addChild(root, region){
+                        				// first check if we're inside any children
+                        				for (var i = 0; i < root.children.length; i++){
+                        					var child = root.children[i];
+                        					if (regionInsideRegion(region, child.region)){
+                        						// we are, so insert inside them instead
+                        						addChild(child, region);
+                        						return;
+                        					}
+                        				}
+                        	
+                        				// not inside any children, so check to see if any children are inside us
+                        				var node = newNode(region);
+                        				for (var i = 0; i < root.children.length; i++){
+                        					var child = root.children[i];
+                        					if (regionInsideRegion(child.region, region)){
+                        						// oops... move the child beneath us, and remove them from root
+                        						node.children.push(child);
+                        						root.children.splice(i, 1);
+                        						i--;
+                        					}
+                        				}
+                        	
+                        				// now we can add ourselves
+                        				root.children.push(node);
+                        			}
+                        	
+                        			// add all regions to the root
+                        			for (var i = 0; i < poly.regions.length; i++){
+                        				var region = poly.regions[i];
+                        				if (region.length < 3) // regions must have at least 3 points (sanity check)
+                        					continue;
+                        				addChild(roots, region);
+                        			}
+                        	
+                        			// with our heirarchy, we can distinguish between exterior borders, and interior holes
+                        			// the root nodes are exterior, children are interior, children's children are exterior,
+                        			// children's children's children are interior, etc
+                        	
+                        			// while we're at it, exteriors are counter-clockwise, and interiors are clockwise
+                        	
+                        			function forceWinding(region, clockwise){
+                        				// first, see if we're clockwise or counter-clockwise
+                        				// https://en.wikipedia.org/wiki/Shoelace_formula
+                        				var winding = 0;
+                        				var last_x = region[region.length - 1][0];
+                        				var last_y = region[region.length - 1][1];
+                        				var copy = [];
+                        				for (var i = 0; i < region.length; i++){
+                        					var curr_x = region[i][0];
+                        					var curr_y = region[i][1];
+                        					copy.push([curr_x, curr_y]); // create a copy while we're at it
+                        					winding += curr_y * last_x - curr_x * last_y;
+                        					last_x = curr_x;
+                        					last_y = curr_y;
+                        				}
+                        				// this assumes Cartesian coordinates (Y is positive going up)
+                        				var isclockwise = winding < 0;
+                        				if (isclockwise !== clockwise)
+                        					copy.reverse();
+                        				// while we're here, the last point must be the first point...
+                        				copy.push([copy[0][0], copy[0][1]]);
+                        				return copy;
+                        			}
+                        	
+                        			var geopolys = [];
+                        	
+                        			function addExterior(node){
+                        				var poly = [forceWinding(node.region, false)];
+                        				geopolys.push(poly);
+                        				// children of exteriors are interior
+                        				for (var i = 0; i < node.children.length; i++)
+                        					poly.push(getInterior(node.children[i]));
+                        			}
+                        	
+                        			function getInterior(node){
+                        				// children of interiors are exterior
+                        				for (var i = 0; i < node.children.length; i++)
+                        					addExterior(node.children[i]);
+                        				// return the clockwise interior
+                        				return forceWinding(node.region, true);
+                        			}
+                        	
+                        			// root nodes are exterior
+                        			for (var i = 0; i < roots.children.length; i++)
+                        				addExterior(roots.children[i]);
+                        	
+                        			// lastly, construct the approrpriate GeoJSON object
+                        	
+                        			if (geopolys.length <= 0) // empty GeoJSON Polygon
+                        				return { type: 'Polygon', coordinates: [] };
+                        			if (geopolys.length == 1) // use a GeoJSON Polygon
+                        				return { type: 'Polygon', coordinates: geopolys[0] };
+                        			return { // otherwise, use a GeoJSON MultiPolygon
+                        				type: 'MultiPolygon',
+                        				coordinates: geopolys
+                        			};
+                        		}
+                        	};
+                        	
+                        	module.exports = GeoJSON;
+                        	
+                        	},{}],5:[function(require,module,exports){
+                        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                        	// MIT License
+                        	// Project Home: https://github.com/voidqk/polybooljs
+                        	
+                        	//
+                        	// this is the core work-horse
+                        	//
+                        	
+                        	var LinkedList = require('./linked-list');
+                        	
+                        	function Intersecter(selfIntersection, eps, buildLog){
+                        		// selfIntersection is true/false depending on the phase of the overall algorithm
+                        	
+                        		//
+                        		// segment creation
+                        		//
+                        	
+                        		function segmentNew(start, end){
+                        			return {
+                        				id: buildLog ? buildLog.segmentId() : -1,
+                        				start: start,
+                        				end: end,
+                        				myFill: {
+                        					above: null, // is there fill above us?
+                        					below: null  // is there fill below us?
+                        				},
+                        				otherFill: null
+                        			};
+                        		}
+                        	
+                        		function segmentCopy(start, end, seg){
+                        			return {
+                        				id: buildLog ? buildLog.segmentId() : -1,
+                        				start: start,
+                        				end: end,
+                        				myFill: {
+                        					above: seg.myFill.above,
+                        					below: seg.myFill.below
+                        				},
+                        				otherFill: null
+                        			};
+                        		}
+                        	
+                        		//
+                        		// event logic
+                        		//
+                        	
+                        		var event_root = LinkedList.create();
+                        	
+                        		function eventCompare(p1_isStart, p1_1, p1_2, p2_isStart, p2_1, p2_2){
+                        			// compare the selected points first
+                        			var comp = eps.pointsCompare(p1_1, p2_1);
+                        			if (comp !== 0)
+                        				return comp;
+                        			// the selected points are the same
+                        	
+                        			if (eps.pointsSame(p1_2, p2_2)) // if the non-selected points are the same too...
+                        				return 0; // then the segments are equal
+                        	
+                        			if (p1_isStart !== p2_isStart) // if one is a start and the other isn't...
+                        				return p1_isStart ? 1 : -1; // favor the one that isn't the start
+                        	
+                        			// otherwise, we'll have to calculate which one is below the other manually
+                        			return eps.pointAboveOrOnLine(p1_2,
+                        				p2_isStart ? p2_1 : p2_2, // order matters
+                        				p2_isStart ? p2_2 : p2_1
+                        			) ? 1 : -1;
+                        		}
+                        	
+                        		function eventAdd(ev, other_pt){
+                        			event_root.insertBefore(ev, function(here){
+                        				// should ev be inserted before here?
+                        				var comp = eventCompare(
+                        					ev  .isStart, ev  .pt,      other_pt,
+                        					here.isStart, here.pt, here.other.pt
+                        				);
+                        				return comp < 0;
+                        			});
+                        		}
+                        	
+                        		function eventAddSegmentStart(seg, primary){
+                        			var ev_start = LinkedList.node({
+                        				isStart: true,
+                        				pt: seg.start,
+                        				seg: seg,
+                        				primary: primary,
+                        				other: null,
+                        				status: null
+                        			});
+                        			eventAdd(ev_start, seg.end);
+                        			return ev_start;
+                        		}
+                        	
+                        		function eventAddSegmentEnd(ev_start, seg, primary){
+                        			var ev_end = LinkedList.node({
+                        				isStart: false,
+                        				pt: seg.end,
+                        				seg: seg,
+                        				primary: primary,
+                        				other: ev_start,
+                        				status: null
+                        			});
+                        			ev_start.other = ev_end;
+                        			eventAdd(ev_end, ev_start.pt);
+                        		}
+                        	
+                        		function eventAddSegment(seg, primary){
+                        			var ev_start = eventAddSegmentStart(seg, primary);
+                        			eventAddSegmentEnd(ev_start, seg, primary);
+                        			return ev_start;
+                        		}
+                        	
+                        		function eventUpdateEnd(ev, end){
+                        			// slides an end backwards
+                        			//   (start)------------(end)    to:
+                        			//   (start)---(end)
+                        	
+                        			if (buildLog)
+                        				buildLog.segmentChop(ev.seg, end);
+                        	
+                        			ev.other.remove();
+                        			ev.seg.end = end;
+                        			ev.other.pt = end;
+                        			eventAdd(ev.other, ev.pt);
+                        		}
+                        	
+                        		function eventDivide(ev, pt){
+                        			var ns = segmentCopy(pt, ev.seg.end, ev.seg);
+                        			eventUpdateEnd(ev, pt);
+                        			return eventAddSegment(ns, ev.primary);
+                        		}
+                        	
+                        		function calculate(primaryPolyInverted, secondaryPolyInverted){
+                        			// if selfIntersection is true then there is no secondary polygon, so that isn't used
+                        	
+                        			//
+                        			// status logic
+                        			//
+                        	
+                        			var status_root = LinkedList.create();
+                        	
+                        			function statusCompare(ev1, ev2){
+                        				var a1 = ev1.seg.start;
+                        				var a2 = ev1.seg.end;
+                        				var b1 = ev2.seg.start;
+                        				var b2 = ev2.seg.end;
+                        	
+                        				if (eps.pointsCollinear(a1, b1, b2)){
+                        					if (eps.pointsCollinear(a2, b1, b2))
+                        						return 1;//eventCompare(true, a1, a2, true, b1, b2);
+                        					return eps.pointAboveOrOnLine(a2, b1, b2) ? 1 : -1;
+                        				}
+                        				return eps.pointAboveOrOnLine(a1, b1, b2) ? 1 : -1;
+                        			}
+                        	
+                        			function statusFindSurrounding(ev){
+                        				return status_root.findTransition(function(here){
+                        					var comp = statusCompare(ev, here.ev);
+                        					return comp > 0;
+                        				});
+                        			}
+                        	
+                        			function checkIntersection(ev1, ev2){
+                        				// returns the segment equal to ev1, or false if nothing equal
+                        	
+                        				var seg1 = ev1.seg;
+                        				var seg2 = ev2.seg;
+                        				var a1 = seg1.start;
+                        				var a2 = seg1.end;
+                        				var b1 = seg2.start;
+                        				var b2 = seg2.end;
+                        	
+                        				if (buildLog)
+                        					buildLog.checkIntersection(seg1, seg2);
+                        	
+                        				var i = eps.linesIntersect(a1, a2, b1, b2);
+                        	
+                        				if (i === false){
+                        					// segments are parallel or coincident
+                        	
+                        					// if points aren't collinear, then the segments are parallel, so no intersections
+                        					if (!eps.pointsCollinear(a1, a2, b1))
+                        						return false;
+                        					// otherwise, segments are on top of each other somehow (aka coincident)
+                        	
+                        					if (eps.pointsSame(a1, b2) || eps.pointsSame(a2, b1))
+                        						return false; // segments touch at endpoints... no intersection
+                        	
+                        					var a1_equ_b1 = eps.pointsSame(a1, b1);
+                        					var a2_equ_b2 = eps.pointsSame(a2, b2);
+                        	
+                        					if (a1_equ_b1 && a2_equ_b2)
+                        						return ev2; // segments are exactly equal
+                        	
+                        					var a1_between = !a1_equ_b1 && eps.pointBetween(a1, b1, b2);
+                        					var a2_between = !a2_equ_b2 && eps.pointBetween(a2, b1, b2);
+                        	
+                        					// handy for debugging:
+                        					// buildLog.log({
+                        					//	a1_equ_b1: a1_equ_b1,
+                        					//	a2_equ_b2: a2_equ_b2,
+                        					//	a1_between: a1_between,
+                        					//	a2_between: a2_between
+                        					// });
+                        	
+                        					if (a1_equ_b1){
+                        						if (a2_between){
+                        							//  (a1)---(a2)
+                        							//  (b1)----------(b2)
+                        							eventDivide(ev2, a2);
+                        						}
+                        						else{
+                        							//  (a1)----------(a2)
+                        							//  (b1)---(b2)
+                        							eventDivide(ev1, b2);
+                        						}
+                        						return ev2;
+                        					}
+                        					else if (a1_between){
+                        						if (!a2_equ_b2){
+                        							// make a2 equal to b2
+                        							if (a2_between){
+                        								//         (a1)---(a2)
+                        								//  (b1)-----------------(b2)
+                        								eventDivide(ev2, a2);
+                        							}
+                        							else{
+                        								//         (a1)----------(a2)
+                        								//  (b1)----------(b2)
+                        								eventDivide(ev1, b2);
+                        							}
+                        						}
+                        	
+                        						//         (a1)---(a2)
+                        						//  (b1)----------(b2)
+                        						eventDivide(ev2, a1);
+                        					}
+                        				}
+                        				else{
+                        					// otherwise, lines intersect at i.pt, which may or may not be between the endpoints
+                        	
+                        					// is A divided between its endpoints? (exclusive)
+                        					if (i.alongA === 0){
+                        						if (i.alongB === -1) // yes, at exactly b1
+                        							eventDivide(ev1, b1);
+                        						else if (i.alongB === 0) // yes, somewhere between B's endpoints
+                        							eventDivide(ev1, i.pt);
+                        						else if (i.alongB === 1) // yes, at exactly b2
+                        							eventDivide(ev1, b2);
+                        					}
+                        	
+                        					// is B divided between its endpoints? (exclusive)
+                        					if (i.alongB === 0){
+                        						if (i.alongA === -1) // yes, at exactly a1
+                        							eventDivide(ev2, a1);
+                        						else if (i.alongA === 0) // yes, somewhere between A's endpoints (exclusive)
+                        							eventDivide(ev2, i.pt);
+                        						else if (i.alongA === 1) // yes, at exactly a2
+                        							eventDivide(ev2, a2);
+                        					}
+                        				}
+                        				return false;
+                        			}
+                        	
+                        			//
+                        			// main event loop
+                        			//
+                        			var segments = [];
+                        			while (!event_root.isEmpty()){
+                        				var ev = event_root.getHead();
+                        	
+                        				if (buildLog)
+                        					buildLog.vert(ev.pt[0]);
+                        	
+                        				if (ev.isStart){
+                        	
+                        					if (buildLog)
+                        						buildLog.segmentNew(ev.seg, ev.primary);
+                        	
+                        					var surrounding = statusFindSurrounding(ev);
+                        					var above = surrounding.before ? surrounding.before.ev : null;
+                        					var below = surrounding.after ? surrounding.after.ev : null;
+                        	
+                        					if (buildLog){
+                        						buildLog.tempStatus(
+                        							ev.seg,
+                        							above ? above.seg : false,
+                        							below ? below.seg : false
+                        						);
+                        					}
+                        	
+                        					function checkBothIntersections(){
+                        						if (above){
+                        							var eve = checkIntersection(ev, above);
+                        							if (eve)
+                        								return eve;
+                        						}
+                        						if (below)
+                        							return checkIntersection(ev, below);
+                        						return false;
+                        					}
+                        	
+                        					var eve = checkBothIntersections();
+                        					if (eve){
+                        						// ev and eve are equal
+                        						// we'll keep eve and throw away ev
+                        	
+                        						// merge ev.seg's fill information into eve.seg
+                        	
+                        						if (selfIntersection){
+                        							var toggle; // are we a toggling edge?
+                        							if (ev.seg.myFill.below === null)
+                        								toggle = true;
+                        							else
+                        								toggle = ev.seg.myFill.above !== ev.seg.myFill.below;
+                        	
+                        							// merge two segments that belong to the same polygon
+                        							// think of this as sandwiching two segments together, where `eve.seg` is
+                        							// the bottom -- this will cause the above fill flag to toggle
+                        							if (toggle)
+                        								eve.seg.myFill.above = !eve.seg.myFill.above;
+                        						}
+                        						else{
+                        							// merge two segments that belong to different polygons
+                        							// each segment has distinct knowledge, so no special logic is needed
+                        							// note that this can only happen once per segment in this phase, because we
+                        							// are guaranteed that all self-intersections are gone
+                        							eve.seg.otherFill = ev.seg.myFill;
+                        						}
+                        	
+                        						if (buildLog)
+                        							buildLog.segmentUpdate(eve.seg);
+                        	
+                        						ev.other.remove();
+                        						ev.remove();
+                        					}
+                        	
+                        					if (event_root.getHead() !== ev){
+                        						// something was inserted before us in the event queue, so loop back around and
+                        						// process it before continuing
+                        						if (buildLog)
+                        							buildLog.rewind(ev.seg);
+                        						continue;
+                        					}
+                        	
+                        					//
+                        					// calculate fill flags
+                        					//
+                        					if (selfIntersection){
+                        						var toggle; // are we a toggling edge?
+                        						if (ev.seg.myFill.below === null) // if we are a new segment...
+                        							toggle = true; // then we toggle
+                        						else // we are a segment that has previous knowledge from a division
+                        							toggle = ev.seg.myFill.above !== ev.seg.myFill.below; // calculate toggle
+                        	
+                        						// next, calculate whether we are filled below us
+                        						if (!below){ // if nothing is below us...
+                        							// we are filled below us if the polygon is inverted
+                        							ev.seg.myFill.below = primaryPolyInverted;
+                        						}
+                        						else{
+                        							// otherwise, we know the answer -- it's the same if whatever is below
+                        							// us is filled above it
+                        							ev.seg.myFill.below = below.seg.myFill.above;
+                        						}
+                        	
+                        						// since now we know if we're filled below us, we can calculate whether
+                        						// we're filled above us by applying toggle to whatever is below us
+                        						if (toggle)
+                        							ev.seg.myFill.above = !ev.seg.myFill.below;
+                        						else
+                        							ev.seg.myFill.above = ev.seg.myFill.below;
+                        					}
+                        					else{
+                        						// now we fill in any missing transition information, since we are all-knowing
+                        						// at this point
+                        	
+                        						if (ev.seg.otherFill === null){
+                        							// if we don't have other information, then we need to figure out if we're
+                        							// inside the other polygon
+                        							var inside;
+                        							if (!below){
+                        								// if nothing is below us, then we're inside if the other polygon is
+                        								// inverted
+                        								inside =
+                        									ev.primary ? secondaryPolyInverted : primaryPolyInverted;
+                        							}
+                        							else{ // otherwise, something is below us
+                        								// so copy the below segment's other polygon's above
+                        								if (ev.primary === below.primary)
+                        									inside = below.seg.otherFill.above;
+                        								else
+                        									inside = below.seg.myFill.above;
+                        							}
+                        							ev.seg.otherFill = {
+                        								above: inside,
+                        								below: inside
+                        							};
+                        						}
+                        					}
+                        	
+                        					if (buildLog){
+                        						buildLog.status(
+                        							ev.seg,
+                        							above ? above.seg : false,
+                        							below ? below.seg : false
+                        						);
+                        					}
+                        	
+                        					// insert the status and remember it for later removal
+                        					ev.other.status = surrounding.insert(LinkedList.node({ ev: ev }));
+                        				}
+                        				else{
+                        					var st = ev.status;
+                        	
+                        					if (st === null){
+                        						throw new Error('PolyBool: Zero-length segment detected; your epsilon is ' +
+                        							'probably too small or too large');
+                        					}
+                        	
+                        					// removing the status will create two new adjacent edges, so we'll need to check
+                        					// for those
+                        					if (status_root.exists(st.prev) && status_root.exists(st.next))
+                        						checkIntersection(st.prev.ev, st.next.ev);
+                        	
+                        					if (buildLog)
+                        						buildLog.statusRemove(st.ev.seg);
+                        	
+                        					// remove the status
+                        					st.remove();
+                        	
+                        					// if we've reached this point, we've calculated everything there is to know, so
+                        					// save the segment for reporting
+                        					if (!ev.primary){
+                        						// make sure `seg.myFill` actually points to the primary polygon though
+                        						var s = ev.seg.myFill;
+                        						ev.seg.myFill = ev.seg.otherFill;
+                        						ev.seg.otherFill = s;
+                        					}
+                        					segments.push(ev.seg);
+                        				}
+                        	
+                        				// remove the event and continue
+                        				event_root.getHead().remove();
+                        			}
+                        	
+                        			if (buildLog)
+                        				buildLog.done();
+                        	
+                        			return segments;
+                        		}
+                        	
+                        		// return the appropriate API depending on what we're doing
+                        		if (!selfIntersection){
+                        			// performing combination of polygons, so only deal with already-processed segments
+                        			return {
+                        				calculate: function(segments1, inverted1, segments2, inverted2){
+                        					// segmentsX come from the self-intersection API, or this API
+                        					// invertedX is whether we treat that list of segments as an inverted polygon or not
+                        					// returns segments that can be used for further operations
+                        					segments1.forEach(function(seg){
+                        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), true);
+                        					});
+                        					segments2.forEach(function(seg){
+                        						eventAddSegment(segmentCopy(seg.start, seg.end, seg), false);
+                        					});
+                        					return calculate(inverted1, inverted2);
+                        				}
+                        			};
+                        		}
+                        	
+                        		// otherwise, performing self-intersection, so deal with regions
+                        		return {
+                        			addRegion: function(region){
+                        				// regions are a list of points:
+                        				//  [ [0, 0], [100, 0], [50, 100] ]
+                        				// you can add multiple regions before running calculate
+                        				var pt1;
+                        				var pt2 = region[region.length - 1];
+                        				for (var i = 0; i < region.length; i++){
+                        					pt1 = pt2;
+                        					pt2 = region[i];
+                        	
+                        					var forward = eps.pointsCompare(pt1, pt2);
+                        					if (forward === 0) // points are equal, so we have a zero-length segment
+                        						continue; // just skip it
+                        	
+                        					eventAddSegment(
+                        						segmentNew(
+                        							forward < 0 ? pt1 : pt2,
+                        							forward < 0 ? pt2 : pt1
+                        						),
+                        						true
+                        					);
+                        				}
+                        			},
+                        			calculate: function(inverted){
+                        				// is the polygon inverted?
+                        				// returns segments
+                        				return calculate(inverted, false);
+                        			}
+                        		};
+                        	}
+                        	
+                        	module.exports = Intersecter;
+                        	
+                        	},{"./linked-list":6}],6:[function(require,module,exports){
+                        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                        	// MIT License
+                        	// Project Home: https://github.com/voidqk/polybooljs
+                        	
+                        	//
+                        	// simple linked list implementation that allows you to traverse down nodes and save positions
+                        	//
+                        	
+                        	var LinkedList = {
+                        		create: function(){
+                        			var my = {
+                        				root: { root: true, next: null },
+                        				exists: function(node){
+                        					if (node === null || node === my.root)
+                        						return false;
+                        					return true;
+                        				},
+                        				isEmpty: function(){
+                        					return my.root.next === null;
+                        				},
+                        				getHead: function(){
+                        					return my.root.next;
+                        				},
+                        				insertBefore: function(node, check){
+                        					var last = my.root;
+                        					var here = my.root.next;
+                        					while (here !== null){
+                        						if (check(here)){
+                        							node.prev = here.prev;
+                        							node.next = here;
+                        							here.prev.next = node;
+                        							here.prev = node;
+                        							return;
+                        						}
+                        						last = here;
+                        						here = here.next;
+                        					}
+                        					last.next = node;
+                        					node.prev = last;
+                        					node.next = null;
+                        				},
+                        				findTransition: function(check){
+                        					var prev = my.root;
+                        					var here = my.root.next;
+                        					while (here !== null){
+                        						if (check(here))
+                        							break;
+                        						prev = here;
+                        						here = here.next;
+                        					}
+                        					return {
+                        						before: prev === my.root ? null : prev,
+                        						after: here,
+                        						insert: function(node){
+                        							node.prev = prev;
+                        							node.next = here;
+                        							prev.next = node;
+                        							if (here !== null)
+                        								here.prev = node;
+                        							return node;
+                        						}
+                        					};
+                        				}
+                        			};
+                        			return my;
+                        		},
+                        		node: function(data){
+                        			data.prev = null;
+                        			data.next = null;
+                        			data.remove = function(){
+                        				data.prev.next = data.next;
+                        				if (data.next)
+                        					data.next.prev = data.prev;
+                        				data.prev = null;
+                        				data.next = null;
+                        			};
+                        			return data;
+                        		}
+                        	};
+                        	
+                        	module.exports = LinkedList;
+                        	
+                        	},{}],7:[function(require,module,exports){
+                        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                        	// MIT License
+                        	// Project Home: https://github.com/voidqk/polybooljs
+                        	
+                        	//
+                        	// converts a list of segments into a list of regions, while also removing unnecessary verticies
+                        	//
+                        	
+                        	function SegmentChainer(segments, eps, buildLog){
+                        		var chains = [];
+                        		var regions = [];
+                        	
+                        		segments.forEach(function(seg){
+                        			var pt1 = seg.start;
+                        			var pt2 = seg.end;
+                        			if (eps.pointsSame(pt1, pt2)){
+                        				console.warn('PolyBool: Warning: Zero-length segment detected; your epsilon is ' +
+                        					'probably too small or too large');
+                        				return;
+                        			}
+                        	
+                        			if (buildLog)
+                        				buildLog.chainStart(seg);
+                        	
+                        			// search for two chains that this segment matches
+                        			var first_match = {
+                        				index: 0,
+                        				matches_head: false,
+                        				matches_pt1: false
+                        			};
+                        			var second_match = {
+                        				index: 0,
+                        				matches_head: false,
+                        				matches_pt1: false
+                        			};
+                        			var next_match = first_match;
+                        			function setMatch(index, matches_head, matches_pt1){
+                        				// return true if we've matched twice
+                        				next_match.index = index;
+                        				next_match.matches_head = matches_head;
+                        				next_match.matches_pt1 = matches_pt1;
+                        				if (next_match === first_match){
+                        					next_match = second_match;
+                        					return false;
+                        				}
+                        				next_match = null;
+                        				return true; // we've matched twice, we're done here
+                        			}
+                        			for (var i = 0; i < chains.length; i++){
+                        				var chain = chains[i];
+                        				var head  = chain[0];
+                        				var head2 = chain[1];
+                        				var tail  = chain[chain.length - 1];
+                        				var tail2 = chain[chain.length - 2];
+                        				if (eps.pointsSame(head, pt1)){
+                        					if (setMatch(i, true, true))
+                        						break;
+                        				}
+                        				else if (eps.pointsSame(head, pt2)){
+                        					if (setMatch(i, true, false))
+                        						break;
+                        				}
+                        				else if (eps.pointsSame(tail, pt1)){
+                        					if (setMatch(i, false, true))
+                        						break;
+                        				}
+                        				else if (eps.pointsSame(tail, pt2)){
+                        					if (setMatch(i, false, false))
+                        						break;
+                        				}
+                        			}
+                        	
+                        			if (next_match === first_match){
+                        				// we didn't match anything, so create a new chain
+                        				chains.push([ pt1, pt2 ]);
+                        				if (buildLog)
+                        					buildLog.chainNew(pt1, pt2);
+                        				return;
+                        			}
+                        	
+                        			if (next_match === second_match){
+                        				// we matched a single chain
+                        	
+                        				if (buildLog)
+                        					buildLog.chainMatch(first_match.index);
+                        	
+                        				// add the other point to the apporpriate end, and check to see if we've closed the
+                        				// chain into a loop
+                        	
+                        				var index = first_match.index;
+                        				var pt = first_match.matches_pt1 ? pt2 : pt1; // if we matched pt1, then we add pt2, etc
+                        				var addToHead = first_match.matches_head; // if we matched at head, then add to the head
+                        	
+                        				var chain = chains[index];
+                        				var grow  = addToHead ? chain[0] : chain[chain.length - 1];
+                        				var grow2 = addToHead ? chain[1] : chain[chain.length - 2];
+                        				var oppo  = addToHead ? chain[chain.length - 1] : chain[0];
+                        				var oppo2 = addToHead ? chain[chain.length - 2] : chain[1];
+                        	
+                        				if (eps.pointsCollinear(grow2, grow, pt)){
+                        					// grow isn't needed because it's directly between grow2 and pt:
+                        					// grow2 ---grow---> pt
+                        					if (addToHead){
+                        						if (buildLog)
+                        							buildLog.chainRemoveHead(first_match.index, pt);
+                        						chain.shift();
+                        					}
+                        					else{
+                        						if (buildLog)
+                        							buildLog.chainRemoveTail(first_match.index, pt);
+                        						chain.pop();
+                        					}
+                        					grow = grow2; // old grow is gone... new grow is what grow2 was
+                        				}
+                        	
+                        				if (eps.pointsSame(oppo, pt)){
+                        					// we're closing the loop, so remove chain from chains
+                        					chains.splice(index, 1);
+                        	
+                        					if (eps.pointsCollinear(oppo2, oppo, grow)){
+                        						// oppo isn't needed because it's directly between oppo2 and grow:
+                        						// oppo2 ---oppo--->grow
+                        						if (addToHead){
+                        							if (buildLog)
+                        								buildLog.chainRemoveTail(first_match.index, grow);
+                        							chain.pop();
+                        						}
+                        						else{
+                        							if (buildLog)
+                        								buildLog.chainRemoveHead(first_match.index, grow);
+                        							chain.shift();
+                        						}
+                        					}
+                        	
+                        					if (buildLog)
+                        						buildLog.chainClose(first_match.index);
+                        	
+                        					// we have a closed chain!
+                        					regions.push(chain);
+                        					return;
+                        				}
+                        	
+                        				// not closing a loop, so just add it to the apporpriate side
+                        				if (addToHead){
+                        					if (buildLog)
+                        						buildLog.chainAddHead(first_match.index, pt);
+                        					chain.unshift(pt);
+                        				}
+                        				else{
+                        					if (buildLog)
+                        						buildLog.chainAddTail(first_match.index, pt);
+                        					chain.push(pt);
+                        				}
+                        				return;
+                        			}
+                        	
+                        			// otherwise, we matched two chains, so we need to combine those chains together
+                        	
+                        			function reverseChain(index){
+                        				if (buildLog)
+                        					buildLog.chainReverse(index);
+                        				chains[index].reverse(); // gee, that's easy
+                        			}
+                        	
+                        			function appendChain(index1, index2){
+                        				// index1 gets index2 appended to it, and index2 is removed
+                        				var chain1 = chains[index1];
+                        				var chain2 = chains[index2];
+                        				var tail  = chain1[chain1.length - 1];
+                        				var tail2 = chain1[chain1.length - 2];
+                        				var head  = chain2[0];
+                        				var head2 = chain2[1];
+                        	
+                        				if (eps.pointsCollinear(tail2, tail, head)){
+                        					// tail isn't needed because it's directly between tail2 and head
+                        					// tail2 ---tail---> head
+                        					if (buildLog)
+                        						buildLog.chainRemoveTail(index1, tail);
+                        					chain1.pop();
+                        					tail = tail2; // old tail is gone... new tail is what tail2 was
+                        				}
+                        	
+                        				if (eps.pointsCollinear(tail, head, head2)){
+                        					// head isn't needed because it's directly between tail and head2
+                        					// tail ---head---> head2
+                        					if (buildLog)
+                        						buildLog.chainRemoveHead(index2, head);
+                        					chain2.shift();
+                        				}
+                        	
+                        				if (buildLog)
+                        					buildLog.chainJoin(index1, index2);
+                        				chains[index1] = chain1.concat(chain2);
+                        				chains.splice(index2, 1);
+                        			}
+                        	
+                        			var F = first_match.index;
+                        			var S = second_match.index;
+                        	
+                        			if (buildLog)
+                        				buildLog.chainConnect(F, S);
+                        	
+                        			var reverseF = chains[F].length < chains[S].length; // reverse the shorter chain, if needed
+                        			if (first_match.matches_head){
+                        				if (second_match.matches_head){
+                        					if (reverseF){
+                        						// <<<< F <<<< --- >>>> S >>>>
+                        						reverseChain(F);
+                        						// >>>> F >>>> --- >>>> S >>>>
+                        						appendChain(F, S);
+                        					}
+                        					else{
+                        						// <<<< F <<<< --- >>>> S >>>>
+                        						reverseChain(S);
+                        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                        						// >>>> S >>>> --- >>>> F >>>>
+                        						appendChain(S, F);
+                        					}
+                        				}
+                        				else{
+                        					// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                        					// >>>> S >>>> --- >>>> F >>>>
+                        					appendChain(S, F);
+                        				}
+                        			}
+                        			else{
+                        				if (second_match.matches_head){
+                        					// >>>> F >>>> --- >>>> S >>>>
+                        					appendChain(F, S);
+                        				}
+                        				else{
+                        					if (reverseF){
+                        						// >>>> F >>>> --- <<<< S <<<<
+                        						reverseChain(F);
+                        						// <<<< F <<<< --- <<<< S <<<<   logically same as:
+                        						// >>>> S >>>> --- >>>> F >>>>
+                        						appendChain(S, F);
+                        					}
+                        					else{
+                        						// >>>> F >>>> --- <<<< S <<<<
+                        						reverseChain(S);
+                        						// >>>> F >>>> --- >>>> S >>>>
+                        						appendChain(F, S);
+                        					}
+                        				}
+                        			}
+                        		});
+                        	
+                        		return regions;
+                        	}
+                        	
+                        	module.exports = SegmentChainer;
+                        	
+                        	},{}],8:[function(require,module,exports){
+                        	// (c) Copyright 2016, Sean Connelly (@voidqk), http://syntheti.cc
+                        	// MIT License
+                        	// Project Home: https://github.com/voidqk/polybooljs
+                        	
+                        	//
+                        	// filter a list of segments based on boolean operations
+                        	//
+                        	
+                        	function select(segments, selection, buildLog){
+                        		var result = [];
+                        		segments.forEach(function(seg){
+                        			var index =
+                        				(seg.myFill.above ? 8 : 0) +
+                        				(seg.myFill.below ? 4 : 0) +
+                        				((seg.otherFill && seg.otherFill.above) ? 2 : 0) +
+                        				((seg.otherFill && seg.otherFill.below) ? 1 : 0);
+                        			if (selection[index] !== 0){
+                        				// copy the segment to the results, while also calculating the fill status
+                        				result.push({
+                        					id: buildLog ? buildLog.segmentId() : -1,
+                        					start: seg.start,
+                        					end: seg.end,
+                        					myFill: {
+                        						above: selection[index] === 1, // 1 if filled above
+                        						below: selection[index] === 2  // 2 if filled below
+                        					},
+                        					otherFill: null
+                        				});
+                        			}
+                        		});
+                        	
+                        		if (buildLog)
+                        			buildLog.selected(result);
+                        	
+                        		return result;
+                        	}
+                        	
+                        	var SegmentSelector = {
+                        		union: function(segments, buildLog){ // primary | secondary
+                        			// above1 below1 above2 below2    Keep?               Value
+                        			//    0      0      0      0   =>   no                  0
+                        			//    0      0      0      1   =>   yes filled below    2
+                        			//    0      0      1      0   =>   yes filled above    1
+                        			//    0      0      1      1   =>   no                  0
+                        			//    0      1      0      0   =>   yes filled below    2
+                        			//    0      1      0      1   =>   yes filled below    2
+                        			//    0      1      1      0   =>   no                  0
+                        			//    0      1      1      1   =>   no                  0
+                        			//    1      0      0      0   =>   yes filled above    1
+                        			//    1      0      0      1   =>   no                  0
+                        			//    1      0      1      0   =>   yes filled above    1
+                        			//    1      0      1      1   =>   no                  0
+                        			//    1      1      0      0   =>   no                  0
+                        			//    1      1      0      1   =>   no                  0
+                        			//    1      1      1      0   =>   no                  0
+                        			//    1      1      1      1   =>   no                  0
+                        			return select(segments, [
+                        				0, 2, 1, 0,
+                        				2, 2, 0, 0,
+                        				1, 0, 1, 0,
+                        				0, 0, 0, 0
+                        			], buildLog);
+                        		},
+                        		intersect: function(segments, buildLog){ // primary & secondary
+                        			// above1 below1 above2 below2    Keep?               Value
+                        			//    0      0      0      0   =>   no                  0
+                        			//    0      0      0      1   =>   no                  0
+                        			//    0      0      1      0   =>   no                  0
+                        			//    0      0      1      1   =>   no                  0
+                        			//    0      1      0      0   =>   no                  0
+                        			//    0      1      0      1   =>   yes filled below    2
+                        			//    0      1      1      0   =>   no                  0
+                        			//    0      1      1      1   =>   yes filled below    2
+                        			//    1      0      0      0   =>   no                  0
+                        			//    1      0      0      1   =>   no                  0
+                        			//    1      0      1      0   =>   yes filled above    1
+                        			//    1      0      1      1   =>   yes filled above    1
+                        			//    1      1      0      0   =>   no                  0
+                        			//    1      1      0      1   =>   yes filled below    2
+                        			//    1      1      1      0   =>   yes filled above    1
+                        			//    1      1      1      1   =>   no                  0
+                        			return select(segments, [
+                        				0, 0, 0, 0,
+                        				0, 2, 0, 2,
+                        				0, 0, 1, 1,
+                        				0, 2, 1, 0
+                        			], buildLog);
+                        		},
+                        		difference: function(segments, buildLog){ // primary - secondary
+                        			// above1 below1 above2 below2    Keep?               Value
+                        			//    0      0      0      0   =>   no                  0
+                        			//    0      0      0      1   =>   no                  0
+                        			//    0      0      1      0   =>   no                  0
+                        			//    0      0      1      1   =>   no                  0
+                        			//    0      1      0      0   =>   yes filled below    2
+                        			//    0      1      0      1   =>   no                  0
+                        			//    0      1      1      0   =>   yes filled below    2
+                        			//    0      1      1      1   =>   no                  0
+                        			//    1      0      0      0   =>   yes filled above    1
+                        			//    1      0      0      1   =>   yes filled above    1
+                        			//    1      0      1      0   =>   no                  0
+                        			//    1      0      1      1   =>   no                  0
+                        			//    1      1      0      0   =>   no                  0
+                        			//    1      1      0      1   =>   yes filled above    1
+                        			//    1      1      1      0   =>   yes filled below    2
+                        			//    1      1      1      1   =>   no                  0
+                        			return select(segments, [
+                        				0, 0, 0, 0,
+                        				2, 0, 2, 0,
+                        				1, 1, 0, 0,
+                        				0, 1, 2, 0
+                        			], buildLog);
+                        		},
+                        		differenceRev: function(segments, buildLog){ // secondary - primary
+                        			// above1 below1 above2 below2    Keep?               Value
+                        			//    0      0      0      0   =>   no                  0
+                        			//    0      0      0      1   =>   yes filled below    2
+                        			//    0      0      1      0   =>   yes filled above    1
+                        			//    0      0      1      1   =>   no                  0
+                        			//    0      1      0      0   =>   no                  0
+                        			//    0      1      0      1   =>   no                  0
+                        			//    0      1      1      0   =>   yes filled above    1
+                        			//    0      1      1      1   =>   yes filled above    1
+                        			//    1      0      0      0   =>   no                  0
+                        			//    1      0      0      1   =>   yes filled below    2
+                        			//    1      0      1      0   =>   no                  0
+                        			//    1      0      1      1   =>   yes filled below    2
+                        			//    1      1      0      0   =>   no                  0
+                        			//    1      1      0      1   =>   no                  0
+                        			//    1      1      1      0   =>   no                  0
+                        			//    1      1      1      1   =>   no                  0
+                        			return select(segments, [
+                        				0, 2, 1, 0,
+                        				0, 0, 1, 1,
+                        				0, 2, 0, 2,
+                        				0, 0, 0, 0
+                        			], buildLog);
+                        		},
+                        		xor: function(segments, buildLog){ // primary ^ secondary
+                        			// above1 below1 above2 below2    Keep?               Value
+                        			//    0      0      0      0   =>   no                  0
+                        			//    0      0      0      1   =>   yes filled below    2
+                        			//    0      0      1      0   =>   yes filled above    1
+                        			//    0      0      1      1   =>   no                  0
+                        			//    0      1      0      0   =>   yes filled below    2
+                        			//    0      1      0      1   =>   no                  0
+                        			//    0      1      1      0   =>   no                  0
+                        			//    0      1      1      1   =>   yes filled above    1
+                        			//    1      0      0      0   =>   yes filled above    1
+                        			//    1      0      0      1   =>   no                  0
+                        			//    1      0      1      0   =>   no                  0
+                        			//    1      0      1      1   =>   yes filled below    2
+                        			//    1      1      0      0   =>   no                  0
+                        			//    1      1      0      1   =>   yes filled above    1
+                        			//    1      1      1      0   =>   yes filled below    2
+                        			//    1      1      1      1   =>   no                  0
+                        			return select(segments, [
+                        				0, 2, 1, 0,
+                        				2, 0, 0, 1,
+                        				1, 0, 0, 2,
+                        				0, 1, 2, 0
+                        			], buildLog);
+                        		}
+                        	};
+                        	
+                        	module.exports = SegmentSelector;
+                        	
+                        },{}]},{},[1]);
                     };
+                    this.__tp = _thirdparty;
                 };
                 _canvas_.core = new function(){
                     var core = this;
@@ -17789,7 +21146,7 @@
                                                     context.enableVertexAttribArray(point.attributeLocation);
                                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
+                                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.math.polygonToSubTriangles(points,'flatArray')), context.STATIC_DRAW);
                                                     pointsChanged = false;
                                                 }else{
                                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
@@ -17877,12 +21234,22 @@
                                         this.stopAttributeStartedExtremityUpdate = false;
                             
                                     //attributes pertinent to extremity calculation
+                                        function update(){
+                                            generatedPathPolygon = loopedLineGenerator(); 
+                                            pointsChanged = true; 
+                                            if(this.stopAttributeStartedExtremityUpdate){return;}
+                                            computeExtremities();
+                                        }
+                            
                                         var pointsChanged = true; var generatedPathPolygon = [];
-                                        var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;        generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2;   generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
-                                        var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                             if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        
-                                        function loopedLineGenerator(){ return _canvas_.library.math.pathExtrapolation.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }
+                                        var points = [];         this.points =      function(a){ if(a==undefined){return points;} points = a; if(this.devMode){console.log(this.getAddress()+'::points');} update(); };
+                                        var thickness = 5;       this.thickness =   function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} update(); };
+                                        var scale = 1;           this.scale =       function(a){ if(a==undefined){return scale;} scale = a; if(this.devMode){console.log(this.getAddress()+'::scale');} update(); };
+                                        var jointDetail = 25;    this.jointDetail = function(a){ if(a==undefined){return jointDetail;} jointDetail = a; if(this.devMode){console.log(this.getAddress()+'::jointDetail');} update(); }
+                                        var jointType = 'sharp'; this.jointType =   function(a){ if(a==undefined){return jointType;} jointType = a; if(this.devMode){console.log(this.getAddress()+'::jointType');} update(); };
+                                        var sharpLimit = 4;      this.sharpLimit =  function(a){ if(a==undefined){return sharpLimit;} sharpLimit = a; if(this.devMode){console.log(this.getAddress()+'::sharpLimit');} update(); };
+                            
+                                        function loopedLineGenerator(){ return _canvas_.library.math.pathExtrapolation(points,thickness,'none',jointType,true,jointDetail,sharpLimit); }
                                         this.pointsAsXYArray = function(a){
                                             if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
                             
@@ -17945,7 +21312,7 @@
                                         }
                                     `;
                                     var index = { buffer:undefined, attributeLocation:undefined };
-                                    var point = { buffer:undefined, attributeLocation:undefined, earcut:[] };
+                                    var point = { buffer:undefined, attributeLocation:undefined, triangles:[] };
                                     var drawingPoints = [];
                                     var uniformLocations;
                                     function updateGLAttributes(context,offset){                
@@ -17954,11 +21321,11 @@
                                                 if(point.buffer == undefined || pointsChanged){
                                                     point.attributeLocation = context.getAttribLocation(program, "point");
                                                     point.buffer = context.createBuffer();
-                                                    point.earcut = _canvas_.library.thirdparty.earcut(points);
+                                                    point.triangles = _canvas_.library.math.polygonToSubTriangles(points,'flatArray');
                                                     context.enableVertexAttribArray(point.attributeLocation);
                                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                                                     context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.earcut.concat(generatedPathPolygon)), context.STATIC_DRAW);
+                                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.triangles.concat(generatedPathPolygon)), context.STATIC_DRAW);
                                                     pointsChanged = false;
                                                 }else{
                                                     context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
@@ -17972,7 +21339,7 @@
                                                 context.enableVertexAttribArray(index.attributeLocation);
                                                 context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
                                                 context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.earcut.length/2 + generatedPathPolygon.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
+                                                context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.triangles.length/2 + generatedPathPolygon.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                                             }else{
                                                 context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                                                 context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
@@ -17996,7 +21363,7 @@
                                             context.uniform1f(uniformLocations["offset.angle"], offset.angle);
                                             context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                                             context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                                            context.uniform1f(uniformLocations["indexParting"], point.earcut.length/2);
+                                            context.uniform1f(uniformLocations["indexParting"], point.triangles.length/2);
                                             context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
                                     }
                                     var program;
@@ -18063,160 +21430,25 @@
                                         this.stopAttributeStartedExtremityUpdate = false;
                             
                                     //attributes pertinent to extremity calculation
-                                        var pointsChanged = true; var generatedPathPolygon = [];
-                                        var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
-                            
-                                        function lineGenerator(){ return _canvas_.library.math.pathExtrapolation.pathToPolygonGenerator( points, thickness ); }
-                                        this.pointsAsXYArray = function(a){
-                                            if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
-                            
-                                            if(a==undefined){
-                                                var output = [];
-                                                for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                                                return output;
-                                            }
-                            
-                                            this.points( a.map( a => [a.x,a.y] ).flat() );
-                                        };
-                                        
-                                //addressing
-                                    this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
-                            
-                                //webGL rendering functions
-                                    var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
-                                            //variables
-                                                struct location{
-                                                    vec2 xy;
-                                                    float scale;
-                                                    float angle;
-                                                };
-                                                uniform location offset;
-                            
-                                                attribute vec2 point;
-                                                uniform vec2 resolution;
-                            
-                                            void main(){    
-                                                //adjust point by offset
-                                                    vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
-                            
-                                                //convert from unit space to clipspace
-                                                    gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                                            }
-                                        `;
-                                    var fragmentShaderSource = `  
-                                        precision mediump float;
-                                        uniform vec4 colour;
-                                                                                                    
-                                        void main(){
-                                            gl_FragColor = colour;
+                                        var pointsChanged = true;
+                                        var generatedPathPolygon = [];
+                                        function update(){
+                                            generatedPathPolygon = lineGenerator();
+                                            pointsChanged = true;
+                                            if(this.stopAttributeStartedExtremityUpdate){return;}
+                                            computeExtremities();
                                         }
-                                    `;
-                                    var point = { buffer:undefined, attributeLocation:undefined };
-                                    var uniformLocations;
-                                    function updateGLAttributes(context,offset){
-                                        //buffers
-                                            //points
-                                                if(point.buffer == undefined || pointsChanged){
-                                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                                    point.buffer = context.createBuffer();
-                                                    context.enableVertexAttribArray(point.attributeLocation);
-                                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
-                                                }else{
-                                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                }
+                                        var points = [];         this.points =      function(a){ if(a==undefined){return points;} points = a; if(this.devMode){console.log(this.getAddress()+'::points');} update(); };
+                                        var thickness = 1;       this.thickness =   function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} update(); };
+                                        var scale = 1;           this.scale =       function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
+                                        var jointType = 'sharp'; this.jointType =   function(a){ if(a==undefined){return jointType;} jointType = a; if(this.devMode){console.log(this.getAddress()+'::jointType');} update(); };
+                                        var capType = 'none';    this.capType =     function(a){ if(a==undefined){return capType;} capType = a; if(this.devMode){console.log(this.getAddress()+'::capType');} update(); };
+                                        var looping = false;     this.looping =     function(a){ if(a==undefined){return looping;} looping = a; if(this.devMode){console.log(this.getAddress()+'::looping');} update(); };
+                                        var jointDetail = 25;    this.jointDetail = function(a){ if(a==undefined){return jointDetail;} jointDetail = a; if(this.devMode){console.log(this.getAddress()+'::jointDetail');} update(); }
+                                        var sharpLimit = 4;      this.sharpLimit =  function(a){ if(a==undefined){return sharpLimit;} sharpLimit = a; if(this.devMode){console.log(this.getAddress()+'::sharpLimit');} update(); };
                             
-                                        //uniforms
-                                            if( uniformLocations == undefined ){
-                                                uniformLocations = {
-                                                    "offset.xy": context.getUniformLocation(program, "offset.xy"),
-                                                    "offset.scale": context.getUniformLocation(program, "offset.scale"),
-                                                    "offset.angle": context.getUniformLocation(program, "offset.angle"),
-                                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                                    "colour": context.getUniformLocation(program, "colour"),
-                                                };
-                                            }
-                            
-                                            context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
-                                            context.uniform1f(uniformLocations["offset.scale"], offset.scale);
-                                            context.uniform1f(uniformLocations["offset.angle"], offset.angle);
-                                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                                            context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                                    }
-                                    var program;
-                                    function activateGLRender(context,adjust){
-                                        if(program == undefined){ program = core.render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
-                            
-                                        context.useProgram(program);
-                                        updateGLAttributes(context,adjust);
-                                        context.drawArrays(context.TRIANGLE_STRIP, 0, generatedPathPolygon.length/2);
-                                    }
-                            
-                                //extremities
-                                    function computeExtremities(informParent=true,offset){
-                                        if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
-                            
-                                        //get offset from parent, if one isn't provided
-                                            if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
-                                        //calculate points based on the offset
-                                            self.extremities.points = [];
-                                            for(var a = 0; a < generatedPathPolygon.length; a+=2){
-                                                var P = _canvas_.library.math.cartesianAngleAdjust(generatedPathPolygon[a]*offset.scale,generatedPathPolygon[a+1]*offset.scale, offset.angle);
-                                                self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                                            }
-                                            self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                        //if told to do so, inform parent (if there is one) that extremities have changed
-                                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                                    }
-                                    this.computeExtremities = computeExtremities;
-                            
-                                //lead render
-                                    function drawDotFrame(){
-                                        //draw shape extremity points
-                                            self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                                        //draw bounding box top left and bottom right points
-                                            core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                                            core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                                    }
-                                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                                        //activate shape render code
-                                            activateGLRender(context,offset);
-                            
-                                        //if requested; draw dot frame
-                                            if(self.dotFrame){drawDotFrame();}
-                                    };
-                            };
-                            this.pathWithRoundJointsAndEnds = function(){
-                                var self = this;
-                            
-                                //attributes 
-                                    //protected attributes
-                                        const type = 'pathWithRoundJointsAndEnds'; this.getType = function(){return type;}
-                            
-                                    //simple attributes
-                                        this.name = '';
-                                        this.parent = undefined;
-                                        this.dotFrame = false;
-                                        this.extremities = { points:[], boundingBox:{} };
-                                        this.ignored = false;
-                                        this.colour = {r:0,g:0,b:0,a:1};
-                                    //advanced use attributes
-                                        this.devMode = false;
-                                        this.stopAttributeStartedExtremityUpdate = false;
-                            
-                                    //attributes pertinent to extremity calculation
-                                        var pointsChanged = true; var generatedPathPolygon = [];
-                                        var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
-                                        var detail = 25;   this.detail =    function(a){ if(a==undefined){return detail;} detail = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::detail');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                            
-                                        function lineGenerator(){ return _canvas_.library.math.pathExtrapolation.pathToPolygonWithRoundJointsAndEndsGenerator(points,thickness,detail); }
+                                        function lineGenerator(){ return _canvas_.library.math.pathExtrapolation(points,thickness,capType,jointType,looping,jointDetail,sharpLimit); }
+                                         
                                         this.pointsAsXYArray = function(a){
                                             if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
                             
@@ -18303,154 +21535,6 @@
                                         context.useProgram(program);
                                         updateGLAttributes(context,adjust);
                                         context.drawArrays(context.TRIANGLES, 0, generatedPathPolygon.length/2);
-                                        // context.drawArrays(context.LINE_STRIP, 0, generatedPathPolygon.length/2);
-                                    }
-                            
-                                //extremities
-                                    function computeExtremities(informParent=true,offset){
-                                        if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
-                            
-                                        //get offset from parent, if one isn't provided
-                                            if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
-                                        //calculate points based on the offset
-                                            self.extremities.points = [];
-                                            for(var a = 0; a < generatedPathPolygon.length; a+=2){
-                                                var P = _canvas_.library.math.cartesianAngleAdjust(generatedPathPolygon[a]*offset.scale,generatedPathPolygon[a+1]*offset.scale, offset.angle);
-                                                self.extremities.points.push({ x: P.x+offset.x, y: P.y+offset.y });
-                                            }
-                                            self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                        //if told to do so, inform parent (if there is one) that extremities have changed
-                                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                                    }
-                                    this.computeExtremities = computeExtremities;
-                            
-                                //lead render
-                                    function drawDotFrame(){
-                                        //draw shape extremity points
-                                            self.extremities.points.forEach(a => core.render.drawDot(a.x,a.y));
-                                        //draw bounding box top left and bottom right points
-                                            core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                                            core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                                    }
-                                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                                        //activate shape render code
-                                            activateGLRender(context,offset);
-                            
-                                        //if requested; draw dot frame
-                                            if(self.dotFrame){drawDotFrame();}
-                                    };
-                            };
-                            this.loopedPath = function(){
-                                var self = this;
-                            
-                                //attributes 
-                                    //protected attributes
-                                        const type = 'loopedPath'; this.getType = function(){return type;}
-                            
-                                    //simple attributes
-                                        this.name = '';
-                                        this.parent = undefined;
-                                        this.dotFrame = false;
-                                        this.extremities = { points:[], boundingBox:{} };
-                                        this.ignored = false;
-                                        this.colour = {r:0,g:0,b:0,a:1};
-                                    //advanced use attributes
-                                        this.devMode = false;
-                                        this.stopAttributeStartedExtremityUpdate = false;
-                            
-                                    //attributes pertinent to extremity calculation
-                                        var pointsChanged = true; var generatedPathPolygon = [];
-                                        var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-                                        var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
-                                        
-                                        function lineGenerator(){ return _canvas_.library.math.pathExtrapolation.loopedPathToPolygonGenerator( points, thickness ); }
-                                        this.pointsAsXYArray = function(a){
-                                            if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
-                            
-                                            if(a==undefined){
-                                                var output = [];
-                                                for(var a = 0; a < points.length; a+=2){ output.push({ x:points[a], y:points[a+1] }); }
-                                                return output;
-                                            }
-                            
-                                            this.points( a.map( a => [a.x,a.y] ).flat() );
-                                        };
-                                        
-                                //addressing
-                                    this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
-                            
-                                //webGL rendering functions
-                                    var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
-                                            //variables
-                                                struct location{
-                                                    vec2 xy;
-                                                    float scale;
-                                                    float angle;
-                                                };
-                                                uniform location offset;
-                            
-                                                attribute vec2 point;
-                                                uniform vec2 resolution;
-                            
-                                            void main(){    
-                                                //adjust point by offset
-                                                    vec2 P = cartesianAngleAdjust(point*offset.scale, offset.angle) + offset.xy;
-                            
-                                                //convert from unit space to clipspace
-                                                    gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                                            }
-                                        `;
-                                    var fragmentShaderSource = `  
-                                        precision mediump float;
-                                        uniform vec4 colour;
-                                                                                                    
-                                        void main(){
-                                            gl_FragColor = colour;
-                                        }
-                                    `;
-                                    var point = { buffer:undefined, attributeLocation:undefined };
-                                    var uniformLocations;
-                                    function updateGLAttributes(context,offset){
-                                        //buffers
-                                            //points
-                                                if(point.buffer == undefined || pointsChanged){
-                                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                                    point.buffer = context.createBuffer();
-                                                    context.enableVertexAttribArray(point.attributeLocation);
-                                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(generatedPathPolygon), context.STATIC_DRAW);
-                                                }else{
-                                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                                }
-                            
-                                        //uniforms
-                                            if( uniformLocations == undefined ){
-                                                uniformLocations = {
-                                                    "offset.xy": context.getUniformLocation(program, "offset.xy"),
-                                                    "offset.scale": context.getUniformLocation(program, "offset.scale"),
-                                                    "offset.angle": context.getUniformLocation(program, "offset.angle"),
-                                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                                    "colour": context.getUniformLocation(program, "colour"),
-                                                };
-                                            }
-                            
-                                            context.uniform2f(uniformLocations["offset.xy"], offset.x, offset.y);
-                                            context.uniform1f(uniformLocations["offset.scale"], offset.scale);
-                                            context.uniform1f(uniformLocations["offset.angle"], offset.angle);
-                                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                                            context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                                    }
-                                    var program;
-                                    function activateGLRender(context,adjust){
-                                        if(program == undefined){ program = core.render.produceProgram('polygon', vertexShaderSource, fragmentShaderSource); }
-                            
-                                        context.useProgram(program);
-                                        updateGLAttributes(context,adjust);
-                                        context.drawArrays(context.TRIANGLE_STRIP, 0, generatedPathPolygon.length/2);
                                     }
                             
                                 //extremities
@@ -19611,173 +22695,173 @@
                                 loadAttempted:true,
                                 isLoaded:true,
                                 'default':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ])
                                     vector:[0.8,0.2,0.2,0.2,0,0,0,1,0,0,0.2,0.2,0.8,0.2,0,0,1,0,0,1,0.2,0.2,0.2,0.8,0.8,0.8,0.8,0.2,1,0,1,1,0,1,0.2,0.8,0.8,0.8,1,0,1,1,1,1,0.2,0.8,0.8,0.8],
                                 },
                                 '':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1, 0,0, 0.2,0.2,  0.2,0.8, 0.8,0.8, 0.8,0.2, 0.2,0.2 ])
                                     vector:[0.8,0.2,0.2,0.2,0,0,0,1,0,0,0.2,0.2,0.8,0.2,0,0,1,0,0,1,0.2,0.2,0.2,0.8,0.8,0.8,0.8,0.2,1,0,1,1,0,1,0.2,0.8,0.8,0.8,1,0,1,1,1,1,0.2,0.8,0.8,0.8],
                                 },
                             
                             
                                 'A':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,1, 0.4,0, 0.6,0, 1,1, 0.8,1, 0.5,0.2, 0.4,0.5, 0.65,0.5, 0.7,0.7, 0.3,0.7, 0.2,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,1, 0.4,0, 0.6,0, 1,1, 0.8,1, 0.5,0.2, 0.4,0.5, 0.65,0.5, 0.7,0.7, 0.3,0.7, 0.2,1 ]) 
                                     vector:[0.3,0.7,0.2,1,0,1,0,1,0.4,0,0.6,0,0.6,0,1,1,0.8,1,0.4,0.5,0.65,0.5,0.7,0.7,0.6,0,0.8,1,0.5,0.2,0.4,0.5,0.7,0.7,0.3,0.7,0,1,0.6,0,0.5,0.2,0.5,0.2,0.4,0.5,0.3,0.7,0.3,0.7,0,1,0.5,0.2],
                                 },
                                 'B':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.7,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 0.9,0.1, 0.9,0.3, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0.7,0.5, 0.2,0.5, 0.2,0.3, 0.7,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 0.9,0.1, 0.9,0.3, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0,1 ]) 
                                     vector:[0,1,0,0,0.2,0,0.7,0.5,0.2,0.5,0.2,0.3,0.7,0.2,0.2,0.2,0.2,0,0.2,0,0.8,0,0.9,0.1,0.9,0.1,0.9,0.3,0.8,0.4,0.8,0.4,1,0.6,1,0.8,1,0.8,0.8,1,0,1,0,1,0.2,0,0.2,0.8,0.7,0.5,0.2,0.3,0.7,0.3,0.7,0.2,0.2,0,0.9,0.1,0,1,0.2,0.8,0.7,0.8,0.8,0.6,0.7,0.5,0.7,0.3,0.7,0.3,0.7,0.2,0.9,0.1,1,0.8,0,1,0.7,0.8,0.7,0.3,0.9,0.1,0.8,0.4,1,0.8,0.7,0.8,0.8,0.7,0.8,0.6,0.7,0.3,0.8,0.4,1,0.8,0.8,0.7,0.8,0.6,0.8,0.6,0.8,0.4,1,0.8],
                                 },
                                 'C':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.7,0.8, 0.8,0.7, 1,0.8, 0.8,1, 0.3,1, 0,0.7, 0,0.3 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.7,0.8, 0.8,0.7, 1,0.8, 0.8,1, 0.3,1, 0,0.7, 0,0.3 ]) 
                                     vector:[0,0.7,0,0.3,0.3,0,0.3,0,0.8,0,1,0.2,1,0.2,0.8,0.3,0.7,0.2,0.7,0.8,0.8,0.7,1,0.8,1,0.8,0.8,1,0.3,1,0.3,0,1,0.2,0.7,0.2,0.7,0.8,1,0.8,0.3,1,0.3,0,0.7,0.2,0.4,0.2,0.4,0.8,0.7,0.8,0.3,1,0.3,0,0.4,0.2,0.2,0.4,0.2,0.6,0.4,0.8,0.3,1,0,0.7,0.3,0,0.2,0.4,0.2,0.6,0.3,1,0,0.7,0,0.7,0.2,0.4,0.2,0.6],
                                 },
                                 'D':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,1, 0,1 ]) 
                                     vector:[0,1,0,0,0.2,0,0.7,0.2,0.2,0.2,0.2,0,0.2,0,0.8,0,1,0.2,1,0.2,1,0.8,0.8,1,0,1,0.2,0,0.2,0.8,0.7,0.2,0.2,0,1,0.2,0.8,1,0,1,0.2,0.8,0.8,0.3,0.7,0.2,1,0.2,0.8,1,0.2,0.8,0.7,0.8,0.8,0.7,0.8,0.3,1,0.2,0.8,1,0.7,0.8,0.8,0.7,0.8,0.7,1,0.2,0.8,1],
                                 },
                                 'E':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,0.8, 1,0.8, 1,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,0.8, 1,0.8, 1,1, 0,1 ]) 
                                     vector:[0,0,1,0,1,0.2,0.2,0.4,1,0.4,1,0.6,0.2,0.8,1,0.8,1,1,0,0,1,0.2,0.2,0.2,0.2,0.4,1,0.6,0.2,0.6,0.2,0.8,1,1,0,1,0,1,0,0,0.2,0.2,0.2,0.6,0.2,0.8,0,1,0,1,0.2,0.2,0.2,0.4,0.2,0.4,0.2,0.6,0,1],
                                 },
                                 'F':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 1,0.4, 1,0.6, 0.2,0.6, 0.2,1, 0,1 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,1,0,1,0.2,0.2,0.4,1,0.4,1,0.6,0.2,0.6,0.2,1,0,0,0,0,1,0.2,0.2,0.2,0.2,0.4,1,0.6,0.2,0.6,0,0,0.2,0.2,0.2,0.4,0.2,0.4,0.2,0.6,0,0],
                                 },
                                 'G':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.8,0.8, 0.8,0.6, 1,0.6, 1,1, 0.3,1, 0,0.7, 0,0.3 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0, 0.8,0, 1,0.2, 0.8,0.3, 0.7,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.8,0.8, 0.8,0.6, 1,0.6, 1,1, 0.3,1, 0,0.7, 0,0.3 ]) 
                                     vector:[0,0.7,0,0.3,0.3,0,0.3,0,0.8,0,1,0.2,1,0.2,0.8,0.3,0.7,0.2,0.8,0.8,0.8,0.6,1,0.6,1,1,0.3,1,0,0.7,0.3,0,1,0.2,0.7,0.2,0.8,0.8,1,0.6,1,1,0.3,0,0.7,0.2,0.4,0.2,0.4,0.8,0.8,0.8,1,1,0.3,0,0.4,0.2,0.2,0.4,0.4,0.8,1,1,0,0.7,0,0.7,0.3,0,0.2,0.4,0.2,0.6,0.4,0.8,0,0.7,0,0.7,0.2,0.4,0.2,0.6],
                                 },
                                 'H':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.4, 0.8,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.6, 0.2,0.6, 0.2,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.2,0.4, 0.8,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.6, 0.2,0.6, 0.2,1, 0,1 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,0.2,0,0.2,0.4,0.8,0.4,0.8,0,1,0,1,0,1,1,0.8,1,0.2,0.6,0.2,1,0,0,1,0,0.8,1,0.8,0.6,0.2,0.6,0,0,0.2,0.4,0.8,0.4,1,0,0.8,0.6,0.8,0.6,0.2,0.6,0.2,0.4,0.2,0.4,0.8,0.4,0.8,0.6],
                                 },
                                 'I':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.4,0.8, 0.4,0.2, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.4,0.8, 0.4,0.2, 0,0.2 ]) 
                                     vector:[0.4,0.2,0,0.2,0,0,0,0,1,0,1,0.2,0.6,0.8,1,0.8,1,1,1,1,0,1,0,0.8,0,0,1,0.2,0.6,0.2,1,1,0,0.8,0.4,0.8,0.4,0.2,0,0,0.6,0.2,0.6,0.8,1,1,0.4,0.8,0.4,0.8,0.4,0.2,0.6,0.2,0.6,0.2,0.6,0.8,0.4,0.8],
                                 },
                                 'J':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 0.4,1, 0,1, 0,0.8, 0.3,0.8, 0.4,0.7, 0.4,0.2, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,0.8, 0.4,1, 0,1, 0,0.8, 0.3,0.8, 0.4,0.7, 0.4,0.2, 0,0.2 ]) 
                                     vector:[0.4,0.2,0,0.2,0,0,0,0,1,0,1,0.2,0.6,0.2,0.6,0.8,0.4,1,0.4,1,0,1,0,0.8,0,0,1,0.2,0.6,0.2,0.4,1,0,0.8,0.3,0.8,0.4,0.2,0,0,0.6,0.2,0.4,1,0.3,0.8,0.4,0.7,0.4,0.7,0.4,0.2,0.6,0.2,0.6,0.2,0.4,1,0.4,0.7],
                                 },
                                 'K':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.3, 1,0, 1,0.2, 0.5,0.4, 1,1, 0.75,1, 0.3,0.45, 0.2,0.5, 0.2,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.2,0.3, 1,0, 1,0.2, 0.5,0.4, 1,1, 0.75,1, 0.3,0.45, 0.2,0.5, 0.2,1, 0,1 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,0.2,0,0.2,0.3,0.2,0.3,1,0,1,0.2,0.5,0.4,1,1,0.75,1,0.2,0.5,0.2,1,0,0,0.2,0.3,1,0.2,0.5,0.4,0.5,0.4,0.75,1,0.3,0.45,0.3,0.45,0.2,0.5,0,0,0.2,0.3,0.5,0.4,0.3,0.45,0.3,0.45,0,0,0.2,0.3],
                                 },
                                 'L':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.8, 1,0.8, 1,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.2,0.8, 1,0.8, 1,1, 0,1 ]) 
                                     vector:[0,1,0,0,0.2,0,0.2,0.8,1,0.8,1,1,0,1,0.2,0,0.2,0.8,0.2,0.8,1,1,0,1],
                                 },
                                 'M':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.3, 0.5,0.7, 0.2,0.3, 0.2,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.5,0.4, 0.8,0, 1,0, 1,1, 0.8,1, 0.8,0.3, 0.5,0.7, 0.2,0.3, 0.2,1, 0,1 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,0.2,0,0.5,0.4,0.5,0.4,0.8,0,1,0,1,0,1,1,0.8,1,0.2,0.3,0.2,1,0,0,1,0,0.8,1,0.8,0.3,0.5,0.7,0.2,0.3,0,0,0.5,0.4,1,0,0.8,0.3,0.5,0.7,0,0,0.5,0.4,0.5,0.4,0.8,0.3,0.5,0.7],
                                 },
                                 'N':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.8,0.7, 0.8,0, 1,0, 1,1, 0.8,1, 0.2,0.3, 0.2,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.8,0.7, 0.8,0, 1,0, 1,1, 0.8,1, 0.2,0.3, 0.2,1, 0,1 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,0.2,0,0.8,0.7,0.8,0.7,0.8,0,1,0,1,0,1,1,0.8,1,0.2,0.3,0.2,1,0,0,0.8,0.7,1,0,0.8,1,0.8,1,0.2,0.3,0,0,0,0,0.8,0.7,0.8,1],
                                 },
                                 'O':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.7,1, 0.3,1, 0,0.7, 0,0.3, 0.3,0, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.7,1, 0.3,1, 0,0.7, 0,0.3, 0.3,0, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2 ]) 
                                     vector:[0.6,0.2,0.4,0.2,0.3,0,0.3,0,0.7,0,1,0.3,1,0.3,1,0.7,0.7,1,0.7,1,0.3,1,0,0.7,0,0.7,0,0.3,0.3,0,0.3,0,0.4,0.2,0.2,0.4,0.6,0.2,0.3,0,1,0.3,0,0.7,0.3,0,0.2,0.4,0.8,0.4,0.6,0.2,1,0.3,0,0.7,0.2,0.4,0.2,0.6,0.8,0.6,0.8,0.4,1,0.3,0,0.7,0.2,0.6,0.4,0.8,0.8,0.6,1,0.3,0.7,1,0.7,1,0,0.7,0.4,0.8,0.6,0.8,0.8,0.6,0.7,1,0.7,1,0.4,0.8,0.6,0.8],
                                 },
                                 'P':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,0.8,0,1,0.2,1,0.2,1,0.4,0.8,0.6,0.8,0.6,0.2,0.6,0.2,0.4,0.2,0.2,0.2,1,0,0,0.8,0.6,0.2,0.4,0.7,0.4,0.7,0.2,0.2,0.2,0,0,1,0.2,0.8,0.6,0.7,0.4,0.7,0.2,0,0,1,0.2,1,0.2,0.7,0.4,0.8,0.3,0.8,0.3,0.7,0.2,1,0.2],
                                 },
                                 'Q':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.95,0.75, 1,0.8, 1,1, 0.8,1, 0.5,0.7, 0.5,0.5, 0.7,0.5, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.75,0.95, 0.7,1, 0.3,1, 0,0.7, 0,0.3 ]), 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0, 0.7,0, 1,0.3, 1,0.7, 0.95,0.75, 1,0.8, 1,1, 0.8,1, 0.5,0.7, 0.5,0.5, 0.7,0.5, 0.8,0.6, 0.8,0.4, 0.6,0.2, 0.4,0.2, 0.2,0.4, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.75,0.95, 0.7,1, 0.3,1, 0,0.7, 0,0.3 ]), 
                                     vector:[0,0.7,0,0.3,0.3,0,0.3,0,0.7,0,1,0.3,1,0.3,1,0.7,0.95,0.75,0.95,0.75,1,0.8,1,1,1,1,0.8,1,0.5,0.7,0.5,0.7,0.5,0.5,0.7,0.5,0.4,0.8,0.6,0.8,0.75,0.95,0.75,0.95,0.7,1,0.3,1,0.95,0.75,1,1,0.5,0.7,0.5,0.7,0.7,0.5,0.8,0.6,0.4,0.8,0.75,0.95,0.3,1,0.95,0.75,0.5,0.7,0.8,0.6,0.2,0.6,0.4,0.8,0.3,1,1,0.3,0.95,0.75,0.8,0.6,0.2,0.6,0.3,1,0,0.7,1,0.3,0.8,0.6,0.8,0.4,0.2,0.4,0.2,0.6,0,0.7,1,0.3,0.8,0.4,0.6,0.2,0.2,0.4,0,0.7,0.3,0,0.3,0,1,0.3,0.6,0.2,0.4,0.2,0.2,0.4,0.3,0,0.3,0,0.6,0.2,0.4,0.2],
                                     encroach:{'{':1},
                                 },
                                 'R':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.6,0.6, 1,1, 0.75,1, 0.35,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.8,0, 1,0.2, 1,0.4, 0.8,0.6, 0.6,0.6, 1,1, 0.75,1, 0.35,0.6, 0.2,0.6, 0.2,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.2,0.2, 0.2,1, 0,1 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,0.8,0,1,0.2,1,0.2,1,0.4,0.8,0.6,0.6,0.6,1,1,0.75,1,0.35,0.6,0.2,0.6,0.2,0.4,0.2,0.2,0.2,1,0,0,1,0.2,0.8,0.6,0.6,0.6,0.6,0.6,0.75,1,0.35,0.6,0.35,0.6,0.2,0.4,0.7,0.4,0.7,0.2,0.2,0.2,0,0,0.6,0.6,0.35,0.6,0.7,0.4,0.7,0.2,0,0,1,0.2,1,0.2,0.6,0.6,0.7,0.4,0.8,0.3,0.7,0.2,1,0.2,1,0.2,0.7,0.4,0.8,0.3],
                                 },
                                 'S':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2 ]) 
                                     vector:[0,0.4,0,0.2,0.2,0,0.2,0,0.8,0,1,0.2,1,0.2,1,0.3,0.8,0.3,0.3,0.4,0.8,0.4,1,0.6,1,0.6,1,0.8,0.8,1,0.8,1,0.2,1,0,0.8,0,0.8,0,0.7,0.2,0.7,0.7,0.6,0.2,0.6,0,0.4,1,0.2,0.8,0.3,0.7,0.2,0,0.8,0.2,0.7,0.3,0.8,0.2,0,1,0.2,0.7,0.2,0.8,1,0,0.8,0.3,0.8,0.2,0,0.7,0.2,0.3,0.2,0.8,1,0.3,0.8,0.7,0.8,0,0.4,0.2,0,0.3,0.2,1,0.6,0.8,1,0.7,0.8,0,0.4,0.3,0.2,0.2,0.3,1,0.6,0.7,0.8,0.8,0.7,0,0.4,0.2,0.3,0.3,0.4,1,0.6,0.8,0.7,0.7,0.6,0.7,0.6,0,0.4,0.3,0.4,0.3,0.4,1,0.6,0.7,0.6],
                                 },
                                 'T':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,1, 0.4,1, 0.4,0.2, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.6,0.2, 0.6,1, 0.4,1, 0.4,0.2, 0,0.2 ]) 
                                     vector:[0.4,0.2,0,0.2,0,0,0,0,1,0,1,0.2,0.6,0.2,0.6,1,0.4,1,0,0,1,0.2,0.6,0.2,0.6,0.2,0.4,1,0.4,0.2,0.4,0.2,0,0,0.6,0.2],
                                 },
                                 'U':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0, 1,0, 1,0.7, 0.7,1, 0.3,1, 0,0.7 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.2,0.6, 0.4,0.8, 0.6,0.8, 0.8,0.6, 0.8,0, 1,0, 1,0.7, 0.7,1, 0.3,1, 0,0.7 ]) 
                                     vector:[0.3,1,0,0.7,0,0,0,0,0.2,0,0.2,0.6,0.8,0.6,0.8,0,1,0,1,0,1,0.7,0.7,1,0.3,1,0,0,0.2,0.6,0.8,0.6,1,0,0.7,1,0.3,1,0.2,0.6,0.4,0.8,0.6,0.8,0.8,0.6,0.7,1,0.7,1,0.3,1,0.4,0.8,0.4,0.8,0.6,0.8,0.7,1],
                                 },
                                 'V':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2,0, 0.5,0.7, 0.8,0, 1,0, 0.6,1, 0.4,1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2,0, 0.5,0.7, 0.8,0, 1,0, 0.6,1, 0.4,1 ]) 
                                     vector:[0.6,1,0.4,1,0,0,0,0,0.2,0,0.5,0.7,0.5,0.7,0.8,0,1,0,0.6,1,0,0,0.5,0.7,0.5,0.7,1,0,0.6,1],
                                 },
                                 'W':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,1, 0.2,1, 0.5,0.6, 0.8,1, 1,1, 1,0, 0.8,0, 0.8,0.7, 0.5,0.3, 0.2,0.7, 0.2,0, 0,0 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,1, 0.2,1, 0.5,0.6, 0.8,1, 1,1, 1,0, 0.8,0, 0.8,0.7, 0.5,0.3, 0.2,0.7, 0.2,0, 0,0 ]) 
                                     vector:[0.2,1,0,1,0,0,0,0,0.2,0,0.2,0.7,0.8,0.7,0.8,0,1,0,1,0,1,1,0.8,1,0.2,1,0,0,0.2,0.7,0.8,0.7,1,0,0.8,1,0.5,0.6,0.2,1,0.2,0.7,0.5,0.3,0.8,0.7,0.8,1,0.5,0.6,0.2,0.7,0.5,0.3,0.5,0.3,0.8,1,0.5,0.6],
                                 },
                                 'X':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.6,0.5, 1,1, 0.75,1, 0.5,0.65, 0.25,1, 0,1, 0.4,0.5 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.6,0.5, 1,1, 0.75,1, 0.5,0.65, 0.25,1, 0,1, 0.4,0.5 ]) 
                                     vector:[0.4,0.5,0,0,0.25,0,0.5,0.35,0.75,0,1,0,0.6,0.5,1,1,0.75,1,0.5,0.65,0.25,1,0,1,0.4,0.5,0.25,0,0.5,0.35,0.5,0.35,1,0,0.6,0.5,0.6,0.5,0.75,1,0.5,0.65,0.5,0.65,0,1,0.4,0.5,0.4,0.5,0.5,0.35,0.6,0.5,0.6,0.5,0.5,0.65,0.4,0.5],
                                 },
                                 'Y':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.25,1, 0,1, 0.35,0.5 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.25,0, 0.5,0.35, 0.75,0, 1,0, 0.25,1, 0,1, 0.35,0.5 ]) 
                                     vector:[0.35,0.5,0,0,0.25,0,0.5,0.35,0.75,0,1,0,1,0,0.25,1,0,1,0.35,0.5,0.25,0,0.5,0.35,0.5,0.35,1,0,0,1,0,1,0.35,0.5,0.5,0.35],
                                 },
                                 'Z':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.3,0.2, 1,0.8, 1,1, 0,1, 0,0.8, 0.7,0.8, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.3,0.2, 1,0.8, 1,1, 0,1, 0,0.8, 0.7,0.8, 0,0.2 ]) 
                                     vector:[0.7,0.8,0,0.2,0,0,0,0,1,0,1,0.2,0.3,0.2,1,0.8,1,1,1,1,0,1,0,0.8,0,0,1,0.2,0.3,0.2,1,1,0,0.8,0.7,0.8,0.7,0.8,0,0,0.3,0.2,0.3,0.2,1,1,0.7,0.8],
                                 },
                             
                             
                                 'a':{
-                                    // vector:_canvas_.library.thirdparty.earcut([  0.2/0.8,0.0/0.6, 0.5/0.8,0.0/0.6, 0.7/0.8,0.2/0.6, 0.7/0.8,0.5/0.6, 0.8/0.8,0.6/0.6, 0.5/0.8,0.6/0.6, 0.5/0.8,0.3/0.6, 0.4/0.8,0.2/0.6, 0.3/0.8,0.2/0.6, 0.2/0.8,0.3/0.6, 0.3/0.8,0.4/0.6, 0.5/0.8,0.4/0.6, 0.5/0.8,0.6/0.6, 0.2/0.8,0.6/0.6, 0.0/0.8,0.4/0.6, 0.0/0.8,0.2/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([  0.2/0.8,0.0/0.6, 0.5/0.8,0.0/0.6, 0.7/0.8,0.2/0.6, 0.7/0.8,0.5/0.6, 0.8/0.8,0.6/0.6, 0.5/0.8,0.6/0.6, 0.5/0.8,0.3/0.6, 0.4/0.8,0.2/0.6, 0.3/0.8,0.2/0.6, 0.2/0.8,0.3/0.6, 0.3/0.8,0.4/0.6, 0.5/0.8,0.4/0.6, 0.5/0.8,0.6/0.6, 0.2/0.8,0.6/0.6, 0.0/0.8,0.4/0.6, 0.0/0.8,0.2/0.6 ]),
                                     vector:[0,0.6666666666666667,0,0.33333333333333337,0.25,0,0.25,0,0.625,0,0.8749999999999999,0.33333333333333337,0.8749999999999999,0.8333333333333334,1,1,0.625,1,0.37499999999999994,0.6666666666666667,0.625,0.6666666666666667,0.625,1,0.625,1,0.25,1,0,0.6666666666666667,0.8749999999999999,0.33333333333333337,0.8749999999999999,0.8333333333333334,0.625,1,0.37499999999999994,0.6666666666666667,0.625,1,0,0.6666666666666667,0.8749999999999999,0.33333333333333337,0.625,1,0.625,0.5,0.25,0.5,0.37499999999999994,0.6666666666666667,0,0.6666666666666667,0.25,0,0.8749999999999999,0.33333333333333337,0.625,0.5,0.37499999999999994,0.33333333333333337,0.25,0.5,0,0.6666666666666667,0.25,0,0.625,0.5,0.5,0.33333333333333337,0.37499999999999994,0.33333333333333337,0,0.6666666666666667,0.25,0,0.25,0,0.5,0.33333333333333337,0.37499999999999994,0.33333333333333337],
                                     ratio:{x:0.8,y:0.6}, offset:{y:0.4},
                                     encroach:{'a':1,'t':1,'Y':3},
                                 },
                                 'b':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 0.2/0.7,0, 0.2/0.7,0.8, 0.4/0.7,0.8, 0.5/0.7,0.7, 0.4/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.7/0.7,0.6, 0.7/0.7,0.8, 0.5/0.7,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 0.2/0.7,0, 0.2/0.7,0.8, 0.4/0.7,0.8, 0.5/0.7,0.7, 0.4/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.7/0.7,0.6, 0.7/0.7,0.8, 0.5/0.7,1, 0,1 ]),
                                     vector:[0,1,0,0,0.28571428571428575,0,0.5714285714285715,0.6,0.28571428571428575,0.6,0.28571428571428575,0.4,0.28571428571428575,0.4,0.7142857142857143,0.4,1,0.6,1,0.6,1,0.8,0.7142857142857143,1,0,1,0.28571428571428575,0,0.28571428571428575,0.8,0.5714285714285715,0.6,0.28571428571428575,0.4,1,0.6,0.7142857142857143,1,0,1,0.28571428571428575,0.8,0.7142857142857143,0.7,0.5714285714285715,0.6,1,0.6,0.7142857142857143,1,0.28571428571428575,0.8,0.5714285714285715,0.8,0.5714285714285715,0.8,0.7142857142857143,0.7,1,0.6,1,0.6,0.7142857142857143,1,0.5714285714285715,0.8],
                                     ratio:{x:0.7}
                                 },
                                 'c':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.3/0.7,0.2/0.6, 0.2/0.7,0.3/0.6, 0.3/0.7,0.4/0.6, 0.7/0.7,0.4/0.6, 0.7/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.3/0.7,0.2/0.6, 0.2/0.7,0.3/0.6, 0.3/0.7,0.4/0.6, 0.7/0.7,0.4/0.6, 0.7/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
                                     vector:[0,0.6666666666666667,0,0.33333333333333337,0.28571428571428575,0,0.28571428571428575,0,1,0,1,0.33333333333333337,0.4285714285714286,0.6666666666666667,1,0.6666666666666667,1,1,1,1,0.28571428571428575,1,0,0.6666666666666667,0.28571428571428575,0,1,0.33333333333333337,0.4285714285714286,0.33333333333333337,0.4285714285714286,0.6666666666666667,1,1,0,0.6666666666666667,0,0.6666666666666667,0.28571428571428575,0,0.4285714285714286,0.33333333333333337,0.28571428571428575,0.5,0.4285714285714286,0.6666666666666667,0,0.6666666666666667,0,0.6666666666666667,0.4285714285714286,0.33333333333333337,0.28571428571428575,0.5],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                     encroach:{'a':1},
                                 },
                                 'd':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.6, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.5/0.7,0.6, 0.3/0.7,0.6, 0.2/0.7,0.7, 0.3/0.7,0.8, 0.5/0.7,0.8, 0.5/0.7,0.0, 0.7/0.7,0.0, 0.7/0.7,1.0, 0.2/0.7,1.0, 0.0/0.7,0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.6, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.5/0.7,0.6, 0.3/0.7,0.6, 0.2/0.7,0.7, 0.3/0.7,0.8, 0.5/0.7,0.8, 0.5/0.7,0.0, 0.7/0.7,0.0, 0.7/0.7,1.0, 0.2/0.7,1.0, 0.0/0.7,0.8 ]),
                                     vector:[0.28571428571428575,1,0,0.8,0,0.6,0,0.6,0.28571428571428575,0.4,0.7142857142857143,0.4,0.7142857142857143,0.4,0.7142857142857143,0.6,0.4285714285714286,0.6,0.7142857142857143,0.8,0.7142857142857143,0,1,0,0,0.6,0.7142857142857143,0.4,0.4285714285714286,0.6,0.7142857142857143,0.8,1,0,1,1,0,0.6,0.4285714285714286,0.6,0.28571428571428575,0.7,0.4285714285714286,0.8,0.7142857142857143,0.8,1,1,0.28571428571428575,1,0,0.6,0.28571428571428575,0.7,0.4285714285714286,0.8,1,1,0.28571428571428575,1,0.28571428571428575,1,0.28571428571428575,0.7,0.4285714285714286,0.8],
                                     ratio:{x:0.7},
                                     encroach:{'a':1},
                                 },
                                 'e':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0.0/0.8, 0.8,0.0/0.8, 1.0,0.2/0.8, 1.0,0.4/0.8, 0.9,0.5/0.8, 0.2,0.5/0.8, 0.2,0.3/0.8, 0.8,0.3/0.8, 0.7,0.2/0.8, 0.3,0.2/0.8, 0.2,0.3/0.8, 0.2,0.5/0.8, 0.3,0.6/0.8, 1.0,0.6/0.8, 0.8,0.8/0.8, 0.2,0.8/0.8, 0.0,0.6/0.8, 0.0,0.2/0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0.0/0.8, 0.8,0.0/0.8, 1.0,0.2/0.8, 1.0,0.4/0.8, 0.9,0.5/0.8, 0.2,0.5/0.8, 0.2,0.3/0.8, 0.8,0.3/0.8, 0.7,0.2/0.8, 0.3,0.2/0.8, 0.2,0.3/0.8, 0.2,0.5/0.8, 0.3,0.6/0.8, 1.0,0.6/0.8, 0.8,0.8/0.8, 0.2,0.8/0.8, 0.0,0.6/0.8, 0.0,0.2/0.8 ]),
                                     vector:[0,0.7499999999999999,0,0.25,0.2,0,0.2,0,0.8,0,1,0.25,1,0.25,1,0.5,0.9,0.625,0.3,0.7499999999999999,1,0.7499999999999999,0.8,1,0.8,1,0.2,1,0,0.7499999999999999,0.3,0.7499999999999999,0.8,1,0,0.7499999999999999,0.2,0.625,0.3,0.7499999999999999,0,0.7499999999999999,0.2,0.37499999999999994,0.2,0.625,0,0.7499999999999999,0.2,0.37499999999999994,0,0.7499999999999999,0.2,0,0.9,0.625,0.2,0.625,0.2,0.37499999999999994,0.3,0.25,0.2,0.37499999999999994,0.2,0,0.9,0.625,0.2,0.37499999999999994,0.8,0.37499999999999994,0.7,0.25,0.3,0.25,0.2,0,1,0.25,0.9,0.625,0.8,0.37499999999999994,0.7,0.25,0.2,0,1,0.25,1,0.25,0.8,0.37499999999999994,0.7,0.25],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                     encroach:{'K':1,'t':1,'v':0.5,'x':1},
                                 },
                                 'f':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3/0.4,0.0, 0.4/0.4,0.0, 0.4/0.4,0.2, 0.3/0.4,0.3, 0.3/0.4,0.4, 0.4/0.4,0.4, 0.4/0.4,0.6, 0.3/0.4,0.6, 0.3/0.4,1.0, 0.1/0.4,1.0, 0.1/0.4,0.6, 0.0/0.4,0.6, 0.0/0.4,0.4, 0.1/0.4,0.4, 0.1/0.4,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3/0.4,0.0, 0.4/0.4,0.0, 0.4/0.4,0.2, 0.3/0.4,0.3, 0.3/0.4,0.4, 0.4/0.4,0.4, 0.4/0.4,0.6, 0.3/0.4,0.6, 0.3/0.4,1.0, 0.1/0.4,1.0, 0.1/0.4,0.6, 0.0/0.4,0.6, 0.0/0.4,0.4, 0.1/0.4,0.4, 0.1/0.4,0.2 ]),
                                     vector:[0.25,0.4,0.25,0.2,0.7499999999999999,0,0.7499999999999999,0,1,0,1,0.2,0.7499999999999999,0.4,1,0.4,1,0.6,0.7499999999999999,0.6,0.7499999999999999,1,0.25,1,0.25,0.6,0,0.6,0,0.4,0.25,0.4,0.7499999999999999,0,1,0.2,0.7499999999999999,0.4,1,0.6,0.7499999999999999,0.6,0.7499999999999999,0.6,0.25,1,0.25,0.6,0.25,0.6,0,0.4,0.25,0.4,0.25,0.4,1,0.2,0.7499999999999999,0.3,0.7499999999999999,0.4,0.7499999999999999,0.6,0.25,0.6,0.25,0.6,0.25,0.4,0.7499999999999999,0.3,0.7499999999999999,0.3,0.7499999999999999,0.4,0.25,0.6],
                                     ratio:{x:0.4}, 
                                 },
                                 'g':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0/1.1, 0.6/0.7,0.0/1.1, 0.7/0.7,0.1/1.1, 0.7/0.7,0.9/1.1, 0.5/0.7,1.1/1.1, 0.2/0.7,1.1/1.1, 0.0/0.7,0.9/1.1, 0.0/0.7,0.8/1.1, 0.2/0.7,0.8/1.1, 0.3/0.7,0.9/1.1, 0.4/0.7,0.9/1.1, 0.5/0.7,0.8/1.1, 0.5/0.7,0.2/1.1, 0.3/0.7,0.2/1.1, 0.2/0.7,0.3/1.1, 0.3/0.7,0.4/1.1, 0.5/0.7,0.4/1.1, 0.5/0.7,0.6/1.1, 0.2/0.7,0.6/1.1, 0.0/0.7,0.4/1.1, 0.0/0.7,0.2/1.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.7,0.0/1.1, 0.6/0.7,0.0/1.1, 0.7/0.7,0.1/1.1, 0.7/0.7,0.9/1.1, 0.5/0.7,1.1/1.1, 0.2/0.7,1.1/1.1, 0.0/0.7,0.9/1.1, 0.0/0.7,0.8/1.1, 0.2/0.7,0.8/1.1, 0.3/0.7,0.9/1.1, 0.4/0.7,0.9/1.1, 0.5/0.7,0.8/1.1, 0.5/0.7,0.2/1.1, 0.3/0.7,0.2/1.1, 0.2/0.7,0.3/1.1, 0.3/0.7,0.4/1.1, 0.5/0.7,0.4/1.1, 0.5/0.7,0.6/1.1, 0.2/0.7,0.6/1.1, 0.0/0.7,0.4/1.1, 0.0/0.7,0.2/1.1 ]),
                                     vector:[0,0.36363636363636365,0,0.18181818181818182,0.28571428571428575,0,0.28571428571428575,0,0.8571428571428572,0,1,0.09090909090909091,1,0.09090909090909091,1,0.8181818181818181,0.7142857142857143,1,0.7142857142857143,1,0.28571428571428575,1,0,0.8181818181818181,0,0.8181818181818181,0,0.7272727272727273,0.28571428571428575,0.7272727272727273,0.4285714285714286,0.36363636363636365,0.7142857142857143,0.36363636363636365,0.7142857142857143,0.5454545454545454,0.7142857142857143,0.5454545454545454,0.28571428571428575,0.5454545454545454,0,0.36363636363636365,0.7142857142857143,1,0,0.8181818181818181,0.28571428571428575,0.7272727272727273,0.4285714285714286,0.36363636363636365,0.7142857142857143,0.5454545454545454,0,0.36363636363636365,0.7142857142857143,1,0.28571428571428575,0.7272727272727273,0.4285714285714286,0.8181818181818181,0.28571428571428575,0.2727272727272727,0.4285714285714286,0.36363636363636365,0,0.36363636363636365,0.7142857142857143,1,0.4285714285714286,0.8181818181818181,0.5714285714285715,0.8181818181818181,0.4285714285714286,0.18181818181818182,0.28571428571428575,0.2727272727272727,0,0.36363636363636365,0.7142857142857143,1,0.5714285714285715,0.8181818181818181,0.7142857142857143,0.7272727272727273,0.4285714285714286,0.18181818181818182,0,0.36363636363636365,0.28571428571428575,0,1,0.09090909090909091,0.7142857142857143,1,0.7142857142857143,0.7272727272727273,0.7142857142857143,0.18181818181818182,0.4285714285714286,0.18181818181818182,0.28571428571428575,0,1,0.09090909090909091,0.7142857142857143,0.7272727272727273,0.7142857142857143,0.18181818181818182,0.7142857142857143,0.18181818181818182,0.28571428571428575,0,1,0.09090909090909091],
                                     ratio:{x:0.7,y:1.1}, offset:{y:0.4},
                                 },
                                 'h':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0, 0.2/0.7,0.0, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.7/0.7,0.6, 0.7/0.7,1.0, 0.5/0.7,1.0, 0.5/0.7,0.7, 0.4/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,1.0, 0.0/0.7,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0, 0.2/0.7,0.0, 0.2/0.7,0.4, 0.5/0.7,0.4, 0.7/0.7,0.6, 0.7/0.7,1.0, 0.5/0.7,1.0, 0.5/0.7,0.7, 0.4/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,1.0, 0.0/0.7,1.0 ]),
                                     vector:[0.28571428571428575,1,0,1,0,0,0,0,0.28571428571428575,0,0.28571428571428575,0.4,0.28571428571428575,0.4,0.7142857142857143,0.4,1,0.6,1,0.6,1,1,0.7142857142857143,1,0.28571428571428575,0.6,0.28571428571428575,1,0,0,1,0.6,0.7142857142857143,1,0.7142857142857143,0.7,0.28571428571428575,0.6,0,0,0.28571428571428575,0.4,1,0.6,0.7142857142857143,0.7,0.5714285714285715,0.6,0.5714285714285715,0.6,0.28571428571428575,0.6,0.28571428571428575,0.4,0.28571428571428575,0.4,1,0.6,0.5714285714285715,0.6],
                                     ratio:{x:0.7}
                                 },
                                 'i':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.2,0.0/0.9, 0.2/0.2,0.0/0.9, 0.2/0.2,0.2/0.9, 0.0/0.2,0.2/0.9, 0.0/0.2,0.3/0.9, 0.2/0.2,0.3/0.9, 0.2/0.2,0.9/0.9, 0.0/0.2,0.9/0.9 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.2,0.0/0.9, 0.2/0.2,0.0/0.9, 0.2/0.2,0.2/0.9, 0.0/0.2,0.2/0.9, 0.0/0.2,0.3/0.9, 0.2/0.2,0.3/0.9, 0.2/0.2,0.9/0.9, 0.0/0.2,0.9/0.9 ]),
                                     vector:[0,0,1,0,1,0.22222222222222224,0,0.3333333333333333,1,0.3333333333333333,1,1,0,0,1,0.22222222222222224,0,0.22222222222222224,0,0.3333333333333333,1,1,0,1],
                                     ratio:{x:0.2,y:0.9}, offset:{y:0.1},
                                 },
                                 'j':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.4,0.0/1.2, 0.4/0.4,0.0/1.2, 0.4/0.4,0.2/1.2, 0.2/0.4,0.2/1.2, 0.2/0.4,0.3/1.2, 0.4/0.4,0.3/1.2, 0.4/0.4,1.0/1.2, 0.2/0.4,1.2/1.2, 0.0/0.4,1.2/1.2, 0.0/0.4,1.0/1.2, 0.1/0.4,1.0/1.2, 0.2/0.4,0.9/1.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.4,0.0/1.2, 0.4/0.4,0.0/1.2, 0.4/0.4,0.2/1.2, 0.2/0.4,0.2/1.2, 0.2/0.4,0.3/1.2, 0.4/0.4,0.3/1.2, 0.4/0.4,1.0/1.2, 0.2/0.4,1.2/1.2, 0.0/0.4,1.2/1.2, 0.0/0.4,1.0/1.2, 0.1/0.4,1.0/1.2, 0.2/0.4,0.9/1.2 ]),
                                     vector:[0.5,0,1,0,1,0.16666666666666669,0.5,0.25,1,0.25,1,0.8333333333333334,1,0.8333333333333334,0.5,1,0,1,0,1,0,0.8333333333333334,0.25,0.8333333333333334,0.5,0,1,0.16666666666666669,0.5,0.16666666666666669,1,0.8333333333333334,0,1,0.25,0.8333333333333334,1,0.8333333333333334,0.25,0.8333333333333334,0.5,0.75,0.5,0.25,1,0.8333333333333334,0.5,0.75],
                                     ratio:{x:0.4,y:1.2}, offset:{y:0.1},
                                     encroach:{
@@ -19786,270 +22870,270 @@
                                     },
                                 },
                                 'k':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.75,0.0, 0.2/0.75,0.0, 0.2/0.75,0.5, 0.5/0.75,0.3, 0.75/0.75,0.3, 0.35/0.75,0.6, 0.75/0.75,1.0, 0.5/0.75,1.0, 0.2/0.75,0.7, 0.2/0.75,1.0, 0.0/0.75,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.75,0.0, 0.2/0.75,0.0, 0.2/0.75,0.5, 0.5/0.75,0.3, 0.75/0.75,0.3, 0.35/0.75,0.6, 0.75/0.75,1.0, 0.5/0.75,1.0, 0.2/0.75,0.7, 0.2/0.75,1.0, 0.0/0.75,1.0 ]),
                                     vector:[0.26666666666666666,1,0,1,0,0,0,0,0.26666666666666666,0,0.26666666666666666,0.5,0.26666666666666666,0.5,0.6666666666666666,0.3,1,0.3,0.4666666666666666,0.6,1,1,0.6666666666666666,1,0.26666666666666666,0.7,0.26666666666666666,1,0,0,0.26666666666666666,0.5,1,0.3,0.4666666666666666,0.6,0.4666666666666666,0.6,0.6666666666666666,1,0.26666666666666666,0.7,0.26666666666666666,0.7,0,0,0.26666666666666666,0.5,0.26666666666666666,0.5,0.4666666666666666,0.6,0.26666666666666666,0.7],
                                     ratio:{x:0.75}
                                 },
                                 'l':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.5,0.0, 0.2/0.5,0.0, 0.2/0.5,0.7, 0.3/0.5,0.8, 0.5/0.5,0.8, 0.5/0.5,1.0, 0.2/0.5,1.0, 0.0/0.5,0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.5,0.0, 0.2/0.5,0.0, 0.2/0.5,0.7, 0.3/0.5,0.8, 0.5/0.5,0.8, 0.5/0.5,1.0, 0.2/0.5,1.0, 0.0/0.5,0.8 ]),
                                     vector:[0.4,1,0,0.8,0,0,0,0,0.4,0,0.4,0.7,0.6,0.8,1,0.8,1,1,0.4,1,0,0,0.4,0.7,0.6,0.8,1,1,0.4,1,0.4,1,0.4,0.7,0.6,0.8],
                                     ratio:{x:0.5},
                                     encroach:{'a':1},
                                 },
                                 'm':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/1.2,0.0/0.6, 1.0/1.2,0.0/0.6, 1.2/1.2,0.2/0.6, 1.2/1.2,0.6/0.6, 1.0/1.2,0.6/0.6, 1.0/1.2,0.3/0.6, 0.9/1.2,0.2/0.6, 0.7/1.2,0.2/0.6, 0.7/1.2,0.6/0.6, 0.5/1.2,0.6/0.6, 0.5/1.2,0.3/0.6, 0.4/1.2,0.2/0.6, 0.2/1.2,0.2/0.6, 0.2/1.2,0.6/0.6, 0.0/1.2,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/1.2,0.0/0.6, 1.0/1.2,0.0/0.6, 1.2/1.2,0.2/0.6, 1.2/1.2,0.6/0.6, 1.0/1.2,0.6/0.6, 1.0/1.2,0.3/0.6, 0.9/1.2,0.2/0.6, 0.7/1.2,0.2/0.6, 0.7/1.2,0.6/0.6, 0.5/1.2,0.6/0.6, 0.5/1.2,0.3/0.6, 0.4/1.2,0.2/0.6, 0.2/1.2,0.2/0.6, 0.2/1.2,0.6/0.6, 0.0/1.2,0.6/0.6 ]),
                                     vector:[0.16666666666666669,1,0,1,0,0,0,0,0.8333333333333334,0,1,0.33333333333333337,1,0.33333333333333337,1,1,0.8333333333333334,1,0.5833333333333334,0.33333333333333337,0.5833333333333334,1,0.4166666666666667,1,0.16666666666666669,0.33333333333333337,0.16666666666666669,1,0,0,1,0.33333333333333337,0.8333333333333334,1,0.8333333333333334,0.5,0.5833333333333334,0.33333333333333337,0.4166666666666667,1,0.4166666666666667,0.5,0.33333333333333337,0.33333333333333337,0.16666666666666669,0.33333333333333337,0,0,1,0.33333333333333337,0.8333333333333334,0.5,0.75,0.33333333333333337,0.5833333333333334,0.33333333333333337,0.4166666666666667,0.5,0.33333333333333337,0.33333333333333337,0,0,1,0.33333333333333337,0.75,0.33333333333333337,0.5833333333333334,0.33333333333333337,0.33333333333333337,0.33333333333333337,0,0,0,0,0.75,0.33333333333333337,0.5833333333333334,0.33333333333333337],
                                     ratio:{x:1.2,y:0.6}, offset:{y:0.4},
                                 },
                                 'n':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.5/0.7,0.3/0.6, 0.4/0.7,0.2/0.6, 0.2/0.7,0.2/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.5/0.7,0.3/0.6, 0.4/0.7,0.2/0.6, 0.2/0.7,0.2/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6 ]),
                                     vector:[0.28571428571428575,1,0,1,0,0,0,0,0.7142857142857143,0,1,0.33333333333333337,1,0.33333333333333337,1,1,0.7142857142857143,1,0.28571428571428575,0.33333333333333337,0.28571428571428575,1,0,0,1,0.33333333333333337,0.7142857142857143,1,0.7142857142857143,0.5,0.5714285714285715,0.33333333333333337,0.28571428571428575,0.33333333333333337,0,0,1,0.33333333333333337,0.7142857142857143,0.5,0.5714285714285715,0.33333333333333337,0.5714285714285715,0.33333333333333337,0,0,1,0.33333333333333337],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                 },
                                 'o':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0/0.6, 0.4/0.6,0.0/0.6, 0.6/0.6,0.2/0.6, 0.6/0.6,0.4/0.6, 0.4/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6, 0.0/0.6,0.2/0.6, 0.2/0.6,0.3/0.6, 0.3/0.6,0.4/0.6, 0.4/0.6,0.3/0.6, 0.3/0.6,0.2/0.6, 0.2/0.6,0.3/0.6, 0.0/0.6,0.2/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.6,0.0/0.6, 0.4/0.6,0.0/0.6, 0.6/0.6,0.2/0.6, 0.6/0.6,0.4/0.6, 0.4/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6, 0.0/0.6,0.2/0.6, 0.2/0.6,0.3/0.6, 0.3/0.6,0.4/0.6, 0.4/0.6,0.3/0.6, 0.3/0.6,0.2/0.6, 0.2/0.6,0.3/0.6, 0.0/0.6,0.2/0.6 ]),
                                     vector:[0.33333333333333337,0.5,0,0.33333333333333337,0.33333333333333337,0,0.33333333333333337,0,0.6666666666666667,0,1,0.33333333333333337,1,0.33333333333333337,1,0.6666666666666667,0.6666666666666667,1,0.6666666666666667,1,0.33333333333333337,1,0,0.6666666666666667,0,0.6666666666666667,0,0.33333333333333337,0.33333333333333337,0.5,0.5,0.33333333333333337,0.33333333333333337,0.5,0.33333333333333337,0,0.6666666666666667,1,0,0.6666666666666667,0.33333333333333337,0.5,0.6666666666666667,0.5,0.5,0.33333333333333337,0.33333333333333337,0,0.6666666666666667,1,0.33333333333333337,0.5,0.5,0.6666666666666667,0.6666666666666667,0.5,0.33333333333333337,0,1,0.33333333333333337,1,0.33333333333333337,0.6666666666666667,1,0.5,0.6666666666666667,0.5,0.6666666666666667,0.6666666666666667,0.5,1,0.33333333333333337],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                     encroach:{'T':1,'a':1,'t':1,'v':1,'x':1},
                                 },
                                 'p':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0, 0.5/0.7,0.0, 0.7/0.7,0.2, 0.7/0.7,0.4, 0.5/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,0.4, 0.4/0.7,0.4, 0.5/0.7,0.3, 0.4/0.7,0.2, 0.2/0.7,0.2, 0.2/0.7,1.0, 0.0/0.7,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0, 0.5/0.7,0.0, 0.7/0.7,0.2, 0.7/0.7,0.4, 0.5/0.7,0.6, 0.2/0.7,0.6, 0.2/0.7,0.4, 0.4/0.7,0.4, 0.5/0.7,0.3, 0.4/0.7,0.2, 0.2/0.7,0.2, 0.2/0.7,1.0, 0.0/0.7,1.0 ]),
                                     vector:[0.28571428571428575,1,0,1,0,0,0,0,0.7142857142857143,0,1,0.2,1,0.2,1,0.4,0.7142857142857143,0.6,0.7142857142857143,0.6,0.28571428571428575,0.6,0.28571428571428575,0.4,0.28571428571428575,0.2,0.28571428571428575,1,0,0,0.7142857142857143,0.6,0.28571428571428575,0.4,0.5714285714285715,0.4,0.5714285714285715,0.2,0.28571428571428575,0.2,0,0,1,0.2,0.7142857142857143,0.6,0.5714285714285715,0.4,0.5714285714285715,0.2,0,0,1,0.2,1,0.2,0.5714285714285715,0.4,0.7142857142857143,0.3,0.7142857142857143,0.3,0.5714285714285715,0.2,1,0.2],
                                     ratio:{x:0.7}, offset:{y:0.4},
                                 },
                                 'q':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0, 0.7/0.7,0.0, 0.7/0.7,1.0, 0.5/0.7,1.0, 0.5/0.7,0.2, 0.3/0.7,0.2, 0.2/0.7,0.3, 0.3/0.7,0.4, 0.5/0.7,0.4, 0.5/0.7,0.6, 0.2/0.7,0.6, 0.0/0.7,0.4, 0.0/0.7,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.7,0.0, 0.7/0.7,0.0, 0.7/0.7,1.0, 0.5/0.7,1.0, 0.5/0.7,0.2, 0.3/0.7,0.2, 0.2/0.7,0.3, 0.3/0.7,0.4, 0.5/0.7,0.4, 0.5/0.7,0.6, 0.2/0.7,0.6, 0.0/0.7,0.4, 0.0/0.7,0.2 ]),
                                     vector:[0,0.4,0,0.2,0.28571428571428575,0,1,0,1,1,0.7142857142857143,1,0.4285714285714286,0.4,0.7142857142857143,0.4,0.7142857142857143,0.6,0.7142857142857143,0.6,0.28571428571428575,0.6,0,0.4,1,0,0.7142857142857143,1,0.7142857142857143,0.2,0.4285714285714286,0.4,0.7142857142857143,0.6,0,0.4,0.28571428571428575,0,1,0,0.7142857142857143,0.2,0.28571428571428575,0.3,0.4285714285714286,0.4,0,0.4,0.28571428571428575,0,0.7142857142857143,0.2,0.4285714285714286,0.2,0.4285714285714286,0.2,0.28571428571428575,0.3,0,0.4,0,0.4,0.28571428571428575,0,0.4285714285714286,0.2],
                                     ratio:{x:0.7}, offset:{y:0.4},
                                 },
                                 'r':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.2/0.7,0.1/0.6, 0.4/0.7,0.0/0.6, 0.7/0.7,0.1/0.6, 0.7/0.7,0.3/0.6, 0.4/0.7,0.2/0.6, 0.2/0.7,0.3/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.2/0.7,0.1/0.6, 0.4/0.7,0.0/0.6, 0.7/0.7,0.1/0.6, 0.7/0.7,0.3/0.6, 0.4/0.7,0.2/0.6, 0.2/0.7,0.3/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6 ]),
                                     vector:[0.28571428571428575,1,0,1,0,0,0,0,0.28571428571428575,0,0.28571428571428575,0.16666666666666669,0.28571428571428575,0.16666666666666669,0.5714285714285715,0,1,0.16666666666666669,1,0.16666666666666669,1,0.5,0.5714285714285715,0.33333333333333337,0.28571428571428575,0.5,0.28571428571428575,1,0,0,0.28571428571428575,0.16666666666666669,1,0.16666666666666669,0.5714285714285715,0.33333333333333337,0.28571428571428575,0.5,0,0,0.28571428571428575,0.16666666666666669,0.28571428571428575,0.16666666666666669,0.5714285714285715,0.33333333333333337,0.28571428571428575,0.5],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                 },
                                 's':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.8,0.0/0.8, 0.7/0.8,0.0/0.8, 0.8/0.8,0.2/0.8, 0.3/0.8,0.2/0.8, 0.25/0.8,0.3/0.8, 0.7/0.8,0.3/0.8, 0.8/0.8,0.6/0.8, 0.6/0.8,0.8/0.8, 0.1/0.8,0.8/0.8, 0.0/0.8,0.6/0.8, 0.5/0.8,0.6/0.8, 0.55/0.8,0.5/0.8, 0.1/0.8,0.5/0.8, 0.0/0.8,0.2/0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.8,0.0/0.8, 0.7/0.8,0.0/0.8, 0.8/0.8,0.2/0.8, 0.3/0.8,0.2/0.8, 0.25/0.8,0.3/0.8, 0.7/0.8,0.3/0.8, 0.8/0.8,0.6/0.8, 0.6/0.8,0.8/0.8, 0.1/0.8,0.8/0.8, 0.0/0.8,0.6/0.8, 0.5/0.8,0.6/0.8, 0.55/0.8,0.5/0.8, 0.1/0.8,0.5/0.8, 0.0/0.8,0.2/0.8 ]),
                                     vector:[0.125,0.625,0,0.25,0.25,0,0.25,0,0.8749999999999999,0,1,0.25,0.3125,0.37499999999999994,0.8749999999999999,0.37499999999999994,1,0.7499999999999999,1,0.7499999999999999,0.7499999999999999,1,0.125,1,0.125,1,0,0.7499999999999999,0.625,0.7499999999999999,0.25,0,1,0.25,0.37499999999999994,0.25,1,0.7499999999999999,0.125,1,0.625,0.7499999999999999,0.125,0.625,0.25,0,0.37499999999999994,0.25,1,0.7499999999999999,0.625,0.7499999999999999,0.6875,0.625,0.125,0.625,0.37499999999999994,0.25,0.3125,0.37499999999999994,0.3125,0.37499999999999994,1,0.7499999999999999,0.6875,0.625,0.6875,0.625,0.125,0.625,0.3125,0.37499999999999994],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                 },
                                 't':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0, 0.4/0.6,0.0, 0.4/0.6,0.2, 0.6/0.6,0.2, 0.6/0.6,0.4, 0.4/0.6,0.4, 0.4/0.6,1.0, 0.2/0.6,1.0, 0.2/0.6,0.4, 0.0/0.6,0.4, 0.0/0.6,0.2, 0.2/0.6,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.6,0.0, 0.4/0.6,0.0, 0.4/0.6,0.2, 0.6/0.6,0.2, 0.6/0.6,0.4, 0.4/0.6,0.4, 0.4/0.6,1.0, 0.2/0.6,1.0, 0.2/0.6,0.4, 0.0/0.6,0.4, 0.0/0.6,0.2, 0.2/0.6,0.2 ]),
                                     vector:[0.33333333333333337,0.2,0.33333333333333337,0,0.6666666666666667,0,0.6666666666666667,0.2,1,0.2,1,0.4,0.6666666666666667,0.4,0.6666666666666667,1,0.33333333333333337,1,0.33333333333333337,0.4,0,0.4,0,0.2,0.33333333333333337,0.2,0.6666666666666667,0,0.6666666666666667,0.2,0.6666666666666667,0.2,1,0.4,0.6666666666666667,0.4,0.6666666666666667,0.4,0.33333333333333337,1,0.33333333333333337,0.4,0.33333333333333337,0.4,0,0.2,0.33333333333333337,0.2,0.33333333333333337,0.2,0.6666666666666667,0.2,0.6666666666666667,0.4,0.6666666666666667,0.4,0.33333333333333337,0.4,0.33333333333333337,0.2],
                                     ratio:{x:0.6},
                                     encroach:{'a':1,'h':1,'l':1,'n':1,'o':1,'p':1,'r':1,'s':1,'u':1},
                                 },
                                 'u':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.2/0.7,0.3/0.6, 0.3/0.7,0.4/0.6, 0.5/0.7,0.4/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.2/0.7,0.3/0.6, 0.3/0.7,0.4/0.6, 0.5/0.7,0.4/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6 ]),
                                     vector:[0.28571428571428575,1,0,0.6666666666666667,0,0,0,0,0.28571428571428575,0,0.28571428571428575,0.5,0.7142857142857143,0.6666666666666667,0.7142857142857143,0,1,0,0.28571428571428575,1,0,0,0.28571428571428575,0.5,0.7142857142857143,0.6666666666666667,1,0,1,1,0.28571428571428575,1,0.28571428571428575,0.5,0.4285714285714286,0.6666666666666667,0.4285714285714286,0.6666666666666667,0.7142857142857143,0.6666666666666667,1,1,1,1,0.28571428571428575,1,0.4285714285714286,0.6666666666666667],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                     encroach:{'A':1,'a':0.5},
                                 },
                                 'v':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.35/0.7,0.35/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.45/0.7,0.6/0.6, 0.25/0.7,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.35/0.7,0.35/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.45/0.7,0.6/0.6, 0.25/0.7,0.6/0.6 ]),
                                     vector:[0.6428571428571429,1,0.35714285714285715,1,0,0,0,0,0.28571428571428575,0,0.5,0.5833333333333334,0.5,0.5833333333333334,0.7142857142857143,0,1,0,0.6428571428571429,1,0,0,0.5,0.5833333333333334,0.5,0.5833333333333334,1,0,0.6428571428571429,1],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                     encroach:{'a':1},
                                 },
                                 'w':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/1.2,0.0/0.6, 0.2/1.2,0.0/0.6, 0.2/1.2,0.3/0.6, 0.3/1.2,0.4/0.6, 0.5/1.2,0.4/0.6, 0.5/1.2,0.0/0.6, 0.7/1.2,0.0/0.6, 0.7/1.2,0.3/0.6, 0.8/1.2,0.4/0.6, 1.0/1.2,0.4/0.6, 1.0/1.2,0.0/0.6, 1.2/1.2,0.0/0.6, 1.2/1.2,0.6/0.6, 0.2/1.2,0.6/0.6, 0.0/1.2,0.4/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/1.2,0.0/0.6, 0.2/1.2,0.0/0.6, 0.2/1.2,0.3/0.6, 0.3/1.2,0.4/0.6, 0.5/1.2,0.4/0.6, 0.5/1.2,0.0/0.6, 0.7/1.2,0.0/0.6, 0.7/1.2,0.3/0.6, 0.8/1.2,0.4/0.6, 1.0/1.2,0.4/0.6, 1.0/1.2,0.0/0.6, 1.2/1.2,0.0/0.6, 1.2/1.2,0.6/0.6, 0.2/1.2,0.6/0.6, 0.0/1.2,0.4/0.6 ]),
                                     vector:[0.16666666666666669,1,0,0.6666666666666667,0,0,0,0,0.16666666666666669,0,0.16666666666666669,0.5,0.4166666666666667,0.6666666666666667,0.4166666666666667,0,0.5833333333333334,0,0.8333333333333334,0.6666666666666667,0.8333333333333334,0,1,0,0.16666666666666669,1,0,0,0.16666666666666669,0.5,0.4166666666666667,0.6666666666666667,0.5833333333333334,0,0.5833333333333334,0.5,0.8333333333333334,0.6666666666666667,1,0,1,1,0.16666666666666669,1,0.16666666666666669,0.5,0.25,0.6666666666666667,0.4166666666666667,0.6666666666666667,0.5833333333333334,0.5,0.6666666666666667,0.6666666666666667,0.6666666666666667,0.6666666666666667,0.8333333333333334,0.6666666666666667,1,1,1,1,0.16666666666666669,1,0.25,0.6666666666666667,0.4166666666666667,0.6666666666666667,0.6666666666666667,0.6666666666666667,1,1,1,1,0.25,0.6666666666666667,0.4166666666666667,0.6666666666666667],
                                     ratio:{x:1.2,y:0.6}, offset:{y:0.4},
                                 },
                                 'x':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.35/0.7,0.175/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.45/0.7,0.3/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.35/0.7,0.425/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6, 0.25/0.7,0.3/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0/0.6, 0.2/0.7,0.0/0.6, 0.35/0.7,0.175/0.6, 0.5/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.45/0.7,0.3/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.35/0.7,0.425/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.6/0.6, 0.25/0.7,0.3/0.6 ]),
                                     vector:[0.35714285714285715,0.5,0,0,0.28571428571428575,0,0.5,0.2916666666666667,0.7142857142857143,0,1,0,0.6428571428571429,0.5,1,1,0.7142857142857143,1,0.5,0.7083333333333334,0.28571428571428575,1,0,1,0.35714285714285715,0.5,0.28571428571428575,0,0.5,0.2916666666666667,0.5,0.2916666666666667,1,0,0.6428571428571429,0.5,0.6428571428571429,0.5,0.7142857142857143,1,0.5,0.7083333333333334,0.5,0.7083333333333334,0,1,0.35714285714285715,0.5,0.35714285714285715,0.5,0.5,0.2916666666666667,0.6428571428571429,0.5,0.6428571428571429,0.5,0.5,0.7083333333333334,0.35714285714285715,0.5],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                 },
                                 'y':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/1.1, 0.2/0.7,0.0/1.1, 0.2/0.7,0.3/1.1, 0.3/0.7,0.4/1.1, 0.5/0.7,0.4/1.1, 0.5/0.7,0.0/1.1, 0.7/0.7,0.0/1.1, 0.7/0.7,0.9/1.1, 0.5/0.7,1.1/1.1, 0.2/0.7,1.1/1.1, 0.0/0.7,0.9/1.1, 0.0/0.7,0.8/1.1, 0.2/0.7,0.8/1.1, 0.3/0.7,0.9/1.1, 0.4/0.7,0.9/1.1, 0.5/0.7,0.8/1.1, 0.5/0.7,0.6/1.1, 0.2/0.7,0.6/1.1, 0.0/0.7,0.4/1.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0/1.1, 0.2/0.7,0.0/1.1, 0.2/0.7,0.3/1.1, 0.3/0.7,0.4/1.1, 0.5/0.7,0.4/1.1, 0.5/0.7,0.0/1.1, 0.7/0.7,0.0/1.1, 0.7/0.7,0.9/1.1, 0.5/0.7,1.1/1.1, 0.2/0.7,1.1/1.1, 0.0/0.7,0.9/1.1, 0.0/0.7,0.8/1.1, 0.2/0.7,0.8/1.1, 0.3/0.7,0.9/1.1, 0.4/0.7,0.9/1.1, 0.5/0.7,0.8/1.1, 0.5/0.7,0.6/1.1, 0.2/0.7,0.6/1.1, 0.0/0.7,0.4/1.1 ]),
                                     vector:[0.28571428571428575,0.5454545454545454,0,0.36363636363636365,0,0,0,0,0.28571428571428575,0,0.28571428571428575,0.2727272727272727,0.7142857142857143,0.36363636363636365,0.7142857142857143,0,1,0,1,0,1,0.8181818181818181,0.7142857142857143,1,0.7142857142857143,1,0.28571428571428575,1,0,0.8181818181818181,0,0.8181818181818181,0,0.7272727272727273,0.28571428571428575,0.7272727272727273,0.28571428571428575,0.5454545454545454,0,0,0.28571428571428575,0.2727272727272727,0.7142857142857143,1,0,0.8181818181818181,0.28571428571428575,0.7272727272727273,0.28571428571428575,0.5454545454545454,0.28571428571428575,0.2727272727272727,0.4285714285714286,0.36363636363636365,0.7142857142857143,1,0.28571428571428575,0.7272727272727273,0.4285714285714286,0.8181818181818181,0.7142857142857143,0.5454545454545454,0.28571428571428575,0.5454545454545454,0.4285714285714286,0.36363636363636365,0.7142857142857143,1,0.4285714285714286,0.8181818181818181,0.5714285714285715,0.8181818181818181,0.7142857142857143,0.5454545454545454,0.4285714285714286,0.36363636363636365,0.7142857142857143,0.36363636363636365,0.7142857142857143,1,0.5714285714285715,0.8181818181818181,0.7142857142857143,0.7272727272727273,0.7142857142857143,0.5454545454545454,0.7142857142857143,0.36363636363636365,1,0,1,0,0.7142857142857143,1,0.7142857142857143,0.7272727272727273,0.7142857142857143,0.7272727272727273,0.7142857142857143,0.5454545454545454,1,0],
                                     ratio:{x:0.7,y:1.1}, offset:{y:0.4},
                                     encroach:{'a':1},
                                 },
                                 'z':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.35/0.7,0.2/0.6, 0.7/0.7,0.4/0.6, 0.7/0.7,0.6/0.6, 0.0/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.35/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.7,0.0/0.6, 0.7/0.7,0.0/0.6, 0.7/0.7,0.2/0.6, 0.35/0.7,0.2/0.6, 0.7/0.7,0.4/0.6, 0.7/0.7,0.6/0.6, 0.0/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.35/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
                                     vector:[0.5,0.6666666666666667,0,0.33333333333333337,0,0,0,0,1,0,1,0.33333333333333337,0.5,0.33333333333333337,1,0.6666666666666667,1,1,1,1,0,1,0,0.6666666666666667,0,0,1,0.33333333333333337,0.5,0.33333333333333337,1,1,0,0.6666666666666667,0.5,0.6666666666666667,0.5,0.6666666666666667,0,0,0.5,0.33333333333333337,0.5,0.33333333333333337,1,1,0.5,0.6666666666666667],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                 },
                             
                             
                                 '0':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.3, 1,0.7, 0.8,1, 0.2,1, 0,0.7, 0,0.3, 0.2,0, 0.3,0.2, 0.2,0.4, 0.2,0.6, 0.3,0.8, 0.7,0.8, 0.8,0.6, 0.8,0.4, 0.7,0.2, 0.3,0.2 ]), 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0, 0.8,0, 1,0.3, 1,0.7, 0.8,1, 0.2,1, 0,0.7, 0,0.3, 0.2,0, 0.3,0.2, 0.2,0.4, 0.2,0.6, 0.3,0.8, 0.7,0.8, 0.8,0.6, 0.8,0.4, 0.7,0.2, 0.3,0.2 ]), 
                                     vector:[0.7,0.2,0.3,0.2,0.2,0,0.2,0,0.8,0,1,0.3,1,0.3,1,0.7,0.8,1,0.8,1,0.2,1,0,0.7,0,0.7,0,0.3,0.2,0,0.2,0,0.3,0.2,0.2,0.4,0.7,0.2,0.2,0,1,0.3,0,0.7,0.2,0,0.2,0.4,0.8,0.4,0.7,0.2,1,0.3,0,0.7,0.2,0.4,0.2,0.6,0.8,0.6,0.8,0.4,1,0.3,0,0.7,0.2,0.6,0.3,0.8,0.7,0.8,0.8,0.6,1,0.3,0.8,1,0,0.7,0.3,0.8,0.7,0.8,1,0.3,0.8,1,0.8,1,0.3,0.8,0.7,0.8],
                                 },
                                 '1':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 1/2,0, 2/3,0, 2/3,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 1/3,0.8, 1/3,0.3, 0,0.3, 0,0.2 ]), ratio:{x:2/3} 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 1/2,0, 2/3,0, 2/3,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 1/3,0.8, 1/3,0.3, 0,0.3, 0,0.2 ]), ratio:{x:2/3} 
                                     vector:[0,0.3,0,0.2,0.5,0,0.5,0,0.6666666666666666,0,0.6666666666666666,0.8,0.6666666666666666,0.8,1,0.8,1,1,1,1,0,1,0,0.8,0.3333333333333333,0.3,0,0.3,0.5,0,1,1,0,0.8,0.3333333333333333,0.8,0.3333333333333333,0.8,0.3333333333333333,0.3,0.5,0,0.6666666666666666,0.8,1,1,0.3333333333333333,0.8,0.3333333333333333,0.8,0.5,0,0.6666666666666666,0.8],
                                 },
                                 '2':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.5, 0.4,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.8,0.4, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.5, 0.4,0.8, 1,0.8, 1,1, 0,1, 0,0.8, 0.8,0.4, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.3 ]) 
                                     vector:[0.2,0.3,0,0.3,0,0.2,0,0.2,0.2,0,0.8,0,0.8,0,1,0.2,1,0.5,0.4,0.8,1,0.8,1,1,1,1,0,1,0,0.8,0.3,0.2,0.2,0.3,0,0.2,0.4,0.8,1,1,0,0.8,0.3,0.2,0,0.2,0.8,0,1,0.5,0.4,0.8,0,0.8,0.7,0.2,0.3,0.2,0.8,0,1,0.5,0,0.8,0.8,0.4,0.8,0.4,0.7,0.2,0.8,0,0.8,0,1,0.5,0.8,0.4],
                                 },
                                 '3':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.4,0.6, 0.4,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.4,0.6, 0.4,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3 ]) 
                                     vector:[0.3,0.2,0.2,0.3,0,0.2,0,0.2,0.2,0,0.8,0,0.8,0,1,0.2,1,0.4,0.9,0.5,1,0.6,1,0.8,1,0.8,0.8,1,0.2,1,0.2,1,0,0.8,0.2,0.7,0.7,0.6,0.4,0.6,0.4,0.4,0.3,0.2,0,0.2,0.8,0,0.8,0,1,0.4,0.9,0.5,0.2,1,0.2,0.7,0.3,0.8,0.7,0.6,0.4,0.4,0.7,0.4,0.7,0.2,0.3,0.2,0.8,0,0.2,1,0.3,0.8,0.7,0.8,0.8,0.7,0.7,0.6,0.7,0.4,0.8,0.3,0.7,0.2,0.8,0,1,0.8,0.2,1,0.7,0.8,0.8,0.7,0.7,0.4,0.8,0.3,0.8,0.3,0.8,0,0.9,0.5,1,0.8,0.7,0.8,0.8,0.7,0.8,0.7,0.8,0.3,0.9,0.5,0.9,0.5,1,0.8,0.8,0.7],
                                 },
                                 '4':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.6,0, 0.8,0, 0.8,0.6, 1,0.6, 1,0.8, 0.8,0.8, 0.8,1, 0.6,1, 0.6,0.3, 0.3,0.6, 0.6,0.6, 0.6,0.8, 0,0.8, 0,0.6 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.6,0, 0.8,0, 0.8,0.6, 1,0.6, 1,0.8, 0.8,0.8, 0.8,1, 0.6,1, 0.6,0.3, 0.3,0.6, 0.6,0.6, 0.6,0.8, 0,0.8, 0,0.6 ]) 
                                     vector:[0,0.8,0,0.6,0.6,0,0.6,0,0.8,0,0.8,0.6,0.8,0.6,1,0.6,1,0.8,0.8,0.8,0.8,1,0.6,1,0.3,0.6,0.6,0.6,0.6,0.8,0.8,0.6,1,0.8,0.8,0.8,0.8,0.8,0.6,1,0.6,0.3,0.3,0.6,0.6,0.8,0,0.8,0.6,0,0.8,0.6,0.8,0.8,0.6,0.3,0.3,0.6,0,0.8,0.6,0,0.8,0.8,0.6,0.3,0.6,0.3,0,0.8,0.6,0],
                                 },
                                 '5':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 0.9,0.4, 1,0.5, 1,0.8, 0.8,1, 0.1,1, 0,0.9, 0,0.7, 0.2,0.7, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0,0.6 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.2,0.2, 0.2,0.4, 0.9,0.4, 1,0.5, 1,0.8, 0.8,1, 0.1,1, 0,0.9, 0,0.7, 0.2,0.7, 0.2,0.8, 0.7,0.8, 0.8,0.7, 0.8,0.6, 0,0.6 ]) 
                                     vector:[0,0,1,0,1,0.2,0.2,0.4,0.9,0.4,1,0.5,1,0.5,1,0.8,0.8,1,0.8,1,0.1,1,0,0.9,0,0.9,0,0.7,0.2,0.7,0,0,1,0.2,0.2,0.2,0,0.9,0.2,0.7,0.2,0.8,0,0.6,0,0,0.2,0.2,0.8,1,0,0.9,0.2,0.8,0,0.6,0.2,0.2,0.2,0.4,0.8,1,0.2,0.8,0.7,0.8,0.8,0.6,0,0.6,0.2,0.4,0.8,1,0.7,0.8,0.8,0.7,0.8,0.6,0.2,0.4,1,0.5,1,0.5,0.8,1,0.8,0.7,0.8,0.7,0.8,0.6,1,0.5],
                                 },
                                 '6':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.2, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0, 0.8,0, 1,0.2, 1,0.3, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.2, 0.2,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.2 ]) 
                                     vector:[0,0.2,0.2,0,0.8,0,0.8,0,1,0.2,1,0.3,1,0.3,0.8,0.3,0.7,0.2,0.3,0.4,0.8,0.4,1,0.6,1,0.6,1,0.8,0.8,1,0.8,1,0.2,1,0,0.8,0,0.8,0,0.2,0.2,0.6,0.8,0,1,0.3,0.7,0.2,0,0.8,0.2,0.6,0.2,0.7,0.8,0,0.7,0.2,0.3,0.2,0,0.8,0.2,0.7,0.3,0.8,0,0.2,0.8,0,0.3,0.2,0.8,1,0,0.8,0.3,0.8,0,0.2,0.3,0.2,0.2,0.3,0.8,1,0.3,0.8,0.7,0.8,0.2,0.6,0,0.2,0.2,0.3,1,0.6,0.8,1,0.7,0.8,0.2,0.6,0.2,0.3,0.3,0.4,1,0.6,0.7,0.8,0.8,0.7,0.7,0.6,0.2,0.6,0.3,0.4,1,0.6,0.8,0.7,0.7,0.6,0.7,0.6,0.3,0.4,1,0.6],
                                 },
                                 '7':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.5,1, 0.25,1, 0.75,0.2, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.5,1, 0.25,1, 0.75,0.2, 0,0.2 ]) 
                                     vector:[0.75,0.2,0,0.2,0,0,0,0,1,0,1,0.2,1,0.2,0.5,1,0.25,1,0.75,0.2,0,0,1,0.2,1,0.2,0.25,1,0.75,0.2],
                                 },
                                 '8':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.3,0.6, 0.2,0.7, 0,0.6, 0.1,0.5, 0,0.4, 0,0.2, 0.2,0.3, 0.3,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.2 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0, 0.8,0, 1,0.2, 1,0.4, 0.9,0.5, 1,0.6, 1,0.8, 0.8,1, 0.2,1, 0,0.8, 0,0.6, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.3,0.6, 0.2,0.7, 0,0.6, 0.1,0.5, 0,0.4, 0,0.2, 0.2,0.3, 0.3,0.4, 0.7,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0,0.2 ]) 
                                     vector:[0.2,0.3,0,0.2,0.2,0,0.2,0,0.8,0,1,0.2,1,0.2,1,0.4,0.9,0.5,0.9,0.5,1,0.6,1,0.8,1,0.8,0.8,1,0.2,1,0.2,1,0,0.8,0,0.6,0,0.6,0.2,0.7,0.3,0.8,0.3,0.6,0.2,0.7,0,0.6,0.1,0.5,0,0.4,0,0.2,0,0.2,0.2,0.3,0.3,0.4,0.3,0.2,0.2,0.3,0.2,0,0.2,1,0,0.6,0.3,0.8,0.3,0.6,0,0.6,0.1,0.5,0.1,0.5,0,0.2,0.3,0.4,0.7,0.2,0.3,0.2,0.2,0,0.2,1,0.3,0.8,0.7,0.8,0.7,0.6,0.3,0.6,0.1,0.5,0.1,0.5,0.3,0.4,0.7,0.4,0.7,0.2,0.2,0,1,0.2,1,0.8,0.2,1,0.7,0.8,0.7,0.6,0.1,0.5,0.7,0.4,0.8,0.3,0.7,0.2,1,0.2,1,0.8,0.7,0.8,0.8,0.7,0.8,0.7,0.7,0.6,0.7,0.4,0.7,0.4,0.8,0.3,1,0.2,0.9,0.5,1,0.8,0.8,0.7,0.8,0.7,0.7,0.4,1,0.2,1,0.2,0.9,0.5,0.8,0.7],
                                 },
                                 '9':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.8 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.8,1, 0.2,1, 0,0.8, 0,0.7, 0.2,0.7, 0.3,0.8, 0.7,0.8, 0.8,0.7, 0.7,0.6, 0.2,0.6, 0,0.4, 0,0.2, 0.2,0, 0.8,0, 1,0.2, 1,0.8, 0.8,0.4, 0.8,0.3, 0.7,0.2, 0.3,0.2, 0.2,0.3, 0.3,0.4, 0.8,0.4, 1,0.8 ]) 
                                     vector:[1,0.8,0.8,1,0.2,1,0.2,1,0,0.8,0,0.7,0,0.7,0.2,0.7,0.3,0.8,0.7,0.6,0.2,0.6,0,0.4,0,0.4,0,0.2,0.2,0,0.2,0,0.8,0,1,0.2,1,0.2,1,0.8,0.8,0.4,0.2,1,0,0.7,0.3,0.8,1,0.2,0.8,0.4,0.8,0.3,0.2,1,0.3,0.8,0.7,0.8,1,0.2,0.8,0.3,0.7,0.2,1,0.8,0.2,1,0.7,0.8,0.2,0,1,0.2,0.7,0.2,1,0.8,0.7,0.8,0.8,0.7,0.2,0,0.7,0.2,0.3,0.2,0.8,0.4,1,0.8,0.8,0.7,0,0.4,0.2,0,0.3,0.2,0.8,0.4,0.8,0.7,0.7,0.6,0,0.4,0.3,0.2,0.2,0.3,0.3,0.4,0.8,0.4,0.7,0.6,0,0.4,0.2,0.3,0.3,0.4,0.3,0.4,0.7,0.6,0,0.4],
                                 },
                             
                             
                                 '.':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.2, y:0.2}, offset:{y:0.8},
                                 },
                                 ',':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0., 1,0, 0.8,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0., 1,0, 0.8,1, 0,1 ]),
                                     vector:[0.8,1,0,1,0.2,0,0.2,0,1,0,0.8,1],
                                     ratio:{x:0.2, y:0.4}, offset:{y:0.8},
                                 },
                                 ':':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
                                     vector:[0,0,1,0,1,0.3,0,0.7,1,0.7,1,1,0,0,1,0.3,0,0.3,0,0.7,1,1,0,1],
                                     ratio:{x:0.2, y:0.8}, offset:{y:0.1},
                                 },
                                 ';':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 1,0, 1,0.3, 0.2,0.3, 0.2,0.7, 1,0.7, 0.8,1, 0,1, 0.2,0.7 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0, 1,0, 1,0.3, 0.2,0.3, 0.2,0.7, 1,0.7, 0.8,1, 0,1, 0.2,0.7 ]),
                                     vector:[0.2,0,1,0,1,0.3,1,0.7,0.8,1,0,1,0.2,0,1,0.3,0.2,0.3,1,0.7,0,1,0.2,0.7],
                                     ratio:{x:0.2, y:0.8}, offset:{y:0.1},
                                 },
                                 '?':{
-                                    // vector:_canvas_.library.thirdparty.earcut([
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([
                                     //     0,0.4, 0,0.1, 0.1,0, 0.9,0, 1,0.1, 1,0.5, 0.9,0.6, 0.6,0.6, 0.6,0.7, 0.4,0.7, 0.4,0.8, 0.6,0.8, 0.6,1, 0.4,1, 0.4,0.8, 0.4,0.7, 0.4,0.5, 0.5,0.4, 0.8,0.4, 0.8,0.2, 0.2,0.2, 0.2,0.4
                                     // ]),
                                     vector:[0.2,0.2,0.2,0.4,0,0.4,0,0.4,0,0.1,0.1,0,0.1,0,0.9,0,1,0.1,1,0.1,1,0.5,0.9,0.6,0.6,0.8,0.6,1,0.4,1,0.4,0.5,0.5,0.4,0.8,0.4,0.2,0.2,0,0.4,0.1,0,0.8,0.2,0.2,0.2,0.1,0,0.8,0.2,0.1,0,1,0.1,0.8,0.4,0.8,0.2,1,0.1,0.8,0.4,1,0.1,0.9,0.6,0.4,0.5,0.8,0.4,0.9,0.6,0.4,0.5,0.9,0.6,0.6,0.6,0.4,0.5,0.6,0.6,0.6,0.7,0.4,0.5,0.6,0.7,0.4,0.7,0.4,0.8,0.6,0.8,0.4,1],
                                     encroach:{'a':2},
                                 },
                                 '!':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.7, 0,0.7, 0,0.8, 1,0.8, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.7, 0,0.7, 0,0.8, 1,0.8, 1,1, 0,1 ]),
                                     vector:[0,0,1,0,1,0.7,0,0.8,1,0.8,1,1,0,0,1,0.7,0,0.7,0,0.8,1,1,0,1],
                                     ratio:{x:0.2},
                                 },
                                 '/':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 1,0, 0.7,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0, 1,0, 0.7,1, 0,1 ]),
                                     vector:[0.7,1,0,1,0.3,0,0.3,0,1,0,0.7,1],
                                     ratio:{x:1/4},
                                 },
                                '\\':{
-                                   // vector:_canvas_.library.thirdparty.earcut([ 0.7,0, 0,0, 0.3,1, 1,1 ]),
+                                   // vector:_canvas_.library.math.polygonToSubTriangles([ 0.7,0, 0,0, 0.3,1, 1,1 ]),
                                    vector:[0,0,0.7,0,1,1,1,1,0.3,1,0,0],
                                    ratio:{x:1/4},
                                 },
                                 '(':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.6,0, 1,0, 0.6,0.2, 0.4,0.5, 0.6,0.8, 1,1, 0.6,1, 0.2,0.8, 0,0.5, 0.2,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.6,0, 1,0, 0.6,0.2, 0.4,0.5, 0.6,0.8, 1,1, 0.6,1, 0.2,0.8, 0,0.5, 0.2,0.2 ]),
                                     vector:[0,0.5,0.2,0.2,0.6,0,0.6,0,1,0,0.6,0.2,0.6,0.8,1,1,0.6,1,0.6,1,0.2,0.8,0,0.5,0,0.5,0.6,0,0.6,0.2,0.4,0.5,0.6,0.8,0.6,1,0,0.5,0.6,0.2,0.4,0.5,0.4,0.5,0.6,1,0,0.5],
                                     ratio:{x:0.4},
                                 },
                                 ')':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0.4,0.2, 0.6,0.5, 0.4,0.8, 0,1, 0.4,1, 0.8,0.8, 1,0.5, 0.8,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.4,0, 0,0, 0.4,0.2, 0.6,0.5, 0.4,0.8, 0,1, 0.4,1, 0.8,0.8, 1,0.5, 0.8,0.2 ]),
                                     vector:[0,0,0.4,0,0.8,0.2,0.8,0.2,1,0.5,0.8,0.8,0.8,0.8,0.4,1,0,1,0.4,0.2,0,0,0.8,0.2,0.8,0.8,0,1,0.4,0.8,0.6,0.5,0.4,0.2,0.8,0.2,0.8,0.2,0.8,0.8,0.4,0.8,0.4,0.8,0.6,0.5,0.8,0.2],
                                     ratio:{x:0.4},
                                     encroach:{'p':1},
                                 },
                                 '[':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.2, 0.4,0.2, 0.4,0.8, 1,0.8, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.2, 0.4,0.2, 0.4,0.8, 1,0.8, 1,1, 0,1 ]),
                                     vector:[0,0,1,0,1,0.2,0.4,0.8,1,0.8,1,1,0,0,1,0.2,0.4,0.2,0.4,0.8,1,1,0,1,0,1,0,0,0.4,0.2,0.4,0.2,0.4,0.8,0,1],
                                     ratio:{x:0.4},
                                 },
                                 ']':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 1,0, 0,0, 0,0.2, 0.6,0.2, 0.6,0.8, 0,0.8, 0,1, 1,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 1,0, 0,0, 0,0.2, 0.6,0.2, 0.6,0.8, 0,0.8, 0,1, 1,1 ]),
                                     vector:[1,1,0,1,0,0.8,0.6,0.2,0,0.2,0,0,1,1,0,0.8,0.6,0.8,0.6,0.2,0,0,1,0,1,0,1,1,0.6,0.8,0.6,0.8,0.6,0.2,1,0],
                                     ratio:{x:0.4},
                                 },
                                 '#':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0, 0.4,0, 0.38,0.2, 0.68,0.2, 0.7,0, 0.9,0, 0.88,0.2, 1,0.2, 1,0.4, 0.86,0.4, 0.84,0.6, 1,0.6, 1,0.8, 0.82,0.8, 0.8,1, 0.6,1, 0.62,0.8, 0.32,0.8, 0.3,1, 0.1,1, 0.12,0.8, 0,0.8, 0,0.6, 0.14,0.6, 0.16,0.4, 0,0.4, 0,0.2, 0.18,0.2, 0.36,0.4, 0.34,0.6, 0.64,0.6, 0.66,0.4, 0.36,0.4, 0.18,0.2 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0, 0.4,0, 0.38,0.2, 0.68,0.2, 0.7,0, 0.9,0, 0.88,0.2, 1,0.2, 1,0.4, 0.86,0.4, 0.84,0.6, 1,0.6, 1,0.8, 0.82,0.8, 0.8,1, 0.6,1, 0.62,0.8, 0.32,0.8, 0.3,1, 0.1,1, 0.12,0.8, 0,0.8, 0,0.6, 0.14,0.6, 0.16,0.4, 0,0.4, 0,0.2, 0.18,0.2, 0.36,0.4, 0.34,0.6, 0.64,0.6, 0.66,0.4, 0.36,0.4, 0.18,0.2 ])
                                     vector:[0.36,0.4,0.18,0.2,0.2,0,0.2,0,0.4,0,0.38,0.2,0.68,0.2,0.7,0,0.9,0,0.88,0.2,1,0.2,1,0.4,0.84,0.6,1,0.6,1,0.8,0.82,0.8,0.8,1,0.6,1,0.32,0.8,0.3,1,0.1,1,0.12,0.8,0,0.8,0,0.6,0.16,0.4,0,0.4,0,0.2,0,0.2,0.18,0.2,0.36,0.4,0.36,0.4,0.2,0,0.38,0.2,0.68,0.2,0.9,0,0.88,0.2,0.88,0.2,1,0.4,0.86,0.4,0.84,0.6,1,0.8,0.82,0.8,0.82,0.8,0.6,1,0.62,0.8,0.32,0.8,0.1,1,0.12,0.8,0.12,0.8,0,0.6,0.14,0.6,0.16,0.4,0,0.2,0.36,0.4,0.66,0.4,0.36,0.4,0.38,0.2,0.68,0.2,0.88,0.2,0.86,0.4,0.84,0.6,0.82,0.8,0.62,0.8,0.32,0.8,0.12,0.8,0.14,0.6,0.14,0.6,0.16,0.4,0.36,0.4,0.66,0.4,0.38,0.2,0.68,0.2,0.68,0.2,0.86,0.4,0.84,0.6,0.84,0.6,0.62,0.8,0.32,0.8,0.32,0.8,0.14,0.6,0.36,0.4,0.66,0.4,0.68,0.2,0.84,0.6,0.32,0.8,0.36,0.4,0.34,0.6,0.64,0.6,0.66,0.4,0.84,0.6,0.32,0.8,0.34,0.6,0.64,0.6,0.64,0.6,0.84,0.6,0.32,0.8],
                                 },
                                 '-':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.5, y:0.2}, offset:{y:0.4},
                                 },
                                 '_':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{y:0.2}, offset:{y:1},
                                 },
                                 "'":{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.2, y:0.4},
                                 },
                                 '"':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0,1, 0.4,1, 0.4,0, 0.6,0, 0.6,1, 1,1, 1,0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.4,0, 0,0, 0,1, 0.4,1, 0.4,0, 0.6,0, 0.6,1, 1,1, 1,0 ]),
                                     vector:[1,0,1,1,0.6,1,0.4,1,0,1,0,0,1,0,0.6,1,0.6,0,0.4,1,0,0,0.4,0],
                                     ratio:{x:0.5, y:0.4},
                                 },
                                 '|':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ])
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.2},
                                 },
                                 '>':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0.4, 1,0.6, 0,1, 0,0.8, 0.7,0.5, 0,0.2 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0.4, 1,0.6, 0,1, 0,0.8, 0.7,0.5, 0,0.2 ])
                                     vector:[0.7,0.5,0,0.2,0,0,0,0,1,0.4,1,0.6,1,0.6,0,1,0,0.8,0.7,0.5,0,0,1,0.6,1,0.6,0,0.8,0.7,0.5],
                                 },
                                 '<':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 1,0, 0,0.4, 0,0.6, 1,1, 1,0.8, 0.3,0.5, 1,0.2 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 1,0, 0,0.4, 0,0.6, 1,1, 1,0.8, 0.3,0.5, 1,0.2 ])
                                     vector:[0,0.4,1,0,1,0.2,0.3,0.5,1,0.8,1,1,1,1,0,0.6,0,0.4,0,0.4,1,0.2,0.3,0.5,0.3,0.5,1,1,0,0.4],
                                 },
                                 '+':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0, 0.7,0, 0.7,0.3, 1,0.3, 1,0.7, 0.7,0.7, 0.7,1, 0.3,1, 0.3,0.7, 0,0.7, 0,0.3, 0.3,0.3 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0, 0.7,0, 0.7,0.3, 1,0.3, 1,0.7, 0.7,0.7, 0.7,1, 0.3,1, 0.3,0.7, 0,0.7, 0,0.3, 0.3,0.3 ]),
                                     vector:[0.3,0.3,0.3,0,0.7,0,0.7,0.3,1,0.3,1,0.7,0.7,0.7,0.7,1,0.3,1,0.3,0.7,0,0.7,0,0.3,0.3,0.3,0.7,0,0.7,0.3,0.7,0.3,1,0.7,0.7,0.7,0.7,0.7,0.3,1,0.3,0.7,0.3,0.7,0,0.3,0.3,0.3,0.3,0.3,0.7,0.3,0.7,0.7,0.7,0.7,0.3,0.7,0.3,0.3],
                                     ratio:{x:0.5, y:0.5}, offset:{y:0.25}
                                 },
                                 '=':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,0.3, 0,0.3, 0,0.7, 1,0.7, 1,1, 0,1 ]),
                                     vector:[0,0,1,0,1,0.3,0,0.7,1,0.7,1,1,0,0,1,0.3,0,0.3,0,0.7,1,1,0,1],
                                     ratio:{x:0.8, y:0.5}, offset:{y:0.25}
                                 },
                                 '&':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.1,0, 0.6,0, 0.7,0.2, 0.7,0.4, 0.6,0.5, 0.4,0.6, 0.6,0.7, 0.8,0.5, 0.9,0.6, 0.9,0.7, 0.8,0.8, 1,0.8, 1,1, 0.8,1, 0.6,0.9, 0.5,1, 0.1,1, 0,0.9, 0,0.6, 0.1,0.5, 0.2,0.65, 0.2,0.8, 0.4,0.8, 0.2,0.65, 0,0.4, 0,0.3, 0.1,0, 0.2,0.2, 0.2,0.3, 0.3,0.4, 0.5,0.4, 0.5,0.2, 0.2,0.2 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.1,0, 0.6,0, 0.7,0.2, 0.7,0.4, 0.6,0.5, 0.4,0.6, 0.6,0.7, 0.8,0.5, 0.9,0.6, 0.9,0.7, 0.8,0.8, 1,0.8, 1,1, 0.8,1, 0.6,0.9, 0.5,1, 0.1,1, 0,0.9, 0,0.6, 0.1,0.5, 0.2,0.65, 0.2,0.8, 0.4,0.8, 0.2,0.65, 0,0.4, 0,0.3, 0.1,0, 0.2,0.2, 0.2,0.3, 0.3,0.4, 0.5,0.4, 0.5,0.2, 0.2,0.2 ])
                                     vector:[0.5,0.2,0.2,0.2,0.1,0,0.1,0,0.6,0,0.7,0.2,0.7,0.2,0.7,0.4,0.6,0.5,0.6,0.7,0.8,0.5,0.9,0.6,0.9,0.6,0.9,0.7,0.8,0.8,0.8,0.8,1,0.8,1,1,1,1,0.8,1,0.6,0.9,0.6,0.9,0.5,1,0.1,1,0.1,1,0,0.9,0,0.6,0,0.6,0.1,0.5,0.2,0.65,0.4,0.8,0.2,0.65,0,0.4,0,0.4,0,0.3,0.1,0,0.1,0,0.2,0.2,0.2,0.3,0.5,0.2,0.1,0,0.7,0.2,0.7,0.2,0.6,0.5,0.4,0.6,0.6,0.7,0.9,0.6,0.8,0.8,0.8,0.8,1,1,0.6,0.9,0.1,1,0,0.6,0.2,0.65,0,0.4,0.1,0,0.2,0.3,0.5,0.4,0.5,0.2,0.7,0.2,0.4,0.6,0.6,0.7,0.8,0.8,0.8,0.8,0.6,0.9,0.1,1,0.1,1,0.2,0.65,0.2,0.8,0.4,0.8,0,0.4,0.2,0.3,0.5,0.4,0.7,0.2,0.4,0.6,0.1,1,0.2,0.8,0.4,0.8,0.4,0.8,0.2,0.3,0.3,0.4,0.3,0.4,0.5,0.4,0.4,0.6,0.8,0.8,0.1,1,0.4,0.8,0.4,0.8,0.3,0.4,0.4,0.6,0.4,0.6,0.8,0.8,0.4,0.8],
                                 },
                                 '*':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 0.6,0, 0.6,0.25, 0.775,0.075, 0.925,0.225, 0.75,0.4, 1,0.4, 1,0.6, 0.75,0.6, 0.925,0.775, 0.775,0.925, 0.6,0.75, 0.6,1, 0.4,1, 0.4,0.75, 0.225,0.925, 0.075,0.775, 0.25,0.6, 0,0.6, 0,0.4, 0.25,0.4, 0.075,0.225, 0.225,0.075, 0.4,0.25 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.4,0, 0.6,0, 0.6,0.25, 0.775,0.075, 0.925,0.225, 0.75,0.4, 1,0.4, 1,0.6, 0.75,0.6, 0.925,0.775, 0.775,0.925, 0.6,0.75, 0.6,1, 0.4,1, 0.4,0.75, 0.225,0.925, 0.075,0.775, 0.25,0.6, 0,0.6, 0,0.4, 0.25,0.4, 0.075,0.225, 0.225,0.075, 0.4,0.25 ]),
                                     vector:[0.4,0.25,0.4,0,0.6,0,0.6,0.25,0.775,0.075,0.925,0.225,0.75,0.4,1,0.4,1,0.6,0.75,0.6,0.925,0.775,0.775,0.925,0.6,0.75,0.6,1,0.4,1,0.4,0.75,0.225,0.925,0.075,0.775,0.25,0.6,0,0.6,0,0.4,0.25,0.4,0.075,0.225,0.225,0.075,0.4,0.25,0.6,0,0.6,0.25,0.6,0.25,0.925,0.225,0.75,0.4,0.75,0.4,1,0.6,0.75,0.6,0.75,0.6,0.775,0.925,0.6,0.75,0.6,0.75,0.4,1,0.4,0.75,0.4,0.75,0.075,0.775,0.25,0.6,0.25,0.6,0,0.4,0.25,0.4,0.25,0.4,0.225,0.075,0.4,0.25,0.4,0.25,0.6,0.25,0.75,0.4,0.75,0.4,0.75,0.6,0.6,0.75,0.6,0.75,0.4,0.75,0.25,0.6,0.25,0.6,0.25,0.4,0.4,0.25,0.4,0.25,0.75,0.4,0.6,0.75,0.6,0.75,0.25,0.6,0.4,0.25],
                                     ratio:{x:0.5, y:0.5}, offset:{y:0.25}
                                 },
                                 '~':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0.25, 0.25,0.0, 0.75,0.5, 1,0.25, 1,0.75, 0.75,1, 0.25,0.5, 0,0.75 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0.25, 0.25,0.0, 0.75,0.5, 1,0.25, 1,0.75, 0.75,1, 0.25,0.5, 0,0.75 ]),
                                     vector:[0.25,0.5,0,0.75,0,0.25,0,0.25,0.25,0,0.75,0.5,0.75,0.5,1,0.25,1,0.75,1,0.75,0.75,1,0.25,0.5,0.25,0.5,0,0.25,0.75,0.5,0.75,0.5,1,0.75,0.25,0.5],
                                     ratio:{x:0.8, y:0.4}, offset:{y:0.25},
                                 },
                                 '%':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.8,0, 1,0.2, 0.2,1, 0,0.8, 0,0.2, 0,0.1, 0.1,0, 0.2,0, 0.3,0.1, 0.3,0.2, 0.3,0.2, 0.2,0.3, 0.1,0.3, 0,0.2, 0,0.8, 0.2,1, 0.8,1, 0.7,0.9, 0.7,0.8, 0.8,0.7, 0.9,0.7, 1,0.8, 1,0.9, 0.9,1, 0.8,1, 0.2,1, 0,0.8 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.8,0, 1,0.2, 0.2,1, 0,0.8, 0,0.2, 0,0.1, 0.1,0, 0.2,0, 0.3,0.1, 0.3,0.2, 0.3,0.2, 0.2,0.3, 0.1,0.3, 0,0.2, 0,0.8, 0.2,1, 0.8,1, 0.7,0.9, 0.7,0.8, 0.8,0.7, 0.9,0.7, 1,0.8, 1,0.9, 0.9,1, 0.8,1, 0.2,1, 0,0.8 ])
                                     vector:[0,0.1,0.1,0,0.2,0,0.7,0.9,0.7,0.8,0.8,0.7,0.8,0.7,0.9,0.7,1,0.8,1,0.8,1,0.9,0.9,1,0,0.1,0.2,0,0.3,0.1,0.7,0.9,0.8,0.7,1,0.8,0.7,0.9,1,0.8,0.9,1,0,0.1,0.3,0.1,0.3,0.2,0.3,0.2,0.2,0.3,0.1,0.3,0.8,1,0.7,0.9,0.9,1,0,0.1,0.3,0.2,0.1,0.3,0,0.1,0.1,0.3,0,0.2,1,0.2,0.2,1,0,0.8,0,0.8,0.8,0,1,0.2],
                                 },
                                 '{':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3/0.45,0.0, 0.45/0.45,0.0, 0.45/0.45,0.1, 0.3/0.45,0.2, 0.3/0.45,0.4, 0.225/0.45,0.5, 0.3/0.45,0.6, 0.3/0.45,0.8, 0.45/0.45,0.9, 0.45/0.45,1.0, 0.3/0.45,1.0, 0.15/0.45,0.9, 0.15/0.45,0.6, 0.0/0.45,0.5, 0.15/0.45,0.4, 0.15/0.45,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3/0.45,0.0, 0.45/0.45,0.0, 0.45/0.45,0.1, 0.3/0.45,0.2, 0.3/0.45,0.4, 0.225/0.45,0.5, 0.3/0.45,0.6, 0.3/0.45,0.8, 0.45/0.45,0.9, 0.45/0.45,1.0, 0.3/0.45,1.0, 0.15/0.45,0.9, 0.15/0.45,0.6, 0.0/0.45,0.5, 0.15/0.45,0.4, 0.15/0.45,0.1 ]),
                                     vector:[0.3333333333333333,0.4,0.3333333333333333,0.1,0.6666666666666666,0,0.6666666666666666,0,1,0,1,0.1,0.6666666666666666,0.2,0.6666666666666666,0.4,0.5,0.5,0.5,0.5,0.6666666666666666,0.6,0.6666666666666666,0.8,0.6666666666666666,0.8,1,0.9,1,1,1,1,0.6666666666666666,1,0.3333333333333333,0.9,0.3333333333333333,0.6,0,0.5,0.3333333333333333,0.4,0.6666666666666666,0,1,0.1,0.6666666666666666,0.2,0.6666666666666666,0.8,1,1,0.3333333333333333,0.9,0.3333333333333333,0.6,0.3333333333333333,0.4,0.6666666666666666,0,0.6666666666666666,0,0.6666666666666666,0.2,0.5,0.5,0.5,0.5,0.6666666666666666,0.8,0.3333333333333333,0.9,0.3333333333333333,0.9,0.3333333333333333,0.6,0.6666666666666666,0,0.6666666666666666,0,0.5,0.5,0.3333333333333333,0.9],
                                     ratio:{x:0.45},
                                 },
                                 '}':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.15/0.45,0.0, 0.0/0.45,0.0, 0.0/0.45,0.1, 0.15/0.45,0.2, 0.15/0.45,0.4, 0.225/0.45,0.5, 0.15/0.45,0.6, 0.15/0.45,0.8, 0.0/0.45,0.9, 0.0/0.45,1.0, 0.15/0.45,1.0, 0.3/0.45,0.9, 0.3/0.45,0.6, 0.45/0.45,0.5, 0.3/0.45,0.4, 0.3/0.45,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.15/0.45,0.0, 0.0/0.45,0.0, 0.0/0.45,0.1, 0.15/0.45,0.2, 0.15/0.45,0.4, 0.225/0.45,0.5, 0.15/0.45,0.6, 0.15/0.45,0.8, 0.0/0.45,0.9, 0.0/0.45,1.0, 0.15/0.45,1.0, 0.3/0.45,0.9, 0.3/0.45,0.6, 0.45/0.45,0.5, 0.3/0.45,0.4, 0.3/0.45,0.1 ]),
                                     vector:[0,0,0.3333333333333333,0,0.6666666666666666,0.1,0.6666666666666666,0.4,1,0.5,0.6666666666666666,0.6,0.6666666666666666,0.6,0.6666666666666666,0.9,0.3333333333333333,1,0.3333333333333333,1,0,1,0,0.9,0.3333333333333333,0.8,0.3333333333333333,0.6,0.5,0.5,0.5,0.5,0.3333333333333333,0.4,0.3333333333333333,0.2,0.3333333333333333,0.2,0,0.1,0,0,0.6666666666666666,0.4,0.6666666666666666,0.6,0.3333333333333333,1,0.3333333333333333,1,0,0.9,0.3333333333333333,0.8,0.3333333333333333,0.2,0,0,0.6666666666666666,0.1,0.6666666666666666,0.1,0.6666666666666666,0.4,0.3333333333333333,1,0.3333333333333333,1,0.3333333333333333,0.8,0.5,0.5,0.5,0.5,0.3333333333333333,0.2,0.6666666666666666,0.1,0.6666666666666666,0.1,0.3333333333333333,1,0.5,0.5],
                                     ratio:{x:0.45},
                                 },
@@ -20094,171 +23178,171 @@
                                 loadAttempted:true,
                                 isLoaded:true,
                                 'default':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 0.0,0.0, 0.1,0.1,  0.1,0.9, 0.9,0.9, 0.9,0.1, 0.1,0.1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 0.0,0.0, 0.1,0.1,  0.1,0.9, 0.9,0.9, 0.9,0.1, 0.1,0.1 ]) 
                                     vector:[0.9,0.1,0.1,0.1,0,0,0,1,0,0,0.1,0.1,0.9,0.1,0,0,1,0,0,1,0.1,0.1,0.1,0.9,0.9,0.9,0.9,0.1,1,0,1,1,0,1,0.1,0.9,0.9,0.9,1,0,1,1,1,1,0.1,0.9,0.9,0.9],
                                 },
                                 '':{ 
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 0.0,0.0, 0.1,0.1,  0.1,0.9, 0.9,0.9, 0.9,0.1, 0.1,0.1 ]) 
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 0.0,0.0, 0.1,0.1,  0.1,0.9, 0.9,0.9, 0.9,0.1, 0.1,0.1 ]) 
                                     vector:[0.9,0.1,0.1,0.1,0,0,0,1,0,0,0.1,0.1,0.9,0.1,0,0,1,0,0,1,0.1,0.1,0.1,0.9,0.9,0.9,0.9,0.1,1,0,1,1,0,1,0.1,0.9,0.9,0.9,1,0,1,1,1,1,0.1,0.9,0.9,0.9],
                                 },
                             
                                 'A':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0.0, 0.5,0.0, 1.0,1.0, 0.9,1.0, 0.65,0.5, 0.1,0.5, 0.1,0.4, 0.6,0.4, 0.45,0.1, 0.25,0.1, 0.1,0.25, 0.1,1.0, 0.0,1.0, 0.0,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0.0, 0.5,0.0, 1.0,1.0, 0.9,1.0, 0.65,0.5, 0.1,0.5, 0.1,0.4, 0.6,0.4, 0.45,0.1, 0.25,0.1, 0.1,0.25, 0.1,1.0, 0.0,1.0, 0.0,0.2 ]),
                                     vector:[0.5,0,1,1,0.9,1,0.65,0.5,0.1,0.5,0.1,0.4,0.1,0.25,0.1,1,0,1,0.5,0,0.9,1,0.65,0.5,0.65,0.5,0.1,0.4,0.6,0.4,0.1,0.25,0,1,0,0.2,0.5,0,0.65,0.5,0.6,0.4,0.25,0.1,0.1,0.25,0,0.2,0.5,0,0.6,0.4,0.45,0.1,0.25,0.1,0,0.2,0.2,0,0.2,0,0.5,0,0.45,0.1,0.45,0.1,0.25,0.1,0.2,0],
                                 },
                                 'B':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.1,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.65, 0.75,0.5, 0.1,0.5, 0.1,0.4, 0.7,0.4, 0.8,0.3, 0.8,0.2, 0.65,0.1, 0.1,0.1, 0.1,0.0, 0.7,0.0, 0.9,0.15, 0.9,0.35, 0.825,0.425, 1.0,0.6, 1.0,0.8, 0.8,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.1,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.65, 0.75,0.5, 0.1,0.5, 0.1,0.4, 0.7,0.4, 0.8,0.3, 0.8,0.2, 0.65,0.1, 0.1,0.1, 0.1,0.0, 0.7,0.0, 0.9,0.15, 0.9,0.35, 0.825,0.425, 1.0,0.6, 1.0,0.8, 0.8,1.0, 0.0,1.0 ]),
                                     vector:[0,1,0,0,0.1,0,0.75,0.5,0.1,0.5,0.1,0.4,0.65,0.1,0.1,0.1,0.1,0,0.7,0,0.9,0.15,0.9,0.35,0.825,0.425,1,0.6,1,0.8,0,1,0.1,0,0.1,0.9,0.75,0.5,0.1,0.4,0.7,0.4,0.65,0.1,0.1,0,0.7,0,0.8,1,0,1,0.1,0.9,0.9,0.65,0.75,0.5,0.7,0.4,0.8,0.2,0.65,0.1,0.7,0,0.8,1,0.1,0.9,0.75,0.9,0.8,0.2,0.7,0,0.9,0.35,1,0.8,0.8,1,0.75,0.9,0.8,0.3,0.8,0.2,0.9,0.35,1,0.8,0.75,0.9,0.9,0.75,0.7,0.4,0.8,0.3,0.9,0.35,1,0.8,0.9,0.75,0.9,0.65,0.7,0.4,0.9,0.35,0.825,0.425,0.825,0.425,1,0.8,0.9,0.65,0.9,0.65,0.7,0.4,0.825,0.425],
                                 },
                                 'C':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0.0, 0.8,0.0, 1.0,0.2, 0.9,0.25, 0.75,0.1, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0.0, 0.8,0.0, 1.0,0.2, 0.9,0.25, 0.75,0.1, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2 ]),
                                     vector:[0.8,0,1,0.2,0.9,0.25,0.75,0.9,0.9,0.75,1,0.8,0.8,0,0.9,0.25,0.75,0.1,0.75,0.9,1,0.8,0.8,1,0.2,0,0.8,0,0.75,0.1,0.25,0.9,0.75,0.9,0.8,1,0.2,0,0.75,0.1,0.25,0.1,0.25,0.9,0.8,1,0.2,1,0,0.2,0.2,0,0.25,0.1,0.1,0.75,0.25,0.9,0.2,1,0,0.2,0.25,0.1,0.1,0.25,0.1,0.75,0.2,1,0,0.8,0,0.8,0,0.2,0.1,0.25,0.1,0.25,0.1,0.75,0,0.8],
                                 },
                                 'D':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.1,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.25, 0.75,0.1, 0.1,0.1, 0.1,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.8, 0.8,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.1,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.25, 0.75,0.1, 0.1,0.1, 0.1,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.8, 0.8,1.0, 0.0,1.0 ]),
                                     vector:[0,1,0,0,0.1,0,0.75,0.1,0.1,0.1,0.1,0,0,1,0.1,0,0.1,0.9,0.75,0.1,0.1,0,0.8,0,0.8,1,0,1,0.1,0.9,0.9,0.25,0.75,0.1,0.8,0,0.8,1,0.1,0.9,0.75,0.9,0.9,0.25,0.8,0,1,0.2,1,0.8,0.8,1,0.75,0.9,0.9,0.75,0.9,0.25,1,0.2,1,0.8,0.75,0.9,0.9,0.75,0.9,0.75,1,0.2,1,0.8],
                                 },
                                 'E':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.1,0.1, 0.1,0.4, 0.9,0.4, 0.9,0.5, 0.1,0.5, 0.1,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.1,0.1, 0.1,0.4, 0.9,0.4, 0.9,0.5, 0.1,0.5, 0.1,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0 ]),
                                     vector:[0,0,1,0,1,0.1,0.1,0.4,0.9,0.4,0.9,0.5,0.1,0.9,1,0.9,1,1,0,0,1,0.1,0.1,0.1,0.1,0.4,0.9,0.5,0.1,0.5,0.1,0.9,1,1,0,1,0,1,0,0,0.1,0.1,0.1,0.5,0.1,0.9,0,1,0,1,0.1,0.1,0.1,0.4,0.1,0.4,0.1,0.5,0,1],
                                 },
                                 'F':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.1,0.1, 0.1,0.4, 0.9,0.4, 0.9,0.5, 0.1,0.5, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.1,0.1, 0.1,0.4, 0.9,0.4, 0.9,0.5, 0.1,0.5, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0,0,1,0,1,0.1,0.1,0.4,0.9,0.4,0.9,0.5,0.1,0.5,0.1,1,0,0,0,0,1,0.1,0.1,0.1,0.1,0.4,0.9,0.5,0.1,0.5,0,0,0.1,0.1,0.1,0.4,0.1,0.4,0.1,0.5,0,0],
                                 },
                                 'G':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0.0, 1.0,0.0, 1.0,0.1, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.55, 0.85,0.5, 0.5,0.5, 0.5,0.4, 0.9,0.4, 1.0,0.5, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0.0, 1.0,0.0, 1.0,0.1, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.55, 0.85,0.5, 0.5,0.5, 0.5,0.4, 0.9,0.4, 1.0,0.5, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2 ]),
                                     vector:[0.2,0,1,0,1,0.1,0.85,0.5,0.5,0.5,0.5,0.4,0.5,0.4,0.9,0.4,1,0.5,0.2,0,1,0.1,0.25,0.1,0.85,0.5,0.5,0.4,1,0.5,0,0.2,0.2,0,0.25,0.1,0.9,0.55,0.85,0.5,1,0.5,0,0.2,0.25,0.1,0.1,0.25,0.9,0.75,0.9,0.55,1,0.5,0,0.8,0,0.2,0.1,0.25,0.9,0.75,1,0.5,1,0.8,0,0.8,0.1,0.25,0.1,0.75,0.75,0.9,0.9,0.75,1,0.8,0.2,1,0,0.8,0.1,0.75,0.75,0.9,1,0.8,0.8,1,0.2,1,0.1,0.75,0.25,0.9,0.25,0.9,0.75,0.9,0.8,1,0.8,1,0.2,1,0.25,0.9],
                                 },
                                 'H':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.1,0.4, 0.9,0.4, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.9,0.5, 0.1,0.5, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.1,0.4, 0.9,0.4, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.9,0.5, 0.1,0.5, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0,0,0.1,0,0.1,0.4,0.9,0.4,0.9,0,1,0,1,0,1,1,0.9,1,0.1,0.5,0.1,1,0,0,1,0,0.9,1,0.9,0.5,0.1,0.5,0,0,0.1,0.4,0.9,0.4,1,0,0.9,0.5,0.9,0.5,0.1,0.5,0.1,0.4,0.1,0.4,0.9,0.4,0.9,0.5],
                                 },
                                 'I':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.55,0.1, 0.55,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0, 0.0,0.9, 0.45,0.9, 0.45,0.1, 0.0,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.55,0.1, 0.55,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0, 0.0,0.9, 0.45,0.9, 0.45,0.1, 0.0,0.1 ]),
                                     vector:[0.45,0.1,0,0.1,0,0,0,0,1,0,1,0.1,0.55,0.9,1,0.9,1,1,1,1,0,1,0,0.9,0,0,1,0.1,0.55,0.1,1,1,0,0.9,0.45,0.9,0.45,0.1,0,0,0.55,0.1,0.55,0.9,1,1,0.45,0.9,0.45,0.9,0.45,0.1,0.55,0.1,0.55,0.1,0.55,0.9,0.45,0.9],
                                 },
                                 'J':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.5,0.0, 1.0,0.0, 1.0,0.8, 0.8,1.0, 0.0,1.0, 0.0,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.1, 0.5,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.5,0.0, 1.0,0.0, 1.0,0.8, 0.8,1.0, 0.0,1.0, 0.0,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.1, 0.5,0.1 ]),
                                     vector:[0.9,0.1,0.5,0.1,0.5,0,0.8,1,0,1,0,0.9,0.9,0.1,0.5,0,1,0,0.8,1,0,0.9,0.75,0.9,0.9,0.75,0.9,0.1,1,0,1,0.8,0.8,1,0.75,0.9,0.9,0.75,1,0,1,0.8,1,0.8,0.75,0.9,0.9,0.75],
                                 },
                                 'K':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.1,0.4, 0.7,0.4, 0.9,0.2, 0.9,0.0, 1.0,0.0, 1.0,0.25, 0.8,0.45, 1.0,0.65, 1.0,1.0, 0.9,1.0, 0.9,0.7, 0.7,0.5, 0.1,0.5, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.1,0.4, 0.7,0.4, 0.9,0.2, 0.9,0.0, 1.0,0.0, 1.0,0.25, 0.8,0.45, 1.0,0.65, 1.0,1.0, 0.9,1.0, 0.9,0.7, 0.7,0.5, 0.1,0.5, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0,0,0.1,0,0.1,0.4,0.9,0.2,0.9,0,1,0,1,0,1,0.25,0.8,0.45,1,0.65,1,1,0.9,1,0.1,0.5,0.1,1,0,0,0.9,0.2,1,0,0.8,0.45,1,0.65,0.9,1,0.9,0.7,0.1,0.5,0,0,0.1,0.4,0.7,0.4,0.9,0.2,0.8,0.45,0.8,0.45,1,0.65,0.9,0.7,0.7,0.5,0.1,0.5,0.1,0.4,0.1,0.4,0.7,0.4,0.8,0.45,0.8,0.45,0.9,0.7,0.7,0.5,0.7,0.5,0.1,0.4,0.8,0.45],
                                 },
                                 'L':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.1,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.1,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0 ]),
                                     vector:[0,1,0,0,0.1,0,0.1,0.9,1,0.9,1,1,0,1,0.1,0,0.1,0.9,0.1,0.9,1,1,0,1],
                                 },
                                 'M':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.5,0.4, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.9,0.15, 0.5,0.55, 0.1,0.15, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.5,0.4, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.9,0.15, 0.5,0.55, 0.1,0.15, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0,0,0.1,0,0.5,0.4,0.5,0.4,0.9,0,1,0,1,0,1,1,0.9,1,0.1,0.15,0.1,1,0,0,1,0,0.9,1,0.9,0.15,0.5,0.55,0.1,0.15,0,0,0.5,0.4,1,0,0.9,0.15,0.5,0.55,0,0,0.5,0.4,0.5,0.4,0.9,0.15,0.5,0.55],
                                 },
                                 'N':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.9,0.85, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.1,0.15, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.9,0.85, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.1,0.15, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0,0,0.1,0,0.9,0.85,0.9,0.85,0.9,0,1,0,1,0,1,1,0.9,1,0.1,0.15,0.1,1,0,0,0.9,0.85,1,0,0.9,1,0.9,1,0.1,0.15,0,0,0,0,0.9,0.85,0.9,1],
                                 },
                                 'O':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2, 0.2,0.0, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.25, 0.75,0.1, 0.25,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2, 0.2,0.0, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.25, 0.75,0.1, 0.25,0.1 ]),
                                     vector:[0.75,0.1,0.25,0.1,0.2,0,0,0.2,0.2,0,0.25,0.1,0.75,0.1,0.2,0,0.8,0,0,0.2,0.25,0.1,0.1,0.25,0.9,0.25,0.75,0.1,0.8,0,0,0.8,0,0.2,0.1,0.25,0.9,0.25,0.8,0,1,0.2,0,0.8,0.1,0.25,0.1,0.75,0.9,0.75,0.9,0.25,1,0.2,0.2,1,0,0.8,0.1,0.75,0.9,0.75,1,0.2,1,0.8,0.2,1,0.1,0.75,0.25,0.9,0.75,0.9,0.9,0.75,1,0.8,0.8,1,0.2,1,0.25,0.9,0.75,0.9,1,0.8,0.8,1,0.8,1,0.25,0.9,0.75,0.9],
                                 },
                                 'P':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.3, 0.8,0.5, 0.1,0.5, 0.1,0.4, 0.75,0.4, 0.9,0.25, 0.75,0.1, 0.1,0.1, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.3, 0.8,0.5, 0.1,0.5, 0.1,0.4, 0.75,0.4, 0.9,0.25, 0.75,0.1, 0.1,0.1, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0.8,0,1,0.2,1,0.3,0.8,0.5,0.1,0.5,0.1,0.4,0.1,0.1,0.1,1,0,0,0.8,0.5,0.1,0.4,0.75,0.4,0.75,0.1,0.1,0.1,0,0,1,0.3,0.8,0.5,0.75,0.4,0.75,0.1,0,0,0.8,0,1,0.3,0.75,0.4,0.9,0.25,0.9,0.25,0.75,0.1,0.8,0,0.8,0,1,0.3,0.9,0.25],
                                 },
                                 'Q':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.6, 0.84,0.76, 1.0,0.92, 0.92,1.0, 0.76,0.84, 0.6,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2, 0.2,0.0, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.55,0.9, 0.68,0.76, 0.51,0.59, 0.59,0.51, 0.76,0.68, 0.9,0.55, 0.9,0.25, 0.75,0.1, 0.25,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.6, 0.84,0.76, 1.0,0.92, 0.92,1.0, 0.76,0.84, 0.6,1.0, 0.2,1.0, 0.0,0.8, 0.0,0.2, 0.2,0.0, 0.25,0.1, 0.1,0.25, 0.1,0.75, 0.25,0.9, 0.55,0.9, 0.68,0.76, 0.51,0.59, 0.59,0.51, 0.76,0.68, 0.9,0.55, 0.9,0.25, 0.75,0.1, 0.25,0.1 ]),
                                     vector:[0.75,0.1,0.25,0.1,0.2,0,0.84,0.76,1,0.92,0.92,1,0,0.2,0.2,0,0.25,0.1,0.68,0.76,0.51,0.59,0.59,0.51,0.75,0.1,0.2,0,0.8,0,0.84,0.76,0.92,1,0.76,0.84,0,0.2,0.25,0.1,0.1,0.25,0.68,0.76,0.59,0.51,0.76,0.68,0.9,0.25,0.75,0.1,0.8,0,0,0.8,0,0.2,0.1,0.25,0.55,0.9,0.68,0.76,0.76,0.68,0.9,0.25,0.8,0,1,0.2,0,0.8,0.1,0.25,0.1,0.75,0.55,0.9,0.76,0.68,0.9,0.55,0.9,0.55,0.9,0.25,1,0.2,0.2,1,0,0.8,0.1,0.75,0.9,0.55,1,0.2,1,0.6,0.2,1,0.1,0.75,0.25,0.9,0.55,0.9,0.9,0.55,1,0.6,0.6,1,0.2,1,0.25,0.9,0.55,0.9,1,0.6,0.84,0.76,0.6,1,0.25,0.9,0.55,0.9,0.55,0.9,0.84,0.76,0.76,0.84,0.76,0.84,0.6,1,0.55,0.9],
                                 },
                                 'R':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.3, 0.8,0.5, 1.0,0.7, 1.0,1.0, 0.9,1.0, 0.9,0.75, 0.65,0.5, 0.1,0.5, 0.1,0.4, 0.75,0.4, 0.9,0.25, 0.75,0.1, 0.1,0.1, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.8,0.0, 1.0,0.2, 1.0,0.3, 0.8,0.5, 1.0,0.7, 1.0,1.0, 0.9,1.0, 0.9,0.75, 0.65,0.5, 0.1,0.5, 0.1,0.4, 0.75,0.4, 0.9,0.25, 0.75,0.1, 0.1,0.1, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0.8,0,1,0.2,1,0.3,1,0.7,1,1,0.9,1,0.65,0.5,0.1,0.5,0.1,0.4,0.1,0.1,0.1,1,0,0,1,0.7,0.9,1,0.9,0.75,0.65,0.5,0.1,0.4,0.75,0.4,0.75,0.1,0.1,0.1,0,0,0.8,0.5,1,0.7,0.9,0.75,0.9,0.75,0.65,0.5,0.75,0.4,0.75,0.1,0,0,0.8,0,0.8,0.5,0.9,0.75,0.75,0.4,0.9,0.25,0.75,0.1,0.8,0,1,0.3,0.8,0.5,0.75,0.4,0.9,0.25,0.8,0,1,0.3,1,0.3,0.75,0.4,0.9,0.25],
                                 },
                                 'S':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0.0, 1.0,0.0, 1.0,0.1, 0.35,0.1, 0.1,0.35, 0.1,0.4, 1.0,0.4, 1.0,0.6, 0.6,1.0, 0.0,1.0, 0.0,0.9, 0.55,0.9, 0.9,0.55, 0.9,0.5, 0.0,0.5, 0.0,0.3 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0.0, 1.0,0.0, 1.0,0.1, 0.35,0.1, 0.1,0.35, 0.1,0.4, 1.0,0.4, 1.0,0.6, 0.6,1.0, 0.0,1.0, 0.0,0.9, 0.55,0.9, 0.9,0.55, 0.9,0.5, 0.0,0.5, 0.0,0.3 ]),
                                     vector:[0,0.5,0,0.3,0.3,0,0.3,0,1,0,1,0.1,0.6,1,0,1,0,0.9,0.3,0,1,0.1,0.35,0.1,0.6,1,0,0.9,0.55,0.9,0.3,0,0.35,0.1,0.1,0.35,1,0.6,0.6,1,0.55,0.9,0,0.5,0.3,0,0.1,0.35,1,0.6,0.55,0.9,0.9,0.55,0,0.5,0.1,0.35,0.1,0.4,1,0.4,1,0.6,0.9,0.55,0.9,0.5,0,0.5,0.1,0.4,1,0.4,0.9,0.55,0.9,0.5,0.9,0.5,0.1,0.4,1,0.4],
                                 },
                                 'T':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.55,0.1, 0.55,1.0, 0.45,1.0, 0.45,0.1, 0.0,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.55,0.1, 0.55,1.0, 0.45,1.0, 0.45,0.1, 0.0,0.1 ]),
                                     vector:[0.45,0.1,0,0.1,0,0,0,0,1,0,1,0.1,0.55,0.1,0.55,1,0.45,1,0,0,1,0.1,0.55,0.1,0.55,0.1,0.45,1,0.45,0.1,0.45,0.1,0,0,0.55,0.1],
                                     encroach:{'t':1},
                                 },
                                 'U':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.0, 1.0,0.0, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.1,0.75, 0.25,0.9, 0.75,0.9, 0.9,0.75, 0.9,0.0, 1.0,0.0, 1.0,0.8, 0.8,1.0, 0.2,1.0, 0.0,0.8 ]),
                                     vector:[0,0.8,0,0,0.1,0,0.9,0.75,0.9,0,1,0,0,0.8,0.1,0,0.1,0.75,0.9,0.75,1,0,1,0.8,0.2,1,0,0.8,0.1,0.75,0.75,0.9,0.9,0.75,1,0.8,0.2,1,0.1,0.75,0.25,0.9,0.75,0.9,1,0.8,0.8,1,0.8,1,0.2,1,0.25,0.9,0.25,0.9,0.75,0.9,0.8,1],
                                 },
                                 'V':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.5,0.85, 0.9,0.0, 1.0,0.0, 0.55,1.0, 0.45,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.5,0.85, 0.9,0.0, 1.0,0.0, 0.55,1.0, 0.45,1.0 ]),
                                     vector:[0.55,1,0.45,1,0,0,0,0,0.1,0,0.5,0.85,0.5,0.85,0.9,0,1,0,0.55,1,0,0,0.5,0.85,0.5,0.85,1,0,0.55,1],
                                 },
                                 'W':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.1,0.0, 0.1,0.85, 0.5,0.4, 0.9,0.85, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.5,0.55, 0.1,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.1,0.0, 0.1,0.85, 0.5,0.4, 0.9,0.85, 0.9,0.0, 1.0,0.0, 1.0,1.0, 0.9,1.0, 0.5,0.55, 0.1,1.0, 0.0,1.0 ]),
                                     vector:[0.1,1,0,1,0,0,0,0,0.1,0,0.1,0.85,0.9,0.85,0.9,0,1,0,1,0,1,1,0.9,1,0.1,1,0,0,0.1,0.85,0.9,0.85,1,0,0.9,1,0.5,0.55,0.1,1,0.1,0.85,0.5,0.4,0.9,0.85,0.9,1,0.5,0.55,0.1,0.85,0.5,0.4,0.5,0.4,0.9,1,0.5,0.55],
                                 },
                                 'X':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.12,0.0, 0.5,0.44, 0.88,0.0, 1.0,0.0, 0.56,0.5, 1.0,1.0, 0.88,1.0, 0.5,0.56, 0.12,1.0, 0.0,1.0, 0.44,0.5 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.12,0.0, 0.5,0.44, 0.88,0.0, 1.0,0.0, 0.56,0.5, 1.0,1.0, 0.88,1.0, 0.5,0.56, 0.12,1.0, 0.0,1.0, 0.44,0.5 ]),
                                     vector:[0.44,0.5,0,0,0.12,0,0.5,0.44,0.88,0,1,0,0.56,0.5,1,1,0.88,1,0.5,0.56,0.12,1,0,1,0.44,0.5,0.12,0,0.5,0.44,0.5,0.44,1,0,0.56,0.5,0.56,0.5,0.88,1,0.5,0.56,0.5,0.56,0,1,0.44,0.5,0.44,0.5,0.5,0.44,0.56,0.5,0.56,0.5,0.5,0.56,0.44,0.5],
                                 },
                                 'Y':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 0.15,0.0, 0.5,0.35, 0.85,0.0, 1.0,0.0, 0.0,1.0, 0.0,0.85, 0.42,0.42 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 0.15,0.0, 0.5,0.35, 0.85,0.0, 1.0,0.0, 0.0,1.0, 0.0,0.85, 0.42,0.42 ]),
                                     vector:[0.42,0.42,0,0,0.15,0,0.5,0.35,0.85,0,1,0,1,0,0,1,0,0.85,0.42,0.42,0.15,0,0.5,0.35,0.5,0.35,1,0,0,0.85,0,0.85,0.42,0.42,0.5,0.35],
                                 },
                                 'Z':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.15,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0, 0.0,0.9, 0.85,0.1, 0.0,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,0.1, 0.15,0.9, 1.0,0.9, 1.0,1.0, 0.0,1.0, 0.0,0.9, 0.85,0.1, 0.0,0.1 ]),
                                     vector:[0.85,0.1,0,0.1,0,0,0,0,1,0,1,0.1,0.15,0.9,1,0.9,1,1,1,1,0,1,0,0.9,0.85,0.1,0,0,1,0.1,0.15,0.9,1,1,0,0.9,0,0.9,0.85,0.1,1,0.1,1,0.1,0.15,0.9,0,0.9],
                                 },
                             
                                 'a':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0/0.6, 0.4/0.7,0.0/0.6, 0.6/0.7,0.2/0.6, 0.6/0.7,0.5/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.5/0.7,0.25/0.6, 0.35/0.7,0.1/0.6, 0.25/0.7,0.1/0.6, 0.1/0.7,0.25/0.6, 0.1/0.7,0.35/0.6, 0.25/0.7,0.5/0.6, 0.5/0.7,0.5/0.6, 0.5/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.7,0.0/0.6, 0.4/0.7,0.0/0.6, 0.6/0.7,0.2/0.6, 0.6/0.7,0.5/0.6, 0.7/0.7,0.6/0.6, 0.5/0.7,0.6/0.6, 0.5/0.7,0.25/0.6, 0.35/0.7,0.1/0.6, 0.25/0.7,0.1/0.6, 0.1/0.7,0.25/0.6, 0.1/0.7,0.35/0.6, 0.25/0.7,0.5/0.6, 0.5/0.7,0.5/0.6, 0.5/0.7,0.6/0.6, 0.2/0.7,0.6/0.6, 0.0/0.7,0.4/0.6, 0.0/0.7,0.2/0.6 ]),
                                     vector:[0,0.6666666666666667,0,0.33333333333333337,0.28571428571428575,0,0.28571428571428575,0,0.5714285714285715,0,0.8571428571428572,0.33333333333333337,0.8571428571428572,0.8333333333333334,1,1,0.7142857142857143,1,0.35714285714285715,0.8333333333333334,0.7142857142857143,0.8333333333333334,0.7142857142857143,1,0.8571428571428572,0.33333333333333337,0.8571428571428572,0.8333333333333334,0.7142857142857143,1,0.35714285714285715,0.8333333333333334,0.7142857142857143,1,0.28571428571428575,1,0.8571428571428572,0.33333333333333337,0.7142857142857143,1,0.7142857142857143,0.4166666666666667,0.14285714285714288,0.5833333333333334,0.35714285714285715,0.8333333333333334,0.28571428571428575,1,0.8571428571428572,0.33333333333333337,0.7142857142857143,0.4166666666666667,0.5,0.16666666666666669,0.14285714285714288,0.5833333333333334,0.28571428571428575,1,0,0.6666666666666667,0.28571428571428575,0,0.8571428571428572,0.33333333333333337,0.5,0.16666666666666669,0.14285714285714288,0.4166666666666667,0.14285714285714288,0.5833333333333334,0,0.6666666666666667,0.28571428571428575,0,0.5,0.16666666666666669,0.35714285714285715,0.16666666666666669,0.14285714285714288,0.4166666666666667,0,0.6666666666666667,0.28571428571428575,0,0.28571428571428575,0,0.35714285714285715,0.16666666666666669,0.14285714285714288,0.4166666666666667],
                                     ratio:{x:0.7,y:0.6}, offset:{y:0.4},
                                     encroach:{'f':1},
                                 },
                                 'b':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0, 0.1/0.6,0.0, 0.1/0.6,0.9, 0.35/0.6,0.9, 0.5/0.6,0.75, 0.5/0.6,0.65, 0.35/0.6,0.5, 0.1/0.6,0.5, 0.1/0.6,0.4, 0.4/0.6,0.4, 0.6/0.6,0.6, 0.6/0.6,0.8, 0.4/0.6,1.0, 0.0/0.6,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0, 0.1/0.6,0.0, 0.1/0.6,0.9, 0.35/0.6,0.9, 0.5/0.6,0.75, 0.5/0.6,0.65, 0.35/0.6,0.5, 0.1/0.6,0.5, 0.1/0.6,0.4, 0.4/0.6,0.4, 0.6/0.6,0.6, 0.6/0.6,0.8, 0.4/0.6,1.0, 0.0/0.6,1.0 ]),
                                     vector:[0,1,0,0,0.16666666666666669,0,0.5833333333333334,0.5,0.16666666666666669,0.5,0.16666666666666669,0.4,0.6666666666666667,0.4,1,0.6,1,0.8,0,1,0.16666666666666669,0,0.16666666666666669,0.9,0.5833333333333334,0.5,0.16666666666666669,0.4,0.6666666666666667,0.4,0.6666666666666667,1,0,1,0.16666666666666669,0.9,0.8333333333333334,0.65,0.5833333333333334,0.5,0.6666666666666667,0.4,0.6666666666666667,1,0.16666666666666669,0.9,0.5833333333333334,0.9,0.8333333333333334,0.65,0.6666666666666667,0.4,1,0.8,1,0.8,0.6666666666666667,1,0.5833333333333334,0.9,0.8333333333333334,0.75,0.8333333333333334,0.65,1,0.8,1,0.8,0.5833333333333334,0.9,0.8333333333333334,0.75],
                                     ratio:{x:0.6},
                                 },
                                 'c':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.1/0.6,0.35/0.6, 0.25/0.6,0.5/0.6, 0.6/0.6,0.5/0.6, 0.6/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6, 0.0/0.6,0.2/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.1/0.6,0.35/0.6, 0.25/0.6,0.5/0.6, 0.6/0.6,0.5/0.6, 0.6/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6, 0.0/0.6,0.2/0.6 ]),
                                     vector:[0,0.6666666666666667,0,0.33333333333333337,0.33333333333333337,0,0.33333333333333337,0,1,0,1,0.16666666666666669,0.4166666666666667,0.8333333333333334,1,0.8333333333333334,1,1,0.33333333333333337,0,1,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.4166666666666667,0.8333333333333334,1,1,0.33333333333333337,1,0.33333333333333337,0,0.4166666666666667,0.16666666666666669,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.5833333333333334,0.4166666666666667,0.8333333333333334,0.33333333333333337,1,0,0.6666666666666667,0.33333333333333337,0,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.5833333333333334,0.33333333333333337,1,0,0.6666666666666667,0,0.6666666666666667,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.5833333333333334],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                                 'd':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.5/0.6,0.0, 0.6/0.6,0.0, 0.6/0.6,1.0, 0.2/0.6,1.0, 0.0/0.6,0.8, 0.0/0.6,0.6, 0.2/0.6,0.4, 0.5/0.6,0.4, 0.5/0.6,0.5, 0.25/0.6,0.5, 0.1/0.6,0.65, 0.1/0.6,0.75, 0.25/0.6,0.9, 0.5/0.6,0.9 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.5/0.6,0.0, 0.6/0.6,0.0, 0.6/0.6,1.0, 0.2/0.6,1.0, 0.0/0.6,0.8, 0.0/0.6,0.6, 0.2/0.6,0.4, 0.5/0.6,0.4, 0.5/0.6,0.5, 0.25/0.6,0.5, 0.1/0.6,0.65, 0.1/0.6,0.75, 0.25/0.6,0.9, 0.5/0.6,0.9 ]),
                                     vector:[0.8333333333333334,0.9,0.8333333333333334,0,1,0,0.33333333333333337,1,0,0.8,0,0.6,0.33333333333333337,0.4,0.8333333333333334,0.4,0.8333333333333334,0.5,0.8333333333333334,0.9,1,0,1,1,0.33333333333333337,0.4,0.8333333333333334,0.5,0.4166666666666667,0.5,0.4166666666666667,0.9,0.8333333333333334,0.9,1,1,0,0.6,0.33333333333333337,0.4,0.4166666666666667,0.5,0.4166666666666667,0.9,1,1,0.33333333333333337,1,0,0.6,0.4166666666666667,0.5,0.16666666666666669,0.65,0.16666666666666669,0.75,0.4166666666666667,0.9,0.33333333333333337,1,0,0.6,0.16666666666666669,0.65,0.16666666666666669,0.75,0.16666666666666669,0.75,0.33333333333333337,1,0,0.6],
                                     ratio:{x:0.6},
                                     encroach:{'c':1},
                                 },
                                 'e':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.15/0.6,0.0/0.6, 0.45/0.6,0.0/0.6, 0.6/0.6,0.15/0.6, 0.6/0.6,0.35/0.6, 0.1/0.6,0.35/0.6, 0.1/0.6,0.25/0.6, 0.5/0.6,0.25/0.6, 0.5/0.6,0.2/0.6, 0.4/0.6,0.1/0.6, 0.2/0.6,0.1/0.6, 0.1/0.6,0.2/0.6, 0.1/0.6,0.4/0.6, 0.2/0.6,0.5/0.6, 0.4/0.6,0.5/0.6, 0.45/0.6,0.45/0.6, 0.6/0.6,0.45/0.6, 0.45/0.6,0.6/0.6, 0.15/0.6,0.6/0.6, 0.0/0.6,0.45/0.6, 0.0/0.6,0.15/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.15/0.6,0.0/0.6, 0.45/0.6,0.0/0.6, 0.6/0.6,0.15/0.6, 0.6/0.6,0.35/0.6, 0.1/0.6,0.35/0.6, 0.1/0.6,0.25/0.6, 0.5/0.6,0.25/0.6, 0.5/0.6,0.2/0.6, 0.4/0.6,0.1/0.6, 0.2/0.6,0.1/0.6, 0.1/0.6,0.2/0.6, 0.1/0.6,0.4/0.6, 0.2/0.6,0.5/0.6, 0.4/0.6,0.5/0.6, 0.45/0.6,0.45/0.6, 0.6/0.6,0.45/0.6, 0.45/0.6,0.6/0.6, 0.15/0.6,0.6/0.6, 0.0/0.6,0.45/0.6, 0.0/0.6,0.15/0.6 ]),
                                     vector:[0,0.75,0,0.25,0.25,0,0.25,0,0.75,0,1,0.25,1,0.5833333333333334,0.16666666666666669,0.5833333333333334,0.16666666666666669,0.4166666666666667,0.6666666666666667,0.8333333333333334,0.75,0.75,1,0.75,1,0.75,0.75,1,0.25,1,1,0.5833333333333334,0.16666666666666669,0.4166666666666667,0.8333333333333334,0.4166666666666667,0.6666666666666667,0.8333333333333334,1,0.75,0.25,1,1,0.25,1,0.5833333333333334,0.8333333333333334,0.4166666666666667,0.33333333333333337,0.8333333333333334,0.6666666666666667,0.8333333333333334,0.25,1,1,0.25,0.8333333333333334,0.4166666666666667,0.8333333333333334,0.33333333333333337,0.16666666666666669,0.6666666666666667,0.33333333333333337,0.8333333333333334,0.25,1,1,0.25,0.8333333333333334,0.33333333333333337,0.6666666666666667,0.16666666666666669,0.16666666666666669,0.6666666666666667,0.25,1,0,0.75,0.25,0,1,0.25,0.6666666666666667,0.16666666666666669,0.16666666666666669,0.33333333333333337,0.16666666666666669,0.6666666666666667,0,0.75,0.25,0,0.6666666666666667,0.16666666666666669,0.33333333333333337,0.16666666666666669,0.16666666666666669,0.33333333333333337,0,0.75,0.25,0,0.25,0,0.33333333333333337,0.16666666666666669,0.16666666666666669,0.33333333333333337],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                                 'f':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.35/0.5,0.0, 0.5/0.5,0.0, 0.5/0.5,0.1, 0.4/0.5,0.1, 0.3/0.5,0.2, 0.3/0.5,0.4, 0.5/0.5,0.4, 0.5/0.5,0.5, 0.3/0.5,0.5, 0.3/0.5,1.0, 0.2/0.5,1.0, 0.2/0.5,0.5, 0.0/0.5,0.5, 0.0/0.5,0.4, 0.2/0.5,0.4, 0.2/0.5,0.15 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.35/0.5,0.0, 0.5/0.5,0.0, 0.5/0.5,0.1, 0.4/0.5,0.1, 0.3/0.5,0.2, 0.3/0.5,0.4, 0.5/0.5,0.4, 0.5/0.5,0.5, 0.3/0.5,0.5, 0.3/0.5,1.0, 0.2/0.5,1.0, 0.2/0.5,0.5, 0.0/0.5,0.5, 0.0/0.5,0.4, 0.2/0.5,0.4, 0.2/0.5,0.15 ]),
                                     vector:[0.4,0.4,0.4,0.15,0.7,0,0.7,0,1,0,1,0.1,0.6,0.4,1,0.4,1,0.5,0.6,0.5,0.6,1,0.4,1,0.4,0.5,0,0.5,0,0.4,0.7,0,1,0.1,0.8,0.1,0.6,0.4,1,0.5,0.6,0.5,0.6,0.5,0.4,1,0.4,0.5,0.4,0.5,0,0.4,0.4,0.4,0.7,0,0.8,0.1,0.6,0.2,0.6,0.4,0.6,0.5,0.4,0.5,0.4,0.5,0.4,0.4,0.7,0,0.6,0.2,0.6,0.4,0.4,0.5,0.4,0.5,0.7,0,0.6,0.2],
                                     ratio:{x:0.5},
                                     encroach:{'e':1},
                                 },
                                 'g':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0/1.1, 0.4/0.6,0.0/1.1, 0.6/0.6,0.2/1.1, 0.6/0.6,0.9/1.1, 0.4/0.6,1.1/1.1, 0.2/0.6,1.1/1.1, 0.0/0.6,0.9/1.1, 0.0/0.6,0.8/1.1, 0.1/0.6,0.8/1.1, 0.1/0.6,0.85/1.1, 0.25/0.6,1.0/1.1, 0.35/0.6,1.0/1.1, 0.5/0.6,0.85/1.1, 0.5/0.6,0.25/1.1, 0.35/0.6,0.1/1.1, 0.25/0.6,0.1/1.1, 0.1/0.6,0.25/1.1, 0.1/0.6,0.35/1.1, 0.25/0.6,0.5/1.1, 0.5/0.6,0.5/1.1, 0.5/0.6,0.6/1.1, 0.2/0.6,0.6/1.1, 0.0/0.6,0.4/1.1, 0.0/0.6,0.2/1.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.6,0.0/1.1, 0.4/0.6,0.0/1.1, 0.6/0.6,0.2/1.1, 0.6/0.6,0.9/1.1, 0.4/0.6,1.1/1.1, 0.2/0.6,1.1/1.1, 0.0/0.6,0.9/1.1, 0.0/0.6,0.8/1.1, 0.1/0.6,0.8/1.1, 0.1/0.6,0.85/1.1, 0.25/0.6,1.0/1.1, 0.35/0.6,1.0/1.1, 0.5/0.6,0.85/1.1, 0.5/0.6,0.25/1.1, 0.35/0.6,0.1/1.1, 0.25/0.6,0.1/1.1, 0.1/0.6,0.25/1.1, 0.1/0.6,0.35/1.1, 0.25/0.6,0.5/1.1, 0.5/0.6,0.5/1.1, 0.5/0.6,0.6/1.1, 0.2/0.6,0.6/1.1, 0.0/0.6,0.4/1.1, 0.0/0.6,0.2/1.1 ]),
                                     vector:[0,0.36363636363636365,0,0.18181818181818182,0.33333333333333337,0,0.33333333333333337,0,0.6666666666666667,0,1,0.18181818181818182,1,0.8181818181818181,0.6666666666666667,1,0.33333333333333337,1,0.33333333333333337,1,0,0.8181818181818181,0,0.7272727272727273,0,0.7272727272727273,0.16666666666666669,0.7272727272727273,0.16666666666666669,0.7727272727272726,0.4166666666666667,0.45454545454545453,0.8333333333333334,0.45454545454545453,0.8333333333333334,0.5454545454545454,0.33333333333333337,1,0,0.7272727272727273,0.16666666666666669,0.7727272727272726,0.4166666666666667,0.45454545454545453,0.8333333333333334,0.5454545454545454,0.33333333333333337,0.5454545454545454,0.33333333333333337,1,0.16666666666666669,0.7727272727272726,0.4166666666666667,0.9090909090909091,0.16666666666666669,0.3181818181818181,0.4166666666666667,0.45454545454545453,0.33333333333333337,0.5454545454545454,0.33333333333333337,1,0.4166666666666667,0.9090909090909091,0.5833333333333334,0.9090909090909091,0.16666666666666669,0.3181818181818181,0.33333333333333337,0.5454545454545454,0,0.36363636363636365,1,0.8181818181818181,0.33333333333333337,1,0.5833333333333334,0.9090909090909091,0.16666666666666669,0.22727272727272727,0.16666666666666669,0.3181818181818181,0,0.36363636363636365,1,0.8181818181818181,0.5833333333333334,0.9090909090909091,0.8333333333333334,0.7727272727272726,0.16666666666666669,0.22727272727272727,0,0.36363636363636365,0.33333333333333337,0,1,0.18181818181818182,1,0.8181818181818181,0.8333333333333334,0.7727272727272726,0.4166666666666667,0.09090909090909091,0.16666666666666669,0.22727272727272727,0.33333333333333337,0,1,0.18181818181818182,0.8333333333333334,0.7727272727272726,0.8333333333333334,0.22727272727272727,0.5833333333333334,0.09090909090909091,0.4166666666666667,0.09090909090909091,0.33333333333333337,0,1,0.18181818181818182,0.8333333333333334,0.22727272727272727,0.5833333333333334,0.09090909090909091,0.5833333333333334,0.09090909090909091,0.33333333333333337,0,1,0.18181818181818182],
                                     ratio:{x:0.6,y:1.1}, offset:{y:0.4},
                                     encroach:{'f':1},
                                 },
                                 'h':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0, 0.1/0.6,0.0, 0.1/0.6,0.4, 0.4/0.6,0.4, 0.6/0.6,0.6, 0.6/0.6,1.0, 0.5/0.6,1.0, 0.5/0.6,0.65, 0.35/0.6,0.5, 0.1/0.6,0.5, 0.1/0.6,1.0, 0.0/0.6,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0, 0.1/0.6,0.0, 0.1/0.6,0.4, 0.4/0.6,0.4, 0.6/0.6,0.6, 0.6/0.6,1.0, 0.5/0.6,1.0, 0.5/0.6,0.65, 0.35/0.6,0.5, 0.1/0.6,0.5, 0.1/0.6,1.0, 0.0/0.6,1.0 ]),
                                     vector:[0.16666666666666669,1,0,1,0,0,0,0,0.16666666666666669,0,0.16666666666666669,0.4,1,0.6,1,1,0.8333333333333334,1,0.16666666666666669,0.5,0.16666666666666669,1,0,0,1,0.6,0.8333333333333334,1,0.8333333333333334,0.65,0.16666666666666669,0.5,0,0,0.16666666666666669,0.4,0.6666666666666667,0.4,1,0.6,0.8333333333333334,0.65,0.5833333333333334,0.5,0.16666666666666669,0.5,0.16666666666666669,0.4,0.6666666666666667,0.4,0.8333333333333334,0.65,0.5833333333333334,0.5,0.5833333333333334,0.5,0.16666666666666669,0.4,0.6666666666666667,0.4],
                                     ratio:{x:0.6},
                                 },
                                 'i':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.1,0.0/0.9, 0.1/0.1,0.0/0.9, 0.1/0.1,0.2/0.9, 0.0/0.1,0.2/0.9, 0.0/0.1,0.3/0.9, 0.1/0.1,0.3/0.9, 0.1/0.1,0.9/0.9, 0.0/0.1,0.9/0.9 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.1,0.0/0.9, 0.1/0.1,0.0/0.9, 0.1/0.1,0.2/0.9, 0.0/0.1,0.2/0.9, 0.0/0.1,0.3/0.9, 0.1/0.1,0.3/0.9, 0.1/0.1,0.9/0.9, 0.0/0.1,0.9/0.9 ]),
                                     vector:[0,0,1,0,1,0.22222222222222224,0,0.3333333333333333,1,0.3333333333333333,1,1,0,0,1,0.22222222222222224,0,0.22222222222222224,0,0.3333333333333333,1,1,0,1],
                                     ratio:{x:0.1,y:0.9}, offset:{y:0.1},
                                 },
                                 'j':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.3,0.0/1.1, 0.3/0.3,0.0/1.1, 0.3/0.3,0.2/1.1, 0.2/0.3,0.2/1.1, 0.2/0.3,0.3/1.1, 0.3/0.3,0.3/1.1, 0.3/0.3,0.95/1.1, 0.15/0.3,1.1/1.1,  0.0/0.3,1.1/1.1, 0.0/0.3,1.0/1.1,  0.1/0.3,1.0/1.1, 0.2/0.3,0.9/1.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.3,0.0/1.1, 0.3/0.3,0.0/1.1, 0.3/0.3,0.2/1.1, 0.2/0.3,0.2/1.1, 0.2/0.3,0.3/1.1, 0.3/0.3,0.3/1.1, 0.3/0.3,0.95/1.1, 0.15/0.3,1.1/1.1,  0.0/0.3,1.1/1.1, 0.0/0.3,1.0/1.1,  0.1/0.3,1.0/1.1, 0.2/0.3,0.9/1.1 ]),
                                     vector:[0.6666666666666667,0,1,0,1,0.18181818181818182,0.6666666666666667,0.2727272727272727,1,0.2727272727272727,1,0.8636363636363635,1,0.8636363636363635,0.5,1,0,1,0,1,0,0.9090909090909091,0.33333333333333337,0.9090909090909091,0.6666666666666667,0,1,0.18181818181818182,0.6666666666666667,0.18181818181818182,1,0.8636363636363635,0,1,0.33333333333333337,0.9090909090909091,1,0.8636363636363635,0.33333333333333337,0.9090909090909091,0.6666666666666667,0.8181818181818181,0.6666666666666667,0.2727272727272727,1,0.8636363636363635,0.6666666666666667,0.8181818181818181],
                                     ratio:{x:0.3,y:1.1}, offset:{y:0.1},
                                     encroach:{
@@ -20267,202 +23351,202 @@
                                     },
                                 },
                                 'k':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0, 0.1/0.6,0.0, 0.1/0.6,0.4, 0.6/0.6,0.4, 0.6/0.6,0.5, 0.4/0.6,0.5, 0.6/0.6,1.0, 0.5/0.6,1.0, 0.3/0.6,0.5, 0.1/0.6,0.5, 0.1/0.6,1.0, 0.0/0.6,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0, 0.1/0.6,0.0, 0.1/0.6,0.4, 0.6/0.6,0.4, 0.6/0.6,0.5, 0.4/0.6,0.5, 0.6/0.6,1.0, 0.5/0.6,1.0, 0.3/0.6,0.5, 0.1/0.6,0.5, 0.1/0.6,1.0, 0.0/0.6,1.0 ]),
                                     vector:[0.16666666666666669,1,0,1,0,0,0,0,0.16666666666666669,0,0.16666666666666669,0.4,0.16666666666666669,0.4,1,0.4,1,0.5,0.6666666666666667,0.5,1,1,0.8333333333333334,1,0.16666666666666669,0.5,0.16666666666666669,1,0,0,0.16666666666666669,0.4,1,0.5,0.6666666666666667,0.5,0.6666666666666667,0.5,0.8333333333333334,1,0.5,0.5,0.16666666666666669,0.5,0,0,0.16666666666666669,0.4,0.16666666666666669,0.4,0.6666666666666667,0.5,0.5,0.5,0.5,0.5,0.16666666666666669,0.5,0.16666666666666669,0.4],
                                     ratio:{x:0.6},
                                 },
                                 'l':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.4,0.0, 0.1/0.4,0.0, 0.1/0.4,0.75, 0.25/0.4,0.9, 0.4/0.4,0.9, 0.4/0.4,1.0, 0.2/0.4,1.0, 0.0/0.4,0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.4,0.0, 0.1/0.4,0.0, 0.1/0.4,0.75, 0.25/0.4,0.9, 0.4/0.4,0.9, 0.4/0.4,1.0, 0.2/0.4,1.0, 0.0/0.4,0.8 ]),
                                     vector:[0,0.8,0,0,0.25,0,0.625,0.9,1,0.9,1,1,1,1,0.5,1,0,0.8,0,0.8,0.25,0,0.25,0.75,0.625,0.9,1,1,0,0.8,0,0.8,0.25,0.75,0.625,0.9],
                                     ratio:{x:0.4},
                                 },
                                 'm':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/1.1,0.0/0.6, 0.4/1.1,0.0/0.6,0.5/1.1,0.1/0.6, 0.5/1.1,0.0/0.6, 0.9/1.1,0.0/0.6, 1.1/1.1,0.2/0.6, 1.1/1.1,0.6/0.6, 1.0/1.1,0.6/0.6, 1.0/1.1,0.25/0.6, 0.85/1.1,0.1/0.6, 0.6/1.1,0.1/0.6, 0.6/1.1,0.6/0.6, 0.5/1.1,0.6/0.6, 0.5/1.1,0.25/0.6, 0.35/1.1,0.1/0.6, 0.1/1.1,0.1/0.6, 0.1/1.1,0.6/0.6, 0.0/1.1,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/1.1,0.0/0.6, 0.4/1.1,0.0/0.6,0.5/1.1,0.1/0.6, 0.5/1.1,0.0/0.6, 0.9/1.1,0.0/0.6, 1.1/1.1,0.2/0.6, 1.1/1.1,0.6/0.6, 1.0/1.1,0.6/0.6, 1.0/1.1,0.25/0.6, 0.85/1.1,0.1/0.6, 0.6/1.1,0.1/0.6, 0.6/1.1,0.6/0.6, 0.5/1.1,0.6/0.6, 0.5/1.1,0.25/0.6, 0.35/1.1,0.1/0.6, 0.1/1.1,0.1/0.6, 0.1/1.1,0.6/0.6, 0.0/1.1,0.6/0.6 ]),
                                     vector:[0.09090909090909091,1,0,1,0,0,0,0,0.36363636363636365,0,0.45454545454545453,0.16666666666666669,0.45454545454545453,0.16666666666666669,0.45454545454545453,0,0.8181818181818181,0,1,0.33333333333333337,1,1,0.9090909090909091,1,0.5454545454545454,0.16666666666666669,0.5454545454545454,1,0.45454545454545453,1,0.09090909090909091,0.16666666666666669,0.09090909090909091,1,0,0,1,0.33333333333333337,0.9090909090909091,1,0.9090909090909091,0.4166666666666667,0.5454545454545454,0.16666666666666669,0.45454545454545453,1,0.45454545454545453,0.4166666666666667,0.3181818181818181,0.16666666666666669,0.09090909090909091,0.16666666666666669,0,0,0.8181818181818181,0,1,0.33333333333333337,0.9090909090909091,0.4166666666666667,0.3181818181818181,0.16666666666666669,0,0,0.45454545454545453,0.16666666666666669,0.8181818181818181,0,0.9090909090909091,0.4166666666666667,0.7727272727272726,0.16666666666666669,0.45454545454545453,0.4166666666666667,0.3181818181818181,0.16666666666666669,0.45454545454545453,0.16666666666666669,0.8181818181818181,0,0.7727272727272726,0.16666666666666669,0.5454545454545454,0.16666666666666669,0.5454545454545454,0.16666666666666669,0.45454545454545453,0.4166666666666667,0.45454545454545453,0.16666666666666669,0.45454545454545453,0.16666666666666669,0.8181818181818181,0,0.5454545454545454,0.16666666666666669],
                                     ratio:{x:1.1,y:0.6}, offset:{y:0.4},
                                 },
                                 'n':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0/0.6, 0.4/0.6,0.0/0.6, 0.6/0.6,0.2/0.6, 0.6/0.6,0.6/0.6, 0.5/0.6,0.6/0.6, 0.5/0.6,0.25/0.6, 0.35/0.6,0.1/0.6, 0.1/0.6,0.1/0.6, 0.1/0.6,0.6/0.6, 0.0/0.6,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0/0.6, 0.4/0.6,0.0/0.6, 0.6/0.6,0.2/0.6, 0.6/0.6,0.6/0.6, 0.5/0.6,0.6/0.6, 0.5/0.6,0.25/0.6, 0.35/0.6,0.1/0.6, 0.1/0.6,0.1/0.6, 0.1/0.6,0.6/0.6, 0.0/0.6,0.6/0.6 ]),
                                     vector:[0.16666666666666669,1,0,1,0,0,1,0.33333333333333337,1,1,0.8333333333333334,1,0.16666666666666669,0.16666666666666669,0.16666666666666669,1,0,0,1,0.33333333333333337,0.8333333333333334,1,0.8333333333333334,0.4166666666666667,0.5833333333333334,0.16666666666666669,0.16666666666666669,0.16666666666666669,0,0,0.6666666666666667,0,1,0.33333333333333337,0.8333333333333334,0.4166666666666667,0.5833333333333334,0.16666666666666669,0,0,0.6666666666666667,0,0.6666666666666667,0,0.8333333333333334,0.4166666666666667,0.5833333333333334,0.16666666666666669],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                                 'o':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0/0.6, 0.4/0.6,0.0/0.6, 0.6/0.6,0.2/0.6, 0.6/0.6,0.4/0.6, 0.4/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6, 0.0/0.6,0.2/0.6, 0.2/0.6,0.0/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.1/0.6,0.35/0.6, 0.25/0.6,0.5/0.6, 0.35/0.6,0.5/0.6, 0.5/0.6,0.35/0.6, 0.5/0.6,0.25/0.6, 0.35/0.6,0.1/0.6, 0.25/0.6,0.1/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.6,0.0/0.6, 0.4/0.6,0.0/0.6, 0.6/0.6,0.2/0.6, 0.6/0.6,0.4/0.6, 0.4/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6, 0.0/0.6,0.2/0.6, 0.2/0.6,0.0/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.1/0.6,0.35/0.6, 0.25/0.6,0.5/0.6, 0.35/0.6,0.5/0.6, 0.5/0.6,0.35/0.6, 0.5/0.6,0.25/0.6, 0.35/0.6,0.1/0.6, 0.25/0.6,0.1/0.6 ]),
                                     vector:[0.5833333333333334,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.33333333333333337,0,0.33333333333333337,0,0.6666666666666667,0,1,0.33333333333333337,1,0.33333333333333337,1,0.6666666666666667,0.6666666666666667,1,0.6666666666666667,1,0.33333333333333337,1,0,0.6666666666666667,0,0.6666666666666667,0,0.33333333333333337,0.33333333333333337,0,0.33333333333333337,0,0.4166666666666667,0.16666666666666669,0.16666666666666669,0.4166666666666667,0.5833333333333334,0.16666666666666669,0.33333333333333337,0,1,0.33333333333333337,0,0.6666666666666667,0.33333333333333337,0,0.16666666666666669,0.4166666666666667,0.8333333333333334,0.4166666666666667,0.5833333333333334,0.16666666666666669,1,0.33333333333333337,0,0.6666666666666667,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.5833333333333334,0.8333333333333334,0.5833333333333334,0.8333333333333334,0.4166666666666667,1,0.33333333333333337,0,0.6666666666666667,0.16666666666666669,0.5833333333333334,0.4166666666666667,0.8333333333333334,0.8333333333333334,0.5833333333333334,1,0.33333333333333337,0.6666666666666667,1,0.6666666666666667,1,0,0.6666666666666667,0.4166666666666667,0.8333333333333334,0.5833333333333334,0.8333333333333334,0.8333333333333334,0.5833333333333334,0.6666666666666667,1,0.6666666666666667,1,0.4166666666666667,0.8333333333333334,0.5833333333333334,0.8333333333333334],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                                 'p':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0, 0.4/0.6,0.0, 0.6/0.6,0.2, 0.6/0.6,0.4, 0.4/0.6,0.6, 0.1/0.6,0.6, 0.1/0.6,0.5, 0.35/0.6,0.5, 0.5/0.6,0.35, 0.5/0.6,0.25, 0.35/0.6,0.1, 0.1/0.6,0.1, 0.1/0.6,1.0, 0.0/0.6,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0, 0.4/0.6,0.0, 0.6/0.6,0.2, 0.6/0.6,0.4, 0.4/0.6,0.6, 0.1/0.6,0.6, 0.1/0.6,0.5, 0.35/0.6,0.5, 0.5/0.6,0.35, 0.5/0.6,0.25, 0.35/0.6,0.1, 0.1/0.6,0.1, 0.1/0.6,1.0, 0.0/0.6,1.0 ]),
                                     vector:[0.16666666666666669,1,0,1,0,0,0.6666666666666667,0,1,0.2,1,0.4,0.6666666666666667,0.6,0.16666666666666669,0.6,0.16666666666666669,0.5,0.16666666666666669,0.1,0.16666666666666669,1,0,0,0.6666666666666667,0.6,0.16666666666666669,0.5,0.5833333333333334,0.5,0.5833333333333334,0.1,0.16666666666666669,0.1,0,0,1,0.4,0.6666666666666667,0.6,0.5833333333333334,0.5,0.5833333333333334,0.1,0,0,0.6666666666666667,0,1,0.4,0.5833333333333334,0.5,0.8333333333333334,0.35,0.8333333333333334,0.25,0.5833333333333334,0.1,0.6666666666666667,0,1,0.4,0.8333333333333334,0.35,0.8333333333333334,0.25,0.8333333333333334,0.25,0.6666666666666667,0,1,0.4],
                                     ratio:{x:0.6}, offset:{y:0.4},
                                 },
                                 'q':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.6/0.6,0.0, 0.2/0.6,0.0, 0.0/0.6,0.2, 0.0/0.6,0.4, 0.2/0.6,0.6, 0.5/0.6,0.6, 0.5/0.6,0.5, 0.25/0.6,0.5, 0.1/0.6,0.35, 0.1/0.6,0.25, 0.25/0.6,0.1, 0.5/0.6,0.1, 0.5/0.6,1.0, 0.6/0.6,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.6/0.6,0.0, 0.2/0.6,0.0, 0.0/0.6,0.2, 0.0/0.6,0.4, 0.2/0.6,0.6, 0.5/0.6,0.6, 0.5/0.6,0.5, 0.25/0.6,0.5, 0.1/0.6,0.35, 0.1/0.6,0.25, 0.25/0.6,0.1, 0.5/0.6,0.1, 0.5/0.6,1.0, 0.6/0.6,1.0 ]),
                                     vector:[1,0,1,1,0.8333333333333334,1,0.4166666666666667,0.5,0.8333333333333334,0.5,0.8333333333333334,0.6,0.33333333333333337,0.6,0,0.4,0,0.2,1,0,0.8333333333333334,1,0.8333333333333334,0.1,0.4166666666666667,0.5,0.8333333333333334,0.6,0.33333333333333337,0.6,0.33333333333333337,0,1,0,0.8333333333333334,0.1,0.16666666666666669,0.35,0.4166666666666667,0.5,0.33333333333333337,0.6,0.33333333333333337,0,0.8333333333333334,0.1,0.4166666666666667,0.1,0.16666666666666669,0.35,0.33333333333333337,0.6,0,0.2,0,0.2,0.33333333333333337,0,0.4166666666666667,0.1,0.16666666666666669,0.25,0.16666666666666669,0.35,0,0.2,0,0.2,0.4166666666666667,0.1,0.16666666666666669,0.25],
                                     ratio:{x:0.6}, offset:{y:0.4},
                                 },
                                 'r':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0/0.6, 0.1/0.6,0.0/0.6, 0.1/0.6,0.1/0.6, 0.2/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.1/0.6,0.6/0.6, 0.0/0.6,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0/0.6, 0.1/0.6,0.0/0.6, 0.1/0.6,0.1/0.6, 0.2/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.1/0.6,0.6/0.6, 0.0/0.6,0.6/0.6 ]),
                                     vector:[0.16666666666666669,1,0,1,0,0,0,0,0.16666666666666669,0,0.16666666666666669,0.16666666666666669,0.16666666666666669,0.16666666666666669,0.33333333333333337,0,1,0,1,0,1,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.16666666666666669,0.4166666666666667,0.16666666666666669,1,0,0,0.16666666666666669,0.16666666666666669,1,0,0.4166666666666667,0.16666666666666669,0.16666666666666669,0.4166666666666667,0,0,0.16666666666666669,0.16666666666666669,0.16666666666666669,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.16666666666666669,0.4166666666666667],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                                 's':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.6/0.6,0.25/0.6, 0.6/0.6,0.4/0.6, 0.4/0.6,0.6/0.6, 0.0/0.6,0.6/0.6, 0.0/0.6,0.5/0.6, 0.35/0.6,0.5/0.6, 0.5/0.6,0.35/0.6, 0.0/0.6,0.35/0.6, 0.0/0.6,0.2/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.25/0.6,0.1/0.6, 0.1/0.6,0.25/0.6, 0.6/0.6,0.25/0.6, 0.6/0.6,0.4/0.6, 0.4/0.6,0.6/0.6, 0.0/0.6,0.6/0.6, 0.0/0.6,0.5/0.6, 0.35/0.6,0.5/0.6, 0.5/0.6,0.35/0.6, 0.0/0.6,0.35/0.6, 0.0/0.6,0.2/0.6 ]),
                                     vector:[0,0.5833333333333334,0,0.33333333333333337,0.33333333333333337,0,0.33333333333333337,0,1,0,1,0.16666666666666669,1,0.4166666666666667,1,0.6666666666666667,0.6666666666666667,1,0.6666666666666667,1,0,1,0,0.8333333333333334,0.33333333333333337,0,1,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.6666666666666667,1,0,0.8333333333333334,0.5833333333333334,0.8333333333333334,0.33333333333333337,0,0.4166666666666667,0.16666666666666669,0.16666666666666669,0.4166666666666667,0.6666666666666667,1,0.5833333333333334,0.8333333333333334,0.8333333333333334,0.5833333333333334,0,0.5833333333333334,0.33333333333333337,0,0.16666666666666669,0.4166666666666667,1,0.4166666666666667,0.6666666666666667,1,0.8333333333333334,0.5833333333333334,0.8333333333333334,0.5833333333333334,0,0.5833333333333334,0.16666666666666669,0.4166666666666667,0.16666666666666669,0.4166666666666667,1,0.4166666666666667,0.8333333333333334,0.5833333333333334],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                     encroach:{'r':1},
                                 },
                                 't':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.5,0.0, 0.3/0.5,0.0, 0.3/0.5,0.4, 0.5/0.5,0.4, 0.5/0.5,0.5, 0.3/0.5,0.5, 0.3/0.5,1.0, 0.2/0.5,1.0, 0.2/0.5,0.5, 0.0/0.5,0.5, 0.0/0.5,0.4, 0.2/0.5,0.4 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.5,0.0, 0.3/0.5,0.0, 0.3/0.5,0.4, 0.5/0.5,0.4, 0.5/0.5,0.5, 0.3/0.5,0.5, 0.3/0.5,1.0, 0.2/0.5,1.0, 0.2/0.5,0.5, 0.0/0.5,0.5, 0.0/0.5,0.4, 0.2/0.5,0.4 ]),
                                     vector:[0.4,0.4,0.4,0,0.6,0,0.6,0.4,1,0.4,1,0.5,0.6,0.5,0.6,1,0.4,1,0.4,0.5,0,0.5,0,0.4,0.4,0.4,0.6,0,0.6,0.4,0.6,0.4,1,0.5,0.6,0.5,0.6,0.5,0.4,1,0.4,0.5,0.4,0.5,0,0.4,0.4,0.4,0.4,0.4,0.6,0.4,0.6,0.5,0.6,0.5,0.4,0.5,0.4,0.4],
                                     ratio:{x:0.5},
                                     encroach:{'l':1},
                                 },
                                 'u':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0/0.6, 0.1/0.6,0.0/0.6, 0.1/0.6,0.35/0.6, 0.25/0.6,0.5/0.6, 0.5/0.6,0.5/0.6, 0.5/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0/0.6, 0.1/0.6,0.0/0.6, 0.1/0.6,0.35/0.6, 0.25/0.6,0.5/0.6, 0.5/0.6,0.5/0.6, 0.5/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.6/0.6, 0.2/0.6,0.6/0.6, 0.0/0.6,0.4/0.6 ]),
                                     vector:[0,0.6666666666666667,0,0,0.16666666666666669,0,0.8333333333333334,0.8333333333333334,0.8333333333333334,0,1,0,0,0.6666666666666667,0.16666666666666669,0,0.16666666666666669,0.5833333333333334,0.8333333333333334,0.8333333333333334,1,0,1,1,0.33333333333333337,1,0,0.6666666666666667,0.16666666666666669,0.5833333333333334,0.4166666666666667,0.8333333333333334,0.8333333333333334,0.8333333333333334,1,1,0.33333333333333337,1,0.16666666666666669,0.5833333333333334,0.4166666666666667,0.8333333333333334,0.4166666666666667,0.8333333333333334,1,1,0.33333333333333337,1],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                     encroach:{'a':1},
                                 },
                                 'v':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0/0.6, 0.1/0.6,0.0/0.6, 0.3/0.6,0.45/0.6, 0.5/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.35/0.6,0.6/0.6, 0.25/0.6,0.6/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0/0.6, 0.1/0.6,0.0/0.6, 0.3/0.6,0.45/0.6, 0.5/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.35/0.6,0.6/0.6, 0.25/0.6,0.6/0.6 ]),
                                     vector:[0.5833333333333334,1,0.4166666666666667,1,0,0,0,0,0.16666666666666669,0,0.5,0.75,0.5,0.75,0.8333333333333334,0,1,0,0.5833333333333334,1,0,0,0.5,0.75,0.5,0.75,1,0,0.5833333333333334,1],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                                 'w':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/1.1,0.0/0.6, 0.1/1.1,0.0/0.6, 0.1/1.1,0.35/0.6, 0.25/1.1,0.5/0.6, 0.5/1.1,0.5/0.6, 0.5/1.1,0.0/0.6, 0.6/1.1,0.0/0.6, 0.6/1.1,0.35/0.6, 0.75/1.1,0.5/0.6, 1.0/1.1,0.5/0.6, 1.0/1.1,0.0/0.6, 1.1/1.1,0.0/0.6, 1.1/1.1,0.6/0.6, 0.7/1.1,0.6/0.6, 0.6/1.1,0.5/0.6, 0.6/1.1,0.6/0.6, 0.2/1.1,0.6/0.6, 0.0/1.1,0.4/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/1.1,0.0/0.6, 0.1/1.1,0.0/0.6, 0.1/1.1,0.35/0.6, 0.25/1.1,0.5/0.6, 0.5/1.1,0.5/0.6, 0.5/1.1,0.0/0.6, 0.6/1.1,0.0/0.6, 0.6/1.1,0.35/0.6, 0.75/1.1,0.5/0.6, 1.0/1.1,0.5/0.6, 1.0/1.1,0.0/0.6, 1.1/1.1,0.0/0.6, 1.1/1.1,0.6/0.6, 0.7/1.1,0.6/0.6, 0.6/1.1,0.5/0.6, 0.6/1.1,0.6/0.6, 0.2/1.1,0.6/0.6, 0.0/1.1,0.4/0.6 ]),
                                     vector:[0,0.6666666666666667,0,0,0.09090909090909091,0,0.45454545454545453,0.8333333333333334,0.45454545454545453,0,0.5454545454545454,0,0.9090909090909091,0.8333333333333334,0.9090909090909091,0,1,0,1,1,0.6363636363636362,1,0.5454545454545454,0.8333333333333334,0.5454545454545454,0.8333333333333334,0.5454545454545454,1,0.18181818181818182,1,0,0.6666666666666667,0.09090909090909091,0,0.09090909090909091,0.5833333333333334,0.45454545454545453,0.8333333333333334,0.5454545454545454,0,0.5454545454545454,0.5833333333333334,0.9090909090909091,0.8333333333333334,1,0,1,1,0.18181818181818182,1,0,0.6666666666666667,0.09090909090909091,0.5833333333333334,0.6818181818181818,0.8333333333333334,0.9090909090909091,0.8333333333333334,1,1,0.18181818181818182,1,0.09090909090909091,0.5833333333333334,0.22727272727272727,0.8333333333333334,0.6818181818181818,0.8333333333333334,1,1,0.5454545454545454,0.8333333333333334,0.18181818181818182,1,0.22727272727272727,0.8333333333333334,0.45454545454545453,0.8333333333333334,0.5454545454545454,0.5833333333333334,0.6818181818181818,0.8333333333333334,0.5454545454545454,0.8333333333333334,0.5454545454545454,0.8333333333333334,0.18181818181818182,1,0.45454545454545453,0.8333333333333334,0.45454545454545453,0.8333333333333334,0.5454545454545454,0.5833333333333334,0.5454545454545454,0.8333333333333334],
                                     ratio:{x:1.1,y:0.6}, offset:{y:0.4},
                                 },
                                 'x':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0/0.6, 0.125/0.6,0.0/0.6, 0.3/0.6,0.225/0.6, 0.475/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.366/0.6,0.3/0.6, 0.6/0.6,0.6/0.6, 0.475/0.6,0.6/0.6, 0.3/0.6,0.375/0.6, 0.125/0.6,0.6/0.6, 0.0/0.6,0.6/0.6, 0.233/0.6,0.3/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0/0.6, 0.125/0.6,0.0/0.6, 0.3/0.6,0.225/0.6, 0.475/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.366/0.6,0.3/0.6, 0.6/0.6,0.6/0.6, 0.475/0.6,0.6/0.6, 0.3/0.6,0.375/0.6, 0.125/0.6,0.6/0.6, 0.0/0.6,0.6/0.6, 0.233/0.6,0.3/0.6 ]),
                                     vector:[0.38833333333333336,0.5,0,0,0.20833333333333334,0,0.5,0.375,0.7916666666666666,0,1,0,0.61,0.5,1,1,0.7916666666666666,1,0.5,0.625,0.20833333333333334,1,0,1,0.38833333333333336,0.5,0.20833333333333334,0,0.5,0.375,0.5,0.375,1,0,0.61,0.5,0.61,0.5,0.7916666666666666,1,0.5,0.625,0.5,0.625,0,1,0.38833333333333336,0.5,0.38833333333333336,0.5,0.5,0.375,0.61,0.5,0.61,0.5,0.5,0.625,0.38833333333333336,0.5],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                                 'y':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0/1.1, 0.1/0.6,0.0/1.1, 0.1/0.6,0.35/1.1, 0.25/0.6,0.5/1.1, 0.5/0.6,0.5/1.1, 0.5/0.6,0.0/1.1, 0.6/0.6,0.0/1.1, 0.6/0.6,0.9/1.1, 0.4/0.6,1.1/1.1, 0.2/0.6,1.1/1.1, 0.0/0.6,0.9/1.1, 0.0/0.6,0.8/1.1, 0.1/0.6,0.8/1.1, 0.1/0.6,0.85/1.1, 0.25/0.6,1.0/1.1, 0.35/0.6,1.0/1.1, 0.5/0.6,0.85/1.1, 0.5/0.6,0.6/1.1,0.2/0.6,0.6/1.1, 0.0/0.6,0.4/1.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0/1.1, 0.1/0.6,0.0/1.1, 0.1/0.6,0.35/1.1, 0.25/0.6,0.5/1.1, 0.5/0.6,0.5/1.1, 0.5/0.6,0.0/1.1, 0.6/0.6,0.0/1.1, 0.6/0.6,0.9/1.1, 0.4/0.6,1.1/1.1, 0.2/0.6,1.1/1.1, 0.0/0.6,0.9/1.1, 0.0/0.6,0.8/1.1, 0.1/0.6,0.8/1.1, 0.1/0.6,0.85/1.1, 0.25/0.6,1.0/1.1, 0.35/0.6,1.0/1.1, 0.5/0.6,0.85/1.1, 0.5/0.6,0.6/1.1,0.2/0.6,0.6/1.1, 0.0/0.6,0.4/1.1 ]),
                                     vector:[0,0.36363636363636365,0,0,0.16666666666666669,0,0.8333333333333334,0.45454545454545453,0.8333333333333334,0,1,0,1,0.8181818181818181,0.6666666666666667,1,0.33333333333333337,1,0.33333333333333337,1,0,0.8181818181818181,0,0.7272727272727273,0,0.7272727272727273,0.16666666666666669,0.7272727272727273,0.16666666666666669,0.7727272727272726,0,0.36363636363636365,0.16666666666666669,0,0.16666666666666669,0.3181818181818181,0.8333333333333334,0.45454545454545453,1,0,1,0.8181818181818181,0.33333333333333337,1,0,0.7272727272727273,0.16666666666666669,0.7727272727272726,0.33333333333333337,0.5454545454545454,0,0.36363636363636365,0.16666666666666669,0.3181818181818181,0.33333333333333337,1,0.16666666666666669,0.7727272727272726,0.4166666666666667,0.9090909090909091,0.33333333333333337,0.5454545454545454,0.16666666666666669,0.3181818181818181,0.4166666666666667,0.45454545454545453,0.33333333333333337,1,0.4166666666666667,0.9090909090909091,0.5833333333333334,0.9090909090909091,0.8333333333333334,0.5454545454545454,0.33333333333333337,0.5454545454545454,0.4166666666666667,0.45454545454545453,1,0.8181818181818181,0.33333333333333337,1,0.5833333333333334,0.9090909090909091,0.8333333333333334,0.5454545454545454,0.4166666666666667,0.45454545454545453,0.8333333333333334,0.45454545454545453,1,0.8181818181818181,0.5833333333333334,0.9090909090909091,0.8333333333333334,0.7727272727272726,0.8333333333333334,0.5454545454545454,0.8333333333333334,0.45454545454545453,1,0.8181818181818181,1,0.8181818181818181,0.8333333333333334,0.7727272727272726,0.8333333333333334,0.5454545454545454],
                                     ratio:{x:0.6,y:1.1}, offset:{y:0.4},
                                 },
                                 'z':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.15/0.6,0.5/0.6, 0.6/0.6,0.5/0.6, 0.6/0.6,0.6/0.6, 0.0/0.6,0.6/0.6, 0.0/0.6,0.5/0.6, 0.45/0.6,0.1/0.6, 0.0/0.6,0.1/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0/0.6, 0.6/0.6,0.0/0.6, 0.6/0.6,0.1/0.6, 0.15/0.6,0.5/0.6, 0.6/0.6,0.5/0.6, 0.6/0.6,0.6/0.6, 0.0/0.6,0.6/0.6, 0.0/0.6,0.5/0.6, 0.45/0.6,0.1/0.6, 0.0/0.6,0.1/0.6 ]),
                                     vector:[0.75,0.16666666666666669,0,0.16666666666666669,0,0,0,0,1,0,1,0.16666666666666669,0.25,0.8333333333333334,1,0.8333333333333334,1,1,1,1,0,1,0,0.8333333333333334,0.75,0.16666666666666669,0,0,1,0.16666666666666669,0.25,0.8333333333333334,1,1,0,0.8333333333333334,0,0.8333333333333334,0.75,0.16666666666666669,1,0.16666666666666669,1,0.16666666666666669,0.25,0.8333333333333334,0,0.8333333333333334],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.4},
                                 },
                             
                                 '0':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.0/0.8,0.2, 0.2/0.8,0.0, 0.25/0.8,0.1, 0.1/0.8,0.25, 0.1/0.8,0.75, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.0/0.8,0.2, 0.2/0.8,0.0, 0.25/0.8,0.1, 0.1/0.8,0.25, 0.1/0.8,0.75, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1 ]),
                                     vector:[0.6875,0.1,0.3125,0.1,0.25,0,0,0.2,0.25,0,0.3125,0.1,0.6875,0.1,0.25,0,0.7499999999999999,0,0,0.2,0.3125,0.1,0.125,0.25,0.8749999999999999,0.25,0.6875,0.1,0.7499999999999999,0,0,0.8,0,0.2,0.125,0.25,0.8749999999999999,0.25,0.7499999999999999,0,1,0.2,0,0.8,0.125,0.25,0.125,0.75,0.8749999999999999,0.75,0.8749999999999999,0.25,1,0.2,0.25,1,0,0.8,0.125,0.75,0.8749999999999999,0.75,1,0.2,1,0.8,0.25,1,0.125,0.75,0.3125,0.9,0.6875,0.9,0.8749999999999999,0.75,1,0.8,0.7499999999999999,1,0.25,1,0.3125,0.9,0.6875,0.9,1,0.8,0.7499999999999999,1,0.7499999999999999,1,0.3125,0.9,0.6875,0.9],
                                     ratio:{x:0.8},
                                 },
                                 '1':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.5,0.0, 0.3/0.5,0.0, 0.3/0.5,0.9, 0.5/0.5,0.9, 0.5/0.5,1.0, 0.0/0.5,1.0, 0.0/0.5,0.9, 0.2/0.5,0.9, 0.2/0.5,0.1, 0.0/0.5,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.5,0.0, 0.3/0.5,0.0, 0.3/0.5,0.9, 0.5/0.5,0.9, 0.5/0.5,1.0, 0.0/0.5,1.0, 0.0/0.5,0.9, 0.2/0.5,0.9, 0.2/0.5,0.1, 0.0/0.5,0.1 ]),
                                     vector:[0.4,0.1,0,0.1,0,0,0.6,0.9,1,0.9,1,1,1,1,0,1,0,0.9,0.4,0.1,0,0,0.6,0,1,1,0,0.9,0.4,0.9,0.4,0.9,0.4,0.1,0.6,0,0.6,0.9,1,1,0.4,0.9,0.4,0.9,0.6,0,0.6,0.9],
                                     ratio:{x:0.5},
                                 },
                                 '2':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.5, 0.2/0.8,0.9, 0.8/0.8,0.9, 0.8/0.8,1.0, 0.0/0.8,1.0, 0.0/0.8,0.9, 0.7/0.8,0.45, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1, 0.08/0.8,0.26, 0.0/0.8,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.5, 0.2/0.8,0.9, 0.8/0.8,0.9, 0.8/0.8,1.0, 0.0/0.8,1.0, 0.0/0.8,0.9, 0.7/0.8,0.45, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1, 0.08/0.8,0.26, 0.0/0.8,0.2 ]),
                                     vector:[0.09999999999999999,0.26,0,0.2,0.25,0,0.7499999999999999,0,1,0.2,1,0.5,0.25,0.9,1,0.9,1,1,1,1,0,1,0,0.9,0.3125,0.1,0.09999999999999999,0.26,0.25,0,0.25,0.9,1,1,0,0.9,0.6875,0.1,0.3125,0.1,0.25,0,1,0.5,0.25,0.9,0,0.9,0.6875,0.1,0.25,0,0.7499999999999999,0,1,0.5,0,0.9,0.8749999999999999,0.45,0.8749999999999999,0.25,0.6875,0.1,0.7499999999999999,0,1,0.5,0.8749999999999999,0.45,0.8749999999999999,0.25,0.8749999999999999,0.25,0.7499999999999999,0,1,0.5],
                                     ratio:{x:0.8},
                                 },
                                 '3':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.8,0.2, 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.4, 0.7/0.8,0.5, 0.8/0.8,0.6, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.08/0.8,0.74, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.65, 0.6/0.8,0.55, 0.3/0.8,0.55, 0.3/0.8,0.45, 0.6/0.8,0.45, 0.7/0.8,0.35, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1, 0.08/0.8,0.26 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.8,0.2, 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.4, 0.7/0.8,0.5, 0.8/0.8,0.6, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.08/0.8,0.74, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.65, 0.6/0.8,0.55, 0.3/0.8,0.55, 0.3/0.8,0.45, 0.6/0.8,0.45, 0.7/0.8,0.35, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1, 0.08/0.8,0.26 ]),
                                     vector:[0.3125,0.1,0.09999999999999999,0.26,0,0.2,0.7499999999999999,0,1,0.2,1,0.4,0.8749999999999999,0.5,1,0.6,1,0.8,0.25,1,0,0.8,0.09999999999999999,0.74,0.7499999999999999,0.55,0.37499999999999994,0.55,0.37499999999999994,0.45,0.3125,0.1,0,0.2,0.25,0,0.25,1,0.09999999999999999,0.74,0.3125,0.9,0.7499999999999999,0.55,0.37499999999999994,0.45,0.7499999999999999,0.45,0.6875,0.1,0.3125,0.1,0.25,0,0.7499999999999999,1,0.25,1,0.3125,0.9,0.8749999999999999,0.65,0.7499999999999999,0.55,0.7499999999999999,0.45,0.6875,0.1,0.25,0,0.7499999999999999,0,0.7499999999999999,1,0.3125,0.9,0.6875,0.9,0.8749999999999999,0.25,0.6875,0.1,0.7499999999999999,0,1,0.8,0.7499999999999999,1,0.6875,0.9,0.8749999999999999,0.25,0.7499999999999999,0,1,0.4,1,0.8,0.6875,0.9,0.8749999999999999,0.75,0.8749999999999999,0.35,0.8749999999999999,0.25,1,0.4,1,0.8,0.8749999999999999,0.75,0.8749999999999999,0.65,0.7499999999999999,0.45,0.8749999999999999,0.35,1,0.4,0.8749999999999999,0.5,1,0.8,0.8749999999999999,0.65,0.7499999999999999,0.45,1,0.4,0.8749999999999999,0.5,0.8749999999999999,0.5,0.8749999999999999,0.65,0.7499999999999999,0.45],
                                     ratio:{x:0.8},
                                 },
                                 '4':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.8,0.0, 0.1/0.8,0.0, 0.1/0.8,0.25, 0.25/0.8,0.4, 0.7/0.8,0.4, 0.7/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,1.0, 0.7/0.8,1.0, 0.7/0.8,0.5, 0.2/0.8,0.5, 0.0/0.8,0.3 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.8,0.0, 0.1/0.8,0.0, 0.1/0.8,0.25, 0.25/0.8,0.4, 0.7/0.8,0.4, 0.7/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,1.0, 0.7/0.8,1.0, 0.7/0.8,0.5, 0.2/0.8,0.5, 0.0/0.8,0.3 ]),
                                     vector:[0,0.3,0,0,0.125,0,0.8749999999999999,0.4,0.8749999999999999,0,1,0,1,0,1,1,0.8749999999999999,1,0,0.3,0.125,0,0.125,0.25,1,0,0.8749999999999999,1,0.8749999999999999,0.5,0.25,0.5,0,0.3,0.125,0.25,0.8749999999999999,0.4,1,0,0.8749999999999999,0.5,0.25,0.5,0.125,0.25,0.3125,0.4,0.3125,0.4,0.8749999999999999,0.4,0.8749999999999999,0.5,0.8749999999999999,0.5,0.25,0.5,0.3125,0.4],
                                     ratio:{x:0.8},
                                 },
                                 '5':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,0.1, 0.1/0.8,0.1, 0.1/0.8,0.4, 0.7/0.8,0.4, 0.8/0.8,0.5, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.0/0.8,1.0, 0.0/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.55, 0.65/0.8,0.5, 0.0/0.8,0.5 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,0.1, 0.1/0.8,0.1, 0.1/0.8,0.4, 0.7/0.8,0.4, 0.8/0.8,0.5, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.0/0.8,1.0, 0.0/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.55, 0.65/0.8,0.5, 0.0/0.8,0.5 ]),
                                     vector:[0,0,1,0,1,0.1,0.125,0.4,0.8749999999999999,0.4,1,0.5,1,0.5,1,0.8,0.7499999999999999,1,0.7499999999999999,1,0,1,0,0.9,0,0,1,0.1,0.125,0.1,0.7499999999999999,1,0,0.9,0.6875,0.9,0,0.5,0,0,0.125,0.1,0.7499999999999999,1,0.6875,0.9,0.8749999999999999,0.75,0,0.5,0.125,0.1,0.125,0.4,1,0.5,0.7499999999999999,1,0.8749999999999999,0.75,0.8125,0.5,0,0.5,0.125,0.4,1,0.5,0.8749999999999999,0.75,0.8749999999999999,0.55,0.8125,0.5,0.125,0.4,1,0.5,1,0.5,0.8749999999999999,0.55,0.8125,0.5],
                                     ratio:{x:0.8},
                                 },
                                 '6':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,0.1, 0.25/0.8,0.1, 0.1/0.8,0.25, 0.1/0.8,0.75, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.55, 0.65/0.8,0.5, 0.1/0.8,0.5, 0.1/0.8,0.4, 0.7/0.8,0.4, 0.8/0.8,0.5, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.0/0.8,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,0.1, 0.25/0.8,0.1, 0.1/0.8,0.25, 0.1/0.8,0.75, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.55, 0.65/0.8,0.5, 0.1/0.8,0.5, 0.1/0.8,0.4, 0.7/0.8,0.4, 0.8/0.8,0.5, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.0/0.8,0.2 ]),
                                     vector:[0.25,0,1,0,1,0.1,0.8125,0.5,0.125,0.5,0.125,0.4,0.125,0.4,0.8749999999999999,0.4,1,0.5,1,0.5,1,0.8,0.7499999999999999,1,0.25,0,1,0.1,0.3125,0.1,0.8125,0.5,0.125,0.4,1,0.5,0,0.2,0.25,0,0.3125,0.1,0.8749999999999999,0.55,0.8125,0.5,1,0.5,0,0.2,0.3125,0.1,0.125,0.25,0.8749999999999999,0.75,0.8749999999999999,0.55,1,0.5,0,0.8,0,0.2,0.125,0.25,0.8749999999999999,0.75,1,0.5,0.7499999999999999,1,0,0.8,0.125,0.25,0.125,0.75,0.6875,0.9,0.8749999999999999,0.75,0.7499999999999999,1,0.25,1,0,0.8,0.125,0.75,0.3125,0.9,0.6875,0.9,0.7499999999999999,1,0.25,1,0.125,0.75,0.3125,0.9,0.3125,0.9,0.7499999999999999,1,0.25,1],
                                     ratio:{x:0.8},
                                 },
                                 '7':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,0.1, 0.12/0.8,1.0, 0.0/0.8,1.0, 0.66/0.8,0.1, 0.0/0.8,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.8,0.0, 0.8/0.8,0.0, 0.8/0.8,0.1, 0.12/0.8,1.0, 0.0/0.8,1.0, 0.66/0.8,0.1, 0.0/0.8,0.1 ]),
                                     vector:[0.825,0.1,0,0.1,0,0,0,0,1,0,1,0.1,1,0.1,0.15,1,0,1,0.825,0.1,0,0,1,0.1,1,0.1,0,1,0.825,0.1],
                                     ratio:{x:0.8},
                                 },
                                 '8':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.1/0.8,0.0, 0.7/0.8,0.0, 0.8/0.8,0.1, 0.8/0.8,0.35, 0.7/0.8,0.45, 0.8/0.8,0.55, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.0/0.8,0.55, 0.1/0.8,0.45, 0.2/0.8,0.5, 0.1/0.8,0.6, 0.1/0.8,0.75, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.6, 0.6/0.8,0.5, 0.2/0.8,0.5, 0.1/0.8,0.45, 0.0/0.8,0.35, 0.0/0.8,0.1, 0.1/0.8,0.0, 0.15/0.8,0.1, 0.1/0.8,0.15, 0.1/0.8,0.3, 0.2/0.8,0.4, 0.6/0.8,0.4, 0.7/0.8,0.3, 0.7/0.8,0.15, 0.65/0.8,0.1, 0.15/0.8,0.1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.1/0.8,0.0, 0.7/0.8,0.0, 0.8/0.8,0.1, 0.8/0.8,0.35, 0.7/0.8,0.45, 0.8/0.8,0.55, 0.8/0.8,0.8, 0.6/0.8,1.0, 0.2/0.8,1.0, 0.0/0.8,0.8, 0.0/0.8,0.55, 0.1/0.8,0.45, 0.2/0.8,0.5, 0.1/0.8,0.6, 0.1/0.8,0.75, 0.25/0.8,0.9, 0.55/0.8,0.9, 0.7/0.8,0.75, 0.7/0.8,0.6, 0.6/0.8,0.5, 0.2/0.8,0.5, 0.1/0.8,0.45, 0.0/0.8,0.35, 0.0/0.8,0.1, 0.1/0.8,0.0, 0.15/0.8,0.1, 0.1/0.8,0.15, 0.1/0.8,0.3, 0.2/0.8,0.4, 0.6/0.8,0.4, 0.7/0.8,0.3, 0.7/0.8,0.15, 0.65/0.8,0.1, 0.15/0.8,0.1 ]),
                                     vector:[0.8125,0.1,0.18749999999999997,0.1,0.125,0,0.125,0,0.8749999999999999,0,1,0.1,1,0.1,1,0.35,0.8749999999999999,0.45,0.8749999999999999,0.45,1,0.55,1,0.8,0.25,1,0,0.8,0,0.55,0,0.55,0.125,0.45,0.25,0.5,0.7499999999999999,0.5,0.25,0.5,0.125,0.45,0.125,0.45,0,0.35,0,0.1,0,0.1,0.125,0,0.18749999999999997,0.1,0.8125,0.1,0.125,0,1,0.1,0,0.55,0.25,0.5,0.125,0.6,0,0.1,0.18749999999999997,0.1,0.125,0.15,0.8749999999999999,0.15,0.8125,0.1,1,0.1,0,0.55,0.125,0.6,0.125,0.75,0,0.1,0.125,0.15,0.125,0.3,0.8749999999999999,0.3,0.8749999999999999,0.15,1,0.1,0.25,1,0,0.55,0.125,0.75,0.125,0.45,0,0.1,0.125,0.3,0.8749999999999999,0.3,1,0.1,0.8749999999999999,0.45,0.25,1,0.125,0.75,0.3125,0.9,0.125,0.45,0.125,0.3,0.25,0.4,0.7499999999999999,0.4,0.8749999999999999,0.3,0.8749999999999999,0.45,0.7499999999999999,1,0.25,1,0.3125,0.9,0.7499999999999999,0.5,0.125,0.45,0.25,0.4,0.25,0.4,0.7499999999999999,0.4,0.8749999999999999,0.45,0.7499999999999999,1,0.3125,0.9,0.6875,0.9,0.7499999999999999,0.5,0.25,0.4,0.8749999999999999,0.45,1,0.8,0.7499999999999999,1,0.6875,0.9,0.8749999999999999,0.6,0.7499999999999999,0.5,0.8749999999999999,0.45,1,0.8,0.6875,0.9,0.8749999999999999,0.75,0.8749999999999999,0.6,0.8749999999999999,0.45,1,0.8,1,0.8,0.8749999999999999,0.75,0.8749999999999999,0.6],
                                     ratio:{x:0.8},
                                 },
                                 '9':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.7, 0.5/0.8,1.0, 0.0/0.8,1.0, 0.0/0.8,0.9, 0.45/0.8,0.9, 0.7/0.8,0.65, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1, 0.1/0.8,0.25, 0.1/0.8,0.35, 0.12/0.8,0.4, 0.7/0.8,0.4, 0.7/0.8,0.5, 0.1/0.8,0.5, 0.0/0.8,0.4, 0.0/0.8,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.8,0.0, 0.6/0.8,0.0, 0.8/0.8,0.2, 0.8/0.8,0.7, 0.5/0.8,1.0, 0.0/0.8,1.0, 0.0/0.8,0.9, 0.45/0.8,0.9, 0.7/0.8,0.65, 0.7/0.8,0.25, 0.55/0.8,0.1, 0.25/0.8,0.1, 0.1/0.8,0.25, 0.1/0.8,0.35, 0.12/0.8,0.4, 0.7/0.8,0.4, 0.7/0.8,0.5, 0.1/0.8,0.5, 0.0/0.8,0.4, 0.0/0.8,0.2 ]),
                                     vector:[0,0.4,0,0.2,0.25,0,0.625,1,0,1,0,0.9,0.15,0.4,0.8749999999999999,0.4,0.8749999999999999,0.5,0.8749999999999999,0.5,0.125,0.5,0,0.4,0.625,1,0,0.9,0.5625,0.9,0.15,0.4,0.8749999999999999,0.5,0,0.4,1,0.7,0.625,1,0.5625,0.9,0.125,0.35,0.15,0.4,0,0.4,1,0.7,0.5625,0.9,0.8749999999999999,0.65,0.125,0.25,0.125,0.35,0,0.4,1,0.2,1,0.7,0.8749999999999999,0.65,0.125,0.25,0,0.4,0.25,0,1,0.2,0.8749999999999999,0.65,0.8749999999999999,0.25,0.3125,0.1,0.125,0.25,0.25,0,0.7499999999999999,0,1,0.2,0.8749999999999999,0.25,0.6875,0.1,0.3125,0.1,0.25,0,0.7499999999999999,0,0.8749999999999999,0.25,0.6875,0.1,0.6875,0.1,0.25,0,0.7499999999999999,0],
                                     ratio:{x:0.8},
                                 },
                             
                                 '.':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.1, y:0.1}, offset:{y:0.9},
                                 },
                                 ',':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.1, y:0.2}, offset:{y:0.9},
                                 },
                                 ':':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.2,0.0/0.8, 0.2/0.2,0.0/0.8, 0.2/0.2,0.2/0.8, 0.0/0.2,0.2/0.8, 0.0/0.2,0.4/0.8, 0.2/0.2,0.4/0.8, 0.2/0.2,0.6/0.8, 0.0/0.2,0.6/0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.2,0.0/0.8, 0.2/0.2,0.0/0.8, 0.2/0.2,0.2/0.8, 0.0/0.2,0.2/0.8, 0.0/0.2,0.4/0.8, 0.2/0.2,0.4/0.8, 0.2/0.2,0.6/0.8, 0.0/0.2,0.6/0.8 ]),
                                     vector:[0,0,1,0,1,0.25,0,0.5,1,0.5,1,0.7499999999999999,0,0,1,0.25,0,0.25,0,0.5,1,0.7499999999999999,0,0.7499999999999999],
                                     ratio:{x:0.1, y:0.8}, offset:{y:0.2},
                                 },
                                 ';':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0, 1.0,0.2, 0.0,0.2, 0.0,0.7, 1.0,0.7, 1.0,0.9, 0.0,0.9 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0, 1.0,0.2, 0.0,0.2, 0.0,0.7, 1.0,0.7, 1.0,0.9, 0.0,0.9 ]),
                                     vector:[0,0,1,0,1,0.2,0,0.7,1,0.7,1,0.9,0,0,1,0.2,0,0.2,0,0.7,1,0.9,0,0.9],
                                     ratio:{x:0.1}, offset:{y:0.2},
                                 },
                                 '?':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.7,0.0, 0.5/0.7,0.0, 0.7/0.7,0.2, 0.7/0.7,0.4, 0.5/0.7,0.6, 0.4/0.7,0.6, 0.4/0.7,0.7, 0.3/0.7,0.7, 0.3/0.7,0.8, 0.4/0.7,0.8, 0.4/0.7,1.0, 0.3/0.7,1.0, 0.3/0.7,0.5, 0.45/0.7,0.5, 0.6/0.7,0.35, 0.6/0.7,0.25, 0.45/0.7,0.1, 0.25/0.7,0.1, 0.08/0.7,0.25, 0.0/0.7,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.7,0.0, 0.5/0.7,0.0, 0.7/0.7,0.2, 0.7/0.7,0.4, 0.5/0.7,0.6, 0.4/0.7,0.6, 0.4/0.7,0.7, 0.3/0.7,0.7, 0.3/0.7,0.8, 0.4/0.7,0.8, 0.4/0.7,1.0, 0.3/0.7,1.0, 0.3/0.7,0.5, 0.45/0.7,0.5, 0.6/0.7,0.35, 0.6/0.7,0.25, 0.45/0.7,0.1, 0.25/0.7,0.1, 0.08/0.7,0.25, 0.0/0.7,0.2 ]),
                                     vector:[0.1142857142857143,0.25,0,0.2,0.28571428571428575,0,0.7142857142857143,0,1,0.2,1,0.4,1,0.4,0.7142857142857143,0.6,0.5714285714285715,0.6,0.5714285714285715,0.6,0.5714285714285715,0.7,0.4285714285714286,0.7,0.4285714285714286,0.8,0.5714285714285715,0.8,0.5714285714285715,1,0.35714285714285715,0.1,0.1142857142857143,0.25,0.28571428571428575,0,0.4285714285714286,0.8,0.5714285714285715,1,0.4285714285714286,1,0.6428571428571429,0.1,0.35714285714285715,0.1,0.28571428571428575,0,0.6428571428571429,0.1,0.28571428571428575,0,0.7142857142857143,0,0.8571428571428572,0.25,0.6428571428571429,0.1,0.7142857142857143,0,0.8571428571428572,0.25,0.7142857142857143,0,1,0.4,0.8571428571428572,0.35,0.8571428571428572,0.25,1,0.4,0.6428571428571429,0.5,0.8571428571428572,0.35,1,0.4,0.6428571428571429,0.5,1,0.4,0.5714285714285715,0.6,0.4285714285714286,0.5,0.6428571428571429,0.5,0.5714285714285715,0.6,0.4285714285714286,0.5,0.5714285714285715,0.6,0.4285714285714286,0.7],
                                     ratio:{x:0.7},
                                 },
                                 '!':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.0,1.0,0.7, 0.0,0.7, 0.0,0.8, 1.0,0.8, 1.0,1.0, 0.0,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.0,1.0,0.7, 0.0,0.7, 0.0,0.8, 1.0,0.8, 1.0,1.0, 0.0,1.0 ]),
                                     vector:[0,0,1,0,1,0.7,0,0.8,1,0.8,1,1,0,0,1,0.7,0,0.7,0,0.8,1,1,0,1],
                                     ratio:{x:0.1},
                                 },
                                 '/':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.48/0.6,0.0, 0.6/0.6,0.0, 0.12/0.6,1.0, 0.0/0.6,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.48/0.6,0.0, 0.6/0.6,0.0, 0.12/0.6,1.0, 0.0/0.6,1.0 ]),
                                     vector:[0.2,1,0,1,0.8,0,0.8,0,1,0,0.2,1],
                                     ratio:{x:0.6},
                                 },
                                 '\\':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.6,0.0, 0.12/0.6,0.0, 0.6/0.6,1.0, 0.48/0.6,1.0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.6,0.0, 0.12/0.6,0.0, 0.6/0.6,1.0, 0.48/0.6,1.0 ]),
                                     vector:[1,1,0.8,1,0,0,0,0,0.2,0,1,1],
                                     ratio:{x:0.6},
                                 },
                                 '(':{
-                                    // vector:_canvas_.library.thirdparty.earcut([
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([
                                     //     0.2/0.3,0.0, 0.3/0.3,0.0, 0.3/0.3,0.1, 0.25/0.3,0.1, 0.1/0.3,0.25, 0.1/0.3,0.75, 0.25/0.3,0.9, 0.3/0.3,0.9, 0.3/0.3,1.0, 0.2/0.3,1.0, 0.0/0.3,0.8, 0.0/0.3,0.2
                                     // ]),
                                     vector:[0,0.2,0.6666666666666667,0,1,0,1,0,1,0.1,0.8333333333333334,0.1,0.8333333333333334,0.9,1,0.9,1,1,1,1,0.6666666666666667,1,0,0.8,0,0.2,1,0,0.8333333333333334,0.1,0.33333333333333337,0.75,0.8333333333333334,0.9,1,1,0,0.2,0.8333333333333334,0.1,0.33333333333333337,0.25,0.33333333333333337,0.75,1,1,0,0.8,0,0.8,0,0.2,0.33333333333333337,0.25,0.33333333333333337,0.25,0.33333333333333337,0.75,0,0.8],
                                     ratio:{x:0.3},
                                 },
                                 ')':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.1/0.3,0.0, 0.0/0.3,0.0, 0.0/0.3,0.1, 0.05/0.3,0.1, 0.2/0.3,0.25, 0.2/0.3,0.75, 0.05/0.3,0.9, 0.0/0.3,0.9, 0.0/0.3,1.0, 0.1/0.3,1.0, 0.3/0.3,0.8, 0.3/0.3,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.1/0.3,0.0, 0.0/0.3,0.0, 0.0/0.3,0.1, 0.05/0.3,0.1, 0.2/0.3,0.25, 0.2/0.3,0.75, 0.05/0.3,0.9, 0.0/0.3,0.9, 0.0/0.3,1.0, 0.1/0.3,1.0, 0.3/0.3,0.8, 0.3/0.3,0.2 ]),
                                     vector:[0,0,0.33333333333333337,0,1,0.2,1,0.8,0.33333333333333337,1,0,1,0,1,0,0.9,0.16666666666666669,0.9,0.16666666666666669,0.1,0,0.1,0,0,1,0.8,0,1,0.16666666666666669,0.9,0.6666666666666667,0.25,0.16666666666666669,0.1,0,0,1,0.8,0.16666666666666669,0.9,0.6666666666666667,0.75,0.6666666666666667,0.25,0,0,1,0.2,1,0.2,1,0.8,0.6666666666666667,0.75,0.6666666666666667,0.75,0.6666666666666667,0.25,1,0.2],
                                     ratio:{x:0.3},
                                     encroach:{'p':1},
                                 },
                                 '[':{
-                                    // vector:_canvas_.library.thirdparty.earcut([
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([
                                     //     0.0/0.3,0.0, 0.3/0.3,0.0, 0.3/0.3,0.1, 0.1/0.3,0.1, 0.1/0.3,0.9, 0.3/0.3,0.9, 0.3/0.3,1.0, 0.0/0.3,1.0
                                     // ]),
                                     vector:[0,0,1,0,1,0.1,0.33333333333333337,0.9,1,0.9,1,1,0,0,1,0.1,0.33333333333333337,0.1,0.33333333333333337,0.9,1,1,0,1,0,1,0,0,0.33333333333333337,0.1,0.33333333333333337,0.1,0.33333333333333337,0.9,0,1],
                                     ratio:{x:0.3},
                                 },
                                 ']':{
-                                    // vector:_canvas_.library.thirdparty.earcut([
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([
                                     //     0.3/0.3,0.0, 0.0/0.3,0.0, 0.0/0.3,0.1, 0.2/0.3,0.1, 0.2/0.3,0.9, 0.0/0.3,0.9, 0.0/0.3,1.0, 0.3/0.3,1.0
                                     // ]),
                                     vector:[1,1,0,1,0,0.9,0.6666666666666667,0.1,0,0.1,0,0,1,1,0,0.9,0.6666666666666667,0.9,0.6666666666666667,0.1,0,0,1,0,1,0,1,1,0.6666666666666667,0.9,0.6666666666666667,0.9,0.6666666666666667,0.1,1,0],
@@ -20470,79 +23554,79 @@
                                 },
                             
                                 '{':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3/0.4,0.0, 0.4/0.4,0.0, 0.4/0.4,0.1, 0.35/0.4,0.1, 0.2/0.4,0.25, 0.2/0.4,0.45, 0.15/0.4,0.5, 0.2/0.4,0.55, 0.2/0.4,0.75, 0.35/0.4,0.9, 0.4/0.4,0.9, 0.4/0.4,1.0, 0.3/0.4,1.0, 0.1/0.4,0.8, 0.1/0.4,0.6, 0.0/0.4,0.55, 0.0/0.4,0.45, 0.1/0.4,0.4, 0.1/0.4,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3/0.4,0.0, 0.4/0.4,0.0, 0.4/0.4,0.1, 0.35/0.4,0.1, 0.2/0.4,0.25, 0.2/0.4,0.45, 0.15/0.4,0.5, 0.2/0.4,0.55, 0.2/0.4,0.75, 0.35/0.4,0.9, 0.4/0.4,0.9, 0.4/0.4,1.0, 0.3/0.4,1.0, 0.1/0.4,0.8, 0.1/0.4,0.6, 0.0/0.4,0.55, 0.0/0.4,0.45, 0.1/0.4,0.4, 0.1/0.4,0.2 ]),
                                     vector:[0.25,0.4,0.25,0.2,0.7499999999999999,0,0.7499999999999999,0,1,0,1,0.1,0.5,0.25,0.5,0.45,0.37499999999999994,0.5,0.37499999999999994,0.5,0.5,0.55,0.5,0.75,0.8749999999999999,0.9,1,0.9,1,1,1,1,0.7499999999999999,1,0.25,0.8,0.25,0.6,0,0.55,0,0.45,0.7499999999999999,0,1,0.1,0.8749999999999999,0.1,0.5,0.75,0.8749999999999999,0.9,1,1,0.25,0.6,0,0.45,0.25,0.4,0.7499999999999999,0,0.8749999999999999,0.1,0.5,0.25,0.5,0.75,1,1,0.25,0.8,0.25,0.4,0.7499999999999999,0,0.5,0.25,0.37499999999999994,0.5,0.5,0.75,0.25,0.8,0.25,0.6,0.25,0.4,0.5,0.25,0.37499999999999994,0.5,0.25,0.8,0.25,0.6,0.25,0.6,0.5,0.25,0.37499999999999994,0.5],
                                     ratio:{x:0.4},
                                 },
                                 '}':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.1/0.4,0.0, 0.0/0.4,0.0, 0.0/0.4,0.1, 0.05/0.4,0.1, 0.2/0.4,0.25, 0.2/0.4,0.45, 0.25/0.4,0.5, 0.2/0.4,0.55, 0.2/0.4,0.75, 0.05/0.4,0.9, 0.0/0.4,0.9, 0.0/0.4,1.0, 0.1/0.4,1.0, 0.3/0.4,0.8, 0.3/0.4,0.6, 0.4/0.4,0.55, 0.4/0.4,0.45, 0.3/0.4,0.4, 0.3/0.4,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.1/0.4,0.0, 0.0/0.4,0.0, 0.0/0.4,0.1, 0.05/0.4,0.1, 0.2/0.4,0.25, 0.2/0.4,0.45, 0.25/0.4,0.5, 0.2/0.4,0.55, 0.2/0.4,0.75, 0.05/0.4,0.9, 0.0/0.4,0.9, 0.0/0.4,1.0, 0.1/0.4,1.0, 0.3/0.4,0.8, 0.3/0.4,0.6, 0.4/0.4,0.55, 0.4/0.4,0.45, 0.3/0.4,0.4, 0.3/0.4,0.2 ]),
                                     vector:[0,0,0.25,0,0.7499999999999999,0.2,0.7499999999999999,0.4,1,0.45,1,0.55,0.7499999999999999,0.6,0.7499999999999999,0.8,0.25,1,0.25,1,0,1,0,0.9,0.5,0.75,0.5,0.55,0.625,0.5,0.625,0.5,0.5,0.45,0.5,0.25,0.125,0.1,0,0.1,0,0,0.7499999999999999,0.4,1,0.55,0.7499999999999999,0.6,0.25,1,0,0.9,0.125,0.9,0.5,0.25,0.125,0.1,0,0,0.25,1,0.125,0.9,0.5,0.75,0.5,0.25,0,0,0.7499999999999999,0.2,0.7499999999999999,0.6,0.25,1,0.5,0.75,0.625,0.5,0.5,0.25,0.7499999999999999,0.2,0.7499999999999999,0.4,0.7499999999999999,0.6,0.5,0.75,0.625,0.5,0.7499999999999999,0.2,0.7499999999999999,0.4,0.7499999999999999,0.4,0.5,0.75,0.625,0.5],
                                     ratio:{x:0.4},
                                 },
                                 '#':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.3,0.0, 0.4,0.0, 0.375,0.25, 0.675,0.25, 0.7,0.0, 0.8,0.0, 0.775,0.25, 1.0,0.25, 1.0,0.35, 0.765,0.35, 0.735,0.65, 1.0,0.65,1.0,0.75, 0.725,0.75,0.7,1.0,0.6,1.0, 0.625,0.75, 0.325,0.75, 0.3,1.0, 0.2,1.0, 0.225,0.75,0.0,0.75,0.0,0.65,0.235,0.65,0.265,0.35,0.0,0.35,0.0,0.25,0.275,0.25,0.3,0.0, 0.365,0.35,0.335,0.65,0.635,0.65,0.665,0.35,0.365,0.35 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.3,0.0, 0.4,0.0, 0.375,0.25, 0.675,0.25, 0.7,0.0, 0.8,0.0, 0.775,0.25, 1.0,0.25, 1.0,0.35, 0.765,0.35, 0.735,0.65, 1.0,0.65,1.0,0.75, 0.725,0.75,0.7,1.0,0.6,1.0, 0.625,0.75, 0.325,0.75, 0.3,1.0, 0.2,1.0, 0.225,0.75,0.0,0.75,0.0,0.65,0.235,0.65,0.265,0.35,0.0,0.35,0.0,0.25,0.275,0.25,0.3,0.0, 0.365,0.35,0.335,0.65,0.635,0.65,0.665,0.35,0.365,0.35 ])
                                     vector:[0.365,0.35,0.3,0,0.4,0,0.675,0.25,0.7,0,0.8,0,0.775,0.25,1,0.25,1,0.35,0.735,0.65,1,0.65,1,0.75,0.725,0.75,0.7,1,0.6,1,0.325,0.75,0.3,1,0.2,1,0.225,0.75,0,0.75,0,0.65,0.265,0.35,0,0.35,0,0.25,0.275,0.25,0.3,0,0.365,0.35,0.675,0.25,0.8,0,0.775,0.25,0.775,0.25,1,0.35,0.765,0.35,0.735,0.65,1,0.75,0.725,0.75,0.725,0.75,0.6,1,0.625,0.75,0.325,0.75,0.2,1,0.225,0.75,0.225,0.75,0,0.65,0.235,0.65,0.265,0.35,0,0.25,0.275,0.25,0.275,0.25,0.365,0.35,0.335,0.65,0.675,0.25,0.775,0.25,0.765,0.35,0.765,0.35,0.735,0.65,0.725,0.75,0.325,0.75,0.225,0.75,0.235,0.65,0.235,0.65,0.265,0.35,0.275,0.25,0.375,0.25,0.675,0.25,0.765,0.35,0.765,0.35,0.725,0.75,0.625,0.75,0.625,0.75,0.325,0.75,0.235,0.65,0.235,0.65,0.275,0.25,0.335,0.65,0.625,0.75,0.235,0.65,0.335,0.65,0.625,0.75,0.335,0.65,0.635,0.65,0.765,0.35,0.625,0.75,0.635,0.65,0.765,0.35,0.635,0.65,0.665,0.35,0.375,0.25,0.765,0.35,0.665,0.35,0.375,0.25,0.665,0.35,0.365,0.35,0.4,0,0.375,0.25,0.365,0.35],
                                 },
                                 '-':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.6, y:0.1}, offset:{y:0.45},
                                 },
                                 '_':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.8,y:0.1}, offset:{y:1},
                                 },
                                 "'":{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1 ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.1, y:0.2},
                                 },
                                 '"':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.4,0, 0,0, 0,1, 0.4,1, 0.4,0, 0.6,0, 0.6,1, 1,1, 1,0 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.4,0, 0,0, 0,1, 0.4,1, 0.4,0, 0.6,0, 0.6,1, 1,1, 1,0 ]),
                                     vector:[1,0,1,1,0.6,1,0.4,1,0,1,0,0,1,0,0.6,1,0.6,0,0.4,1,0,0,0.4,0],
                                     ratio:{x:0.25, y:0.2},
                                 },
                                 '|':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0,0, 1,0, 1,1, 0,1  ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0,0, 1,0, 1,1, 0,1  ]),
                                     vector:[1,1,0,1,0,0,0,0,1,0,1,1],
                                     ratio:{x:0.1},
                                 },
                                 '>':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.0, 1.0,0.45, 1.0,0.55, 0.0,1.0, 0.0,0.9, 0.85,0.5, 0.0,0.1 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.0, 1.0,0.45, 1.0,0.55, 0.0,1.0, 0.0,0.9, 0.85,0.5, 0.0,0.1 ])
                                     vector:[0.85,0.5,0,0.1,0,0,0,0,1,0.45,1,0.55,1,0.55,0,1,0,0.9,0.85,0.5,0,0,1,0.55,1,0.55,0,0.9,0.85,0.5],
                                 },
                                 '<':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 1.0,0.0, 0.0,0.45, 0.0,0.55, 1.0,1.0, 1.0,0.9, 0.15,0.5, 1.0,0.1 ])
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 1.0,0.0, 0.0,0.45, 0.0,0.55, 1.0,1.0, 1.0,0.9, 0.15,0.5, 1.0,0.1 ])
                                     vector:[0,0.45,1,0,1,0.1,0.15,0.5,1,0.9,1,1,1,1,0,0.55,0,0.45,0,0.45,1,0.1,0.15,0.5,0.15,0.5,1,1,0,0.45],
                                 },
                                 '+':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.35/0.8,0.0/0.8, 0.45/0.8,0.0/0.8, 0.45/0.8,0.35/0.8, 0.8/0.8,0.35/0.8, 0.8/0.8,0.45/0.8, 0.45/0.8,0.45/0.8, 0.45/0.8,0.8/0.8, 0.35/0.8,0.8/0.8, 0.35/0.8,0.45/0.8, 0.0/0.8,0.45/0.8, 0.0/0.8,0.35/0.8, 0.35/0.8,0.35/0.8 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.35/0.8,0.0/0.8, 0.45/0.8,0.0/0.8, 0.45/0.8,0.35/0.8, 0.8/0.8,0.35/0.8, 0.8/0.8,0.45/0.8, 0.45/0.8,0.45/0.8, 0.45/0.8,0.8/0.8, 0.35/0.8,0.8/0.8, 0.35/0.8,0.45/0.8, 0.0/0.8,0.45/0.8, 0.0/0.8,0.35/0.8, 0.35/0.8,0.35/0.8 ]),
                                     vector:[0.43749999999999994,0.43749999999999994,0.43749999999999994,0,0.5625,0,0.5625,0.43749999999999994,1,0.43749999999999994,1,0.5625,0.5625,0.5625,0.5625,1,0.43749999999999994,1,0.43749999999999994,0.5625,0,0.5625,0,0.43749999999999994,0.43749999999999994,0.43749999999999994,0.5625,0,0.5625,0.43749999999999994,0.5625,0.43749999999999994,1,0.5625,0.5625,0.5625,0.5625,0.5625,0.43749999999999994,1,0.43749999999999994,0.5625,0.43749999999999994,0.5625,0,0.43749999999999994,0.43749999999999994,0.43749999999999994,0.43749999999999994,0.43749999999999994,0.5625,0.43749999999999994,0.5625,0.5625,0.5625,0.5625,0.43749999999999994,0.5625,0.43749999999999994,0.43749999999999994],
                                     ratio:{x:0.8,y:0.8}, offset:{y:0.1},
                                 },
                                 '=':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0/0.8,0.0/0.5, 0.8/0.8,0.0/0.5, 0.8/0.8,0.1/0.5, 0.0/0.8,0.1/0.5, 0.0/0.8,0.4/0.5, 0.8/0.8,0.4/0.5, 0.8/0.8,0.5/0.5, 0.0/0.8,0.5/0.5 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0/0.8,0.0/0.5, 0.8/0.8,0.0/0.5, 0.8/0.8,0.1/0.5, 0.0/0.8,0.1/0.5, 0.0/0.8,0.4/0.5, 0.8/0.8,0.4/0.5, 0.8/0.8,0.5/0.5, 0.0/0.8,0.5/0.5 ]),
                                     vector:[0,0,1,0,1,0.2,0,0.8,1,0.8,1,1,0,0,1,0.2,0,0.2,0,0.8,1,1,0,1],
                                     ratio:{x:0.8,y:0.5}, offset:{y:0.25},
                                 },
                                 '&':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.2/0.9,0.0, 0.5/0.9,0.0, 0.7/0.9,0.2, 0.7/0.9,0.4, 0.425/0.9,0.675, 0.35/0.9,0.6, 0.6/0.9,0.35, 0.6/0.9,0.25, 0.45/0.9,0.1, 0.25/0.9,0.1, 0.1/0.9,0.25, 0.1/0.9,0.35, 0.525/0.9,0.775, 0.82/0.9,0.48, 0.9/0.9,0.55, 0.6/0.9,0.85, 0.65/0.9,0.9, 0.9/0.9,0.9, 0.9/0.9,1.0, 0.6/0.9,1.0, 0.525/0.9,0.925, 0.45/0.9,1.0, 0.1/0.9,1.0, 0.0/0.9,0.9, 0.0/0.9,0.6, 0.1/0.9,0.5, 0.175/0.9,0.575, 0.1/0.9,0.65, 0.1/0.9,0.85, 0.15/0.9,0.9, 0.4/0.9,0.9, 0.45/0.9,0.85, 0.0/0.9,0.4, 0.0/0.9,0.2 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.2/0.9,0.0, 0.5/0.9,0.0, 0.7/0.9,0.2, 0.7/0.9,0.4, 0.425/0.9,0.675, 0.35/0.9,0.6, 0.6/0.9,0.35, 0.6/0.9,0.25, 0.45/0.9,0.1, 0.25/0.9,0.1, 0.1/0.9,0.25, 0.1/0.9,0.35, 0.525/0.9,0.775, 0.82/0.9,0.48, 0.9/0.9,0.55, 0.6/0.9,0.85, 0.65/0.9,0.9, 0.9/0.9,0.9, 0.9/0.9,1.0, 0.6/0.9,1.0, 0.525/0.9,0.925, 0.45/0.9,1.0, 0.1/0.9,1.0, 0.0/0.9,0.9, 0.0/0.9,0.6, 0.1/0.9,0.5, 0.175/0.9,0.575, 0.1/0.9,0.65, 0.1/0.9,0.85, 0.15/0.9,0.9, 0.4/0.9,0.9, 0.45/0.9,0.85, 0.0/0.9,0.4, 0.0/0.9,0.2 ]),
                                     vector:[0,0.4,0,0.2,0.22222222222222224,0,0.5555555555555556,0,0.7777777777777777,0.2,0.7777777777777777,0.4,0.7777777777777777,0.4,0.4722222222222222,0.675,0.38888888888888884,0.6,0.5833333333333334,0.775,0.911111111111111,0.48,1,0.55,0.7222222222222222,0.9,1,0.9,1,1,1,1,0.6666666666666666,1,0.5833333333333334,0.925,0.5833333333333334,0.925,0.5,1,0.11111111111111112,1,0.11111111111111112,1,0,0.9,0,0.6,0,0.6,0.11111111111111112,0.5,0.19444444444444442,0.575,0.7777777777777777,0.4,0.38888888888888884,0.6,0.6666666666666666,0.35,0.5833333333333334,0.775,1,0.55,0.6666666666666666,0.85,0.7222222222222222,0.9,1,1,0.5833333333333334,0.925,0,0.6,0.19444444444444442,0.575,0.11111111111111112,0.65,0.7777777777777777,0.4,0.6666666666666666,0.35,0.6666666666666666,0.25,0.11111111111111112,0.35,0.5833333333333334,0.775,0.6666666666666666,0.85,0.6666666666666666,0.85,0.7222222222222222,0.9,0.5833333333333334,0.925,0,0.6,0.11111111111111112,0.65,0.11111111111111112,0.85,0.5555555555555556,0,0.7777777777777777,0.4,0.6666666666666666,0.25,0.11111111111111112,0.35,0.6666666666666666,0.85,0.5833333333333334,0.925,0.11111111111111112,1,0,0.6,0.11111111111111112,0.85,0.5555555555555556,0,0.6666666666666666,0.25,0.5,0.1,0.11111111111111112,1,0.11111111111111112,0.85,0.16666666666666666,0.9,0.22222222222222224,0,0.5555555555555556,0,0.5,0.1,0.5833333333333334,0.925,0.11111111111111112,1,0.16666666666666666,0.9,0.22222222222222224,0,0.5,0.1,0.2777777777777778,0.1,0.5833333333333334,0.925,0.16666666666666666,0.9,0.4444444444444445,0.9,0.22222222222222224,0,0.2777777777777778,0.1,0.11111111111111112,0.25,0.5833333333333334,0.925,0.4444444444444445,0.9,0.5,0.85,0,0.4,0.22222222222222224,0,0.11111111111111112,0.25,0.11111111111111112,0.35,0.5833333333333334,0.925,0.5,0.85,0,0.4,0.11111111111111112,0.25,0.11111111111111112,0.35,0.11111111111111112,0.35,0.5,0.85,0,0.4],
                                     ratio:{x:0.9}
                                 },
                                 '*':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.25/0.6,0.0/0.6, 0.35/0.6,0.0/0.6, 0.35/0.6,0.175/0.6,0.475/0.6,0.05/0.6, 0.55/0.6,0.125/0.6,0.425/0.6,0.25/0.6,0.6/0.6,0.25/0.6, 0.6/0.6,0.35/0.6, 0.425/0.6,0.35/0.6,0.55/0.6,0.475/0.6, 0.475/0.6,0.55/0.6, 0.35/0.6,0.425/0.6,0.35/0.6,0.6/0.6, 0.25/0.6,0.6/0.6, 0.25/0.6,0.425/0.6,0.125/0.6,0.55/0.6, 0.05/0.6,0.475/0.6, 0.175/0.6,0.35/0.6,0.0/0.6,0.35/0.6, 0.0/0.6,0.25/0.6, 0.175/0.6,0.25/0.6,0.05/0.6,0.125/0.6, 0.125/0.6,0.05/0.6,0.25/0.6,0.175/0.6 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.25/0.6,0.0/0.6, 0.35/0.6,0.0/0.6, 0.35/0.6,0.175/0.6,0.475/0.6,0.05/0.6, 0.55/0.6,0.125/0.6,0.425/0.6,0.25/0.6,0.6/0.6,0.25/0.6, 0.6/0.6,0.35/0.6, 0.425/0.6,0.35/0.6,0.55/0.6,0.475/0.6, 0.475/0.6,0.55/0.6, 0.35/0.6,0.425/0.6,0.35/0.6,0.6/0.6, 0.25/0.6,0.6/0.6, 0.25/0.6,0.425/0.6,0.125/0.6,0.55/0.6, 0.05/0.6,0.475/0.6, 0.175/0.6,0.35/0.6,0.0/0.6,0.35/0.6, 0.0/0.6,0.25/0.6, 0.175/0.6,0.25/0.6,0.05/0.6,0.125/0.6, 0.125/0.6,0.05/0.6,0.25/0.6,0.175/0.6 ]),
                                     vector:[0.4166666666666667,0.2916666666666667,0.4166666666666667,0,0.5833333333333334,0,0.5833333333333334,0.2916666666666667,0.7916666666666666,0.08333333333333334,0.9166666666666667,0.20833333333333334,0.7083333333333334,0.4166666666666667,1,0.4166666666666667,1,0.5833333333333334,0.7083333333333334,0.5833333333333334,0.9166666666666667,0.7916666666666666,0.7916666666666666,0.9166666666666667,0.5833333333333334,0.7083333333333334,0.5833333333333334,1,0.4166666666666667,1,0.4166666666666667,0.7083333333333334,0.20833333333333334,0.9166666666666667,0.08333333333333334,0.7916666666666666,0.2916666666666667,0.5833333333333334,0,0.5833333333333334,0,0.4166666666666667,0.2916666666666667,0.4166666666666667,0.08333333333333334,0.20833333333333334,0.20833333333333334,0.08333333333333334,0.4166666666666667,0.2916666666666667,0.5833333333333334,0,0.5833333333333334,0.2916666666666667,0.5833333333333334,0.2916666666666667,0.9166666666666667,0.20833333333333334,0.7083333333333334,0.4166666666666667,0.7083333333333334,0.4166666666666667,1,0.5833333333333334,0.7083333333333334,0.5833333333333334,0.7083333333333334,0.5833333333333334,0.7916666666666666,0.9166666666666667,0.5833333333333334,0.7083333333333334,0.5833333333333334,0.7083333333333334,0.4166666666666667,1,0.4166666666666667,0.7083333333333334,0.4166666666666667,0.7083333333333334,0.08333333333333334,0.7916666666666666,0.2916666666666667,0.5833333333333334,0.2916666666666667,0.5833333333333334,0,0.4166666666666667,0.2916666666666667,0.4166666666666667,0.2916666666666667,0.4166666666666667,0.20833333333333334,0.08333333333333334,0.4166666666666667,0.2916666666666667,0.4166666666666667,0.2916666666666667,0.5833333333333334,0.2916666666666667,0.7083333333333334,0.4166666666666667,0.7083333333333334,0.4166666666666667,0.7083333333333334,0.5833333333333334,0.5833333333333334,0.7083333333333334,0.5833333333333334,0.7083333333333334,0.4166666666666667,0.7083333333333334,0.2916666666666667,0.5833333333333334,0.2916666666666667,0.5833333333333334,0.2916666666666667,0.4166666666666667,0.4166666666666667,0.2916666666666667,0.4166666666666667,0.2916666666666667,0.7083333333333334,0.4166666666666667,0.5833333333333334,0.7083333333333334,0.5833333333333334,0.7083333333333334,0.2916666666666667,0.5833333333333334,0.4166666666666667,0.2916666666666667],
                                     ratio:{x:0.6,y:0.6}, offset:{y:0.2},
                                 },
                                 '~':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.1/0.3, 0.15,0.0/0.3, 0.35,0.0/0.3, 0.675,0.2/0.3, 0.825,0.2/0.3, 1.0,0.1/0.3, 1.0,0.2/0.3, 0.85,0.3/0.3, 0.65,0.3/0.3, 0.325,0.1/0.3, 0.175,0.1/0.3, 0.0,0.2/0.3 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.1/0.3, 0.15,0.0/0.3, 0.35,0.0/0.3, 0.675,0.2/0.3, 0.825,0.2/0.3, 1.0,0.1/0.3, 1.0,0.2/0.3, 0.85,0.3/0.3, 0.65,0.3/0.3, 0.325,0.1/0.3, 0.175,0.1/0.3, 0.0,0.2/0.3 ]),
                                     vector:[0.175,0.33333333333333337,0,0.6666666666666667,0,0.33333333333333337,0,0.33333333333333337,0.15,0,0.35,0,0.825,0.6666666666666667,1,0.33333333333333337,1,0.6666666666666667,1,0.6666666666666667,0.85,1,0.65,1,0.175,0.33333333333333337,0,0.33333333333333337,0.35,0,0.825,0.6666666666666667,1,0.6666666666666667,0.65,1,0.325,0.33333333333333337,0.175,0.33333333333333337,0.35,0,0.675,0.6666666666666667,0.825,0.6666666666666667,0.65,1,0.65,1,0.325,0.33333333333333337,0.35,0,0.35,0,0.675,0.6666666666666667,0.65,1],
                                     ratio:{x:0.9,y:0.3}, offset:{y:0.35},
                                 },
                                 '%':{
-                                    // vector:_canvas_.library.thirdparty.earcut([ 0.0,0.1, 0.1,0.0, 0.3,0.0, 0.4,0.1, 0.4,0.3, 0.3,0.4, 0.1,0.4, 0.0,0.3, 0.1,0.25, 0.15,0.3, 0.25,0.3, 0.3,0.25, 0.3,0.15, 0.25,0.1, 0.15,0.1, 0.1,0.15, 0.1,0.25, 0.0,0.3, 0.02,0.9, 0.92,0.0, 1.0,0.08, 0.08,0.98, 0.7,1.0, 0.6,0.9, 0.6,0.7, 0.7,0.6, 0.9,0.6, 1.0,0.7, 1.0,0.9, 0.9,1.0, 0.7,1.0, 0.75,0.9, 0.85,0.9, 0.9,0.85, 0.9,0.75, 0.85,0.7, 0.75,0.7, 0.7,0.75, 0.7,0.85, 0.75,0.9, 0.7,1.0, 0.08,0.98, 0.02,0.9 ]),
+                                    // vector:_canvas_.library.math.polygonToSubTriangles([ 0.0,0.1, 0.1,0.0, 0.3,0.0, 0.4,0.1, 0.4,0.3, 0.3,0.4, 0.1,0.4, 0.0,0.3, 0.1,0.25, 0.15,0.3, 0.25,0.3, 0.3,0.25, 0.3,0.15, 0.25,0.1, 0.15,0.1, 0.1,0.15, 0.1,0.25, 0.0,0.3, 0.02,0.9, 0.92,0.0, 1.0,0.08, 0.08,0.98, 0.7,1.0, 0.6,0.9, 0.6,0.7, 0.7,0.6, 0.9,0.6, 1.0,0.7, 1.0,0.9, 0.9,1.0, 0.7,1.0, 0.75,0.9, 0.85,0.9, 0.9,0.85, 0.9,0.75, 0.85,0.7, 0.75,0.7, 0.7,0.75, 0.7,0.85, 0.75,0.9, 0.7,1.0, 0.08,0.98, 0.02,0.9 ]),
                                     vector:[0,0.1,0.1,0,0.3,0,0.3,0,0.4,0.1,0.4,0.3,0.4,0.3,0.3,0.4,0.1,0.4,0.1,0.15,0.1,0.25,0,0.3,0.02,0.9,0.92,0,1,0.08,0.7,1,0.6,0.9,0.6,0.7,0.6,0.7,0.7,0.6,0.9,0.6,0.9,0.6,1,0.7,1,0.9,0.02,0.9,1,0.08,0.08,0.98,0.7,1,0.7,0.85,0.75,0.9,0.1,0.15,0,0.3,0,0.1,0.1,0.4,0,0.3,0.1,0.25,0.15,0.1,0.1,0.15,0,0.1,0.1,0.4,0.1,0.25,0.15,0.3,0.15,0.1,0,0.1,0.3,0,0.1,0.4,0.15,0.3,0.25,0.3,0.25,0.1,0.15,0.1,0.3,0,0.4,0.3,0.1,0.4,0.25,0.3,0.3,0.15,0.25,0.1,0.3,0,0.4,0.3,0.25,0.3,0.3,0.25,0.3,0.15,0.3,0,0.4,0.3,0.4,0.3,0.3,0.25,0.3,0.15,0.7,0.75,0.7,1,0.6,0.7,1,0.9,0.9,1,0.7,1,0.7,1,0.75,0.9,0.85,0.9,0.75,0.7,0.7,0.75,0.6,0.7,1,0.9,0.7,1,0.85,0.9,0.75,0.7,0.6,0.7,0.9,0.6,1,0.9,0.85,0.9,0.9,0.85,0.85,0.7,0.75,0.7,0.9,0.6,1,0.9,0.9,0.85,0.9,0.75,0.9,0.75,0.85,0.7,0.9,0.6,0.9,0.6,1,0.9,0.9,0.75],
                                 },
                             };
@@ -20998,36 +24082,42 @@
                             'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick',
                             'onkeydown', 'onkeyup',
                         ];
+                        this.listCallbackTypes = function(){return callbacks;};
+                    
+                        var shapeCallbackStates = {}; callbacks.forEach(callbackType => shapeCallbackStates[callbackType] = true);
+                        this.getShapeCallbackState = function(type){return shapeCallbackStates[type];};
+                        this.activateShapeCallback = function(type){shapeCallbackStates[type] = true;};
+                        this.disactivateShapeCallback = function(type){shapeCallbackStates[type] = false;};
+                        this.activateAllShapeCallbacks = function(){ callbacks.forEach(callback => this.activateShapeCallback(callback)); };
+                        this.disactivateAllShapeCallbacks = function(){ callbacks.forEach(callback => this.disactivateShapeCallback(callback)); };
+                        this.activateAllShapeCallbacks();
+                    
                         function gatherDetails(event,callback,count){
-                            var point = undefined;
-                            if(count > 0){
-                                //calculate the workspace point
-                                point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
-                            }
-                            var shapes = undefined;
-                            if(count > 3){
-                                //get the shapes under this point that have this callback, in order of front to back
-                                shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a[callback]!=undefined);
-                            }
-                     
-                            return {shapes:shapes, point:point};
+                            //only calculate enough data for what will be needed
+                            return {
+                                point: count > 0 ? core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y) : undefined,
+                                shapes: count > 3 ? core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a[callback]!=undefined) : undefined,
+                            };
                         }
+                        this.functions = {};
+                    
+                    
+                    
+                    
+                    
+                    
+                    
                     
                         //default
                             for(var a = 0; a < callbacks.length; a++){
                                 _canvas_[callbacks[a]] = function(callback){
                                     return function(event){
-                                        //if core doesn't have this callback set up, just bail
-                                            if( !core.callback[callback] ){return;}
+                                        if( !core.callback.functions[callback] ){return;}
                     
-                                        //generate rectified XY position
-                                            event.X = event.offsetX; event.Y = event.offsetY;
+                                        event.X = event.offsetX; event.Y = event.offsetY;
                     
-                                        //depending on how many arguments the callback has, calculate more data for it
-                                            var data = gatherDetails(event,callback,core.callback[callback].length);
-                                
-                                        //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
+                                        var data = gatherDetails(event,callback,core.callback.functions[callback].length);
+                                        core.callback.functions[callback]( data.point.x, data.point.y, event, data.shapes );
                                     }
                                 }(callbacks[a]);
                             }
@@ -21043,132 +24133,149 @@
                                         if(core.viewport.stopMouseScroll()){ document.body.style.overflow = ''; }
                                 };
                     
-                            //onmousemove / shape's onmouseenter / shape's onmouseleave
+                            //onmousemove / onmouseenter / onmouseleave
                                 var shapeMouseoverList = [];
                                 _canvas_.onmousemove = function(event){
-                                    //generate rectified XY position
-                                        event.X = event.offsetX; event.Y = event.offsetY;
-                    
-                                    //update the stored mouse position
-                                        core.viewport.mousePosition(event.X,event.Y);
+                                    event.X = event.offsetX; event.Y = event.offsetY;
+                                    core.viewport.mousePosition(event.X,event.Y);
+                                    var shapesUnderPoint = core.arrangement.getElementsUnderPoint(event.X,event.Y);
+                                    var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                     
                                     //check for onmouseenter / onmouseleave
-                                        //get all shapes under point that have onmouseenter or onmouseleave callbacks
-                                            var shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onmouseenter!=undefined || a.onmouseleave!=undefined);
-                                        //get point
-                                            var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                        //get all shapes under point that have onmousemove, onmouseenter or onmouseleave callbacks
+                                            var shapes = shapesUnderPoint.filter(shape => shape.onmousemove!=undefined || shape.onmouseenter!=undefined || shape.onmouseleave!=undefined);
+                                        //run all onmousemove callbacks for shapes
+                                            if(shapeCallbackStates.onmousemove){
+                                                shapes.forEach(shape => { if(shape.onmousemove){shape.onmousemove( point.x, point.y, event );} });
+                                            }
                                         //go through this list, comparing to the shape transition list
                                             //shapes only on shapes list; run onmouseenter and add to shapeMouseoverList
                                             //shapes only on shapeMouseoverList; run onmouseleave and remove from shapeMouseoverList
                                             var diff = _canvas_.library.math.getDifferenceOfArrays(shapeMouseoverList,shapes);
-                                            diff.b.forEach(function(a){
-                                                if(a.onmouseenter){a.onmouseenter( point.x, point.y, event, shapes );}
-                                                shapeMouseoverList.push(a);
+                                            diff.b.forEach(function(shape){
+                                                if(shapeCallbackStates.onmouseenter && shape.onmouseenter){shape.onmouseenter( point.x, point.y, event );}
+                                                shapeMouseoverList.push(shape);
                                             });
-                                            diff.a.forEach(function(a){
-                                                if(a.onmouseleave){a.onmouseleave( point.x, point.y, event, shapes );}
-                                                shapeMouseoverList.splice(shapeMouseoverList.indexOf(a),1);
+                                            diff.a.forEach(function(shape){
+                                                if(shapeCallbackStates.onmouseleave && shape.onmouseleave){shape.onmouseleave( point.x, point.y, event );}
+                                                shapeMouseoverList.splice(shapeMouseoverList.indexOf(shape),1);
                                             });
                     
                                     //perform regular onmousemove actions
-                                        var callback = 'onmousemove';
+                                        if(core.callback.functions.onmousemove){
+                                            core.callback.functions.onmousemove( point.x, point.y, event, shapesUnderPoint.filter(shape => shape.onmousemove!=undefined) );
+                                        }
+                                };
                     
-                                        //if core doesn't have this callback set up, just bail
-                                            if( !core.callback[callback] ){return;}
-                                
-                                        //depending on how many arguments the  callback has, calculate more data for it
-                                            var data = gatherDetails(event,callback,core.callback[callback].length);
-                                
-                                        //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
+                            //onwheel
+                                _canvas_.onwheel = function(event){
+                                    event.X = event.offsetX; event.Y = event.offsetY;
+                    
+                                    if(shapeCallbackStates.onwheel){
+                                        var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                        core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(shape => shape.onwheel!=undefined).forEach(shape => { shape.onwheel(point.x,point.y,event); });
+                                    }
+                    
+                                    if(core.callback.functions.onwheel){
+                                        var data = gatherDetails(event,'onwheel',core.callback.functions.onwheel.length);
+                                        core.callback.functions.onwheel( data.point.x, data.point.y, event, data.shapes );
+                                    }
                                 };
                     
                             //onkeydown / onkeyup
-                                var tmp = ['onkeydown', 'onkeyup'];
-                                for(var a = 0; a < tmp.length; a++){
-                                    _canvas_[tmp[a]] = function(callback){
+                                ['onkeydown', 'onkeyup'].forEach(callbackName => {
+                                    _canvas_[callbackName] = function(callback){
                                         return function(event){
-                                            //if core doesn't have this callback set up, just bail
-                                                if( !core.callback[callback] ){return;}
+                                            var p = core.viewport.mousePosition(); event.X = p.x; event.Y = p.y;
+                                            var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                     
-                                            //generate rectified XY position
-                                                event.X = event.offsetX; event.Y = event.offsetY;
-                                                    
-                                            //depending on how many arguments the  callback has, calculate more data for it
-                                                var shapes = undefined;
-                                                if(core.callback[callback].length > 1){
-                                                    //get the shapes under this point that have this callback, in order of front to back
-                                                    var p = core.viewport.mousePosition();
-                                                    shapes = core.arrangement.getElementsUnderPoint(p.x,p.y).filter(a => a[callback]!=undefined);
-                                                }
-                                                var point = undefined;
-                                                if(core.callback[callback].length > 2){
-                                                    //calculate the workspace point
-                                                    var p = core.viewport.mousePosition();
-                                                    point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(p.x,p.y);
-                                                }
+                                            if(shapeCallbackStates[callback]){
+                                                core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(shape => shape[callback]!=undefined).forEach(shape => { shape[callback](point.x,point.y,event); });
+                                            }
                                     
-                                            //activate core's callback, providing the point, original event, and shapes
-                                                var p = core.viewport.mousePosition();
-                                                event.X = p.x; event.Y = p.y;
-                                                core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
+                                            if(core.callback.functions[callback]){
+                                                var data = gatherDetails(event,callback,core.callback.functions[callback].length);
+                                                core.callback.functions[callback]( point.x, point.y, event, data.shapes );
+                                            }
                                         }
-                                    }(tmp[a]);
-                                }
+                                    }(callbackName);
+                                });
                     
-                            //onmousedown / onmouseup / onclick
+                            //onmousedown / onmouseup / onclick / ondblclick
                                 var shapeMouseclickList = [];
-                                _canvas_.onclick = function(){};
+                                var doubleClickCounter = 0;
                                 _canvas_.onmousedown = function(event){
-                                    //generate rectified XY position
-                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                    if(core.viewport.clickVisibility()){ core.render.drawDot(event.offsetX,event.offsetY); }
                     
-                                    //dev functions
-                                        if(core.viewport.clickVisibility()){ core.render.drawDot(event.X,event.Y); }
+                                    event.X = event.offsetX; event.Y = event.offsetY;
                     
-                                    var callback = 'onmousedown';
-                                    
-                                    //save current shapes for use in the onmouseup callback
-                                        shapeMouseclickList = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onclick!=undefined);
+                                    var shapesUnderPoint = core.arrangement.getElementsUnderPoint(event.X,event.Y);
+                                    var workspacePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                     
-                                    //perform regular onmousedown actions
-                                        //if core doesn't have this callback set up, just bail
-                                            if( !core.callback[callback] ){return;}
-                                
-                                        //depending on how many arguments the  callback has, calculate more data for it
-                                            var data = gatherDetails(event,callback,core.callback[callback].length);
-                            
-                                        //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
+                                    //save current shapes for use in the onclick part of the onmouseup callback
+                                        shapeMouseclickList = shapesUnderPoint.filter(shape => shape.onclick!=undefined);
+                    
+                                    //activate the onmousedown callback for all the shapes under this point
+                                        if(shapeCallbackStates.onmousedown){
+                                            shapesUnderPoint.filter(shape => shape.onmousedown!=undefined).forEach(shape => { 
+                                                if( shape.onmousedown ){ shape.onmousedown(workspacePoint.x,workspacePoint.y,event); }
+                                            });
+                                        }
+                    
+                                    //perform global function
+                                        if(core.callback.functions.onmousedown){
+                                            core.callback.functions.onmousedown( workspacePoint.x, workspacePoint.y, event, shapesUnderPoint.filter(shape => shape.onmousedown!=undefined) );
+                                        }
                                 };
                                 _canvas_.onmouseup = function(event){
-                                    //generate rectified XY position
-                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                    event.X = event.offsetX; event.Y = event.offsetY;
+                                    var point = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                     
-                                    var callback = 'onmouseup';
+                                    
+                                    //run callbacks for all shapes with the onmouseup callback
+                                        if(shapeCallbackStates.onmouseup){
+                                            core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(shape => shape.onmouseup!=undefined).forEach(shape => { shape.onmouseup( point.x, point.y, event ); });
+                                        };
                     
                                     //for the shapes under the mouse that are also on the shapeMouseclickList, activate their "onclick" callback
-                                        var shapes = core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(a => a.onclick!=undefined);
-                                        shapes.forEach(function(a){ if( shapeMouseclickList.includes(a) ){ 
-                                            //if core doesn't have this callback set up, just bail
-                                                if( !core.callback[callback] ){return;}
+                                        if(shapeCallbackStates.onclick){
+                                            core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(shape => shape.onclick!=undefined).forEach(shape => { 
+                                                if( shapeMouseclickList.includes(shape) && shape.onclick ){ shape.onclick( point.x, point.y, event ); } 
+                                            });
+                                        }
                     
-                                            //depending on how many arguments the  callback has, calculate more data for it
-                                                var data = gatherDetails(event,callback,core.callback[callback].length);
+                                    //for the shapes under the mouse that are also on the shapeMouseclickList, activate their "ondblclick" callback, if appropriate
+                                        if(shapeCallbackStates.ondblclick){
+                                            doubleClickCounter++;
+                                            setTimeout(function(){doubleClickCounter=0;},500);
+                                            if(doubleClickCounter >= 2){
+                                                core.arrangement.getElementsUnderPoint(event.X,event.Y).filter(shape => shape.ondblclick!=undefined).forEach(shape => { 
+                                                    if( shapeMouseclickList.includes(shape) && shape.ondblclick ){ shape.ondblclick( point.x, point.y, event ); } 
+                                                });
+                                                doubleClickCounter = 0;
+                                            }
+                                        }
+                                        
+                                    //perform global function
+                                        if(core.callback.functions.onmouseup){
+                                            var data = gatherDetails(event,'onmouseup',core.callback.functions.onmouseup.length);
+                                            core.callback.functions.onmouseup( data.point.x, data.point.y, event, data.shapes );
+                                        }
                     
-                                            //activate the callback, providing the point, original event, and shapes
-                                                a.onclick( event, data.shapes, data.point );
-                                        } });
-                    
-                                    //perform regular onmouseup actions
-                                        //if core doesn't have this callback set up, just bail
-                                            if( !core.callback[callback] ){return;}
-                    
-                                        //depending on how many arguments the  callback has, calculate more data for it
-                                            var data = gatherDetails(event,callback,core.callback[callback].length);
-                            
-                                        //activate core's callback, providing the point, original event, and shapes
-                                            core.callback[callback]( data.point.x, data.point.y, event, data.shapes );
+                                };
+                                _canvas_.onclick = function(){
+                                    if(core.callback.functions.onclick){
+                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                        var data = gatherDetails(event,'onclick',core.callback.functions.onclick.length);
+                                        core.callback.functions.onclick( data.point.x, data.point.y, event, data.shapes );
+                                    }
+                                };
+                                _canvas_.ondblclick = function(){
+                                    if(core.callback.functions.ondblclick){
+                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                        var data = gatherDetails(event,'ondblclick',core.callback.functions.ondblclick.length);
+                                        core.callback.functions.ondblclick( data.point.x, data.point.y, event, data.shapes );
+                                    }
                                 };
                     };
                 };

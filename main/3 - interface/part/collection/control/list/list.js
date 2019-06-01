@@ -522,7 +522,7 @@ this.list = function(
             stenciledGroup.clipActive(true);
 
     //interaction
-        cover.onwheel = function(event){
+        cover.onwheel = function(x,y,event){
             if(!interactable){return;}
             var move = event.deltaY/100;
             object.position( object.position() + move/10 );

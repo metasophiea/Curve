@@ -5,12 +5,11 @@ _canvas_.core.render.active(true);
 
 // // view positioning
 // _canvas_.core.viewport.scale(6);
-// var x = 625;
-// var y = 300;
+// var x = 0;
+// var y = 0;
 // _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // // _canvas_.core.viewport.angle(-0.1);
 
-_canvas_.core.render.active(true);
 // _canvas_.core.stats.active(true);
 // var averages = [];
 // var rollingAverage = 0;
@@ -39,7 +38,7 @@ _canvas_.core.render.active(true);
     basicGroup.append( _canvas_.interface.part.builder( 'polygon', 'testPolygon', { points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'polygonWithOutline', 'testPolygonWithOutline', { points:[75,15, 75,55, 115,55], thickness:1, colour:{r:1,g:0,b:0.5,a:1}, lineColour:{r:0,g:0,b:0,a:1} } ) );
     basicGroup.append( _canvas_.interface.part.builder( 'text', 'testText', { x:5, y:75, text:'Hello', height:15, width:70, colour:{r:150/255,g:150/255,b:1,a:1} } ) );
-    basicGroup.append( _canvas_.interface.part.builder( 'path', 'testPath', { points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1 }) );
+    basicGroup.append( _canvas_.interface.part.builder( 'path', 'testPath', { points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1.25, jointType:'round', capType:'round' }) );
     basicGroup.append( _canvas_.interface.part.builder( 'circleWithOutline', 'testCircleWithOutline', { x:90, y:70, radius:10 } ) );
 
 //display
@@ -349,11 +348,11 @@ _canvas_.core.render.active(true);
     var cn_aud_2 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio3', { x:450, y:60 } ); dynamicGroup.append( cn_aud_2 ); 
     var cn_aud_3 = _canvas_.interface.part.builder( 'connectionNode_audio', 'test_connectionNode_audio4', { x:420, y:100, isAudioOutput:true} ); dynamicGroup.append( cn_aud_3 ); 
 
-    cn_reg_0.connectTo(cn_reg_1); cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
-    cn_sig_0.connectTo(cn_sig_1); cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
-    cn_vol_0.connectTo(cn_vol_1); cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
-    cn_dat_0.connectTo(cn_dat_1); cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
-    cn_aud_0.connectTo(cn_aud_1); cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
+    cn_reg_0.connectTo(cn_reg_1); //cn_reg_0.allowConnections(false); cn_reg_0.allowDisconnections(false);
+    cn_sig_0.connectTo(cn_sig_1); //cn_sig_0.allowConnections(false); cn_sig_0.allowDisconnections(false);
+    cn_vol_0.connectTo(cn_vol_1); //cn_vol_0.allowConnections(false); cn_vol_0.allowDisconnections(false);
+    cn_dat_0.connectTo(cn_dat_1); //cn_dat_0.allowConnections(false); cn_dat_0.allowDisconnections(false);
+    cn_aud_0.connectTo(cn_aud_1); //cn_aud_0.allowConnections(false); cn_aud_0.allowDisconnections(false);
 
     var cn_reg_4 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode5', { x:50,  y:150, angle:Math.PI*0.15 } ); dynamicGroup.append( cn_reg_4 );
     var cn_reg_5 = _canvas_.interface.part.builder( 'connectionNode', 'test_connectionNode6', { x:100, y:150, angle:Math.PI*0.25 } ); dynamicGroup.append( cn_reg_5 );

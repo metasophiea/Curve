@@ -19,7 +19,9 @@ _canvas_.library = new function(){
     this.misc = new function(){
         {{include:misc.js}}
     };
-    this.thirdparty = new function(){
-        {{include:thirdparty.js}}
+    var _thirdparty = new function(){
+        var thirdparty = this;
+        {{include:thirdparty/*}} /**/
     };
+    this.__tp = _thirdparty;
 };

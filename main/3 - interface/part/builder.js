@@ -25,9 +25,7 @@ this.builder = function(type,name,data){
     this.partLibrary.polygonWithOutline = function(name,data){ return interfacePart.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour ); }
     this.partLibrary.circle = function(name,data){ return interfacePart.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour ); }
     this.partLibrary.circleWithOutline = function(name,data){ return interfacePart.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour ); }
-    this.partLibrary.path = function(name,data){ return interfacePart.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray ); }
-    this.partLibrary.pathWithRoundJointsAndEnds = function(name,data){ return interfacePart.collection.basic.pathWithRoundJointsAndEnds( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray ); }
-    this.partLibrary.loopedPath = function(name,data){ return interfacePart.collection.basic.loopedPath( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray ); }
+    this.partLibrary.path = function(name,data){ return interfacePart.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray, data.jointType, data.capType, data.looping, data.jointDetail, data.sharpLimit ); }
     this.partLibrary.text = function(name,data){ return interfacePart.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing ); }
 
 //display
@@ -496,31 +494,26 @@ this.builder = function(type,name,data){
     ); }
     this.partLibrary.connectionNode = function(name,data){ return interfacePart.collection.dynamic.connectionNode(
         name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-        data.onconnect, data.ondisconnect,
-    ); }
-    this.partLibrary.connectionNode2 = function(name,data){ return interfacePart.collection.dynamic.connectionNode2(
-        name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
         data.onconnect, data.ondisconnect,
     ); }
     this.partLibrary.connectionNode_signal = function(name,data){ return interfacePart.collection.dynamic.connectionNode_signal(
         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
         data.onchange, data.onconnect, data.ondisconnect,
     ); }
     this.partLibrary.connectionNode_voltage = function(name,data){ return interfacePart.collection.dynamic.connectionNode_voltage(
         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
         data.onchange, data.onconnect, data.ondisconnect,
     ); }
     this.partLibrary.connectionNode_data = function(name,data){ return interfacePart.collection.dynamic.connectionNode_data(
         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
         data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
     ); }
     this.partLibrary.connectionNode_audio = function(name,data){ return interfacePart.collection.dynamic.connectionNode_audio(
-        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context,
+        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableVersion,
         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
         data.onconnect, data.ondisconnect,
     ); }

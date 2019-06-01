@@ -32,16 +32,16 @@ _canvas_.core.arrangement.append(dynamicGroup);
     tmp.name = 'centre';
     tmp.x(30); tmp.y(30); tmp.width(440); tmp.height(440);
     tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
-    tmp.onmousedown = function(x,y,event,shapes){console.log('rectangle::centre::onmousedown');};
-    tmp.onmouseup = function(x,y,event,shapes){console.log('rectangle::centre::onmouseup');};
-    tmp.onmousemove = function(x,y,event,shapes){console.log('rectangle::centre::onmousemove');};
-    tmp.onmouseenter = function(x,y,event,shapes){console.log('rectangle::centre::onmouseenter');};
-    tmp.onmouseleave = function(x,y,event,shapes){console.log('rectangle::centre::onmouseleave');};
-    tmp.onwheel = function(x,y,event,shapes){console.log('rectangle::centre::onwheel');};
-    tmp.onclick = function(x,y,event,shapes){console.log('rectangle::centre::onclick');};
-    tmp.ondblclick = function(x,y,event,shapes){console.log('rectangle::centre::ondblclick');};
-    tmp.onkeydown = function(x,y,event,shapes){console.log('rectangle::centre::onkeydown');};
-    tmp.onkeyup = function(x,y,event,shapes){console.log('rectangle::centre::onkeyup');};
+    tmp.onmousedown = function(x,y,event){console.log('rectangle::centre::onmousedown');};
+    tmp.onmouseup = function(x,y,event){console.log('rectangle::centre::onmouseup');};
+    tmp.onmousemove = function(x,y,event){console.log('rectangle::centre::onmousemove');};
+    tmp.onmouseenter = function(x,y,event){console.log('rectangle::centre::onmouseenter');};
+    tmp.onmouseleave = function(x,y,event){console.log('rectangle::centre::onmouseleave');};
+    tmp.onwheel = function(x,y,event){console.log('rectangle::centre::onwheel');};
+    tmp.onclick = function(x,y,event){console.log('rectangle::centre::onclick');};
+    tmp.ondblclick = function(x,y,event){console.log('rectangle::centre::ondblclick');};
+    tmp.onkeydown = function(x,y,event){console.log('rectangle::centre::onkeydown');};
+    tmp.onkeyup = function(x,y,event){console.log('rectangle::centre::onkeyup');};
     dynamicGroup.append(tmp);
 
 var staticGroup = _canvas_.core.shape.create('group');
@@ -88,16 +88,18 @@ _canvas_.core.arrangement.append(staticGroup);
 //     console.log( _canvas_.core.arrangement.getElementUnderPoint(event.X,event.Y) );
 // }
 
-// _canvas_.core.callback.onmousedown   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousedown(x,y,event,shapes)); }
-// _canvas_.core.callback.onmouseup     = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseup(x,y,event,shapes)); }
-// _canvas_.core.callback.onmousemove   = function(x,y,event,shapes){ shapes.forEach(a => a.onmousemove(x,y,event,shapes)); }
-// _canvas_.core.callback.onmouseenter  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseenter(x,y,event,shapes)); }
-// _canvas_.core.callback.onmouseleave  = function(x,y,event,shapes){ shapes.forEach(a => a.onmouseleave(x,y,event,shapes)); }
-// _canvas_.core.callback.onwheel       = function(x,y,event,shapes){ shapes.forEach(a => a.onwheel(x,y,event,shapes)); }
-// _canvas_.core.callback.onclick       = function(x,y,event,shapes){ shapes.forEach(a => a.onclick(x,y,event,shapes)); }
-// _canvas_.core.callback.ondblclick    = function(x,y,event,shapes){ shapes.forEach(a => a.ondblclick(x,y,event,shapes)); }
-// _canvas_.core.callback.onkeydown     = function(x,y,event,shapes){ shapes.forEach(a => a.onkeydown(x,y,event,shapes)); }
-// _canvas_.core.callback.onkeyup       = function(x,y,event,shapes){ shapes.forEach(a => a.onkeyup(x,y,event,shapes)); }
+_canvas_.core.callback.functions.onmousedown   = function(x,y,event,shapes){ console.log('core.callback.functions.onmousedown',x,y,event,shapes); };
+_canvas_.core.callback.functions.onmouseup     = function(x,y,event,shapes){ console.log('core.callback.functions.onmouseup',x,y,event,shapes); };
+_canvas_.core.callback.functions.onmousemove   = function(x,y,event,shapes){ console.log('core.callback.functions.onmousemove',x,y,event,shapes); };
+_canvas_.core.callback.functions.onmouseenter  = function(x,y,event,shapes){ console.log('core.callback.functions.onmouseenter',x,y,event,shapes); };
+_canvas_.core.callback.functions.onmouseleave  = function(x,y,event,shapes){ console.log('core.callback.functions.onmouseleave',x,y,event,shapes); };
+_canvas_.core.callback.functions.onwheel       = function(x,y,event,shapes){ console.log('core.callback.functions.onwheel',x,y,event,shapes); };
+_canvas_.core.callback.functions.onclick       = function(x,y,event,shapes){ console.log('core.callback.functions.onclick',x,y,event,shapes); };
+_canvas_.core.callback.functions.ondblclick    = function(x,y,event,shapes){ console.log('core.callback.functions.ondblclick',x,y,event,shapes); };
+_canvas_.core.callback.functions.onkeydown     = function(x,y,event,shapes){ console.log('core.callback.functions.onkeydown',x,y,event,shapes); };
+_canvas_.core.callback.functions.onkeyup       = function(x,y,event,shapes){ console.log('core.callback.functions.onkeyup',x,y,event,shapes); };
+
+_canvas_.core.callback.disactivateAllShapeCallbacks();
 
 
 _canvas_.core.render.frame();

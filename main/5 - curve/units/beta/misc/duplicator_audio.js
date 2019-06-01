@@ -19,7 +19,7 @@ this.duplicator_audio = function(x,y,a){
         space:shape,
         elements:[
             {type:'connectionNode_audio', name:'input', data:{ 
-                x:55, y:17.5, width:5, height:15, 
+                x:55, y:17.5, width:5, height:15, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.audio.dim, 
                     glow:style.connectionNode.audio.glow,
@@ -28,7 +28,7 @@ this.duplicator_audio = function(x,y,a){
                 },
             }},
             {type:'connectionNode_audio', name:'output_1', data:{ 
-                x:-2.5, y:7.5, width:5, height:15, angle:0.15, isAudioOutput:true, 
+                x:0.25, y:15+7.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.audio.dim, 
                     glow:style.connectionNode.audio.glow, 
@@ -37,7 +37,7 @@ this.duplicator_audio = function(x,y,a){
                 }
             }},
             {type:'connectionNode_audio', name:'output_2', data:{ 
-                x:-4.75, y:27.5, width:5, height:15, angle:-0.15, isAudioOutput:true, 
+                x:2.5, y:15+27.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.audio.dim, 
                     glow:style.connectionNode.audio.glow, 
@@ -48,18 +48,18 @@ this.duplicator_audio = function(x,y,a){
 
             { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
 
-            { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
+            { type:'path', name:'marking_1', data:{pointsAsXYArray:[
                 {x:50,y:25}, {x:5,y:34}, {x:7,y:30}, 
-            ], thickness:1.25, colour:style.marking.audio} },
-            { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
+            { type:'path', name:'marking_2', data:{pointsAsXYArray:[
                 {x:5,y:34}, {x:8.5,y:37}, 
-            ], thickness:1.25, colour:style.marking.audio} },
-            { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
+            { type:'path', name:'marking_3', data:{pointsAsXYArray:[
                 {x:50,y:25}, {x:5,y:16}, {x:7,y:20},
-            ], thickness:1.25, colour:style.marking.audio} },
-            { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
+            { type:'path', name:'marking_4', data:{pointsAsXYArray:[
                 {x:5,y:16}, {x:8.5,y:13}, 
-            ], thickness:1.25, colour:style.marking.audio} },
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
 
             { type:'text', name:'label', data:{
                 x:30.5, y:43.5, 
@@ -79,9 +79,9 @@ this.duplicator_audio = function(x,y,a){
         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
 
-        design.elements.push( {type:'pathWithRoundJointsAndEnds', name:'bumper_'+b, data:{ pointsAsXYArray:[
+        design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-        ], thickness:2.5, colour:style.bumper }} );
+        ], thickness:2.5, jointType:'round', capType:'round', colour:style.bumper }} );
     }
 
 

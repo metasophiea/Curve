@@ -8,8 +8,8 @@ this.padString = function(string,length,padding=' '){
 
     return string;
 };
-this.compressString = function(string){return library.thirdparty.lzString.compress(string);};
-this.decompressString = function(string){return library.thirdparty.lzString.decompress(string);};
+this.compressString = function(string){return _thirdparty.lzString.compress(string);};
+this.decompressString = function(string){return _thirdparty.lzString.decompress(string);};
 this.serialize = function(data,compress=true){
     function getType(obj){
         return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()

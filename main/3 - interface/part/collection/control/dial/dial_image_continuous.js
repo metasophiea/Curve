@@ -86,7 +86,7 @@ this.dial_continuous_image = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onwheel = function(event){
+        handle.onwheel = function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
             
@@ -96,7 +96,7 @@ this.dial_continuous_image = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        handle.onmousedown = function(event){
+        handle.onmousedown = function(x,y,event){
             if(!interactable){return;}
             var initialValue = value;
             var initialY = event.Y;

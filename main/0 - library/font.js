@@ -1,9 +1,9 @@
 this.listAllAvailableGlyphs = function(fontFileData){
-    var font = library.thirdparty.opentype.parse(fontFileData);
+    var font = this.decodeFont(fontFileData);
     return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
 };
 this.decodeFont = function(fontFileData){
-    return library.thirdparty.opentype.parse(fontFileData);
+    return _thirdparty.opentype.parse(fontFileData);
 };
 this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
     var glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
@@ -95,20 +95,18 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
                 var isHole = false;
                 for(var a = 0; a < segments.length; a++){
                     if( library.math.detectOverlap.overlappingPolygons(path,segments[a].path) ){
-                        segments[a].holeIndexes.push( segments[a].path.length );
                         segments[a].path = segments[a].path.concat(path);
+                        segments[a].regions.unshift(path);
                         isHole = true;
                         break;
                     }
                 }
-                if(!isHole){ segments.push({ path:path, holeIndexes:[] }); }
+                if(!isHole){ segments.push({ path:path, regions:[path] }); }
             });
 
     //produce triangles from points
         var triangles = [];
-        segments.forEach(segment => {
-            triangles = triangles.concat( library.thirdparty.earcut(segment.path.map(a => [a.x,a.y]).flat(),segment.holeIndexes) );
-        });
+        segments.forEach(segment => { triangles = triangles.concat( library.math.polygonToSubTriangles(segment.regions) ); });
 
         return triangles;
 };

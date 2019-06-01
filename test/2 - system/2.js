@@ -19,6 +19,7 @@ var rect = _canvas_.core.shape.create('rectangle');
     rect.width(60); rect.height(60);
     rect.colour = {r:0,g:1,b:0,a:0.6};
     rect.dotFrame = true;
+    rect.onmousemove = function(x,y,event){console.log('rectangle::testRectangle_middlegroud_middle::onmousemove',x,y,event);};
     _canvas_.system.pane.mm.append(rect);
 var rect = _canvas_.core.shape.create('rectangle');
     rect.name = 'testRectangle_middlegroud_front';

@@ -173,6 +173,11 @@ console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
         tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:4.9999,y:4.9999},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
         tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:5,y:5},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
         tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:5.0001,y:5.0001},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),false);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:115,y:30},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),false);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:400,y:0},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),false);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:200,y:0},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),false);
+        tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:10,y:20},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),true);
+
     //lineSegments
         console.log('%c-- lineSegments', 'font-weight: bold;');
             //the function tells where the lines would intersect if they were infinitely long in both directions,

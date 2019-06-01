@@ -42,7 +42,7 @@ this.checkbox_ = function(
         };
 
     //interactivity
-        subject.cover.onclick = function(event){
+        subject.cover.onclick = function(){
             if(!interactable){return;}
             object.set(!object.get());
         };

@@ -6,6 +6,7 @@ this.connectionNode = function(
     glowStyle={r:0.95,g:0.95,b:0.95,a:1},
     cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
     cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
+    cableVersion=0,
     onconnect=function(instigator){},
     ondisconnect=function(instigator){},
 ){
@@ -72,7 +73,7 @@ this.connectionNode = function(
             _canvas_.system.mouse.mouseInteractionHandler(
                 undefined,
                 function(event){
-                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0];
+                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0]; 
                     if(element == undefined){return;}
                     
                     var node = element.parent;
@@ -85,7 +86,7 @@ this.connectionNode = function(
             );
         };
         rectangle.ondblclick = function(x,y,event){
-            if( !(allowDisconnections && foreignNode.allowDisconnections()) ){return;}
+            if(foreignNode == undefined || !(allowDisconnections && foreignNode.allowDisconnections()) ){return;}
             object.disconnect();
         };
 
@@ -93,8 +94,13 @@ this.connectionNode = function(
         var cable;
 
         object._addCable = function(){
-            cable = interfacePart.builder('cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
-            // cable = interfacePart.builder('cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+            console.log(cableVersion);
+            if(cableVersion == 2){
+                cable = interfacePart.builder('cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+            }else{
+                cable = interfacePart.builder('cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+            }
+            
             foreignNode._receiveCable(cable);
             _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
             this.draw();

@@ -5,7 +5,7 @@ _canvas_.control.grapple = {
     declare:function(unit){
 
         function grappleFunctionRunner(list){
-            return function(event){
+            return function(x,y,event){
                 //ensure that it's the action button on the mouse
                     if(event.button != 0){return;}
 

@@ -6,12 +6,14 @@ this.connectionNode_audio = function(
     glowStyle={r:255/255, g:244/255, b:244/255, a:1},
     cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
     cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
+    cableVersion=0,
     onconnect=function(){},
     ondisconnect=function(){},
 ){
     //elements
         var object = interfacePart.builder('connectionNode',name,{
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
+            cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
         });
         object._direction = isAudioOutput ? 'out' : 'in';

@@ -21,22 +21,22 @@ this.duplicator_signal = function(x,y,a){
                 colour:style.textColour}
             },
 
-            { type:'pathWithRoundJointsAndEnds', name:'marking_1', data:{pointsAsXYArray:[
+            { type:'path', name:'marking_1', data:{pointsAsXYArray:[
                 {x:35,y:20}, {x:27.5,y:20}, {x:17.5,y:12.5}, {x:5,y:12.5}, {x:7.5,y:9.5},
-            ], thickness:1.25, colour:style.marking.signal} },
-            { type:'pathWithRoundJointsAndEnds', name:'marking_2', data:{pointsAsXYArray:[
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
+            { type:'path', name:'marking_2', data:{pointsAsXYArray:[
                 {x:5,y:12.5}, {x:7.5,y:15.5},
-            ], thickness:1.25, colour:style.marking.signal} },
-            { type:'pathWithRoundJointsAndEnds', name:'marking_3', data:{pointsAsXYArray:[
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
+            { type:'path', name:'marking_3', data:{pointsAsXYArray:[
                 {x:27.5,y:20}, {x:17.5,y:27.5}, {x:5,y:27.5}, {x:7.5,y:30.5},
-            ], thickness:1.25, colour:style.marking.signal} },
-            { type:'pathWithRoundJointsAndEnds', name:'marking_4', data:{pointsAsXYArray:[
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
+            { type:'path', name:'marking_4', data:{pointsAsXYArray:[
                 {x:5,y:27.5}, {x:7.5,y:24.5},
-            ], thickness:1.25, colour:style.marking.signal} },
+            ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
 
 
             {type:'connectionNode_signal', name:'input', data:{ 
-                x:40, y:15, width:5, height:10, 
+                x:40, y:15, width:5, height:10, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.signal.dim, 
                     glow:style.connectionNode.signal.glow,
@@ -46,7 +46,7 @@ this.duplicator_signal = function(x,y,a){
                 onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
             }},
             {type:'connectionNode_signal', name:'output_1', data:{ 
-                x:-5, y:7.5, width:5, height:10, 
+                x:0, y:17.5, width:5, height:10, angle:Math.PI, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.signal.dim, 
                     glow:style.connectionNode.signal.glow, 
@@ -55,7 +55,7 @@ this.duplicator_signal = function(x,y,a){
                 }
             }},
             {type:'connectionNode_signal', name:'output_2', data:{
-                x:-5, y:22.5, width:5, height:10, 
+                x:0, y:32.5, width:5, height:10, angle:Math.PI, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.signal.dim, 
                     glow:style.connectionNode.signal.glow, 
@@ -72,9 +72,9 @@ this.duplicator_signal = function(x,y,a){
         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
 
-        design.elements.push( {type:'pathWithRoundJointsAndEnds', name:'bumper_'+b, data:{ pointsAsXYArray:[
+        design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-        ], thickness:2.5, colour:style.bumper }} );
+        ], thickness:2.5, jointType:'round', capType:'round', colour:style.bumper }} );
     }
 
 

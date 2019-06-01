@@ -10,4 +10,4 @@ var tmp = _canvas_.core.shape.create('rectangle');
     _canvas_.core.arrangement.append(tmp);
 
 _canvas_.core.render.frame();
-_canvas_.core.callback.clickVisibility(true);
+_canvas_.core.viewport.clickVisibility(true);

@@ -4,5 +4,5 @@ _canvas_.control.scene.addUnit(70,80,0,'duplicator_voltage','beta');
 _canvas_.control.scene.addUnit(125,30,0,'duplicator_data','beta');
 _canvas_.control.scene.addUnit(125,85,0,'duplicator_audio','beta');
 
-// _canvas_.control.viewport.scale(18);
-// _canvas_.control.viewport.position(-2500,-1800)
+_canvas_.control.viewport.scale(12);
+_canvas_.control.viewport.position(-1320,-930);

@@ -175,31 +175,31 @@ this.detectOverlap = new function(){
             //if the point is on a point of the poly; bail and return true
             if( point.x == points[a].x && point.y == points[a].y ){ return true; }
 
-            //discover if point is on the same level (y) as the poly, if both these tests return the same result, it is not
-            if( (points[a].y > point.y) != (points[b].y > point.y) ){
+            //point must be on the same level of the line
+            if( (points[b].y >= point.y && points[a].y <= point.y) || (points[a].y >= point.y && points[b].y <= point.y) ){
                 //discover if the point is on the far right of the line
                 if( points[a].x < point.x && points[b].x < point.x ){
                     inside = !inside;
                 }else{
-                    var X = points[a].x < points[b].x ? {big:points[a].x,little:points[b].x} : {big:points[b].x,little:points[a].x};
-                    var Y = points[a].y < points[b].y ? {big:points[a].y,little:points[b].y} : {big:points[b].y,little:points[a].y};
-                    var areaLocation = (point.x-X.big)/(X.little-X.big) + (point.y-Y.big)/(Y.little-Y.big);
+                    //calculate what side of the line this point is
+                        if( points[b].y > points[a].y && points[b].x > points[a].x ){
+                            var areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
+                        }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
+                            var areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
+                        }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
+                            var areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
+                        }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
+                            var areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
+                        }
 
-                    //is this point on the line (if so, bail and return true)
-                    //if it's in the right side area; do the flip
-                    if( areaLocation == 1 ){
-                        return true;
-                    }else if(areaLocation > 1){
-                        inside = !inside;
-                    }
+                    //if its on the line, return true immediatly, if it's just above 1 do a flip
+                        if( areaLocation == 1 ){
+                            return true;
+                        }else if(areaLocation > 1){
+                            inside = !inside;
+                        }
                 }
             }
-
-            //old method (kinda magic)
-            // if(
-            //     ((points[a].y > point.y) != (points[b].y > point.y)) && 
-            //     (point.x < ((((points[b].x-points[a].x)*(point.y-points[a].y)) / (points[b].y-points[a].y)) + points[a].x))
-            // ){inside = !inside;}
         }
         return inside;
     };
@@ -438,40 +438,57 @@ this.multiBlendColours = function(rgbaList,ratio){//console.log(rgbaList,ratio);
         return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
 };
 
-this.pathExtrapolation = new function(){
-    function path_to_overlappingRectangleSeries(path,thickness){
-        var jointData = [];
-    
-        //parse path
-            for(var a = 0; a < path.length/2; a++){
-                jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
-            }
-    
-        var outputPoints = [];
-        for(var a = 1; a < jointData.length; a++){
-            var tmp = {
-                startPoint:jointData[a-1].point,
-                endPoint:jointData[a].point,
-                angle:_canvas_.library.math.getAngleOfTwoPoints( jointData[a-1].point, jointData[a].point ),
-            };
-    
-            var left =  _canvas_.library.math.cartesianAngleAdjust(thickness, 0, Math.PI/2 + tmp.angle);
-            var right = _canvas_.library.math.cartesianAngleAdjust(-thickness, 0, Math.PI/2 + tmp.angle);
-    
-            outputPoints.push(
-                tmp.startPoint.x+left.x,  tmp.startPoint.y+left.y,
-                tmp.startPoint.x+right.x, tmp.startPoint.y+right.y,
-                tmp.endPoint.x+left.x,    tmp.endPoint.y+left.y,
-    
-                tmp.startPoint.x+right.x, tmp.startPoint.y+right.y,
-                tmp.endPoint.x+left.x,    tmp.endPoint.y+left.y,
-                tmp.endPoint.x+right.x,   tmp.endPoint.y+right.y,
-            );
-        }
-    
-        return outputPoints;
+
+
+this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+    if(inputFormat == 'flatArray'){
+        var tmp = [];
+        for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
+        regions = [tmp];
     }
-    function path_to_rectangleSeries(path,thickness,returnExtraData=false){
+
+    var holes = regions.reverse().map(region => region.length);
+    holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
+    holes.pop();
+
+    return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
+};
+this.unionPolygons = function(polygon1,polygon2){
+    //martinez (not working)
+    // for(var a = 0; a < polygon1.length; a++){
+    //     polygon1[a].push( polygon1[a][0] );
+    // }
+    // for(var a = 0; a < polygon2.length; a++){
+    //     polygon2[a].push( polygon2[a][0] );
+    // }
+
+    // var ans = _thirdparty.martinez.union(
+    //     polygon1.map(region => region.map(item => [item.x,item.y])  ),
+    //     polygon2.map(region => region.map(item => [item.x,item.y])  )
+    // );
+    // return ans.flat().map(region => region.map(item => ({x:item[0],y:item[1]})));
+
+    //PolyBool
+    return _thirdparty.PolyBool.union(
+        {regions:polygon1.map(region => region.map(item => [item.x,item.y]))}, 
+        {regions:polygon2.map(region => region.map(item => [item.x,item.y]))}
+    ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
+}
+this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
+    function loopThisPath(path){
+        var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
+        var loopingPath = [];
+    
+        loopingPath = loopingPath.concat(joinPoint);
+        for(var a = 2; a < path.length; a+=2){
+            loopingPath = loopingPath.concat( [path[a], path[a+1]] );
+        }
+        loopingPath = loopingPath.concat( [path[0], path[1]] );
+        loopingPath = loopingPath.concat(joinPoint);
+
+        return loopingPath;
+    }
+    function calculateJointData(path,thickness){
         var jointData = [];
         //parse path
             for(var a = 0; a < path.length/2; a++){
@@ -489,209 +506,213 @@ this.pathExtrapolation = new function(){
                     if( jointData[a].departAngle != undefined && jointData[a].implementAngle != undefined ){
                         jointData[a].joiningAngle = jointData[a].departAngle - jointData[a].implementAngle + Math.PI;
                         while(jointData[a].joiningAngle < 0){jointData[a].joiningAngle += Math.PI*2;}
-                        while(jointData[a].joiningAngle > Math.PI*2){jointData[a].joiningAngle -= Math.PI*2;} 
+                        while(jointData[a].joiningAngle >= Math.PI*2){jointData[a].joiningAngle -= Math.PI*2;} 
                         jointData[a].wingAngle = jointData[a].implementAngle + jointData[a].joiningAngle/2 - Math.PI;
                         while(jointData[a].wingAngle < 0){jointData[a].wingAngle += Math.PI*2;}
                         while(jointData[a].wingAngle > Math.PI*2){jointData[a].wingAngle -= Math.PI*2;} 
-                        jointData[a].wingWidth = thickness / Math.sin(jointData[a].joiningAngle/2); 
+                        jointData[a].wingWidth = thickness / Math.sin(jointData[a].joiningAngle/2);
                     }
             }
 
-        //generation of outline poly
-            var polygonOutline = [];
-            var reverseSide = [];
-
-            //starting end
-                var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
-                var perpenR = {x:-perpenL.x, y:-perpenL.y};
-                polygonOutline.push( jointData[0].point.x + perpenL.x, jointData[0].point.y + perpenL.y );
-                polygonOutline.push( jointData[0].point.x + perpenR.x, jointData[0].point.y + perpenR.y );
-            //joints
-                for(var a = 1; a < jointData.length-1; a++){
-                    var pushL = _canvas_.library.math.cartesianAngleAdjust(jointData[a].wingWidth, 0, jointData[a].wingAngle);
-                    var pushR = {x:-pushL.x, y:-pushL.y};
-
-                    var last_perpenL = perpenL;
-                    var last_perpenR = perpenR;
-                    var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
-                    var perpenR = {x:-perpenL.x, y:-perpenL.y};
-
-                    if(jointData[a].joiningAngle == Math.PI){
-                        polygonOutline.push( jointData[a].point.x + last_perpenR.x, jointData[a].point.y + last_perpenR.y );
-                        reverseSide.unshift( jointData[a].point.x + last_perpenL.x, jointData[a].point.y + last_perpenL.y );
-                    }else if(jointData[a].joiningAngle < Math.PI){
-                        polygonOutline.push( jointData[a].point.x + last_perpenR.x, jointData[a].point.y + last_perpenR.y );
-                        polygonOutline.push( jointData[a].point.x, jointData[a].point.y );
-                        polygonOutline.push( jointData[a].point.x + perpenR.x, jointData[a].point.y + perpenR.y );
-                        reverseSide.unshift( jointData[a].point.x + pushL.x, jointData[a].point.y + pushL.y );
-                    }else if(jointData[a].joiningAngle > Math.PI){
-                        polygonOutline.push( jointData[a].point.x + pushR.x, jointData[a].point.y + pushR.y );
-                        reverseSide.unshift( jointData[a].point.x + last_perpenL.x, jointData[a].point.y + last_perpenL.y );
-                        reverseSide.unshift( jointData[a].point.x, jointData[a].point.y );
-                        reverseSide.unshift( jointData[a].point.x + perpenL.x, jointData[a].point.y + perpenL.y );
-                    }
-                }
-            //finishding end
-                polygonOutline.push( jointData[jointData.length-1].point.x + perpenR.x, jointData[jointData.length-1].point.y + perpenR.y );
-                polygonOutline.push( jointData[jointData.length-1].point.x + perpenL.x, jointData[jointData.length-1].point.y + perpenL.y );
-
-            //complete the polygon by adding the reverse side
-                polygonOutline = polygonOutline.concat(reverseSide);
-
-        //return requested data
-            if(returnExtraData){
-                return { 
-                    jointData:jointData, 
-                    polygonOutline:polygonOutline,
-                    triangles:_canvas_.library.thirdparty.earcut(polygonOutline),
-                };
-            }else{
-                return _canvas_.library.thirdparty.earcut(polygonOutline);
-            }
+        return jointData;
     }
-
-    this.pathToRectangleSeriesGenerator = function(path,thickness){ return path_to_rectangleSeries(path,thickness); };
-    this.pathToOverlappingRectangleSeriesGenerator = function(path,thickness){ return path_to_overlappingRectangleSeries(path,thickness); };
-    this.pathToPolygonWithRoundJointsAndEndsGenerator = function(path,thickness,detail){
-        var data = path_to_rectangleSeries(path,thickness,true);
-        var outputTriangles = data.triangles;
-
-        //add round ends
-            //top
-                for(var a = 0; a < detail+1; a++){
-                    outputTriangles.push( data.jointData[0].point.x, data.jointData[0].point.y );
-                    var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[0].departAngle + Math.PI/2 + (a/(detail+1))*(Math.PI) );
-                    outputTriangles.push( data.jointData[0].point.x + p.x, data.jointData[0].point.y + p.y );
-                    var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[0].departAngle + Math.PI/2 + ((a+1)/(detail+1))*(Math.PI) );
-                    outputTriangles.push( data.jointData[0].point.x + p.x, data.jointData[0].point.y + p.y );
-                }
-            //bottom
-                for(var a = 0; a < detail+1; a++){
-                    outputTriangles.push( data.jointData[data.jointData.length-1].point.x, data.jointData[data.jointData.length-1].point.y );
-                    var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[data.jointData.length-1].implementAngle - Math.PI/2 + (a/(detail+1))*(Math.PI) );
-                    outputTriangles.push( data.jointData[data.jointData.length-1].point.x + p.x, data.jointData[data.jointData.length-1].point.y + p.y );
-                    var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[data.jointData.length-1].implementAngle - Math.PI/2 + ((a+1)/(detail+1))*(Math.PI) );
-                    outputTriangles.push( data.jointData[data.jointData.length-1].point.x + p.x, data.jointData[data.jointData.length-1].point.y + p.y );
-                }
-
-        //add round joints
-            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[0].departAngle - Math.PI/2);
-            var perpenR = {x:-perpenL.x, y:-perpenL.y};
-            for(var a = 1; a < data.jointData.length-1; a++){
-                var last_perpenL = perpenL;
-                var last_perpenR = perpenR;
-                var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, data.jointData[a].departAngle - Math.PI/2);
-                var perpenR = {x:-perpenL.x, y:-perpenL.y};
-
-                if(data.jointData[a].joiningAngle == Math.PI){
-                }else if(data.jointData[a].joiningAngle < Math.PI){
-                    outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                    outputTriangles.push( data.jointData[a].point.x + last_perpenR.x, data.jointData[a].point.y + last_perpenR.y );
-
-                    var gapSize = Math.PI - data.jointData[a].joiningAngle;
-                    var partialDetail = Math.floor(detail*(Math.abs(gapSize)/Math.PI)); 
-                    if(partialDetail < 1){partialDetail = 1;}
-                    for(var b = 1; b < partialDetail; b++){
-                        var angle = b*(gapSize/partialDetail);
-                        var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenR.x, last_perpenR.y, -angle);
-                        outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                        outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                        outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                    }
-
-                    outputTriangles.push( data.jointData[a].point.x + perpenR.x, data.jointData[a].point.y + perpenR.y );
-                }else if(data.jointData[a].joiningAngle > Math.PI){
-                    outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                    outputTriangles.push( data.jointData[a].point.x + last_perpenL.x, data.jointData[a].point.y + last_perpenL.y );
-
-                    var gapSize = Math.PI - data.jointData[a].joiningAngle;
-                    var partialDetail = Math.floor(detail*(Math.abs(gapSize)/Math.PI)); 
-                    if(partialDetail < 2){partialDetail = 2;}
-                    for(var b = 1; b < partialDetail; b++){
-                        var angle = b*(gapSize/partialDetail);
-                        var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenL.x, last_perpenL.y, -angle);
-                        outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                        outputTriangles.push( data.jointData[a].point.x, data.jointData[a].point.y );
-                        outputTriangles.push( data.jointData[a].point.x + p.x, data.jointData[a].point.y + p.y );
-                    }
-
-                    outputTriangles.push( data.jointData[a].point.x + perpenL.x, data.jointData[a].point.y + perpenL.y );
-                }
-            }
-            
-        return outputTriangles;
-    };
-
-    this.pathToPolygonGenerator = function(path,thickness,returnedPointsFormat='TRIANGLE_STRIP'){
-        var jointData = [];
-        var joinMuxLimit = 5;
+    function path_to_rectangleSeries(path,thickness){
+        var outputPoints = [];
+        for(var a = 1; a < path.length/2; a++){
+            var angle = _canvas_.library.math.getAngleOfTwoPoints( {x:path[a*2-2], y:path[a*2 -1]}, {x:path[a*2], y:path[a*2 +1]});
+            var left =  _canvas_.library.math.cartesianAngleAdjust(thickness, 0, Math.PI/2 + angle);
+            var right = { x:-left.x, y:-left.y };
     
-        //parse path
-            for(var a = 0; a < path.length/2; a++){
-                jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
-            }
-        //calculate segment angles, joining angles, wing angles and wing widths; then generate wing points
-            var outputPoints = [];
-            for(var a = 0; a < jointData.length; a++){
-                var item = jointData[a];
-    
-                //calculate segment angles
-                    if( a != jointData.length-1 ){
-                        var tmp = _canvas_.library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
-                        if(jointData[a] != undefined){jointData[a].departAngle = tmp;}
-                        if(jointData[a+1] != undefined){jointData[a+1].implementAngle = tmp;}
-                    }
-    
-                //joining angles
-                    var joiningAngle = item.departAngle == undefined || item.implementAngle == undefined ? Math.PI : item.departAngle - item.implementAngle + Math.PI;
-                    if( Math.abs(joiningAngle) == Math.PI*2 ){ joiningAngle = Math.PI; }
-    
-                //angle
-                    var segmentAngle = item.implementAngle != undefined ? item.implementAngle : item.departAngle;
-                    var wingAngle = segmentAngle + joiningAngle/2;
-    
-                //width
-                    var div = a == 0 || a == jointData.length-1 ? 1 : Math.sin(joiningAngle/2);
-                    var wingWidth = thickness / div; 
-                    if(Math.abs(wingWidth) > thickness*joinMuxLimit){ wingWidth = Math.sign(wingWidth)*thickness*joinMuxLimit; }
-    
-                //wing points
-                    var plus =  _canvas_.library.math.cartesianAngleAdjust(0,  wingWidth, Math.PI/2 + wingAngle);
-                    var minus = _canvas_.library.math.cartesianAngleAdjust(0, -wingWidth, Math.PI/2 + wingAngle);
-                    outputPoints.push( plus.x+ item.point.x, plus.y+ item.point.y );
-                    outputPoints.push( minus.x+item.point.x, minus.y+item.point.y );
-            }
-    
-        if(returnedPointsFormat == 'TRIANGLE_STRIP'){
-            return outputPoints;
-        }else if(returnedPointsFormat == 'TRIANGLES'){
-            var replacementPoints = [];
-    
-            for(var a = 0; a < outputPoints.length/2-2; a++){
-                replacementPoints.push( outputPoints[a*2+0],outputPoints[a*2+1] );
-                replacementPoints.push( outputPoints[a*2+2],outputPoints[a*2+3] );
-                replacementPoints.push( outputPoints[a*2+4],outputPoints[a*2+5] );
-            }
-    
-            return replacementPoints;
+            outputPoints.push([
+                {x:path[a*2-2]+left.x,  y:path[a*2-1]+left.y},
+                {x:path[a*2-2]+right.x, y:path[a*2-1]+right.y},
+                {x:path[a*2]+right.x,   y:path[a*2+1]+right.y},
+                {x:path[a*2]+left.x,    y:path[a*2+1]+left.y},
+            ]);
         }
     
         return outputPoints;
-    };
-    this.loopedPathToPolygonGenerator = function(path,thickness,returnedPointsFormat){
-        var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
-        var loopingPath = [];
-    
-        loopingPath = loopingPath.concat(joinPoint);
-        for(var a = 2; a < path.length; a+=2){
-            loopingPath = loopingPath.concat( [path[a], path[a+1]] );
+    }
+
+    function flatJoints(jointData,thickness){
+        var polygons = [];
+
+        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+        var perpenR = {x:-perpenL.x, y:-perpenL.y};
+        for(var a = 1; a < jointData.length-1; a++){
+            var last_perpenL = perpenL;
+            var last_perpenR = perpenR;
+            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+            var perpenR = {x:-perpenL.x, y:-perpenL.y};
+
+            if(jointData[a].joiningAngle == Math.PI){
+                //do nothing
+            }else if(jointData[a].joiningAngle < Math.PI){
+                polygons.push([
+                    {x:jointData[a].point.x, y:jointData[a].point.y},
+                    {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y},
+                    {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y},
+                ]);
+            }else if(jointData[a].joiningAngle > Math.PI){
+                polygons.push([
+                    {x:jointData[a].point.x, y:jointData[a].point.y},
+                    {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y},
+                    {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y},
+                ]);
+            }
         }
-        loopingPath = loopingPath.concat( [path[0], path[1]] );
-        loopingPath = loopingPath.concat(joinPoint);
-    
-        return this.pathToPolygonGenerator(loopingPath,thickness,returnedPointsFormat);
-    };
+
+        return polygons;
+    }
+    function roundJoints(jointData,thickness,detail=5){
+        var polygons = [];
+        if(detail < 1){detail = 1;}
+
+        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+        var perpenR = {x:-perpenL.x, y:-perpenL.y};
+        for(var a = 1; a < jointData.length-1; a++){
+            var newPolygon = [];
+            var last_perpenL = perpenL;
+            var last_perpenR = perpenR;
+            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+            var perpenR = {x:-perpenL.x, y:-perpenL.y};
+
+            if(jointData[a].joiningAngle == Math.PI){
+                //do nothing
+            }else if(jointData[a].joiningAngle < Math.PI){
+                newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
+
+                var gapSize = Math.PI - jointData[a].joiningAngle;
+                var partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
+                for(var b = 1; b < partialDetail; b++){
+                    var angle = b*(gapSize/partialDetail);
+                    var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenR.x, last_perpenR.y, -angle);
+                    newPolygon.push( {x:jointData[a].point.x + p.x, y:jointData[a].point.y + p.y} );
+                }
+
+                newPolygon.push( {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y} );
+            }else if(jointData[a].joiningAngle > Math.PI){
+                newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
+
+                var gapSize = Math.PI - jointData[a].joiningAngle;
+                var partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
+                for(var b = 1; b < partialDetail; b++){
+                    var angle = b*(gapSize/partialDetail);
+                    var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenL.x, last_perpenL.y, -angle);
+                    newPolygon.push( {x:jointData[a].point.x + p.x, y:jointData[a].point.y + p.y} );
+                }
+
+                newPolygon.push( {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y} );
+            }
+
+            polygons.push(newPolygon);
+        }
+
+        return polygons;
+    }
+    function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
+        var polygons = [];
+
+        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+        var perpenR = {x:-perpenL.x, y:-perpenL.y};
+        for(var a = 1; a < jointData.length-1; a++){
+            var newPolygon = [];
+            var last_perpenL = perpenL;
+            var last_perpenR = perpenR;
+            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+            var perpenR = {x:-perpenL.x, y:-perpenL.y};
+
+            if(jointData[a].joiningAngle == Math.PI){
+                //do nothing
+            }else if(jointData[a].joiningAngle < Math.PI){
+                if( Math.abs(jointData[a].wingWidth) <= sharpLimit ){
+                    var plus = _canvas_.library.math.cartesianAngleAdjust(0, jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
+                    newPolygon.push( {x:plus.x + jointData[a].point.x, y:plus.y + jointData[a].point.y} );
+                    newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
+                    newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                    newPolygon.push( {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y} );
+                }else{
+                    var length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
+                    var partialWingA = _canvas_.library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].implementAngle);
+                    var partialWingB = _canvas_.library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].departAngle);
+
+                    newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                    newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
+                    newPolygon.push( {x:jointData[a].point.x + last_perpenR.x + partialWingA.x, y:jointData[a].point.y + last_perpenR.y + partialWingA.y} );
+                    newPolygon.push( {x:jointData[a].point.x + perpenR.x + partialWingB.x, y:jointData[a].point.y + perpenR.y + partialWingB.y} );
+                    newPolygon.push( {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y} );
+                }
+            }else if(jointData[a].joiningAngle > Math.PI){
+                if( Math.abs(jointData[a].wingWidth) <= sharpLimit ){
+                    var plus = _canvas_.library.math.cartesianAngleAdjust(0, -jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
+                    newPolygon.push( {x:plus.x + jointData[a].point.x, y:plus.y + jointData[a].point.y} );
+                    newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
+                    newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                    newPolygon.push( {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y} );
+                }else{
+                    var length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
+                    var partialWingA = _canvas_.library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].implementAngle);
+                    var partialWingB = _canvas_.library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].departAngle);
+
+                    newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
+                    newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
+                    newPolygon.push( {x:jointData[a].point.x + last_perpenL.x + partialWingA.x, y:jointData[a].point.y + last_perpenL.y + partialWingA.y} );
+                    newPolygon.push( {x:jointData[a].point.x + perpenL.x + partialWingB.x, y:jointData[a].point.y + perpenL.y + partialWingB.y} );
+                    newPolygon.push( {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y} );
+                }
+            }
+
+            polygons.push(newPolygon);
+        }
+
+        return polygons;
+    }
+
+    function roundCaps(jointData,thickness,detail=5){
+        if(detail < 1){detail = 1;}
+
+        var polygons = [];
+
+        //top
+            var newPolygon = [];
+            newPolygon.push( { x:jointData[0].point.x, y:jointData[0].point.y } );
+            for(var a = 0; a < detail+1; a++){
+                var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle + Math.PI/2 + (a/(detail))*(Math.PI) );
+                newPolygon.push( {x:jointData[0].point.x + p.x, y:jointData[0].point.y + p.y} );
+            }
+            polygons.push(newPolygon);
+        //bottom
+            var newPolygon = [];
+            newPolygon.push( { x:jointData[jointData.length-1].point.x, y:jointData[jointData.length-1].point.y } );
+            for(var a = 0; a < detail+1; a++){
+                var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[jointData.length-1].implementAngle - Math.PI/2 + (a/(detail))*(Math.PI) );
+                newPolygon.push( {x:jointData[jointData.length-1].point.x + p.x, y:jointData[jointData.length-1].point.y + p.y} );
+            }
+            polygons.push(newPolygon);
+
+        return polygons;
+    }
+
+
+    if(loopPath){path = loopThisPath(path);}
+    var jointData = calculateJointData(path,thickness);
+    if(jointData.length == 0){return [];}
+
+    //generate polygons
+        var polygons = path_to_rectangleSeries(path,thickness);
+        //joints
+        if(joinType == 'flat'){ polygons = polygons.concat(flatJoints(jointData,thickness)); }
+        if(joinType == 'round'){ polygons = polygons.concat(roundJoints(jointData,thickness,detail)); }
+        if(joinType == 'sharp'){ polygons = polygons.concat(sharpJoints(jointData,thickness,sharpLimit)); }
+        //caps
+        if(capType == 'round'){ polygons = polygons.concat(roundCaps(jointData,thickness,detail)); }
+
+    //union all polygons, convert to triangles and return
+        return library.math.polygonToSubTriangles( polygons.map(a=>[a]).reduce((conglomerate,polygon) => library.math.unionPolygons(conglomerate, polygon) ) );
 };
+
 
 this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},dev=false){
     function applyOffsetToPoints(offset,points){

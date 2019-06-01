@@ -82,7 +82,7 @@ this.polygon = function(){
                         context.enableVertexAttribArray(point.attributeLocation);
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.thirdparty.earcut(points)), context.STATIC_DRAW);
+                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = _canvas_.library.math.polygonToSubTriangles(points,'flatArray')), context.STATIC_DRAW);
                         pointsChanged = false;
                     }else{
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 

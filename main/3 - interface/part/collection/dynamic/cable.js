@@ -53,6 +53,7 @@ this.cable2 = function(
             var object = interfacePart.builder('group',name);
         //cable shape
             var pathShape = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+            // var pathShape = interfacePart.builder('pathWithRoundJointsAndEnds','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             object.append(pathShape);
     
     //controls
@@ -80,18 +81,18 @@ this.cable2 = function(
 
                 path.push(x2,y2);
 
-            //go through each segment to improve the line, so that it does not collide with any unit
-                //gather together the relevant units 
-                var otherUnits = _canvas_.system.pane.getMiddlegroundPane(this).children().filter(a => !a._isCable).map(a => a.space);
+            // //go through each segment to improve the line, so that it does not collide with any unit
+            //     //gather together the relevant units 
+            //     var otherUnits = _canvas_.system.pane.getMiddlegroundPane(this).children().filter(a => !a._isCable).map(a => a.space);
 
-                //run though the cable to see what segments collide with units
-                    for(var a = 0; a < path.length-2; a +=2){
-                        //get cable segment
-                        let segment = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]};
+            //     //run though the cable to see what segments collide with units
+            //         for(var a = 0; a < path.length-2; a +=2){
+            //             //get cable segment
+            //             let segment = {x1:path[a],y1:path[a+1],x2:path[a+2],y2:path[a+3]};
 
-                        //get the units this segment collides with
-                        let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(segment,otherUnits).map(a => otherUnits[a]);
-                    }
+            //             //get the units this segment collides with
+            //             let collidingPolys = _canvas_.library.math.detectOverlap.overlappingLineWithPolygons(segment,otherUnits).map(a => otherUnits[a]);
+            //         }
 
 
 

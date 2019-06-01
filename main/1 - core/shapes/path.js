@@ -17,12 +17,25 @@ this.path = function(){
             this.stopAttributeStartedExtremityUpdate = false;
 
         //attributes pertinent to extremity calculation
-            var pointsChanged = true; var generatedPathPolygon = [];
-            var points = [];   this.points =    function(a){ if(a==undefined){return points;} points = a; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var thickness = 1; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2; generatedPathPolygon = lineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var scale = 1;     this.scale =     function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
+            var pointsChanged = true;
+            var generatedPathPolygon = [];
+            function update(){
+                generatedPathPolygon = lineGenerator();
+                pointsChanged = true;
+                if(this.stopAttributeStartedExtremityUpdate){return;}
+                computeExtremities();
+            }
+            var points = [];         this.points =      function(a){ if(a==undefined){return points;} points = a; if(this.devMode){console.log(this.getAddress()+'::points');} update(); };
+            var thickness = 1;       this.thickness =   function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} update(); };
+            var scale = 1;           this.scale =       function(a){ if(a==undefined){return scale;} scale = a; computeExtremities(); };
+            var jointType = 'sharp'; this.jointType =   function(a){ if(a==undefined){return jointType;} jointType = a; if(this.devMode){console.log(this.getAddress()+'::jointType');} update(); };
+            var capType = 'none';    this.capType =     function(a){ if(a==undefined){return capType;} capType = a; if(this.devMode){console.log(this.getAddress()+'::capType');} update(); };
+            var looping = false;     this.looping =     function(a){ if(a==undefined){return looping;} looping = a; if(this.devMode){console.log(this.getAddress()+'::looping');} update(); };
+            var jointDetail = 25;    this.jointDetail = function(a){ if(a==undefined){return jointDetail;} jointDetail = a; if(this.devMode){console.log(this.getAddress()+'::jointDetail');} update(); }
+            var sharpLimit = 4;      this.sharpLimit =  function(a){ if(a==undefined){return sharpLimit;} sharpLimit = a; if(this.devMode){console.log(this.getAddress()+'::sharpLimit');} update(); };
 
-            function lineGenerator(){ return _canvas_.library.math.pathExtrapolation.pathToPolygonGenerator( points, thickness ); }
+            function lineGenerator(){ return _canvas_.library.math.pathExtrapolation(points,thickness,capType,jointType,looping,jointDetail,sharpLimit); }
+             
             this.pointsAsXYArray = function(a){
                 if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
 
@@ -108,7 +121,7 @@ this.path = function(){
 
             context.useProgram(program);
             updateGLAttributes(context,adjust);
-            context.drawArrays(context.TRIANGLE_STRIP, 0, generatedPathPolygon.length/2);
+            context.drawArrays(context.TRIANGLES, 0, generatedPathPolygon.length/2);
         }
 
     //extremities

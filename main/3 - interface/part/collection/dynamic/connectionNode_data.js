@@ -6,6 +6,7 @@ this.connectionNode_data = function(
     glowStyle={r:244/255, g:244/255, b:255/255, a:1},
     cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
     cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
+    cableVersion=0,
     onreceivedata=function(address, data){},
     ongivedata=function(address){},
     onconnect=function(){},
@@ -14,6 +15,7 @@ this.connectionNode_data = function(
     //elements
         var object = interfacePart.builder('connectionNode',name,{
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
+            cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
             onconnect, ondisconnect
         });

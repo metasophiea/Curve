@@ -18,12 +18,22 @@ this.polygonWithOutline = function(){
             this.stopAttributeStartedExtremityUpdate = false;
 
         //attributes pertinent to extremity calculation
+            function update(){
+                generatedPathPolygon = loopedLineGenerator(); 
+                pointsChanged = true; 
+                if(this.stopAttributeStartedExtremityUpdate){return;}
+                computeExtremities();
+            }
+
             var pointsChanged = true; var generatedPathPolygon = [];
-            var points = [];   this.points = function(a){    if(a==undefined){return points;}    points = a;        generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::points');}    if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            var thickness = 5; this.thickness = function(a){ if(a==undefined){return thickness;} thickness = a/2;   generatedPathPolygon = loopedLineGenerator(); pointsChanged = true; if(this.devMode){console.log(this.getAddress()+'::thickness');} /*if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities();*/ };
-            var scale = 1;     this.scale =  function(a){    if(a==undefined){return scale;}     scale = a;                                                                             if(this.devMode){console.log(this.getAddress()+'::scale');}     if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
-            
-            function loopedLineGenerator(){ return _canvas_.library.math.pathExtrapolation.loopedPathToPolygonGenerator( points, thickness, 'TRIANGLES' ); }
+            var points = [];         this.points =      function(a){ if(a==undefined){return points;} points = a; if(this.devMode){console.log(this.getAddress()+'::points');} update(); };
+            var thickness = 5;       this.thickness =   function(a){ if(a==undefined){return thickness;} thickness = a/2; if(this.devMode){console.log(this.getAddress()+'::thickness');} update(); };
+            var scale = 1;           this.scale =       function(a){ if(a==undefined){return scale;} scale = a; if(this.devMode){console.log(this.getAddress()+'::scale');} update(); };
+            var jointDetail = 25;    this.jointDetail = function(a){ if(a==undefined){return jointDetail;} jointDetail = a; if(this.devMode){console.log(this.getAddress()+'::jointDetail');} update(); }
+            var jointType = 'sharp'; this.jointType =   function(a){ if(a==undefined){return jointType;} jointType = a; if(this.devMode){console.log(this.getAddress()+'::jointType');} update(); };
+            var sharpLimit = 4;      this.sharpLimit =  function(a){ if(a==undefined){return sharpLimit;} sharpLimit = a; if(this.devMode){console.log(this.getAddress()+'::sharpLimit');} update(); };
+
+            function loopedLineGenerator(){ return _canvas_.library.math.pathExtrapolation(points,thickness,'none',jointType,true,jointDetail,sharpLimit); }
             this.pointsAsXYArray = function(a){
                 if(this.devMode){console.log(this.getAddress()+'::pointsAsXYArray');}
 
@@ -86,7 +96,7 @@ this.polygonWithOutline = function(){
             }
         `;
         var index = { buffer:undefined, attributeLocation:undefined };
-        var point = { buffer:undefined, attributeLocation:undefined, earcut:[] };
+        var point = { buffer:undefined, attributeLocation:undefined, triangles:[] };
         var drawingPoints = [];
         var uniformLocations;
         function updateGLAttributes(context,offset){                
@@ -95,11 +105,11 @@ this.polygonWithOutline = function(){
                     if(point.buffer == undefined || pointsChanged){
                         point.attributeLocation = context.getAttribLocation(program, "point");
                         point.buffer = context.createBuffer();
-                        point.earcut = _canvas_.library.thirdparty.earcut(points);
+                        point.triangles = _canvas_.library.math.polygonToSubTriangles(points,'flatArray');
                         context.enableVertexAttribArray(point.attributeLocation);
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.earcut.concat(generatedPathPolygon)), context.STATIC_DRAW);
+                        context.bufferData(context.ARRAY_BUFFER, new Float32Array(drawingPoints = point.triangles.concat(generatedPathPolygon)), context.STATIC_DRAW);
                         pointsChanged = false;
                     }else{
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
@@ -113,7 +123,7 @@ this.polygonWithOutline = function(){
                     context.enableVertexAttribArray(index.attributeLocation);
                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
-                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.earcut.length/2 + generatedPathPolygon.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
+                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:point.triangles.length/2 + generatedPathPolygon.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
                 }else{
                     context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
                     context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
@@ -137,7 +147,7 @@ this.polygonWithOutline = function(){
                 context.uniform1f(uniformLocations["offset.angle"], offset.angle);
                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
                 context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
-                context.uniform1f(uniformLocations["indexParting"], point.earcut.length/2);
+                context.uniform1f(uniformLocations["indexParting"], point.triangles.length/2);
                 context.uniform4f(uniformLocations["lineColour"], self.lineColour.r, self.lineColour.g, self.lineColour.b, self.lineColour.a);
         }
         var program;

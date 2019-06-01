@@ -31,24 +31,24 @@
     }
 
 //connect callbacks to keyboard function lists
-    _canvas_.core.callback.onkeydown = function(event,shapes){        
+    _canvas_.core.callback.functions.onkeydown = function(x,y,event,shapes){        
         //if key is already pressed, don't press it again
             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
             _canvas_.system.keyboard.pressedKeys[event.code] = true;
             customKeyInterpreter(event,true);
         
         //perform action
-            if(shapes.length > 0){ shapes[0].onkeydown(event,shapes); }
+            if(shapes.length > 0){ shapes[0].onkeydown(x,y,event); }
             else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
     };
 
-    _canvas_.core.callback.onkeyup = function(event,shapes){
+    _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
         //if key isn't pressed, don't release it
             if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
             delete _canvas_.system.keyboard.pressedKeys[event.code];
             customKeyInterpreter(event,false);
         
         //perform action
-            if(shapes.length > 0){ shapes[0].onkeyup(event,shapes); }
+            if(shapes.length > 0){ shapes[0].onkeyup(x,y,event); }
             else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
     };

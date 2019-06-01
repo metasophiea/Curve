@@ -154,8 +154,8 @@ this.rangeslide = function(
                 span.onmousedown = function(){};
                 span.onclick = function(){};
                 
-            backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
-            backingAndSlotCover.onclick = function(event){
+            backingAndSlotCover.onmousedown = function(){};//to stop unit selection
+            backingAndSlotCover.onclick = function(x,y,event){
                 if(!interactable){return;}
                 if(grappled){return;}
 
@@ -195,7 +195,7 @@ this.rangeslide = function(
             };
 
         //span panning - drag
-            span.onmousedown = function(event){
+            span.onmousedown = function(x,y,event){
                 if(!interactable){return;}
                 grappled = true;
 
@@ -218,7 +218,7 @@ this.rangeslide = function(
         //handle movement
             for(var a = 0; a < handleNames.length; a++){
                 handles[handleNames[a]].children()[1].onmousedown = (function(a){
-                    return function(event){
+                    return function(x,y,event){
                         if(!interactable){return;}
                         grappled = true;
             

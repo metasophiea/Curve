@@ -76,7 +76,7 @@ this.dial_1_discrete = function(
 
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        dial.getChildByName('handle').onwheel = function(event){
+        dial.getChildByName('handle').onwheel = function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
 
@@ -89,7 +89,7 @@ this.dial_1_discrete = function(
                 if(object.onrelease != undefined){object.onrelease(value);}
             }
         };
-        dial.getChildByName('handle').onmousedown = function(event){
+        dial.getChildByName('handle').onmousedown = function(x,y,event){
             if(!interactable){return;}
             var initialValue = value;
             var initialY = event.Y;

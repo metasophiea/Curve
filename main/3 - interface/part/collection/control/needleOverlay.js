@@ -197,7 +197,7 @@ this.needleOverlay = function(
 
     //interaction
         //generic onmousedown code for interaction
-            backing.onmousedown = function(event){
+            backing.onmousedown = function(x,y,event){
                 if(!interactable){return;}
                 if( _canvas_.system.keyboard.pressedKeys.shift ){
                     var firstPosition = getRelativeX(event.X,event.Y);
@@ -212,9 +212,9 @@ this.needleOverlay = function(
                     object.select(getRelativeX(event.X,event.Y));
                 }
             };
-            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(event){
+            controlObjects.lead.getChildByName('invisibleHandle').onmouseenter = function(){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.lead.getChildByName('invisibleHandle').onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
+            controlObjects.lead.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
                 if(!interactable){return;}
 
                 leadNeedle_grappled = true;
@@ -245,10 +245,10 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmousemove = function(event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(event){
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseenter = function(){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmousemove = function(){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_A.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
                 if(!interactable){return;}
 
                 selectionNeedleA_grappled = true;
@@ -279,10 +279,10 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmousemove = function(event){_canvas_.core.viewport.cursor('col-resize');};
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(event){
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseenter = function(){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmousemove = function(){_canvas_.core.viewport.cursor('col-resize');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_B.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
                 if(!interactable){return;}
 
                 selectionNeedleB_grappled = true;
@@ -313,10 +313,10 @@ this.needleOverlay = function(
                 );
             };
 
-            controlObjects.selection_area.onmouseenter = function(event){_canvas_.core.viewport.cursor('grab');};
-            controlObjects.selection_area.onmousemove = function(event){_canvas_.core.viewport.cursor('grab');};
-            controlObjects.selection_area.onmouseleave = function(event){_canvas_.core.viewport.cursor('default');};
-            controlObjects.selection_area.onmousedown = function(event){
+            controlObjects.selection_area.onmouseenter = function(){_canvas_.core.viewport.cursor('grab');};
+            controlObjects.selection_area.onmousemove = function(){_canvas_.core.viewport.cursor('grab');};
+            controlObjects.selection_area.onmouseleave = function(){_canvas_.core.viewport.cursor('default');};
+            controlObjects.selection_area.onmousedown = function(x,y,event){
                 if(!interactable){return;}
 
                 _canvas_.core.viewport.cursor('grabbing');

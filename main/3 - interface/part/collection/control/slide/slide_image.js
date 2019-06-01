@@ -103,8 +103,8 @@ this.slide_image = function(
             set( value + move/(10*globalScale) );
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        backingAndSlotCover.onmousedown = function(event){};//to stop unit selection
-        backingAndSlotCover.onclick = function(event){
+        backingAndSlotCover.onmousedown = function(){};//to stop unit selection
+        backingAndSlotCover.onclick = function(x,y,event){
             if(!interactable){return;}
             if(grappled){return;}
 
@@ -124,7 +124,7 @@ this.slide_image = function(
             set(value);
             if(object.onrelease != undefined){object.onrelease(value);}
         };
-        invisibleHandle.onmousedown = function(event){
+        invisibleHandle.onmousedown = function(x,y,event){
             if(!interactable){return;}
             grappled = true;
 
