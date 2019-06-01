@@ -2,11 +2,11 @@ this.connectionNode_audio = function(
     name='connectionNode_audio',
     x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
     isAudioOutput=false, audioContext,
+    cableVersion=0,
     dimStyle={r:255/255, g:244/255, b:220/255, a:1},
     glowStyle={r:255/255, g:244/255, b:244/255, a:1},
     cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
     cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
-    cableVersion=0,
     onconnect=function(){},
     ondisconnect=function(){},
 ){

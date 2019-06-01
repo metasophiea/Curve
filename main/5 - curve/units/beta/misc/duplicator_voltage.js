@@ -67,12 +67,12 @@ this.duplicator_voltage = function(x,y,a){
     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
         if(c == shape.length){c = 0;}
 
-        var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-        var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+        var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+        var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
 
         design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-        ], thickness:2.5, jointType:'round', capType:'round', colour:style.bumper }} );
+        ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
     }
 
 

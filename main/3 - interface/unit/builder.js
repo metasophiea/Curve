@@ -106,7 +106,7 @@ this.builder = function(creatorMethod,design){
             if( unit.space.shape != undefined ){
                 unit.space.shape.pointsAsXYArray(unit.space.originalPoints);
             }else{
-                unit.space.shape = _canvas_.interface.part.builder( 'polygon', 'unit.space.shape', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0.5} } );
+                unit.space.shape = _canvas_.interface.part.builder( 'polygon', 'unit.space.shape', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
                 unit.space.shape.unit = unit;
                 unit.prepend( unit.space.shape );
             }

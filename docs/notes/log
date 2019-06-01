@@ -2,6 +2,13 @@
 2019-06-1
   - connectionNode now has argument to select which version of the cable you
     want
+  - added the amplifier unit (with the grill image)(pretty snazzy, though
+    pretty simple)
+
+  ideas
+  - Could maybe make the amplifier grill vibrate with the sound?
+  - change the unit paste function so that it places the units in the exact
+    position first, and then does the springy corrections
     
 
 2019-05-31
