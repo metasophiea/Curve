@@ -1,4 +1,14 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-06-03
+  - rearranged the beta units folder to include custom shapes and parts
+  - began work on the distortion unit
+
+  bugs
+  - the colours don't seem to be the same as the ones I use in the development
+    painting..they're not even like what the numbers I put it say they should
+    be.. :/
+
+
 2019-06-01
   - connectionNode now has argument to select which version of the cable you
     want

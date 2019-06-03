@@ -52,6 +52,10 @@ var bumperCoverage = {
         length:5,
         thickness:5/2,
     },
+    medium:{
+        length:10,
+        thickness:10/3,
+    },
     large:{
         length:15,
         thickness:15/4,

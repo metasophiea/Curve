@@ -7,7 +7,7 @@ _canvas_.control.scene.addUnit(125,85,0,'duplicator_audio','beta');
 
 _canvas_.control.scene.addUnit(200,30,0,'amplifier','beta');
 
-// _canvas_.control.viewport.scale(8);
-// _canvas_.control.viewport.position(-1039.7331513842769, -529.6391498417627);
+_canvas_.control.scene.addUnit(360,30,0,'distortion','beta');
 
 _canvas_.control.viewport.scale(4);
+_canvas_.control.viewport.position(-1250, -10);

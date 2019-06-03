@@ -42858,6 +42858,254 @@
                     };
                 };
                 this.beta = new function(){
+                    _canvas_.core.shape.library.rectangleWithRoundEnds = function(){
+                        var self = this;
+                    
+                        //attributes 
+                            //protected attributes
+                                const type = 'rectangleWithRoundEnds'; this.getType = function(){return type;}
+                    
+                            //simple attributes
+                                this.name = '';
+                                this.parent = undefined;
+                                this.dotFrame = false;
+                                this.extremities = { points:[], boundingBox:{} };
+                                this.ignored = false;
+                                this.colour = {r:1,g:0,b:0,a:1};
+                            //advanced use attributes
+                                this.devMode = false;
+                                this.stopAttributeStartedExtremityUpdate = false;
+                    
+                            //attributes pertinent to extremity calculation
+                                var x = 0;          this.x =      function(a){ if(a==undefined){return x;}      x = a;      if(this.devMode){console.log(this.getAddress()+'::x');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                var y = 0;          this.y =      function(a){ if(a==undefined){return y;}      y = a;      if(this.devMode){console.log(this.getAddress()+'::y');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                var angle = 0;      this.angle =  function(a){ if(a==undefined){return angle;}  angle = a;  if(this.devMode){console.log(this.getAddress()+'::angle');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                var width = 10;     this.width =  function(a){ if(a==undefined){return width;}  width = a;  if(this.devMode){console.log(this.getAddress()+'::width');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                var height = 10;    this.height = function(a){ if(a==undefined){return height;} height = a; if(this.devMode){console.log(this.getAddress()+'::height');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                var scale = 1;      this.scale =  function(a){ if(a==undefined){return scale;}  scale = a;  if(this.devMode){console.log(this.getAddress()+'::scale');} if(this.stopAttributeStartedExtremityUpdate){return;} computeExtremities(); };
+                                var detail = 25;    this.detail = function(a){ 
+                                                        if(a==undefined){return detail;} detail = a;
+                                                        if(this.devMode){console.log(this.getAddress()+'::detail');}
+                    
+                                                        points = [];
+                                                        points.push(-1,0);
+                    
+                                                        //round top
+                                                            var pointCount = detail+1;
+                                                            for(var a = 1; a < pointCount; a++){
+                                                                points.push(
+                                                                    Math.sin( Math.PI * ((pointCount-a)/pointCount) + Math.PI/2 ),
+                                                                    Math.cos( Math.PI * ((pointCount-a)/pointCount) + Math.PI/2 )
+                                                                );
+                                                            }
+                    
+                                                        points.push(1,0,1,0);
+                    
+                                                        //round bottom
+                                                            var pointCount = detail+1;
+                                                            for(var a = 1; a < pointCount; a++){
+                                                                points.push(
+                                                                    Math.sin( Math.PI * ((pointCount-a)/pointCount) - Math.PI/2 ),
+                                                                    Math.cos( Math.PI * ((pointCount-a)/pointCount) - Math.PI/2 )
+                                                                );
+                                                            }
+                    
+                                                        points.push(-1,0);
+                                                    
+                                                        pointsChanged = true;
+                    
+                                                        if(this.stopAttributeStartedExtremityUpdate){return;} 
+                                                        computeExtremities();
+                                                    };
+                    
+                        //addressing
+                            this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+                    
+                        //webGL rendering functions
+                            var points = []; 
+                            var pointsChanged = true;
+                            this.detail(detail);
+                            var vertexShaderSource = 
+                                _canvas_.library.gsls.geometry + `
+                                //index
+                                    attribute lowp float index;
+                    
+                                //constants
+                                    attribute vec2 point;
+                    
+                                //variables
+                                    struct location{
+                                        vec2 xy;
+                                        float scale;
+                                        float angle;
+                                    };
+                                    uniform location adjust;
+                    
+                                    uniform vec2 resolution;
+                                    uniform float width;
+                                    uniform float height;
+                                    uniform vec2 anchor;
+                                    uniform lowp float detail;
+                    
+                                void main(){
+                                    float push = detail+1.0 < index ? height : 0.0;
+                                    
+                                    //adjust points by width and xy offset
+                                        vec2 P = cartesianAngleAdjust(point*(width/2.0)*adjust.scale + vec2(0,push*adjust.scale), -adjust.angle) + adjust.xy;
+                    
+                                    //convert from unit space to clipspace
+                                        gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                                }
+                            `;
+                            var fragmentShaderSource = `  
+                                precision mediump float;
+                                uniform vec4 colour;
+                                                                                            
+                                void main(){
+                                    gl_FragColor = colour;
+                                }
+                            `;
+                            var index = { buffer:undefined, attributeLocation:undefined };
+                            var point = { buffer:undefined, attributeLocation:undefined };
+                            var uniformLocations;
+                            function updateGLAttributes(context,adjust){
+                                //buffers
+                                    //points
+                                        if(point.buffer == undefined || pointsChanged){
+                                            point.attributeLocation = context.getAttribLocation(program, "point");
+                                            point.buffer = context.createBuffer();
+                                            context.enableVertexAttribArray(point.attributeLocation);
+                                            context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                            context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                            context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                            pointsChanged = false;
+                                        }else{
+                                            context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                            context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                        }
+                    
+                                    //index
+                                        if(index.buffer == undefined){
+                                            index.attributeLocation = context.getAttribLocation(program, "index");
+                                            index.buffer = context.createBuffer();
+                                            context.enableVertexAttribArray(index.attributeLocation);
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer); 
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                            context.bufferData(context.ARRAY_BUFFER, new Float32Array(Array.apply(null, {length:points.length/2}).map(Number.call, Number)), context.STATIC_DRAW);
+                                        }else{
+                                            context.bindBuffer(context.ARRAY_BUFFER, index.buffer);
+                                            context.vertexAttribPointer( index.attributeLocation, 1, context.FLOAT, false, 0, 0 );
+                                        }
+                    
+                                //uniforms
+                                    if( uniformLocations == undefined ){
+                                        uniformLocations = {
+                                            "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+                                            "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+                                            "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+                                            "resolution": context.getUniformLocation(program, "resolution"),
+                                            "width": context.getUniformLocation(program, "width"),
+                                            "height": context.getUniformLocation(program, "height"),
+                                            "colour": context.getUniformLocation(program, "colour"),
+                                            "detail": context.getUniformLocation(program, "detail"),
+                                        };
+                                    }
+                    
+                                    context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+                                    context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+                                    context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+                                    context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                                    context.uniform1f(uniformLocations["width"], width);
+                                    context.uniform1f(uniformLocations["height"], height);
+                                    context.uniform4f(uniformLocations["colour"], self.colour.r, self.colour.g, self.colour.b, self.colour.a);
+                                    context.uniform1f(uniformLocations["detail"], detail);
+                            }
+                            var program;
+                            function activateGLRender(context,adjust){
+                                if(program == undefined){ program = _canvas_.core.render.produceProgram('rectangleWithRoundEnds', vertexShaderSource, fragmentShaderSource); }
+                    
+                                context.useProgram(program);
+                                updateGLAttributes(context,adjust);
+                                context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
+                            }
+                    
+                        //extremities
+                            function computeExtremities(informParent=true,offset){
+                                if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
+                    
+                                //get offset from parent, if one isn't provided
+                                    if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                                //calculate adjusted offset based on the offset
+                                    var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                    var adjusted = { 
+                                        x: point.x*offset.scale + offset.x,
+                                        y: point.y*offset.scale + offset.y,
+                                        scale: offset.scale*scale,
+                                        angle: -(offset.angle + angle),
+                                    };
+                                //calculate points based on the adjusted offset
+                                    self.extremities.points = [];
+                                    for(var a = 0; a < points.length; a+=2){
+                                        var push = detail+1.0 < a/2 ? height : 0;
+                    
+                                        var P = _canvas_.library.math.cartesianAngleAdjust(
+                                            points[a]*(width/2)*adjusted.scale,
+                                            points[a+1]*(width/2)*adjusted.scale + push, 
+                                            -adjusted.angle
+                                        );
+                                        self.extremities.points.push({ x:P.x+adjusted.x, y:P.y+adjusted.y });
+                                    }
+                                    self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
+                                //if told to do so, inform parent (if there is one) that extremities have changed
+                                    if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                            }
+                            this.computeExtremities = computeExtremities;
+                    
+                        //lead render
+                            function drawDotFrame(){
+                                //draw shape extremity points
+                                    self.extremities.points.forEach(a => _canvas_.core.render.drawDot(a.x,a.y));
+                                //draw bounding box top left and bottom right points
+                                    _canvas_.core.render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
+                                    _canvas_.core.render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
+                            };
+                            this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                                //combine offset with shape's position, angle and scale to produce adjust value for render
+                                    var point = _canvas_.library.math.cartesianAngleAdjust(x,y,offset.angle);
+                                    var adjust = { 
+                                        x: point.x*offset.scale + offset.x,
+                                        y: point.y*offset.scale + offset.y,
+                                        scale: offset.scale*scale,
+                                        angle: -(offset.angle + angle),
+                                    };
+                    
+                                //activate shape render code
+                                    activateGLRender(context,adjust);
+                    
+                                //if requested; draw dot frame
+                                    if(self.dotFrame){drawDotFrame();}
+                            };
+                    };
+                    _canvas_.interface.part.collection.basic.rectangleWithRoundEnds = function( name=null, x=0, y=0, angle=0, width=5, height=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                        var temp = _canvas_.core.shape.create('rectangleWithRoundEnds');
+                        temp.name = name;
+                        temp.ignored = ignored;
+                        temp.colour = colour;
+                        
+                        temp.stopAttributeStartedExtremityUpdate = true;
+                        temp.x(x);
+                        temp.y(y);
+                        temp.angle(angle);
+                        temp.width(width)
+                        temp.height(height)
+                        temp.detail(detail);
+                        temp.stopAttributeStartedExtremityUpdate = false;
+                    
+                        return temp;
+                    };
+                    _canvas_.interface.part.partLibrary.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
+                        name, data.x, data.y, data.angle, data.width, data.height, data.detail, data.ignored, data.colour
+                    ); }
                     this.duplicator_data = function(x,y,a){
                         var shape = [
                             {x:0,y:0},
@@ -43500,10 +43748,766 @@
                             length:5,
                             thickness:5/2,
                         },
+                        medium:{
+                            length:10,
+                            thickness:10/3,
+                        },
                         large:{
                             length:15,
                             thickness:15/4,
                         },
+                    };
+                    this.duplicator_data = function(x,y,a){
+                        var shape = [
+                            {x:0,y:0},
+                            {x:30,y:0},
+                            {x:50,y:10},
+                            {x:50,y:40},
+                            {x:30,y:50},
+                            {x:0,y:50}
+                        ];
+                        var design = {
+                            name:'duplicator_data',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                                { type:'text', name:'label', data:{
+                                    x:29, y:47.5, 
+                                    width:3,height:3,
+                                    angle:-0.475,
+                                    text:'data duplicator',
+                                    font:'AppleGaramond', 
+                                    printingMode:{widthCalculation:'absolute'},
+                                    colour:style.textColour}
+                                },
+                    
+                                { type:'path', name:'marking_1', data:{pointsAsXYArray:[
+                                    {x:45,y:25}, {x:20,y:25}, {x:10,y:35}, {x:5,y:35}, {x:7.5,y:32},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
+                                { type:'path', name:'marking_2', data:{pointsAsXYArray:[
+                                    {x:5,y:35}, {x:7.5,y:38},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
+                                { type:'path', name:'marking_3', data:{pointsAsXYArray:[
+                                    {x:35,y:25}, {x:25,y:15}, {x:5,y:15}, {x:7.5,y:12},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
+                                { type:'path', name:'marking_4', data:{pointsAsXYArray:[
+                                    {x:5,y:15}, {x:7.5,y:18},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
+                    
+                                {type:'connectionNode_data', name:'input', data:{ 
+                                    x:50, y:17.5, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.data.dim, 
+                                        glow:style.connectionNode.data.glow,
+                                        cable_dim:style.connectionCable.data.dim, 
+                                        cable_glow:style.connectionCable.data.glow,
+                                    },
+                                    onreceive:function(address,data){
+                                        object.io.data.output_1.send(address,data);
+                                        object.io.data.output_2.send(address,data);
+                                    } 
+                                }},
+                                {type:'connectionNode_data', name:'output_1', data:{ 
+                                    x:0, y:22.5, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.data.dim, 
+                                        glow:style.connectionNode.data.glow, 
+                                        cable_dim:style.connectionCable.data.dim, 
+                                        cable_glow:style.connectionCable.data.glow 
+                                    }
+                                }},
+                                {type:'connectionNode_data', name:'output_2', data:{ 
+                                    x:0, y:42.5, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.data.dim, 
+                                        glow:style.connectionNode.data.glow, 
+                                        cable_dim:style.connectionCable.data.dim, 
+                                        cable_glow:style.connectionCable.data.glow 
+                                    }
+                                }},
+                            ]
+                        };
+                        //add bumpers
+                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                            if(c == shape.length){c = 0;}
+                    
+                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                    
+                            design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        }
+                    
+                    
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        return object;
+                    };
+                    
+                    this.duplicator_data.metadata = {
+                        name:'Data Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_data/'
+                    };
+                    this.duplicator_signal = function(x,y,a){
+                        var shape = [
+                            {x:0,y:0},
+                            {x:40,y:10},
+                            {x:40,y:30},
+                            {x:0,y:40}
+                        ];
+                        var design = {
+                            name:'duplicator_signal',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                                { type:'text', name:'label', data:{
+                                    x:15.75, y:33.5, 
+                                    width:3,height:3,
+                                    angle:-0.24497866312686423,
+                                    text:'signal duplicator',
+                                    font:'AppleGaramond', 
+                                    printingMode:{widthCalculation:'absolute'},
+                                    colour:style.textColour}
+                                },
+                    
+                                { type:'path', name:'marking_1', data:{pointsAsXYArray:[
+                                    {x:35,y:20}, {x:27.5,y:20}, {x:17.5,y:12.5}, {x:5,y:12.5}, {x:7.5,y:9.5},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
+                                { type:'path', name:'marking_2', data:{pointsAsXYArray:[
+                                    {x:5,y:12.5}, {x:7.5,y:15.5},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
+                                { type:'path', name:'marking_3', data:{pointsAsXYArray:[
+                                    {x:27.5,y:20}, {x:17.5,y:27.5}, {x:5,y:27.5}, {x:7.5,y:30.5},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
+                                { type:'path', name:'marking_4', data:{pointsAsXYArray:[
+                                    {x:5,y:27.5}, {x:7.5,y:24.5},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
+                    
+                    
+                                {type:'connectionNode_signal', name:'input', data:{ 
+                                    x:40, y:15, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
+                                }},
+                                {type:'connectionNode_signal', name:'output_1', data:{ 
+                                    x:0, y:17.5, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow, 
+                                        cable_dim:style.connectionCable.signal.dim, 
+                                        cable_glow:style.connectionCable.signal.glow 
+                                    }
+                                }},
+                                {type:'connectionNode_signal', name:'output_2', data:{
+                                    x:0, y:32.5, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow, 
+                                        cable_dim:style.connectionCable.signal.dim, 
+                                        cable_glow:style.connectionCable.signal.glow 
+                                    }
+                                }},
+                            ]
+                        };
+                        //add bumpers
+                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                            if(c == shape.length){c = 0;}
+                    
+                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                    
+                            design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        }
+                    
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        return object;
+                    };
+                    
+                    this.duplicator_signal.metadata = {
+                        name:'Signal Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_signal/'
+                    };
+                    this.duplicator_voltage = function(x,y,a){
+                        var shape = [
+                            {x:0,y:0},
+                            {x:40,y:20},
+                            {x:40,y:40},
+                            {x:0,y:40}
+                        ];
+                        var design = {
+                            name:'duplicator_voltage',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                                { type:'text', name:'label', data:{
+                                    x:12.5, y:37.5, 
+                                    width:3,height:3,
+                                    text:'voltage duplicator',
+                                    font:'AppleGaramond', 
+                                    printingMode:{widthCalculation:'absolute'},
+                                    colour:style.textColour}
+                                },
+                    
+                                { type:'path', name:'marking_1', data:{pointsAsXYArray:[
+                                    {x:35,y:30}, {x:20,y:30}, {x:15,y:28.5}, {x:5,y:28.5}, {x:7.5,y:25.5},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
+                                { type:'path', name:'marking_2', data:{pointsAsXYArray:[
+                                    {x:25,y:30}, {x:15,y:14}, {x:5,y:14}, {x:7.5,y:11},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
+                                { type:'path', name:'marking_3', data:{pointsAsXYArray:[
+                                    {x:5,y:14}, {x:7.5,y:17},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
+                                { type:'path', name:'marking_4', data:{pointsAsXYArray:[
+                                    {x:5,y:28.5}, {x:7.5,y:31.5},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
+                    
+                                {type:'connectionNode_voltage', name:'input', data:{ 
+                                    x:40, y:23.75, width:5, height:12.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow, 
+                                        cable_dim:style.connectionCable.voltage.dim, 
+                                        cable_glow:style.connectionCable.voltage.glow,
+                                    },
+                                    onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
+                                }},
+                                {type:'connectionNode_voltage', name:'output_1', data:{ 
+                                    x:0, y:20, width:5, height:12.5, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow, 
+                                        cable_dim:style.connectionCable.voltage.dim, 
+                                        cable_glow:style.connectionCable.voltage.glow 
+                                    }
+                                }},
+                                {type:'connectionNode_voltage', name:'output_2', data:{ 
+                                    x:0, y:35, width:5, height:12.5, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow, 
+                                        cable_dim:style.connectionCable.voltage.dim, 
+                                        cable_glow:style.connectionCable.voltage.glow 
+                                    }
+                                }},
+                            ]
+                        };
+                        //add bumpers
+                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                            if(c == shape.length){c = 0;}
+                    
+                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                    
+                            design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        }
+                    
+                    
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        return object;
+                    };
+                    
+                    this.duplicator_voltage.metadata = {
+                        name:'Voltage Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_voltage/'
+                    };
+                    this.duplicator_audio = function(x,y,a){
+                        var shape = [
+                            {x:5,y:50},
+                            {x:15,y:50},
+                            {x:55,y:40},
+                            {x:55,y:10},
+                            {x:15,y:0},
+                            {x:5,y:0},
+                    
+                            {x:3,y:5},
+                            {x:0.75,y:15},
+                            {x:0,y:25},
+                            {x:0.75,y:35},
+                            {x:3,y:45},
+                        ];
+                        var design = {
+                            name:'duplicator_audio',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {type:'connectionNode_audio', name:'input', data:{ 
+                                    x:55, y:17.5, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                                {type:'connectionNode_audio', name:'output_1', data:{ 
+                                    x:0.25, y:15+7.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow, 
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow 
+                                    }
+                                }},
+                                {type:'connectionNode_audio', name:'output_2', data:{ 
+                                    x:2.5, y:15+27.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow, 
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow 
+                                    }
+                                }},
+                    
+                                { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                    
+                                { type:'path', name:'marking_1', data:{pointsAsXYArray:[
+                                    {x:50,y:25}, {x:5,y:34}, {x:7,y:30}, 
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
+                                { type:'path', name:'marking_2', data:{pointsAsXYArray:[
+                                    {x:5,y:34}, {x:8.5,y:37}, 
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
+                                { type:'path', name:'marking_3', data:{pointsAsXYArray:[
+                                    {x:50,y:25}, {x:5,y:16}, {x:7,y:20},
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
+                                { type:'path', name:'marking_4', data:{pointsAsXYArray:[
+                                    {x:5,y:16}, {x:8.5,y:13}, 
+                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
+                    
+                                { type:'text', name:'label', data:{
+                                    x:30.5, y:43.5, 
+                                    width:3,height:3,
+                                    angle:-0.25,
+                                    text:'audio duplicator',
+                                    font:'AppleGaramond', 
+                                    printingMode:{widthCalculation:'absolute'},
+                                    colour:style.textColour}
+                                },
+                            ]
+                        };
+                        //add bumpers
+                        for(var a = shape.length-1, b=0, c=1; b < 6; a=b, b++, c++){
+                            if(c == shape.length){c = 0;}
+                    
+                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                    
+                            design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        }
+                    
+                    
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //circuitry
+                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                        
+                        return object;
+                    };
+                    
+                    this.duplicator_audio.metadata = {
+                        name:'Audio Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
+                    };
+                    this.amplifier = function(x,y,a){
+                        var shape = [
+                            {x:0,y:0},
+                            {x:150,y:0},
+                            {x:150,y:140},
+                            {x:0,y:140},
+                        ];
+                        var design = {
+                            name:'amplifier',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                    
+                                { type:'image', name:'grill', data:{x:10,y:10,width:130,height:120,url:'images/units/beta/amplifierGrill.png'} },
+                                { type:'path', name:'grillFrame', data:{
+                                    looping:true, 
+                                    pointsAsXYArray:[{x:10,y:10}, {x:140,y:10}, {x:140,y:130}, {x:10,y:130}],
+                                    thickness:5,
+                                    jointType:'round',
+                                    colour:{r:24/255,g:24/255,b:24/255,a:1}
+                                } },
+                    
+                                { type:'text', name:'label', data:{
+                                    x:147.25, y:135, 
+                                    width:4,height:4,
+                                    angle:-Math.PI/2,
+                                    text:'amplifier (true tone)',
+                                    font:'AppleGaramond', 
+                                    printingMode:{widthCalculation:'absolute'},
+                                    colour:style.textColour
+                                } },
+                                { type:'path', name:'line', data:{
+                                    pointsAsXYArray:[{x:146,y:7.5}, {x:146,y:92.5} ],
+                                    capType:'round',
+                                    thickness:0.5,
+                                    colour:style.textColour
+                                } },
+                    
+                                {type:'connectionNode_audio', name:'input_left', data:{ 
+                                    x:150, y:100, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                                {type:'connectionNode_audio', name:'input_right', data:{ 
+                                    x:150, y:120, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                    
+                            ]
+                        };
+                        //add bumpers
+                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                            if(c == shape.length){c = 0;}
+                    
+                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                    
+                            design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                            ], thickness:bumperCoverage.large.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        }
+                    
+                    
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //circuitry
+                            var flow = {
+                                destination:null,
+                                stereoCombiner: null,
+                                pan_left:null, pan_right:null,
+                            };
+                    
+                            //destination
+                                flow._destination = _canvas_.library.audio.destination;
+                    
+                            //stereo channel combiner
+                                flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
+                    
+                            //audio connections
+                                //inputs to stereo combiner
+                                    object.elements.connectionNode_audio.input_left.out().connect(flow.stereoCombiner, 0, 0);
+                                    object.elements.connectionNode_audio.input_right.out().connect(flow.stereoCombiner, 0, 1);
+                                //stereo combiner to main output
+                                    flow.stereoCombiner.connect(flow._destination);
+                    
+                        return object;
+                    };
+                    
+                    this.amplifier.metadata = {
+                        name:'Amplifier',
+                        category:'monitors',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/amplifier/'
+                    };
+                    this.ruler = function(x,y,a){
+                        var style = {
+                            background:{r:200/255,g:200/255,b:200/255,a:1},
+                            markings:{r:150/255,g:150/255,b:150/255,a:1},
+                        };
+                        var shape = [{x:0,y:0},{x:50,y:0},{x:50,y:1000},{x:0,y:1000}];
+                        var design = {
+                            name:'ruler',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            collisionActive:false,
+                            elements:[
+                                {type:'polygon', name:'backing', data:{ pointsAsXYArray:shape, colour:style.background }},
+                            ]
+                        };
+                    
+                        //add markings
+                            for(var a = 1; a < 100; a++){
+                                //centimetres
+                                design.elements.push(
+                                    {type:'rectangle', name:'centimetre_line_L_'+a, data:{
+                                        x:0, y:a*10 - 0.5, width:5, height:1, 
+                                        colour:style.markings,
+                                    }}
+                                );
+                                design.elements.push(
+                                    {type:'rectangle', name:'centimetre_line_R_'+a, data:{
+                                        x:50-5, y:a*10 - 0.5, width:5, height:1, 
+                                        colour:style.markings,
+                                    }}
+                                );
+                                if( a%5 != 0 && a%10 != 0 ){
+                                    design.elements.push(
+                                        {type:'text', name:'centimetre_line_text_'+a, data:{
+                                            x:50/2, y:a*10, text:a,
+                                            width:2.5,height:2.5,
+                                            printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                            colour:style.markings, font:'defaultThin',
+                                        }}
+                                    );
+                                }
+                    
+                                //pentimetres
+                                if( a%5 == 0 ){
+                                    design.elements.push(
+                                        {type:'rectangle', name:'vigintimetre_line_L_'+a, data:{
+                                            x:0, y:a*10 - 0.5, width:10, height:1, 
+                                            colour:style.markings,
+                                        }}
+                                    );
+                                    design.elements.push(
+                                        {type:'rectangle', name:'vigintimetre_line_R_'+a, data:{
+                                            x:50-10, y:a*10 - 0.5, width:10, height:1, 
+                                            colour:style.markings,
+                                        }}
+                                    );
+                                    if( a%10 != 0 ){
+                                        design.elements.push(
+                                            {type:'text', name:'vigintimetre_line_text_'+a, data:{
+                                                x:50/2, y:a*10, text:a,
+                                                width:5,height:5,
+                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                colour:style.markings, font:'defaultThin',
+                                            }}
+                                        );
+                                    }
+                                }
+                    
+                                //decimetres
+                                if( a%10 == 0 ){
+                                    design.elements.push(
+                                        {type:'rectangle', name:'decimetre_line_L_'+a, data:{
+                                            x:0, y:a*10 - 0.5, width:15, height:1, 
+                                            colour:style.markings,
+                                        }}
+                                    );
+                                    design.elements.push(
+                                        {type:'rectangle', name:'decimetre_line_R_'+a, data:{
+                                            x:50-15, y:a*10 - 0.5, width:15, height:1, 
+                                            colour:style.markings,
+                                        }}
+                                    );
+                                    design.elements.push(
+                                        {type:'text', name:'decimetre_line_text_'+a, data:{
+                                            x:50/2, y:a*10, text:a,
+                                            printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                            colour:style.markings, font:'defaultThin',
+                                        }}
+                                    );
+                                }
+                            }
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        return object;
+                    };
+                    
+                    this.ruler.metadata = {
+                        name:'Ruler',
+                        category:'tools',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/ruler/'
+                    };
+                    var style = {
+                        background:{r:70/255,g:70/255,b:70/255,a:1},
+                        bumper:{r:0.125,g:0.125,b:0.125,a:1},
+                        textColour:{r:0.7,g:0.7,b:0.7,a:1},
+                    
+                        marking:{
+                            default:{r:235/255,g:98/255,b:61/255,a:1},
+                            signal:{r:235/255,g:98/255,b:61/255,a:1},
+                            voltage:{r:170/255,g:251/255,b:89/255,a:1},
+                            data:{r:114/255,g:176/255,b:248/255,a:1},
+                            audio:{r:243/255,g:173/255,b:61/255,a:1},
+                        },
+                        connectionNode:{
+                            signal:{
+                                dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                glow:{r:237/255,g:154/255,b:132/255,a:1},
+                            },
+                            voltage:{
+                                dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                glow:{r:210/255,g:255/255,b:165/255,a:1},
+                            },
+                            data:{
+                                dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                glow:{r:168/255,g:208/255,b:255/255,a:1},
+                            },
+                            audio:{
+                                dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                glow:{r:247/255,g:203/255,b:133/255,a:1},
+                            },
+                        },
+                        connectionCable:{
+                            signal:{
+                                dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                glow:{r:237/255,g:154/255,b:132/255,a:1},
+                            },
+                            voltage:{
+                                dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                glow:{r:210/255,g:255/255,b:165/255,a:1},
+                            },
+                            data:{
+                                dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                glow:{r:168/255,g:208/255,b:255/255,a:1},
+                            },
+                            audio:{
+                                dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                glow:{r:247/255,g:203/255,b:133/255,a:1},
+                            },
+                        },
+                    };
+                    var bumperCoverage = {
+                        small:{
+                            length:5,
+                            thickness:5/2,
+                        },
+                        medium:{
+                            length:10,
+                            thickness:10/3,
+                        },
+                        large:{
+                            length:15,
+                            thickness:15/4,
+                        },
+                    };
+                    this.distortion = function(x,y,a){
+                        var shape = [
+                            {x:0,y:0},
+                            {x:120,y:0},
+                            {x:120,y:65},
+                            {x:0,y:65},
+                        ];
+                        var design = {
+                            name:'distortion',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {type:'connectionNode_audio', name:'input', data:{ 
+                                    x:120, y:45, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                                {type:'connectionNode_audio', name:'output', data:{ 
+                                    x:-5, y:45, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                    
+                                {type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                    
+                                {type:'dial_colourWithIndent_continuous',name:'in_dial',data:{
+                                    x:(105-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:236/255,g:97/255,b:43/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
+                                    x:(50-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:117/255,g:251/255,b:237/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'overSample_dial',data:{
+                                    x:55, y:50, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:181/255,g:251/255,b:99/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'res_dial',data:{
+                                    x:(85-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:175/255,g:46/255,b:246/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'out_dial',data:{
+                                    x:(30-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:234/255,g:52/255,b:119/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                    
+                            ]
+                        };
+                        //add bumpers
+                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                            if(c == shape.length){c = 0;}
+                    
+                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                    
+                            design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                            ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        }
+                    
+                    
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        return object;
+                    };
+                    
+                    this.distortion.metadata = {
+                        name:'Distortion',
+                        category:'effects',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
                     };
                     
                     this._categoryData = {
@@ -43511,6 +44515,362 @@
                         misc:{ printingName:'Miscellaneous' },
                         monitors:{ printingName:'Monitors' },
                     };
+                    this.distortion = function(x,y,a){
+                        var shape = [
+                            {x:0,y:0},
+                            {x:120,y:0},
+                            {x:120,y:65},
+                            {x:0,y:65},
+                        ];
+                        var design = {
+                            name:'distortion',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {type:'connectionNode_audio', name:'input', data:{ 
+                                    x:120, y:45, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                                {type:'connectionNode_audio', name:'output', data:{ 
+                                    x:-5, y:45, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                    
+                                {type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                    
+                                {type:'dial_colourWithIndent_continuous',name:'in_dial',data:{
+                                    x:(105-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:236/255,g:97/255,b:43/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
+                                    x:(50-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:117/255,g:251/255,b:237/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'overSample_dial',data:{
+                                    x:55, y:50, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:181/255,g:251/255,b:99/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'res_dial',data:{
+                                    x:(85-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:175/255,g:46/255,b:246/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                                {type:'dial_colourWithIndent_continuous',name:'out_dial',data:{
+                                    x:(30-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                    style:{
+                                        handle:{r:234/255,g:52/255,b:119/255,a:1},
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    }
+                                }},
+                    
+                            ]
+                        };
+                        //add bumpers
+                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                            if(c == shape.length){c = 0;}
+                    
+                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                    
+                            design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                            ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        }
+                    
+                    
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        return object;
+                    };
+                    
+                    this.distortion.metadata = {
+                        name:'Distortion',
+                        category:'effects',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
+                    };
+                    _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous = function(
+                        name='dial_colourWithIndent_continuous',
+                        x, y, radius=10, angle=0, interactable=true,
+                        value=0, resetValue=-1,
+                        startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                    
+                        handleStyle = {r:0.1,g:1,b:1,a:1},
+                        slotStyle =   {r:0,g:0,b:0,a:0},
+                        needleStyle = {r:1,g:1,b:1,a:1},
+                    
+                        onchange=function(){},
+                        onrelease=function(){},
+                    ){
+                        //elements 
+                            //main
+                                var object = _canvas_.interface.part.builder('group',name,{x:x, y:y, angle:angle});
+                            
+                            //slot
+                                var slot = _canvas_.interface.part.builder('circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
+                                object.append(slot);
+                            
+                            //handle
+                                var handle = _canvas_.interface.part.builder('circle','handle',{radius:radius, detail:50, colour:handleStyle});
+                                object.append(handle);
+                    
+                            //needle group
+                                var needleGroup = _canvas_.interface.part.builder('group','needleGroup',{ignored:true});
+                                object.append(needleGroup);
+                    
+                                //needle
+                                    var needle = _canvas_.interface.part.builder('rectangleWithRoundEnds','needle',{x:radius*0.8-radius/2, y:-radius/16, angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
+                                    needleGroup.append(needle);
+                    
+                    
+                    
+                    
+                        //graphical adjust
+                            function set(a,update=true){
+                                a = (a>1 ? 1 : a);
+                                a = (a<0 ? 0 : a);
+                    
+                                if(update && object.onchange != undefined){object.onchange(a);}
+                    
+                                value = a;
+                                needleGroup.angle(startAngle + maxAngle*value);
+                            }
+                    
+                    
+                    
+                    
+                        //methods
+                            var grappled = false;
+                    
+                            object.set = function(value,update){
+                                if(grappled){return;}
+                                set(value,update);
+                            };
+                            object.get = function(){return value;};
+                            object.interactable = function(bool){
+                                if(bool==undefined){return interactable;}
+                                interactable = bool;
+                            };
+                    
+                    
+                    
+                    
+                        //interaction
+                            var turningSpeed = radius*4;
+                            
+                            handle.ondblclick = function(){
+                                if(!interactable){return;}
+                                if(resetValue<0){return;}
+                                if(grappled){return;}
+                                
+                                set(resetValue); 
+                    
+                                if(object.onrelease != undefined){object.onrelease(value);}
+                            };
+                            handle.onwheel = function(x,y,event){
+                                if(!interactable){return;}
+                                if(grappled){return;}
+                                
+                                var move = event.deltaY/100;
+                                var globalScale = _canvas_.core.viewport.scale();
+                                set( value - move/(10*globalScale) );
+                    
+                                if(object.onrelease != undefined){object.onrelease(value);}
+                            };
+                            handle.onmousedown = function(x,y,event){
+                                if(!interactable){return;}
+                                var initialValue = value;
+                                var initialY = event.Y;
+                    
+                                grappled = true;
+                                _canvas_.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var value = initialValue;
+                                        var numerator = event.Y - initialY;
+                                        var divider = _canvas_.core.viewport.scale();
+                                        set( value - (numerator/(divider*turningSpeed) * window.devicePixelRatio), true );
+                                    },
+                                    function(event){
+                                        grappled = false;
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    }
+                                );
+                            };
+                    
+                    
+                    
+                    
+                        //callbacks
+                            object.onchange = onchange; 
+                            object.onrelease = onrelease;
+                    
+                        //setup
+                            set(value);
+                    
+                        return object;
+                    };
+                    _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete = function(
+                        name='dial_colourWithIndent_discrete',
+                        x, y, radius=10, angle=0, interactable=true,
+                        value=0, resetValue=0, optionCount=5,
+                        startAngle=(3*Math.PI)/4, maxAngle=1.5*Math.PI,
+                    
+                        handleStyle = {r:1,g:0.1,b:0.1,a:1},
+                        slotStyle =   {r:0,g:0,b:0,a:0},
+                        needleStyle = {r:1,g:1,b:1,a:1},
+                    
+                        onchange=function(){},
+                        onrelease=function(){},
+                    ){
+                        //elements 
+                            //main
+                                var object = _canvas_.interface.part.builder('group',name,{x:x, y:y, angle:angle});
+                            
+                            //dial
+                                var dial = _canvas_.interface.part.builder('dial_colourWithIndent_continuous',name,{
+                                    x:0, y:0, radius:radius, angle:0, interactable:interactable,
+                                    startAngle:startAngle, maxAngle:maxAngle,
+                                    style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
+                                });
+                                //clean out built-in interaction
+                                dial.getChildByName('handle').ondblclick = undefined;
+                                dial.getChildByName('handle').onwheel = undefined;
+                                dial.getChildByName('handle').onmousedown = undefined;
+                    
+                                object.append(dial);
+                            
+                    
+                    
+                    
+                    
+                    
+                        //graphical adjust
+                            function set(a,update=true){ 
+                                a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                a = (a<0 ? 0 : a);
+                    
+                                if(update && object.onchange != undefined){object.onchange(a);}
+                    
+                                a = Math.round(a);
+                                value = a;
+                                dial.set( value/(optionCount-1) );
+                            };
+                    
+                    
+                    
+                    
+                        //methods
+                            var grappled = false;
+                    
+                            object.set = function(value,update){
+                                if(grappled){return;}
+                                set(value,update);
+                            };
+                            object.get = function(){return value;};
+                            object.interactable = function(bool){
+                                if(bool==undefined){return interactable;}
+                                interactable = bool;
+                            };
+                    
+                    
+                    
+                    
+                        //interaction
+                            var acc = 0;
+                    
+                            dial.getChildByName('handle').ondblclick = function(){
+                                if(!interactable){return;}
+                                if(resetValue<0){return;}
+                                if(grappled){return;}
+                                
+                                set(resetValue);
+                    
+                                if(object.onrelease != undefined){object.onrelease(value);}
+                            };
+                            dial.getChildByName('handle').onwheel = function(x,y,event){
+                                if(!interactable){return;}
+                                if(grappled){return;}
+                    
+                                var move = event.deltaY/100;
+                    
+                                acc += move;
+                                if( Math.abs(acc) >= 1 ){
+                                    set( value -1*Math.sign(acc) );
+                                    acc = 0;
+                                    if(object.onrelease != undefined){object.onrelease(value);}
+                                }
+                            };
+                            dial.getChildByName('handle').onmousedown = function(x,y,event){
+                                if(!interactable){return;}
+                                var initialValue = value;
+                                var initialY = event.Y;
+                    
+                                grappled = true;
+                                _canvas_.system.mouse.mouseInteractionHandler(
+                                    function(event){
+                                        var diff = Math.round( (event.Y - initialY)/25 );
+                                        set( initialValue - diff );
+                                        if(object.onchange != undefined){object.onchange(value);}
+                                    },
+                                    function(event){
+                                        grappled = false;
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    }
+                                );
+                            };
+                    
+                    
+                    
+                    
+                        //callbacks
+                            object.onchange = onchange; 
+                            object.onrelease = onrelease;
+                    
+                        //setup
+                            set(value);
+                    
+                        return object;
+                    };
+                    
+                    
+                    _canvas_.interface.part.partLibrary.dial_colourWithIndent_continuous = function(name,data){ return _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous(
+                        name, data.x, data.y, data.radius, data.angle, data.interactable, data.value, data.resetValue, data.startAngle, data.maxAngle,
+                        data.style.handle, data.style.slot, data.style.needle,
+                        data.onchange, data.onrelease,
+                    ); }
+                    _canvas_.interface.part.partLibrary.dial_colourWithIndent_discrete = function(name,data){ return _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete(
+                        name, data.x, data.y, data.radius, data.angle, data.interactable, data.value, data.resetValue, data.optionCount, data.startAngle, data.maxAngle,
+                        data.style.handle, data.style.slot, data.style.needle,
+                        data.onchange, data.onrelease,
+                    ); }
+
                 };
             };
             //a design object for the menubar options and their respective dropdown menu items
@@ -43706,10 +45066,10 @@
             
             _canvas_.control.scene.addUnit(200,30,0,'amplifier','beta');
             
-            // _canvas_.control.viewport.scale(8);
-            // _canvas_.control.viewport.position(-1039.7331513842769, -529.6391498417627);
+            _canvas_.control.scene.addUnit(360,30,0,'distortion','beta');
             
             _canvas_.control.viewport.scale(4);
+            _canvas_.control.viewport.position(-1250, -10);
 
 
         }
