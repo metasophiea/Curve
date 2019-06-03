@@ -6,7 +6,8 @@
   bugs
   - the colours don't seem to be the same as the ones I use in the development
     painting..they're not even like what the numbers I put it say they should
-    be.. :/
+    be.. :/ There seems to be something off with the way Chrome renders colour,
+    because Firefox seems to be able to reproduce the colours fine
 
 
 2019-06-01
