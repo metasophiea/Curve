@@ -1,4 +1,29 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-06-08
+  - updated the beta distortion unit's marking's image to have a higher
+    resolution (it's not exactly like the original)
+  - updated the beta amplifier unit's marking's image to have a higher
+    resolution
+
+
+2019-06-05
+  - rejiggered the way the group shape does extremity calculation, so now
+    there's less repeated code and it uses library functions more (so it will
+    benefit when things start going WebAssembly down there)
+  - added a transparent layer of markings to the distortion unit..it's not
+    perfect, but it's pretty nice. Maybe I could redraw unit markings
+    individually, and with higher resolution (also the in/out nodes are
+    backwards)
+
+
+2019-06-04
+  - worked a little more on the beta distortion unit
+  
+  ideas
+  - might be an idea to get a mostly transparent image of the distortionUnit
+    that has all the markings on it. Saves me having to make it all with vectors
+
+
 2019-06-03
   - rearranged the beta units folder to include custom shapes and parts
   - began work on the distortion unit

@@ -19982,17 +19982,17 @@
                             
                                         children.push(shape); 
                                         shape.parent = this;
-                                        augmentExtremities_addChild(shape);
+                                        augmentExtremities(shape);
                                     };
                                     this.prepend = function(shape){
                                         if( !isValidShape(shape) ){ return; }
                             
                                         children.unshift(shape); 
                                         shape.parent = this;
-                                        augmentExtremities_addChild(shape);
+                                        augmentExtremities(shape);
                                     };
                                     this.remove = function(shape){ 
-                                        augmentExtremities_removeChild(shape);
+                                        augmentExtremities(shape);
                                         children.splice(children.indexOf(shape), 1);
                                     };
                                     this.clear = function(){ children = []; };
@@ -20064,13 +20064,12 @@
                                 //extremities
                                     function calculateExtremitiesBox(){
                                         var limits = {left:0,right:0,top:0,bottom:0};
-                                        children.forEach(function(child){
-                                            child.extremities.points.forEach(function(point){
-                                                if( point.x > limits.right ){ limits.right = point.x; }
-                                                else if( point.x < limits.left ){ limits.left = point.x; }
-                                                if( point.y > limits.top ){ limits.top = point.y; }
-                                                else if( point.y < limits.bottom ){ limits.bottom = point.y; }
-                                            });
+                                        children.forEach(child => {
+                                            var tmp = _canvas_.library.math.boundingBoxFromPoints(child.extremities.points);
+                                            if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
+                                            else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
+                                            if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
+                                            else if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
                                         });
                                         self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
                                     }
@@ -20110,27 +20109,7 @@
                                             };
                                         //run computeExtremities on new child
                                             shape.computeExtremities(false,newOffset);
-                                    }
-                                    function augmentExtremities_addChild(newShape){
-                                        if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
-                            
-                                        //augment extremities, and bail if it was found that clipping is active
-                                            augmentExtremities(newShape);
                                         //augment points list
-                                            // self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
-                                            calculateExtremitiesBox();
-                                            if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
-                                        //recalculate bounding box
-                                            self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                        //inform parent of change
-                                            if(self.parent){self.parent.updateExtremities();}
-                                    }
-                                    function augmentExtremities_removeChild(departingShape){
-                                        if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_removeChild - type:'+departingShape.getType()+' - name:'+departingShape.name);}
-                            
-                                        //augment extremities, and bail if it was found that clipping is active
-                                            augmentExtremities(departingShape);
-                                        //remove matching points from points list
                                             calculateExtremitiesBox();
                                             if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
                                         //recalculate bounding box
@@ -34900,7 +34879,6 @@
                                         var cable;
                                 
                                         object._addCable = function(){
-                                            console.log(cableVersion);
                                             if(cableVersion == 2){
                                                 cable = interfacePart.builder('cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
                                             }else{

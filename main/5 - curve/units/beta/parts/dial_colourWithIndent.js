@@ -28,7 +28,9 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous = fu
             object.append(needleGroup);
 
             //needle
-                var needle = _canvas_.interface.part.builder('rectangleWithRoundEnds','needle',{x:radius*0.8-radius/2, y:-radius/16, angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
+                var needle = _canvas_.interface.part.builder('rectangleWithRoundEnds','needle',{
+                    x:radius*0.8-radius/2, y:0,
+                    angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
                 needleGroup.append(needle);
 
 

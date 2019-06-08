@@ -31,7 +31,7 @@ this.amplifier = function(x,y,a){
                 colour:style.textColour
             } },
             { type:'path', name:'line', data:{
-                pointsAsXYArray:[{x:146,y:7.5}, {x:146,y:92.5} ],
+                pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
                 capType:'round',
                 thickness:0.5,
                 colour:style.textColour

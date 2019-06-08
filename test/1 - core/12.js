@@ -11,7 +11,7 @@ for(var RED = 0; RED < 256; RED+=10){
             tmp.width(30);
             tmp.height(30);
             tmp.stopAttributeStartedExtremityUpdate = false;
-            tmp.colour = {r:RED/255,g:0/255,b:0,a:1};
+            tmp.colour = {r:RED/255,g:GREEN/255,b:0,a:1};
             console.log({r:RED/255,g:GREEN/255,b:0,a:1});
             _canvas_.core.arrangement.append(tmp);
     }

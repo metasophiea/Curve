@@ -19982,17 +19982,17 @@
                             
                                         children.push(shape); 
                                         shape.parent = this;
-                                        augmentExtremities_addChild(shape);
+                                        augmentExtremities(shape);
                                     };
                                     this.prepend = function(shape){
                                         if( !isValidShape(shape) ){ return; }
                             
                                         children.unshift(shape); 
                                         shape.parent = this;
-                                        augmentExtremities_addChild(shape);
+                                        augmentExtremities(shape);
                                     };
                                     this.remove = function(shape){ 
-                                        augmentExtremities_removeChild(shape);
+                                        augmentExtremities(shape);
                                         children.splice(children.indexOf(shape), 1);
                                     };
                                     this.clear = function(){ children = []; };
@@ -20064,13 +20064,12 @@
                                 //extremities
                                     function calculateExtremitiesBox(){
                                         var limits = {left:0,right:0,top:0,bottom:0};
-                                        children.forEach(function(child){
-                                            child.extremities.points.forEach(function(point){
-                                                if( point.x > limits.right ){ limits.right = point.x; }
-                                                else if( point.x < limits.left ){ limits.left = point.x; }
-                                                if( point.y > limits.top ){ limits.top = point.y; }
-                                                else if( point.y < limits.bottom ){ limits.bottom = point.y; }
-                                            });
+                                        children.forEach(child => {
+                                            var tmp = _canvas_.library.math.boundingBoxFromPoints(child.extremities.points);
+                                            if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
+                                            else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
+                                            if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
+                                            else if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
                                         });
                                         self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
                                     }
@@ -20110,27 +20109,7 @@
                                             };
                                         //run computeExtremities on new child
                                             shape.computeExtremities(false,newOffset);
-                                    }
-                                    function augmentExtremities_addChild(newShape){
-                                        if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_addChild - type:'+newShape.getType()+' - name:'+newShape.name);}
-                            
-                                        //augment extremities, and bail if it was found that clipping is active
-                                            augmentExtremities(newShape);
                                         //augment points list
-                                            // self.extremities.points = self.extremities.points.concat( newShape.extremities.points );
-                                            calculateExtremitiesBox();
-                                            if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
-                                        //recalculate bounding box
-                                            self.extremities.boundingBox = _canvas_.library.math.boundingBoxFromPoints(self.extremities.points);
-                                        //inform parent of change
-                                            if(self.parent){self.parent.updateExtremities();}
-                                    }
-                                    function augmentExtremities_removeChild(departingShape){
-                                        if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_removeChild - type:'+departingShape.getType()+' - name:'+departingShape.name);}
-                            
-                                        //augment extremities, and bail if it was found that clipping is active
-                                            augmentExtremities(departingShape);
-                                        //remove matching points from points list
                                             calculateExtremitiesBox();
                                             if(self.devMode){console.log('\t--> '+self.getAddress()+'::extremities.points.length:',self.extremities.points.length);}
                                         //recalculate bounding box
@@ -34900,7 +34879,6 @@
                                         var cable;
                                 
                                         object._addCable = function(){
-                                            console.log(cableVersion);
                                             if(cableVersion == 2){
                                                 cable = interfacePart.builder('cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
                                             }else{
@@ -43468,7 +43446,7 @@
                                         colour:style.textColour
                                     } },
                                     { type:'path', name:'line', data:{
-                                        pointsAsXYArray:[{x:146,y:7.5}, {x:146,y:92.5} ],
+                                        pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
                                         capType:'round',
                                         thickness:0.5,
                                         colour:style.textColour
@@ -43649,7 +43627,7 @@
                             textColour:{r:0.7,g:0.7,b:0.7,a:1},
                         
                             marking:{
-                                default:{r:235/255,g:98/255,b:61/255,a:1},
+                                default:{r:0.7,g:0.7,b:0.7,a:1},
                                 signal:{r:235/255,g:98/255,b:61/255,a:1},
                                 voltage:{r:170/255,g:251/255,b:89/255,a:1},
                                 data:{r:114/255,g:176/255,b:248/255,a:1},
@@ -44119,7 +44097,7 @@
                                         colour:style.textColour
                                     } },
                                     { type:'path', name:'line', data:{
-                                        pointsAsXYArray:[{x:146,y:7.5}, {x:146,y:92.5} ],
+                                        pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
                                         capType:'round',
                                         thickness:0.5,
                                         colour:style.textColour
@@ -44300,7 +44278,7 @@
                             textColour:{r:0.7,g:0.7,b:0.7,a:1},
                         
                             marking:{
-                                default:{r:235/255,g:98/255,b:61/255,a:1},
+                                default:{r:0.7,g:0.7,b:0.7,a:1},
                                 signal:{r:235/255,g:98/255,b:61/255,a:1},
                                 voltage:{r:170/255,g:251/255,b:89/255,a:1},
                                 data:{r:114/255,g:176/255,b:248/255,a:1},
@@ -44369,6 +44347,15 @@
                                 x:x, y:y, angle:a,
                                 space:shape,
                                 elements:[
+                                    {type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:60, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
+                                        style:{ 
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow,
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        },
+                                    }},
                                     {type:'connectionNode_audio', name:'input', data:{ 
                                         x:120, y:45, width:5, height:15, cableVersion:2,
                                         style:{ 
@@ -44378,59 +44365,50 @@
                                             cable_glow:style.connectionCable.audio.glow,
                                         },
                                     }},
-                                    {type:'connectionNode_audio', name:'output', data:{ 
-                                        x:-5, y:45, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
-                                    }},
                         
                                     {type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                                    {type:'image', name:'markings', data:{x:0,y:0,width:120,height:65,url:'images/units/beta/distortionMarkings.png'} },
                         
                                     {type:'dial_colourWithIndent_continuous',name:'in_dial',data:{
-                                        x:(105-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        x:92.5, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                                         style:{
                                             handle:{r:236/255,g:97/255,b:43/255,a:1},
                                             slot:{r:0,g:0,b:0,a:0},
                                             needle:{r:1,g:1,b:1,a:1},
                                         }
                                     }},
-                                    {type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
-                                        x:(50-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:251/255,b:237/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {type:'dial_colourWithIndent_continuous',name:'overSample_dial',data:{
-                                        x:55, y:50, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:181/255,g:251/255,b:99/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
                                     {type:'dial_colourWithIndent_continuous',name:'res_dial',data:{
-                                        x:(85-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        x:72.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                                         style:{
                                             handle:{r:175/255,g:46/255,b:246/255,a:1},
                                             slot:{r:0,g:0,b:0,a:0},
                                             needle:{r:1,g:1,b:1,a:1},
                                         }
                                     }},
+                                    {type:'dial_colourWithIndent_discrete',name:'overSample_dial',data:{
+                                        x:55, y:50, radius:15/2, startAngle:1.1*Math.PI, maxAngle:0.8*Math.PI, arcDistance:1.2, optionCount:3, 
+                                        style:{
+                                            handle:{r:181/255,g:251/255,b:99/255,a:1},
+                                            slot:{r:0,g:0,b:0,a:0},
+                                            needle:{r:1,g:1,b:1,a:1},
+                                        }
+                                    }},
+                                    {type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
+                                        x:37.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{
+                                            handle:{r:117/255,g:251/255,b:237/255,a:1},
+                                            slot:{r:0,g:0,b:0,a:0},
+                                            needle:{r:1,g:1,b:1,a:1},
+                                        }
+                                    }},
                                     {type:'dial_colourWithIndent_continuous',name:'out_dial',data:{
-                                        x:(30-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        x:20, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                                         style:{
                                             handle:{r:234/255,g:52/255,b:119/255,a:1},
                                             slot:{r:0,g:0,b:0,a:0},
                                             needle:{r:1,g:1,b:1,a:1},
                                         }
                                     }},
-                        
                                 ]
                             };
                             //add bumpers
@@ -44449,6 +44427,41 @@
                             
                             //main object
                                 var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.out_dial.set(data.outGain);
+                                    object.elements.dial_colourWithIndent_continuous.dist_dial.set(data.distortionAmount);
+                                    object.elements.dial_colourWithIndent_continuous.res_dial.set(data.resolution);
+                                    object.elements.dial_colourWithIndent_discrete.overSample_dial.set(data.overSample);
+                                    object.elements.dial_colourWithIndent_continuous.in_dial.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:         object.elements.dial_colourWithIndent_continuous.out_dial.get(), 
+                                        distortionAmount:object.elements.dial_colourWithIndent_continuous.dist_dial.get(), 
+                                        resolution:      object.elements.dial_colourWithIndent_continuous.res_dial.get(), 
+                                        overSample:      object.elements.dial_colourWithIndent_discrete.overSample_dial.get(), 
+                                        inGain:          object.elements.dial_colourWithIndent_continuous.in_dial.get()
+                                    };
+                                };
+                        
+                            //circuitry
+                                object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
+                                object.elements.connectionNode_audio.input.out().connect( object.distortionCircuit.in() );
+                                object.distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                        
+                            //wiring
+                                object.elements.dial_colourWithIndent_continuous.out_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
+                                object.elements.dial_colourWithIndent_continuous.dist_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
+                                object.elements.dial_colourWithIndent_continuous.res_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
+                                object.elements.dial_colourWithIndent_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
+                                object.elements.dial_colourWithIndent_continuous.in_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+                        
+                            //setup
+                                object.elements.dial_colourWithIndent_continuous.res_dial.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.in_dial.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.out_dial.set(1);
                             
                             return object;
                         };
@@ -44476,6 +44489,15 @@
                                 x:x, y:y, angle:a,
                                 space:shape,
                                 elements:[
+                                    {type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:60, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
+                                        style:{ 
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow,
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        },
+                                    }},
                                     {type:'connectionNode_audio', name:'input', data:{ 
                                         x:120, y:45, width:5, height:15, cableVersion:2,
                                         style:{ 
@@ -44485,59 +44507,50 @@
                                             cable_glow:style.connectionCable.audio.glow,
                                         },
                                     }},
-                                    {type:'connectionNode_audio', name:'output', data:{ 
-                                        x:-5, y:45, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
-                                    }},
                         
                                     {type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                                    {type:'image', name:'markings', data:{x:0,y:0,width:120,height:65,url:'images/units/beta/distortionMarkings.png'} },
                         
                                     {type:'dial_colourWithIndent_continuous',name:'in_dial',data:{
-                                        x:(105-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        x:92.5, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                                         style:{
                                             handle:{r:236/255,g:97/255,b:43/255,a:1},
                                             slot:{r:0,g:0,b:0,a:0},
                                             needle:{r:1,g:1,b:1,a:1},
                                         }
                                     }},
-                                    {type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
-                                        x:(50-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:251/255,b:237/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {type:'dial_colourWithIndent_continuous',name:'overSample_dial',data:{
-                                        x:55, y:50, radius:15/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:181/255,g:251/255,b:99/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
                                     {type:'dial_colourWithIndent_continuous',name:'res_dial',data:{
-                                        x:(85-25/2), y:25/2+5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        x:72.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                                         style:{
                                             handle:{r:175/255,g:46/255,b:246/255,a:1},
                                             slot:{r:0,g:0,b:0,a:0},
                                             needle:{r:1,g:1,b:1,a:1},
                                         }
                                     }},
+                                    {type:'dial_colourWithIndent_discrete',name:'overSample_dial',data:{
+                                        x:55, y:50, radius:15/2, startAngle:1.1*Math.PI, maxAngle:0.8*Math.PI, arcDistance:1.2, optionCount:3, 
+                                        style:{
+                                            handle:{r:181/255,g:251/255,b:99/255,a:1},
+                                            slot:{r:0,g:0,b:0,a:0},
+                                            needle:{r:1,g:1,b:1,a:1},
+                                        }
+                                    }},
+                                    {type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
+                                        x:37.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        style:{
+                                            handle:{r:117/255,g:251/255,b:237/255,a:1},
+                                            slot:{r:0,g:0,b:0,a:0},
+                                            needle:{r:1,g:1,b:1,a:1},
+                                        }
+                                    }},
                                     {type:'dial_colourWithIndent_continuous',name:'out_dial',data:{
-                                        x:(30-25/2), y:60 - 25/2, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                                        x:20, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                                         style:{
                                             handle:{r:234/255,g:52/255,b:119/255,a:1},
                                             slot:{r:0,g:0,b:0,a:0},
                                             needle:{r:1,g:1,b:1,a:1},
                                         }
                                     }},
-                        
                                 ]
                             };
                             //add bumpers
@@ -44556,6 +44569,41 @@
                             
                             //main object
                                 var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.out_dial.set(data.outGain);
+                                    object.elements.dial_colourWithIndent_continuous.dist_dial.set(data.distortionAmount);
+                                    object.elements.dial_colourWithIndent_continuous.res_dial.set(data.resolution);
+                                    object.elements.dial_colourWithIndent_discrete.overSample_dial.set(data.overSample);
+                                    object.elements.dial_colourWithIndent_continuous.in_dial.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:         object.elements.dial_colourWithIndent_continuous.out_dial.get(), 
+                                        distortionAmount:object.elements.dial_colourWithIndent_continuous.dist_dial.get(), 
+                                        resolution:      object.elements.dial_colourWithIndent_continuous.res_dial.get(), 
+                                        overSample:      object.elements.dial_colourWithIndent_discrete.overSample_dial.get(), 
+                                        inGain:          object.elements.dial_colourWithIndent_continuous.in_dial.get()
+                                    };
+                                };
+                        
+                            //circuitry
+                                object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
+                                object.elements.connectionNode_audio.input.out().connect( object.distortionCircuit.in() );
+                                object.distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                        
+                            //wiring
+                                object.elements.dial_colourWithIndent_continuous.out_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
+                                object.elements.dial_colourWithIndent_continuous.dist_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
+                                object.elements.dial_colourWithIndent_continuous.res_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
+                                object.elements.dial_colourWithIndent_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
+                                object.elements.dial_colourWithIndent_continuous.in_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+                        
+                            //setup
+                                object.elements.dial_colourWithIndent_continuous.res_dial.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.in_dial.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.out_dial.set(1);
                             
                             return object;
                         };
@@ -44595,7 +44643,9 @@
                                     object.append(needleGroup);
                         
                                     //needle
-                                        var needle = _canvas_.interface.part.builder('rectangleWithRoundEnds','needle',{x:radius*0.8-radius/2, y:-radius/16, angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
+                                        var needle = _canvas_.interface.part.builder('rectangleWithRoundEnds','needle',{
+                                            x:radius*0.8-radius/2, y:0,
+                                            angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
                                         needleGroup.append(needle);
                         
                         

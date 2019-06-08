@@ -94,7 +94,6 @@ this.connectionNode = function(
         var cable;
 
         object._addCable = function(){
-            console.log(cableVersion);
             if(cableVersion == 2){
                 cable = interfacePart.builder('cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
             }else{
