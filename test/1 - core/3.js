@@ -29,7 +29,8 @@ var group_2 = _canvas_.core.shape.create('group');
 
 var tick = 0;
 setInterval(function(){
-    group_2.angle( group_2.angle() + 0.01 );
+    group_1.angle( group_1.angle() + 0.04 );
+    group_2.angle( group_2.angle() + 0.04 );
     group_1.scale( 1 + 0.5*Math.sin( 2*Math.PI*tick ) );
     group_2.scale( 1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/4 ) );
     rectangle_3.scale( 1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/2 ) );

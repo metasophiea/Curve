@@ -1,7 +1,10 @@
 extern "C"{
-  int arrayDoubler(int array[], int length);
+  float* arrayDoubler(float array[], float length);
 }
 
-int arrayDoubler(int array[], int length){
-	return array[0]+array[1];
+float* arrayDoubler(float array[], float length){
+  for(int a = 0; a < length; a++){
+    array[a] = array[a]*2;
+  }
+	return array;
 }

@@ -1221,11 +1221,11 @@ function updateGlobalBufferViews() {
 
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 3968,
+    STACK_BASE = 4064,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 5246848,
-    DYNAMIC_BASE = 5246848,
-    DYNAMICTOP_PTR = 3936;
+    STACK_MAX = 5246944,
+    DYNAMIC_BASE = 5246944,
+    DYNAMICTOP_PTR = 4032;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1723,7 +1723,7 @@ var ASM_CONSTS = [];
 
 
 
-// STATICTOP = STATIC_BASE + 2944;
+// STATICTOP = STATIC_BASE + 3040;
 /* global initializers */ /*__ATINIT__.push();*/
 
 
@@ -1734,7 +1734,7 @@ var ASM_CONSTS = [];
 
 
 /* no memory initializer */
-var tempDoublePtr = 3952
+var tempDoublePtr = 4048
 assert(tempDoublePtr % 8 == 0);
 
 function copyTempFloat(ptr) { // functions, because inlining this code increases code size too much
@@ -1919,6 +1919,10 @@ function copyTempDouble(ptr) {
       return HEAP8.length;
     }
 
+  var _llvm_cos_f64=Math_cos;
+
+  var _llvm_sin_f64=Math_sin;
+
   
   function _emscripten_memcpy_big(dest, src, num) {
       HEAPU8.set(HEAPU8.subarray(src, src+num), dest);
@@ -2002,6 +2006,8 @@ var asmLibraryArg = {
   "_emscripten_get_heap_size": _emscripten_get_heap_size,
   "_emscripten_memcpy_big": _emscripten_memcpy_big,
   "_emscripten_resize_heap": _emscripten_resize_heap,
+  "_llvm_cos_f64": _llvm_cos_f64,
+  "_llvm_sin_f64": _llvm_sin_f64,
   "abortOnCannotGrowMemory": abortOnCannotGrowMemory,
   "flush_NO_FILESYSTEM": flush_NO_FILESYSTEM,
   "tempDoublePtr": tempDoublePtr,
@@ -2037,6 +2043,13 @@ asm["_library___math___arrayDoubler"] = function() {
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return real__library___math___arrayDoubler.apply(null, arguments);
+};
+
+var real__library___math___cartesianAngleAdjust = asm["_library___math___cartesianAngleAdjust"];
+asm["_library___math___cartesianAngleAdjust"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return real__library___math___cartesianAngleAdjust.apply(null, arguments);
 };
 
 var real__library___math___doubler = asm["_library___math___doubler"];
@@ -2138,6 +2151,12 @@ var _library___math___arrayDoubler = Module["_library___math___arrayDoubler"] = 
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
   return Module["asm"]["_library___math___arrayDoubler"].apply(null, arguments)
+};
+
+var _library___math___cartesianAngleAdjust = Module["_library___math___cartesianAngleAdjust"] = function() {
+  assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
+  assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
+  return Module["asm"]["_library___math___cartesianAngleAdjust"].apply(null, arguments)
 };
 
 var _library___math___doubler = Module["_library___math___doubler"] = function() {

@@ -1,4 +1,41 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-06-11
+  - updated the group shape again, this time to improve shape removal
+    performance.
+    - getChildByName now uses the 'childRegistry' (as is should do)
+    - this.remove now activates a function called 'augmentExtremities_remove'
+      which works to adjust the group shape's bounding box manually. It's smart
+      enough to know when a shape is within the boudning box, and can bail on
+      any recalculations of the boundaries if that is the case.
+
+  notes
+  - I've been thinking about re-painting all the beta units again, this time to
+    include the little bumper piece in the image (I need to do a test on the
+    rendering time of images verses shapes)
+
+
+2019-06-10
+  - improved the way the group shape calculates it's extremities when a shape is
+    added (I think I somehow added and removed this method in the past, so, it's
+    good to have it back)
+  - more experimentation with WebAssembly. I created a function that emulates 
+    the cartesianAngleAdjust found in library.math. It passes all the tests,
+    however seems to run much slower that the original JS version. Upon research
+    it seems that though the assemled code itself may be fast, the interface is
+    still rather slow. Maybe in time this interface will get faster, or perhaps
+    this feature is supposed to be used with larger, more completex operations.
+    Perhaps rewriting the bulk of core in this way would be benefitial..quite a
+    complex task however, and one I don't want to engage with for now.
+  - further improved the way the group shape calculates it's extremities when a
+    shape is added. Things are pretty damn fast now (the "check if name is used"
+    code was slowing it down. Spead things along with a "childRegistry" object)
+    Adding 580,000 shapes took ~4.5 seconds..couldn't render that many however
+    (infact, the laptop started to freeze)
+
+  ideas
+  - maybe that beta distortion unit needs a redesign..
+    
+
 2019-06-09
   - began work on the beta basicSynthesizer
   

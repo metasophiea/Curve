@@ -13,6 +13,47 @@ function wasm_relativeDistance(realLength, start, end, d, allowOverflow){
     return ans;
 }
 
+function original_cartesianAngleAdjust(x,y,angle){
+    function cartesian2polar(x,y){
+        var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
+    
+        if(x === 0){
+            if(y === 0){ang = 0;}
+            else if(y > 0){ang = 0.5*Math.PI;}
+            else{ang = 1.5*Math.PI;}
+        }
+        else if(y === 0){
+            if(x >= 0){ang = 0;}else{ang = Math.PI;}
+        }
+        else if(x >= 0){ ang = Math.atan(y/x); }
+        else{ /*if(x < 0)*/ ang = Math.atan(y/x) + Math.PI; }
+    
+        return {'dis':dis,'ang':ang};
+    };
+    function polar2cartesian(angle,distance){
+        return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
+    };
+
+    if(angle == 0 || angle%(Math.PI*2) == 0){ return {x:x,y:y}; }
+    var polar = cartesian2polar( x, y );
+    polar.ang += angle;
+    return polar2cartesian( polar.ang, polar.dis );
+};
+function wasm_cartesianAngleAdjust(x,y,array){
+    var memLocation = _library___math___cartesianAngleAdjust(x,y,array);
+
+    try{
+        return {
+            x:Module.HEAPF64[(memLocation/Float64Array.BYTES_PER_ELEMENT)],
+            y:Module.HEAPF64[(memLocation/Float64Array.BYTES_PER_ELEMENT)+1],
+        };
+    }finally{
+        Module._free(memLocation);
+    }
+}
+
+
+
 //relativeDistance
 console.log('%c- relativeDistance', 'font-weight: bold;');
 tester( original_relativeDistance(100, 0,1, 0),          wasm_relativeDistance(100, 0,1, 0)                );
@@ -39,6 +80,52 @@ tester( original_relativeDistance(60, -1.1, 1.1, -0.7989772731353805, true),    
 tester( original_relativeDistance(60, -1.1, 1.1, -0.7687872823270903, true),    wasm_relativeDistance(60, -1.1, 1.1, -0.7687872823270903, true) );
 tester( original_relativeDistance(60, -1.1, 1.1, -0.7542679542679545, true),    wasm_relativeDistance(60, -1.1, 1.1, -0.7542679542679545, true) );
 tester( original_relativeDistance(60, -1.1, 1.1, -0.7687872823270891, true),    wasm_relativeDistance(60, -1.1, 1.1, -0.7687872823270891, true) );
+console.log('');
+
+//cartesianAngleAdjust
+console.log('%c- cartesianAngleAdjust', 'font-weight: bold;');
+tester( original_cartesianAngleAdjust(0,0,0)          , wasm_cartesianAngleAdjust(0,0,0)           );
+tester( original_cartesianAngleAdjust(10,0,Math.PI)   , wasm_cartesianAngleAdjust(10,0,Math.PI)    );
+tester( original_cartesianAngleAdjust(10,0,Math.PI*2) , wasm_cartesianAngleAdjust(10,0,Math.PI*2)  );
+tester( original_cartesianAngleAdjust(10,0,Math.PI/2) , wasm_cartesianAngleAdjust(10,0,Math.PI/2)  );
+tester( original_cartesianAngleAdjust(10,0,-Math.PI/2), wasm_cartesianAngleAdjust(10,0,-Math.PI/2) );
+tester( original_cartesianAngleAdjust(10,0,Math.PI/4) , wasm_cartesianAngleAdjust(10,0,Math.PI/4)  );
+for(var a = 0; a < 100; a++){
+    var x = Math.random();
+    var y = Math.random();
+    var angle = Math.random();
+    tester( original_cartesianAngleAdjust(x,y,angle), wasm_cartesianAngleAdjust(x,y,angle) );
+}
+
+var startTime = (new Date()).getTime();
+    for(var a = 0; a < 1000000; a++){
+        var x = Math.random();
+        var y = Math.random();
+        var angle = Math.random();
+        original_cartesianAngleAdjust(x,y,angle);
+    }
+var endTime = (new Date()).getTime();
+console.log( 'JS:',(endTime - startTime)/1000 );
+
+var startTime = (new Date()).getTime();
+    for(var a = 0; a < 1000000; a++){
+        var x = Math.random();
+        var y = Math.random();
+        var angle = Math.random();
+        wasm_cartesianAngleAdjust(x,y,angle);
+    }
+var endTime = (new Date()).getTime();
+console.log( 'WASM:',(endTime - startTime)/1000 );
+
+console.log('');
+
+
+
+
+
+
+
+
 
 
 
@@ -62,7 +149,19 @@ function sumUp(array){//js wrapper function for the wasm function
         Module._free(arrayOnHeap); //free the allocated memory
     }
 }
+function arrayDoubler(array){//js wrapper function for the wasm function
+    let arrayOnHeap;
+    try{
+        arrayOnHeap = transferToHeap(array);
+        return Module._library___math___arrayDoubler(arrayOnHeap, array.length);
+    }finally{//this code is executed no matter what; even after a return
+        Module._free(arrayOnHeap); //free the allocated memory
+    }
+}
+
 
 console.log( sumUp([1.0, 2.0, 3.0, 4.5]) ); 
+console.log( arrayDoubler([1.0, 2.0, 3.0, 4.5]) ); 
+
 
 },500);
