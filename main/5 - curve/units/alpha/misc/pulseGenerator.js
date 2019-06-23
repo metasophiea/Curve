@@ -24,17 +24,17 @@ this.pulseGenerator = function(x,y,a){
         ], 
         // spaceOutline:true,
         elements:[
-            {type:'connectionNode_data', name:'out', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'out', data:{
                 x:-5, y:11.25, width:5, height:17.5,
             }},
-            {type:'connectionNode_data', name:'sync', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'sync', data:{
                 x:115, y:11.25, width:5, height:17.5,
                 receive:function(){ object.elements.button_rectangle.sync.press();},
             }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
 
-            {type:'button_rectangle', name:'syncButton', data:{
+            {collection:'control', type:'button_rectangle', name:'syncButton', data:{
                 x:102.5, y:11.25, width:10, height:17.5,
                 selectable:false, 
                 style:{ 
@@ -44,11 +44,11 @@ this.pulseGenerator = function(x,y,a){
                 }, 
                 onpress:function(){updateTempo(tempo)},
             }},
-            {type:'dial_continuous',name:'tempo',data:{
+            {collection:'dynamic', type:'dial_continuous',name:'tempo',data:{
                 x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
         ]
     };
 
@@ -148,17 +148,17 @@ this.pulseGenerator_signal = function(x,y,a){
         ], 
         // spaceOutline:true,
         elements:[
-            {type:'connectionNode_signal', name:'out', data:{
+            {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{
                 x:-5, y:11.25, width:5, height:17.5,
             }},
-            {type:'connectionNode_signal', name:'sync', data:{
+            {collection:'dynamic', type:'connectionNode_signal', name:'sync', data:{
                 x:115, y:11.25, width:5, height:17.5,
                 onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
             }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
 
-            {type:'button_rectangle', name:'syncButton', data:{
+            {collection:'control', type:'button_rectangle', name:'syncButton', data:{
                 x:102.5, y:11.25, width:10, height:17.5,
                 selectable:false, 
                 style:{ 
@@ -168,11 +168,11 @@ this.pulseGenerator_signal = function(x,y,a){
                 }, 
                 onpress:function(){updateTempo(tempo)},
             }},
-            {type:'dial_continuous',name:'tempo',data:{
+            {collection:'control', type:'dial_continuous',name:'tempo',data:{
                 x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
         ]
     };
 
@@ -257,22 +257,22 @@ this.pulseGenerator_voltage = function(x,y,a){
         ], 
         // spaceOutline:true,
         elements:[
-            {type:'connectionNode_voltage', name:'out', data:{
+            {collection:'dynamic', type:'connectionNode_voltage', name:'out', data:{
                 x:-5, y:11.25, width:5, height:17.5,
             }},
-            {type:'connectionNode_signal', name:'sync', data:{
+            {collection:'dynamic', type:'connectionNode_signal', name:'sync', data:{
                 x:145, y:11.25, width:5, height:17.5,
                 onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
             }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ 
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[ 
                 {x:0,y:10},{x:10,y:0}, 
                 {x:100+30,y:0},{x:115+30,y:10}, 
                 {x:115+30,y:30},{x:100+30,y:40}, 
                 {x:10,y:40},{x:0,y:30} 
             ], colour:style.background }},
 
-            {type:'button_rectangle', name:'syncButton', data:{
+            {collection:'control', type:'button_rectangle', name:'syncButton', data:{
                 x:102.5, y:11.25, width:10, height:17.5,
                 selectable:false, 
                 style:{ 
@@ -283,18 +283,18 @@ this.pulseGenerator_voltage = function(x,y,a){
                 onpress:function(){updateTempo(tempo)},
             }},
 
-            {type:'text', name:'strength_0', data:{x:8, y:32, text:'0', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-            {type:'text', name:'strength_1/2', data:{x:20, y:4, text:'1/2', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-            {type:'text', name:'strength_1', data:{x:32, y:32, text:'1', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
-            {type:'dial_continuous',name:'strength',data:{
+            {collection:'basic', type:'text', name:'strength_0', data:{x:8, y:32, text:'0', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+            {collection:'basic', type:'text', name:'strength_1/2', data:{x:20, y:4, text:'1/2', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+            {collection:'basic', type:'text', name:'strength_1', data:{x:32, y:32, text:'1', width:style.text.size, height:style.text.size, colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'strength',data:{
                 x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {type:'dial_continuous',name:'tempo',data:{
+            {collection:'control', type:'dial_continuous',name:'tempo',data:{
                 x:50, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:65, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:65, y:10, width:65, height:20, count:6 }},
         ]
     };
 
@@ -380,17 +380,17 @@ this.pulseGenerator_data = function(x,y,a){
         ], 
         // spaceOutline:true,
         elements:[
-            {type:'connectionNode_data', name:'out', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'out', data:{
                 x:-5, y:11.25, width:5, height:17.5,
             }},
-            {type:'connectionNode_signal', name:'sync', data:{
+            {collection:'dynamic', type:'connectionNode_signal', name:'sync', data:{
                 x:115, y:11.25, width:5, height:17.5,
                 onchange:function(val){ if(val){object.elements.button_rectangle.syncButton.press();} },
             }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[ {x:0,y:10},{x:10,y:0}, {x:100,y:0},{x:115,y:10}, {x:115,y:30},{x:100,y:40}, {x:10,y:40},{x:0,y:30} ], colour:style.background }},
 
-            {type:'button_rectangle', name:'syncButton', data:{
+            {collection:'control', type:'button_rectangle', name:'syncButton', data:{
                 x:102.5, y:11.25, width:10, height:17.5,
                 selectable:false, 
                 style:{ 
@@ -400,11 +400,11 @@ this.pulseGenerator_data = function(x,y,a){
                 }, 
                 onpress:function(){updateTempo(tempo)},
             }},
-            {type:'dial_continuous',name:'tempo',data:{
+            {collection:'control', type:'dial_continuous',name:'tempo',data:{
                 x:20, y:20, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle, outerArc:style.dial.arc},
             }},
-            {type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static',name:'readout',data:{ x:35, y:10, width:65, height:20, count:6 }},
         ]
     };
 

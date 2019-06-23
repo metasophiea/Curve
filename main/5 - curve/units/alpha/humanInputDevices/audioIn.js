@@ -32,23 +32,23 @@ this.audioIn = function(x,y,a,setupConnect=true){
         ],
         // spaceOutline: true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[
                 {x:0,y:10},{x:10,y:10},{x:22.5,y:0},{x:37.5,y:0},{x:50,y:10},{x:245,y:10},
                 {x:245,y:40},{x:50,y:40},{x:37.5,y:50},{x:22.5,y:50},{x:10,y:40},{x:0,y:40}
             ], colour:style.background }},
-            {type:'connectionNode_audio', name:'audioOut', data:{x: -10, y: 15, width: 10, height: 20, isAudioOutput:true }},
-            {type:'readout_sixteenSegmentDisplay_static', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
-            {type:'readout_sixteenSegmentDisplay_static', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
-            {type:'button_rectangle', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
-            {type:'button_rectangle', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
-            {type:'text', name:'gainLabel_name', data:{x:30, y:42, text:'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'gainLabel_0',    data:{x:18, y:38, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gainLabel_1',    data:{x:30, y:8, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gainLabel_2',    data:{x:41, y:38, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, style:style.dial, resetValue:0.5 }},
-            {type:'path', name:'upArrow',   data:{pointsAsXYArray:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
-            {type:'path', name:'downArrow', data:{pointsAsXYArray:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
-            {type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut', data:{x: -10, y: 15, width: 10, height: 20, isAudioOutput:true }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'index', data:{x: 70, y: 15, angle:0, width:50, height:20, count:5, style:style.readout}},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'text',  data:{x: 122.5, y: 15, angle:0, width:100, height:20, count:10, style:style.readout}},
+            {collection:'control', type:'button_rectangle', name:'up',   data:{x:225, y: 15, width:15, height:10, selectable:false, style:style.button, onpress:function(){incSelection();}}},
+            {collection:'control', type:'button_rectangle', name:'down', data:{x:225, y: 25, width:15, height:10, selectable:false, style:style.button, onpress:function(){decSelection();}}},
+            {collection:'basic', type:'text', name:'gainLabel_name', data:{x:30, y:42, text:'gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'gainLabel_0',    data:{x:18, y:38, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gainLabel_1',    data:{x:30, y:8, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gainLabel_2',    data:{x:41, y:38, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous', name:'outputGain', data:{x: 30, y: 25, radius: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, style:style.dial, resetValue:0.5 }},
+            {collection:'basic', type:'path', name:'upArrow',   data:{pointsAsXYArray:[{x:227.5,y:22.5},{x:232.5,y:17.5},{x:237.5,y:22.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
+            {collection:'basic', type:'path', name:'downArrow', data:{pointsAsXYArray:[{x:227.5,y:27.5},{x:232.5,y:32.5},{x:237.5,y:27.5}], colour:style.marking.stroke, thickness:style.marking.lineWidth}},
+            {collection:'display', type:'audio_meter_level', name:'audioIn',data:{x:50, y:15, width:17.5, height:20}},
         ]
     };
 

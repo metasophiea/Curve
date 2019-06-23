@@ -10,7 +10,7 @@ this.checkbox_ = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //subject
             object.append(subject);
 

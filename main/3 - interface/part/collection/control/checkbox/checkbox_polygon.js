@@ -12,20 +12,20 @@ this.checkbox_polygon = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup',{});
+            var subject = interfacePart.builder('basic','group',name+'subGroup',{});
         //backing
-            var backing = interfacePart.builder('polygon','backing',{pointsAsXYArray:outterPoints, colour:backingStyle});
+            var backing = interfacePart.builder('basic','polygon','backing',{pointsAsXYArray:outterPoints, colour:backingStyle});
             subject.append(backing);
         //check
-            var checkpoly = interfacePart.builder('polygon','checkpoly',{pointsAsXYArray:innerPoints, colour:{r:0,g:0,b:0,a:0}});
+            var checkpoly = interfacePart.builder('basic','polygon','checkpoly',{pointsAsXYArray:innerPoints, colour:{r:0,g:0,b:0,a:0}});
             subject.append(checkpoly);
         //cover
-            subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:outterPoints, colour:{r:0,g:0,b:0,a:0}});
+            subject.cover = interfacePart.builder('basic','polygon','cover',{pointsAsXYArray:outterPoints, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic checkbox part
         var object = interfacePart.builder(
-            'checkbox_', name, {
+            'control', 'checkbox_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 onchange:onchange,
                 subject:subject,

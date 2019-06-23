@@ -73,12 +73,12 @@ this.button_circle = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup',{});
+            var subject = interfacePart.builder('basic','group',name+'subGroup',{});
         //backing
-            var backing = interfacePart.builder('circleWithOutline','backing',{radius:radius, colour:backing__off__colour, thickness:5 });
+            var backing = interfacePart.builder('basic','circleWithOutline','backing',{radius:radius, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
         //text
-            var text_centre = interfacePart.builder('text','centre', {
+            var text_centre = interfacePart.builder('basic','text','centre', {
                 text:text_centre, 
                 width:text_size,
                 height:text_size,
@@ -90,12 +90,12 @@ this.button_circle = function(
             });
             subject.append(text_centre);
         //cover
-            subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
+            subject.cover = interfacePart.builder('basic','circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic button part
         var object = interfacePart.builder(
-            'button_', name, {
+            'control', 'button_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
 

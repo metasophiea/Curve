@@ -14,13 +14,13 @@ this.grapher_periodicWave = function(
     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 ){
     var wave = {'sin':[],'cos':[]};
-    var resolution = 100;
+    var resolution = 25;
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //grapher
-            var grapher = interfacePart.builder('grapher',name,{
+            var grapher = interfacePart.builder('display','grapher',name,{
                 x:0, y:0, width:width, height:height,
                 foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                 backgroundStyle_colour:backgroundStyle_colour, 

@@ -12,7 +12,7 @@ this.connectionNode_voltage = function(
     ondisconnect=function(instigator){},
 ){
     //elements
-        var object = interfacePart.builder('connectionNode',name,{
+        var object = interfacePart.builder('dynamic','connectionNode',name,{
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
             cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },

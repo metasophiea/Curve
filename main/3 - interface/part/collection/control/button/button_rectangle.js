@@ -74,12 +74,12 @@ this.button_rectangle = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'__subGroup');
+            var subject = interfacePart.builder('basic','group',name+'__subGroup');
         //backing
-            var backing = interfacePart.builder('rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
+            var backing = interfacePart.builder('basic','rectangleWithOutline','backing',{width:width, height:height, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
         //text
-            var text_centre = interfacePart.builder('text','centre', {
+            var text_centre = interfacePart.builder('basic','text','centre', {
                 x:width/2, 
                 y:height*textVerticalOffsetMux, 
                 text:text_centre, 
@@ -92,7 +92,7 @@ this.button_rectangle = function(
                 interCharacterSpacing:text_interCharacterSpacing,
             });
             subject.append(text_centre);
-            var text_left = interfacePart.builder('text','left', {
+            var text_left = interfacePart.builder('basic','text','left', {
                 x:width*textHorizontalOffsetMux, 
                 y:height*textVerticalOffsetMux, 
                 text:text_left, 
@@ -105,7 +105,7 @@ this.button_rectangle = function(
                 interCharacterSpacing:text_interCharacterSpacing,
             });
             subject.append(text_left);
-            var text_right = interfacePart.builder('text','right',{
+            var text_right = interfacePart.builder('basic','text','right',{
                 x:width-(width*textHorizontalOffsetMux), 
                 y:height*textVerticalOffsetMux, 
                 text:text_right, 
@@ -119,12 +119,12 @@ this.button_rectangle = function(
             });
             subject.append(text_right);
         //cover
-            subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0} });
+            subject.cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0} });
             subject.append(subject.cover);
 
     //generic button part
         var object = interfacePart.builder(
-            'button_', name, {
+            'control', 'button_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
 

@@ -119,9 +119,9 @@ this.sevenSegmentDisplay_static = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //canvas
-            var canvas = interfacePart.builder('canvas','subcanvas',{ width:width, height:height, resolution:resolution });
+            var canvas = interfacePart.builder('basic','canvas','subcanvas',{ width:width, height:height, resolution:resolution });
             object.append(canvas);
 
     //graphics

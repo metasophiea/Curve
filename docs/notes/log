@@ -1,4 +1,39 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+ 2019-06-23
+  - painting
+
+
+ 2019-06-22
+  - painting
+
+
+ 2019-06-20
+  - abandoned the "gauge" display part for now
+  - reworked the interface/parts section, to allow for easier expansion of the
+    collections (caused a lot of rewriting elsewhere too, thanks to the API
+    changing)
+
+  bugs
+  - paths are pretty slow to generate when you get to ~100 points..in the
+    grapher interface display part anyway...Its this union function man. Its 
+    really rather slow
+
+
+2019-06-18
+  - started working on a "gauge" display part
+
+  notes
+  - need to divide out the collections in interface parts some more so that we
+    can have more parts with similar names
+  - need to expand gravity to accept "*/file.js" and to sort files from "*"
+    alphabetically
+
+
+2019-06-17
+  - slight changes to the group shape's 'augmentExtremities_remove' function, 
+    just to speed things up a tiny bit and add a comment
+
+
 2019-06-11
   - updated the group shape again, this time to improve shape removal
     performance.

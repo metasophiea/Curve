@@ -36,8 +36,8 @@
 //audio output
     _canvas_.control.scene.addUnit(1330,25,0,'audioSink');
 
-//audio input
-    _canvas_.control.scene.addUnit(1385,25,0,'audioIn');
+// //audio input
+//     _canvas_.control.scene.addUnit(1385,25,0,'audioIn');
 
 //visualisation
     _canvas_.control.scene.addUnit(1640,25,0,'universalreadout2');

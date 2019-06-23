@@ -11,17 +11,17 @@ this.signal_duplicator = function(x,y,a){
         space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[
-            {type:'connectionNode_signal', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } }},
-            {type:'connectionNode_signal', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_signal', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
 
-            {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-            {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-            {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-            {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-            {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
         ],
     };
 
@@ -53,17 +53,17 @@ this.voltage_duplicator = function(x,y,a){
         space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[
-            {type:'connectionNode_voltage', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } }},
-            {type:'connectionNode_voltage', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_voltage', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ type:0, x:55, y:5, width:10, height:20, onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
 
-            {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-            {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-            {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-            {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-            {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
         ],
     };
 
@@ -95,17 +95,17 @@ this.audio_duplicator = function(x,y,a){
         space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[
-            {type:'connectionNode_audio', name:'input', data:{ type:0, x:55, y:5, width:10, height:20 }},
-            {type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ type:0, x:55, y:5, width:10, height:20 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ type:1, x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ type:1, x:-10, y:30, width:10, height:20, isAudioOutput:true }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
 
-            {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-            {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-            {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-            {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-            {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
         ],
     };
 
@@ -137,9 +137,9 @@ this.data_duplicator = function(x,y,a){
         space:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[
-            {type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
-            {type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
-            {type:'connectionNode_data', name:'input', data:{ 
+            {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ x:-10, y:5, width:20, height:20 }},
+            {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ x:-10, y:30, width:20, height:20 }},
+            {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
                 x:45, y:5, width:20, height:20,
                 onreceive:function(address,data){
                     object.io.data.output_1.send(address,data);
@@ -147,13 +147,13 @@ this.data_duplicator = function(x,y,a){
                 }
             }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background }},
 
-            {type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
-            {type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
-            {type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
-            {type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
-            {type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'upperArrow', data:{ pointsAsXYArray:[{x:10, y:11}, {x:2.5,y:16},{x:10, y:21}], colour:style.markings }},
+            {collection:'basic', type:'polygon', name:'lowerArrow', data:{ pointsAsXYArray:[{x:10, y:36},{x:2.5,y:41}, {x:10, y:46}], colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'topHorizontal', data:{ x:5, y:15, width:45, height:2, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'vertical', data:{ x:27.5, y:15, width:2, height:25.5, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'bottomHorizontal', data:{ x:5, y:40, width:24.5, height:2, colour:style.markings }},
         ]
     };
 

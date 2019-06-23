@@ -6,9 +6,9 @@ this.cable = function(
 ){
     //elements 
         //main
-            var object = interfacePart.builder('group',name);
+            var object = interfacePart.builder('basic','group',name);
         //cable shape
-            var path = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+            var path = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             object.append(path);
     
     //controls
@@ -50,9 +50,9 @@ this.cable2 = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name);
+            var object = interfacePart.builder('basic','group',name);
         //cable shape
-            var pathShape = interfacePart.builder('path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
+            var pathShape = interfacePart.builder('basic','path','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             // var pathShape = interfacePart.builder('pathWithRoundJointsAndEnds','cable',{ points:[x1,y1,x2,y2], colour:dimStyle, thickness:5 });
             object.append(pathShape);
     

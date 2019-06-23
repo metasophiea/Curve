@@ -57,17 +57,17 @@ this.button_image = function(
 
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup',{});
+            var subject = interfacePart.builder('basic','group',name+'subGroup',{});
         //backing
-            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL__off});
+            var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL__off});
             subject.append(backing);
         //cover
-            subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            subject.cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic button part
         var object = interfacePart.builder(
-            'button_', name, {
+            'control', 'button_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
 

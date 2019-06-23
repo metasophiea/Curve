@@ -16,7 +16,7 @@
     }
 */
 this.builder = function(creatorMethod,design){
-    if(!creatorMethod){console.error("workspace unit builder:: creatorMethod missing");return;}
+    if(!creatorMethod){console.error("Interface Unit Builder :: creatorMethod missing");return;}
 
     //input check
         if(design.x == undefined){ design.x = 0; }
@@ -24,7 +24,7 @@ this.builder = function(creatorMethod,design){
         if(design.angle == undefined){ design.angle = 0; }
 
     //main group
-        var unit = _canvas_.interface.part.builder('group',design.name,{x:design.x, y:design.y, angle:design.angle});
+        var unit = _canvas_.interface.part.builder('basic','group',design.name,{x:design.x, y:design.y, angle:design.angle});
         unit.creatorMethod = creatorMethod;
         unit.model = design.name;
         unit.collisionActive = design.collisionActive == undefined ? true : design.collisionActive;
@@ -32,14 +32,20 @@ this.builder = function(creatorMethod,design){
     //generate parts and append to main group
         unit.elements = {};
         for(var a = 0; a < design.elements.length; a++){
+            //check for arguments
+            if(design.elements[a].collection == undefined){console.warn('Interface Unit Builder :: collection name missing'); break;}
+            if(design.elements[a].type == undefined){console.warn('Interface Unit Builder :: type name missing'); break;}
+            if(design.elements[a].name == undefined){console.warn('Interface Unit Builder :: name name missing'); break;}
+
+
             //check for name collision
                 if( unit.getChildByName(design.elements[a].name) != undefined ){
-                    console.warn('error: part with the name "'+design.elements[a].name+'" already exists. Part:',design.elements[a],'will not be added');
+                    console.warn('Interface Unit Builder :: error: part with the name "'+design.elements[a].name+'" already exists. Part:',design.elements[a],'will not be added');
                     continue;
                 }    
 
             //produce and append part
-                var newPart = _canvas_.interface.part.builder( design.elements[a].type, design.elements[a].name, design.elements[a].data );
+                var newPart = _canvas_.interface.part.builder( design.elements[a].collection, design.elements[a].type, design.elements[a].name, design.elements[a].data );
                 unit.append(newPart);
 
             //add part to element tree
@@ -106,7 +112,7 @@ this.builder = function(creatorMethod,design){
             if( unit.space.shape != undefined ){
                 unit.space.shape.pointsAsXYArray(unit.space.originalPoints);
             }else{
-                unit.space.shape = _canvas_.interface.part.builder( 'polygon', 'unit.space.shape', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
+                unit.space.shape = _canvas_.interface.part.builder( 'basic', 'polygon', 'unit.space.shape', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
                 unit.space.shape.unit = unit;
                 unit.prepend( unit.space.shape );
             }
@@ -115,7 +121,7 @@ this.builder = function(creatorMethod,design){
 
         //if requested, add an outline shape
             if( design.spaceOutline ){
-                unit.append( _canvas_.interface.part.builder( 'polygonWithOutline', 'unit.space.shape'+'_Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
+                unit.append( _canvas_.interface.part.builder( 'basic', 'polygonWithOutline', 'unit.space.shape'+'_Outline', {pointsAsXYArray:design.space, colour:{r:1,g:1,b:1,a:0.25}, lineColour:{r:0,g:0,b:0,a:1} } ) );
             }
 
     //setup unit movement snapping

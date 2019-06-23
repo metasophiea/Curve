@@ -243,7 +243,7 @@ _canvas_.interface.part.collection.basic.rectangleWithRoundEnds = function( name
 
     return temp;
 };
-_canvas_.interface.part.partLibrary.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
+_canvas_.interface.part.partLibrary.basic.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
     name, data.x, data.y, data.angle, data.width, data.height, data.detail, data.ignored, data.colour
 ); }
 
@@ -262,22 +262,22 @@ _canvas_.interface.part.collection.control.dial_3_continuous = function(
 ){
     //elements 
         //main
-            var object = _canvas_.interface.part.builder('group',name,{x:x, y:y, angle:angle});
+            var object = _canvas_.interface.part.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = _canvas_.interface.part.builder('circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
+            var slot = _canvas_.interface.part.builder('basic','circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
             object.append(slot);
         
         //handle
-            var handle = _canvas_.interface.part.builder('circle','handle',{radius:radius, detail:50, colour:handleStyle});
+            var handle = _canvas_.interface.part.builder('basic','circle','handle',{radius:radius, detail:50, colour:handleStyle});
             object.append(handle);
 
         //needle group
-            var needleGroup = _canvas_.interface.part.builder('group','needleGroup',{ignored:true});
+            var needleGroup = _canvas_.interface.part.builder('basic','group','needleGroup',{ignored:true});
             object.append(needleGroup);
 
             //needle
-                var needle = _canvas_.interface.part.builder('rectangleWithRoundEnds','needle',{x:radius*0.8-radius/2, y:-radius/16, angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
+                var needle = _canvas_.interface.part.builder('basic','rectangleWithRoundEnds','needle',{x:radius*0.8-radius/2, y:-radius/16, angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
                 needleGroup.append(needle);
 
 
@@ -382,10 +382,10 @@ _canvas_.interface.part.collection.control.dial_3_discrete = function(
 ){
     //elements 
         //main
-            var object = _canvas_.interface.part.builder('group',name,{x:x, y:y, angle:angle});
+            var object = _canvas_.interface.part.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //dial
-            var dial = _canvas_.interface.part.builder('dial_3_continuous',name,{
+            var dial = _canvas_.interface.part.builder('control','dial_3_continuous',name,{
                 x:0, y:0, radius:radius, angle:0, interactable:interactable,
                 startAngle:startAngle, maxAngle:maxAngle,
                 style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
@@ -491,11 +491,11 @@ _canvas_.interface.part.collection.control.dial_3_discrete = function(
 };
 
 
-_canvas_.interface.part.partLibrary.dial_3_continuous = function(name,data){ return _canvas_.interface.part.collection.control.dial_3_continuous(
+_canvas_.interface.part.partLibrary.control.dial_3_continuous = function(name,data){ return _canvas_.interface.part.collection.control.dial_3_continuous(
     name, data.x, data.y, data.width, data.height, data.angle,
     data.style.background, data.style.glow, data.style.dim
 ); }
-_canvas_.interface.part.partLibrary.dial_3_discrete = function(name,data){ return _canvas_.interface.part.collection.control.dial_3_discrete(
+_canvas_.interface.part.partLibrary.control.dial_3_discrete = function(name,data){ return _canvas_.interface.part.collection.control.dial_3_discrete(
     name, data.x, data.y, data.width, data.height, data.angle,
     data.style.background, data.style.glow, data.style.dim
 ); }
@@ -561,17 +561,17 @@ _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.co
 
 
 
-var dc1 = _canvas_.interface.part.builder( 'dial_1_continuous', 'test_dial_1_continuous', {x:15,y:15} );
+var dc1 = _canvas_.interface.part.builder( 'control', 'dial_1_continuous', 'test_dial_1_continuous', {x:15,y:15} );
 _canvas_.system.pane.mm.append( dc1 );
-var dd1 = _canvas_.interface.part.builder( 'dial_1_discrete', 'test_dial_1_discrete', {x:15,y:40} );
+var dd1 = _canvas_.interface.part.builder( 'control', 'dial_1_discrete', 'test_dial_1_discrete', {x:15,y:40} );
 _canvas_.system.pane.mm.append( dd1 );
 
-var dc2 = _canvas_.interface.part.builder( 'dial_2_continuous', 'test_dial_2_continuous', {x:40,y:15} );
+var dc2 = _canvas_.interface.part.builder( 'control', 'dial_2_continuous', 'test_dial_2_continuous', {x:40,y:15} );
 _canvas_.system.pane.mm.append( dc2 );
-var dd2 = _canvas_.interface.part.builder( 'dial_2_discrete', 'test_dial_2_discrete', {x:40,y:40} );
+var dd2 = _canvas_.interface.part.builder( 'control', 'dial_2_discrete', 'test_dial_2_discrete', {x:40,y:40} );
 _canvas_.system.pane.mm.append( dd2 );
 
-var dc3 = _canvas_.interface.part.builder( 'dial_3_continuous', 'test_dial_3_continuous', {x:65,y:15} );
+var dc3 = _canvas_.interface.part.builder( 'control', 'dial_3_continuous', 'test_dial_3_continuous', {x:65,y:15} );
 _canvas_.system.pane.mm.append( dc3 );
-var dd3 = _canvas_.interface.part.builder( 'dial_3_discrete', 'test_dial_3_discrete', {x:65,y:40} );
+var dd3 = _canvas_.interface.part.builder( 'control', 'dial_3_discrete', 'test_dial_3_discrete', {x:65,y:40} );
 _canvas_.system.pane.mm.append( dd3 );

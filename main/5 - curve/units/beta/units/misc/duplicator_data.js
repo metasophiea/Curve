@@ -12,8 +12,8 @@ this.duplicator_data = function(x,y,a){
         x:x, y:y, angle:a,
         space:shape,
         elements:[
-            { type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-            { type:'text', name:'label', data:{
+            {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+            {collection:'basic', type:'text', name:'label', data:{
                 x:29, y:47.5, 
                 width:3,height:3,
                 angle:-0.475,
@@ -23,20 +23,20 @@ this.duplicator_data = function(x,y,a){
                 colour:style.textColour}
             },
 
-            { type:'path', name:'marking_1', data:{pointsAsXYArray:[
+            {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
                 {x:45,y:25}, {x:20,y:25}, {x:10,y:35}, {x:5,y:35}, {x:7.5,y:32},
             ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-            { type:'path', name:'marking_2', data:{pointsAsXYArray:[
+            {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
                 {x:5,y:35}, {x:7.5,y:38},
             ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-            { type:'path', name:'marking_3', data:{pointsAsXYArray:[
+            {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
                 {x:35,y:25}, {x:25,y:15}, {x:5,y:15}, {x:7.5,y:12},
             ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-            { type:'path', name:'marking_4', data:{pointsAsXYArray:[
+            {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
                 {x:5,y:15}, {x:7.5,y:18},
             ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
 
-            {type:'connectionNode_data', name:'input', data:{ 
+            {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
                 x:50, y:17.5, width:5, height:15, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.data.dim, 
@@ -49,7 +49,7 @@ this.duplicator_data = function(x,y,a){
                     object.io.data.output_2.send(address,data);
                 } 
             }},
-            {type:'connectionNode_data', name:'output_1', data:{ 
+            {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
                 x:0, y:22.5, width:5, height:15, angle:Math.PI, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.data.dim, 
@@ -58,7 +58,7 @@ this.duplicator_data = function(x,y,a){
                     cable_glow:style.connectionCable.data.glow 
                 }
             }},
-            {type:'connectionNode_data', name:'output_2', data:{ 
+            {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
                 x:0, y:42.5, width:5, height:15, angle:Math.PI, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.data.dim, 
@@ -76,7 +76,7 @@ this.duplicator_data = function(x,y,a){
         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
 
-        design.elements.push( {type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+        design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
         ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
     }

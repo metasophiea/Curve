@@ -9,20 +9,20 @@ this.checkbox_circle = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup');
+            var subject = interfacePart.builder('basic','group',name+'subGroup');
         //backing
-            var backing = interfacePart.builder('circle','backing',{radius:radius, colour:backingStyle});
+            var backing = interfacePart.builder('basic','circle','backing',{radius:radius, colour:backingStyle});
             subject.append(backing);
         //check
-            var checkcirc = interfacePart.builder('circle','checkcirc',{radius:radius*0.8, colour:{r:0,g:0,b:0,a:0}});
+            var checkcirc = interfacePart.builder('basic','circle','checkcirc',{radius:radius*0.8, colour:{r:0,g:0,b:0,a:0}});
             subject.append(checkcirc);
         //cover
-            subject.cover = interfacePart.builder('circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
+            subject.cover = interfacePart.builder('basic','circle','cover',{radius:radius, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic checkbox part
         var object = interfacePart.builder(
-            'checkbox_', name, {
+            'control', 'checkbox_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 onchange:onchange,
                 subject:subject,

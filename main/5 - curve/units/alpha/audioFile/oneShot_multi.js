@@ -29,32 +29,32 @@ this.oneShot_multi = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
 
             //connection nodes
-                {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-                {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-                {type:'connectionNode_data', name:'trigger', data:{
+                {collection:'dynamic', type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+                {collection:'dynamic', type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+                {collection:'dynamic', type:'connectionNode_data', name:'trigger', data:{
                     x:220, y:17.5, width:10, height:20,
                     onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
                 }},
 
             //symbol
-                {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
-                {type:'circleWithOutline', name:'symbol_outterCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'circleWithOutline', name:'symbol_infCircle1', data:{ x:8.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'circleWithOutline', name:'symbol_infCircle2', data:{ x:11.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
+                {collection:'basic', type:'circleWithOutline', name:'symbol_outterCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'circleWithOutline', name:'symbol_infCircle1', data:{ x:8.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'circleWithOutline', name:'symbol_infCircle2', data:{ x:11.5, y:40, radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
 
             //load/fire/panic buttons
-                {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+                {collection:'control', type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                     onpress: function(){
                         object.oneShot.load('file',function(data){
                             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
                         });
                     }
                 }},
-                {type:'button_rectangle', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
+                {collection:'control', type:'button_rectangle', name:'fire', data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
                     onpress:function(){
                         var filePlayer = object.oneShot;
                         var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
@@ -112,7 +112,7 @@ this.oneShot_multi = function(x,y,a){
                             },desiredIntervalTime,needleNumber);
                     },
                 }},
-                {type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
+                {collection:'control', type:'button_rectangle', name:'panic', data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
                     onpress:function(){
                         var filePlayer = object.oneShot;
                         var waveport = object.elements.grapher_waveWorkspace.grapher_waveWorkspace;
@@ -130,15 +130,15 @@ this.oneShot_multi = function(x,y,a){
                 }},
 
             //rate adjust
-                {type:'slide', name:'rate', data:{ x:26.25, y:5, width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
+                {collection:'control', type:'slide', name:'rate', data:{ x:26.25, y:5, width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
                     onchange:function(value){object.oneShot.rate((1-value)*2);}
                 }},
 
             //fire light
-                {type:'glowbox_rect', name:'glowbox_rect', data:{ x:32.5, y:5, width:2.5, height:45 }},
+                {collection:'display', type:'glowbox_rect', name:'glowbox_rect', data:{ x:32.5, y:5, width:2.5, height:45 }},
 
             //waveport
-                {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true }},
+                {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true }},
         ]
     };
 

@@ -97,10 +97,10 @@ this.sixteenSegmentDisplay = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
 
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backgroundStyle });
+            var rect = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:backgroundStyle });
                 object.append(rect);
 
 
@@ -242,7 +242,7 @@ this.sixteenSegmentDisplay = function(
             ];
             for(var a = 0; a < points.length; a++){
                 var temp = {
-                    segment: interfacePart.builder('polygon','segment_'+a,{pointsAsXYArray:points[a], colour:dimStyle}),
+                    segment: interfacePart.builder('basic','polygon','segment_'+a,{pointsAsXYArray:points[a], colour:dimStyle}),
                     state: false
                 };
                 segments.push( temp );

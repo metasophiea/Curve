@@ -58,7 +58,7 @@ this.arrangement = new function(){
     };
     this.getElementsUnderPoint = function(x,y){ return design.getElementsUnderPoint(x,y); };
     this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
-    this.printTree = function(mode='address'){ //modes: tabular / address
+    this.printTree = function(mode='tabular'){ //modes: tabular / address
         function recursivePrint(grouping,prefix=''){
             grouping.children.forEach(function(a){
                 if(mode == 'tabular'){

@@ -14,9 +14,9 @@ this.meter_level = function(
 
     //elements
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //level
-            var level = interfacePart.builder('level','level',{
+            var level = interfacePart.builder('display','level','level',{
                 width:width, height:height,
                 style:{
                     backing:backingStyle,
@@ -26,16 +26,16 @@ this.meter_level = function(
             object.append(level);
 
         //markings
-            var marks = interfacePart.builder('group','markings');
+            var marks = interfacePart.builder('basic','group','markings');
                 object.append(marks);
 
             function makeMark(y){
                 var markThickness = 0.2;
                 var path = [{x:width,y:y-markThickness/2},{x:width-width/4, y:y-markThickness/2},{x:width-width/4, y:y+markThickness/2},{x:width,y:y+markThickness/2}];  
-                return interfacePart.builder('polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
+                return interfacePart.builder('basic','polygon', 'mark_'+y, {pointsAsXYArray:path, colour:markingStyle_fill});
             }
             function insertText(y,text){
-                return interfacePart.builder('text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
+                return interfacePart.builder('basic','text', 'text_'+text, {x:0.5, y:y-0.5, height:markingStyle_size, width:markingStyle_size, text:text, colour:markingStyle_fill, font:markingStyle_font, printingMode:markingStyle_printingMode });
             }
 
             for(var a = 0; a < markings.length; a++){

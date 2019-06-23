@@ -12,12 +12,12 @@ this.readout_sixteenSegmentDisplay = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
 
         //display units
             var units = [];
             for(var a = 0; a < count; a++){
-                var temp = interfacePart.builder('sixteenSegmentDisplay', ''+a, {
+                var temp = interfacePart.builder('display','sixteenSegmentDisplay', ''+a, {
                     x:(width/count)*a, width:width/count, height:height, 
                     style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
                 });

@@ -1,4 +1,4 @@
 var interfacePart = this;
 
-{{include:collection/main.js}}
 {{include:builder.js}}
+{{include:collection/main.js}}

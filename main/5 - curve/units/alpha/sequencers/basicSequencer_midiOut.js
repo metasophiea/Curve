@@ -50,13 +50,13 @@ this.basicSequencer_midiOut = function(x,y,a){
         space:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:800,y:0}, {x:800,y:210}, {x:140,y:210}, {x:115,y:225}, {x:0,y:225}], colour:style.background }},
 
             //midi out
-                {type:'connectionNode_data', name:'midiout', data:{ x: -5, y: 11.25, width: 5, height: 17.5 }},
+                {collection:'dynamic', type:'connectionNode_data', name:'midiout', data:{ x: -5, y: 11.25, width: 5, height: 17.5 }},
 
             //main sequencer
-                {type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
+                {collection:'control', type:'sequencer', name:'main', data:{ x:20, y:20, width:770, height:170, xCount:vals.sequencer.width, yCount:vals.sequencer.height,
                     horizontalStripStyle_pattern:vals.sequencer.pattern,
                     event:function(event){
                         for(var a = 0; a < event.length; a++){
@@ -68,38 +68,38 @@ this.basicSequencer_midiOut = function(x,y,a){
                         object.elements.rangeslide.viewselect_x.set( {start:data.topLeft.x, end:data.bottomRight.x}, false );
                     },
                 }},
-                {type:'rangeslide', name:'viewselect_y', data:{ x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1, style:style.rangeslide }},
-                {type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
+                {collection:'control', type:'rangeslide', name:'viewselect_y', data:{ x:10, y:20, height:170, width: 10, angle:0, handleHeight:1/16, spanWidth:1, style:style.rangeslide }},
+                {collection:'control', type:'rangeslide', name:'viewselect_x', data:{ x:20, y:20, height: 770, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:1, style:style.rangeslide }},   
 
             //follow playhead
-                {type:'checkbox_rectangle', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
+                {collection:'control', type:'checkbox_rectangle', name:'followPlayhead',data:{ x:100, y:205, width:15, height:15, style:style.checkbox,
                     onchange:function(value){object.elements.sequencer.main.automove(value);},
                 }},
 
             //loop control
-                {type:'checkbox_rectangle', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
+                {collection:'control', type:'checkbox_rectangle', name:'loopActive',data:{ x:70, y:205, width:25, height:15, style:style.checkbox_loop,
                     onchange:function(value){object.elements.sequencer.main.loopActive(value);},
                 }},
-                {type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
+                {collection:'control', type:'rangeslide', name:'loopSelect', data:{ x:10, y:200, height: 780, width: 10, angle:-Math.PI/2, handleHeight:1/64, spanWidth:0.75, style:style.rangeslide_loop }},    
 
             //progression
-                {type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
+                {collection:'dynamic', type:'connectionNode_data', name:'progress_input', data:{ x: 800, y: 5, width: 5, height: 20,
                     onreceive:function(){object.elements.sequencer.main.progress();},
                 }},
-                {type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
+                {collection:'control', type:'button_rectangle', name:'progress_button', data:{ x:10, y:205, width:25, height:15, style:style.button,
                     onpress:function(){object.elements.sequencer.main.progress();},
                 }},
-                {type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'path', name:'progress_arrow', data:{ pointsAsXYArray:[{x:20, y:209},{x:25,y:212.5},{x:20, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
 
             //reset
-                {type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
+                {collection:'dynamic', type:'connectionNode_data', name:'reset_input', data:{ x: 800, y: 30, width: 5, height: 20,
                     onreceive:function(){object.elements.sequencer.main.playheadPosition(0);},
                 }},
-                {type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
+                {collection:'control', type:'button_rectangle', name:'reset_button', data:{ x:40, y:205, width:25, height:15, style:style.button,
                     onpress:function(){object.elements.sequencer.main.playheadPosition(0);},
                 }},
-                {type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'path', name:'reset_arrow', data:{ pointsAsXYArray:[{x:55, y:209},{x:50,y:212.5},{x:55, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'path', name:'reset_line', data:{ pointsAsXYArray:[{x:49, y:209},{x:49, y:216}], colour:style.markings.colour, thickness:style.markings.thickness }},
         ]
     };
 

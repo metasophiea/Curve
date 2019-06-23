@@ -20,24 +20,24 @@ this.dial_continuous_image = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
+            var slot = interfacePart.builder('basic','image','slot',{width:2.2*radius, height:2.2*radius, anchor:{x:0.5,y:0.5}, url:slotURL});
             object.append(slot);
 
         //handle
-            var handle = interfacePart.builder('image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
+            var handle = interfacePart.builder('basic','image','handle',{width:2*radius, height:2*radius, anchor:{x:0.5,y:0.5}, url:handleURL});
             object.append(handle);
 
         //needle group
-            var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+            var needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
             object.append(needleGroup);
 
             //needle
                 var needleWidth = radius/5;
                 var needleLength = radius;
-                var needle = interfacePart.builder('image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
+                var needle = interfacePart.builder('basic','image','needle',{x:needleLength/3, y:-needleWidth/2, height:needleWidth, width:needleLength, url:needleURL});
                     needleGroup.append(needle);
 
 

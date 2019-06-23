@@ -6,17 +6,17 @@ this.checkbox_image = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup');
+            var subject = interfacePart.builder('basic','group',name+'subGroup');
         //backing
-            var backing = interfacePart.builder('image','backing',{width:width, height:height, url:uncheckURL});
+            var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:uncheckURL});
             subject.append(backing);
         //cover
-            subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            subject.cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic checkbox part
         var object = interfacePart.builder(
-            'checkbox_', name, {
+            'control', 'checkbox_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 onchange:onchange,
                 subject:subject,

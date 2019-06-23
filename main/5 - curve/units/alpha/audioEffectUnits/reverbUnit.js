@@ -27,47 +27,47 @@ this.reverbUnit = function(x,y){
         space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:16, width:10, height:20 }},
-            {type:'connectionNode_audio', name:'audioOut', data:{ x:-10, y:16, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:16, width:10, height:20 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut', data:{ x:-10, y:16, width:10, height:20, isAudioOutput:true }},
             
-            {type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'outGain_dial',data:{
+            {collection:'basic', type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'outGain_dial',data:{
                 x:20, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'wetdry_dial',data:{
+            {collection:'basic', type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'wetdry_dial',data:{
                 x:82.5, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'button_rectangle',name:'raiseByOne',data:{
+            {collection:'control', type:'button_rectangle',name:'raiseByOne',data:{
                 x:51, y:6, width:10.25, height:5, style:style.button, 
                 onpress:function(){ incReverbType(); },
             }},
-            {type:'button_rectangle',name:'raiseByTen',data:{
+            {collection:'control', type:'button_rectangle',name:'raiseByTen',data:{
                 x:38.75, y:6, width:10.25, height:5, style:style.button, 
                 onpress:function(){ inc10ReverbType(); },
             }},
-            {type:'button_rectangle',name:'lowerByOne',data:{
+            {collection:'control', type:'button_rectangle',name:'lowerByOne',data:{
                 x:51, y:39, width:10.25, height:5, style:style.button, 
                 onpress:function(){ decReverbType(); },
             }},
-            {type:'button_rectangle',name:'lowerByTen',data:{
+            {collection:'control', type:'button_rectangle',name:'lowerByTen',data:{
                 x:38.75, y:39, width:10.25, height:5, style:style.button, 
                 onpress:function(){ dec10ReverbType(); },
             }},
 
-            {type:'sevenSegmentDisplay_static',name:'tens',data:{
+            {collection:'display', type:'sevenSegmentDisplay_static',name:'tens',data:{
                 x:50, y:12.5, width:12.5, height:25,
             }},
-            {type:'sevenSegmentDisplay_static',name:'ones',data:{
+            {collection:'display', type:'sevenSegmentDisplay_static',name:'ones',data:{
                 x:37.5, y:12.5, width:12.5, height:25,
             }},
         ]
@@ -170,49 +170,49 @@ this.reverbUnit_stereo = function(x,y){
         space:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}],
         // spaceOutline:true,
         elements:[
-            {type:'connectionNode_audio', name:'audioIn_R', data:{ x:92.5, y:3, width:20, height:20 }},
-            {type:'connectionNode_audio', name:'audioIn_L', data:{ x:92.5, y:27, width:20, height:20 }},
-            {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:3, width:20, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:27, width:20, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_R', data:{ x:92.5, y:3, width:20, height:20 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_L', data:{ x:92.5, y:27, width:20, height:20 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:3, width:20, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:27, width:20, height:20, isAudioOutput:true }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:10}, {x:51.25,y:0}, {x:102.5,y:10}, {x:102.5,y:40}, {x:51.25,y:50}, {x:0,y:40}], colour:style.background }},
             
-            {type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'outGain_dial',data:{
+            {collection:'basic', type:'text', name:'outGain_0',   data:{x:10, y:36, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1/2', data:{x:20, y:11, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1',   data:{x:30, y:36, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'outGain_dial',data:{
                 x:20, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'wetdry_dial',data:{
+            {collection:'basic', type:'text', name:'wetdry_1/2', data:{x:72, y:36, text:'wet', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'wetdry_1',   data:{x:93, y:36, text:'dry', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'wetdry_dial',data:{
                 x:82.5, y:25, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'button_rectangle',name:'raiseByOne',data:{
+            {collection:'control', type:'button_rectangle',name:'raiseByOne',data:{
                 x:51, y:6, width:10.25, height:5, style:style.button, 
                 onpress:function(){ incReverbType(); },
             }},
-            {type:'button_rectangle',name:'raiseByTen',data:{
+            {collection:'control', type:'button_rectangle',name:'raiseByTen',data:{
                 x:38.75, y:6, width:10.25, height:5, style:style.button, 
                 onpress:function(){ inc10ReverbType(); },
             }},
-            {type:'button_rectangle',name:'lowerByOne',data:{
+            {collection:'control', type:'button_rectangle',name:'lowerByOne',data:{
                 x:51, y:39, width:10.25, height:5, style:style.button, 
                 onpress:function(){ decReverbType(); },
             }},
-            {type:'button_rectangle',name:'lowerByTen',data:{
+            {collection:'control', type:'button_rectangle',name:'lowerByTen',data:{
                 x:38.75, y:39, width:10.25, height:5, style:style.button, 
                 onpress:function(){ dec10ReverbType(); },
             }},
 
-            {type:'sevenSegmentDisplay_static',name:'tens',data:{
+            {collection:'display', type:'sevenSegmentDisplay_static',name:'tens',data:{
                 x:50, y:12.5, width:12.5, height:25,
             }},
-            {type:'sevenSegmentDisplay_static',name:'ones',data:{
+            {collection:'display', type:'sevenSegmentDisplay_static',name:'ones',data:{
                 x:37.5, y:12.5, width:12.5, height:25,
             }},
         ]

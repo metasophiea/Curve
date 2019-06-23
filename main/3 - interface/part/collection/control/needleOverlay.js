@@ -13,64 +13,64 @@ this.needleOverlay = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing
-            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            var backing = interfacePart.builder('basic','rectangle','backing',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(backing);
         //control objects
-            var controlObjectsGroup = interfacePart.builder('group','controlObjectsGroup');
+            var controlObjectsGroup = interfacePart.builder('basic','group','controlObjectsGroup');
             object.append(controlObjectsGroup);
-                var controlObjectsGroup_back = interfacePart.builder('group','back');
+                var controlObjectsGroup_back = interfacePart.builder('basic','group','back');
                 controlObjectsGroup.append(controlObjectsGroup_back);
-                var controlObjectsGroup_front = interfacePart.builder('group','front');
+                var controlObjectsGroup_front = interfacePart.builder('basic','group','front');
                 controlObjectsGroup.append(controlObjectsGroup_front);
 
             var invisibleHandleWidth = width*needleWidth + width*0.005;
             var controlObjects = {};
             //lead
-                controlObjects.lead = interfacePart.builder('group','lead');
-                controlObjects.lead.append( interfacePart.builder('rectangle','handle',{
+                controlObjects.lead = interfacePart.builder('basic','group','lead');
+                controlObjects.lead.append( interfacePart.builder('basic','rectangle','handle',{
                     width:needleWidth*width,
                     height:height,
                     colour:needleStyles[0],
                 }));
-                controlObjects.lead.append( interfacePart.builder('rectangle','invisibleHandle',{
+                controlObjects.lead.append( interfacePart.builder('basic','rectangle','invisibleHandle',{
                     x:(width*needleWidth - invisibleHandleWidth)/2, 
                     width:invisibleHandleWidth,
                     height:height,
                     colour:{r:1,g:0,b:0,a:0},
                 }));
             //selection_A
-                controlObjects.selection_A = interfacePart.builder('group','selection_A');
-                controlObjects.selection_A.append( interfacePart.builder('rectangle','handle',{
+                controlObjects.selection_A = interfacePart.builder('basic','group','selection_A');
+                controlObjects.selection_A.append( interfacePart.builder('basic','rectangle','handle',{
                     width:needleWidth*width,
                     height:height,
                     colour:needleStyles[1],
                 }));
-                controlObjects.selection_A.append( interfacePart.builder('rectangle','invisibleHandle',{
+                controlObjects.selection_A.append( interfacePart.builder('basic','rectangle','invisibleHandle',{
                     x:(width*needleWidth - invisibleHandleWidth)/2, 
                     width:invisibleHandleWidth,height:height,
                     colour:{r:1,g:0,b:0,a:0},
                 }));
             //selection_B
-                controlObjects.selection_B = interfacePart.builder('group','selection_B');
-                controlObjects.selection_B.append( interfacePart.builder('rectangle','handle',{
+                controlObjects.selection_B = interfacePart.builder('basic','group','selection_B');
+                controlObjects.selection_B.append( interfacePart.builder('basic','rectangle','handle',{
                     width:needleWidth*width,
                     height:height,
                     colour:needleStyles[1],
                 }));
-                controlObjects.selection_B.append( interfacePart.builder('rectangle','invisibleHandle',{
+                controlObjects.selection_B.append( interfacePart.builder('basic','rectangle','invisibleHandle',{
                     x:(width*needleWidth - invisibleHandleWidth)/2, 
                     width:invisibleHandleWidth,height:height,
                     colour:{r:1,g:0,b:0,a:0},
                 }));
             //selection_area
-                controlObjects.selection_area = interfacePart.builder('rectangle','selection_area',{
+                controlObjects.selection_area = interfacePart.builder('basic','rectangle','selection_area',{
                     height:height,
                     colour:_canvas_.library.math.blendColours(needleStyles[1],{r:0,g:0,b:0,a:0},0.5),
                 });
             //marks
-                controlObjects.markGroup = interfacePart.builder('group','markGroup');
+                controlObjects.markGroup = interfacePart.builder('basic','group','markGroup');
                 controlObjectsGroup_back.append(controlObjects.markGroup);
 
     //internal functions
@@ -150,7 +150,7 @@ this.needleOverlay = function(
             //return 'true' if the mark was added, or 'false' if it was removed
                 var tmp = controlObjects.markGroup.getChildByName(''+position);
                 if( tmp == undefined ){
-                    controlObjects.markGroup.append( interfacePart.builder('rectangle',''+position,{
+                    controlObjects.markGroup.append( interfacePart.builder('basic','rectangle',''+position,{
                         x:position*width, 
                         width:needleWidth*width, height:height,
                         colour:needleStyles[0],

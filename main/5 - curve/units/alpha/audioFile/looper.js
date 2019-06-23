@@ -26,30 +26,30 @@ this.looper = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_data', name:'trigger', data:{
+            {collection:'dynamic', type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_data', name:'trigger', data:{
                 x: 220, y: 17.5, width: 10, height: 20,
                 onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); }
             }},
 
             //symbol
-                {type:'circleWithOutline', name:'symbol_outterCircle1', data:{ x:11.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'circleWithOutline', name:'symbol_outterCircle2', data:{ x:18.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, colour:style.background }},
-                {type:'path', name:'symbol_upperarrow', data:{ pointsAsXYArray:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'path', name:'symbol_lowerarrow', data:{ pointsAsXYArray:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'circleWithOutline', name:'symbol_outterCircle1', data:{ x:11.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'circleWithOutline', name:'symbol_outterCircle2', data:{ x:18.5, y:41, radius:6, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'rectangle', name:'symbol_blockingrect', data:{ x:11.5, y:34, width:7, height:15, colour:style.background }},
+                {collection:'basic', type:'path', name:'symbol_upperarrow', data:{ pointsAsXYArray:[{x:13.5, y:32.5},{x:16.5, y:35},{x:13.5, y:37.5}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'path', name:'symbol_lowerarrow', data:{ pointsAsXYArray:[{x:16.5, y:44.75},{x:13.5, y:47.25},{x:16.5, y:49.75}], colour:style.markings.colour, thickness:style.markings.thickness }},
 
-            {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+            {collection:'control', type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                 onpress: function(){
                     object.looper.load('file',function(data){
                         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.looper.waveformSegment() );
                     });
                 }
             }},
-            {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
+            {collection:'control', type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:10, height:10, style:style.fire_button,
                 onpress:function(){
                     //no file -> don't bother
                         if(object.looper.duration() < 0){return;}
@@ -94,7 +94,7 @@ this.looper = function(x,y,a){
                         needleExists = true;
                 },
             }},
-            {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
+            {collection:'control', type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button,
                 onpress:function(){
                     object.looper.stop();
 
@@ -109,7 +109,7 @@ this.looper = function(x,y,a){
                 },
             }},
 
-            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
+            {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
         ]
     };
 

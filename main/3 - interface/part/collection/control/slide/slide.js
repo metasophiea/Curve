@@ -11,27 +11,27 @@ this.slide = function(
 ){
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing and slot group
-            var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+            var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
             object.append(backingAndSlot);
             //backing
-                var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
+                var backing = interfacePart.builder('basic','rectangle','backing',{width:width, height:height, colour:backingStyle});
                 backingAndSlot.append(backing);
             //slot
-                var slot = interfacePart.builder('rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
+                var slot = interfacePart.builder('basic','rectangle','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), colour:slotStyle});
                 backingAndSlot.append(slot);
             //backing and slot cover
-                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
         //handle
-            var handle = interfacePart.builder('rectangle','handle',{width:width, height:height*handleHeight, colour:handleStyle});
+            var handle = interfacePart.builder('basic','rectangle','handle',{width:width, height:height*handleHeight, colour:handleStyle});
             object.append(handle);
         //invisible handle
-            var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
+            var invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height: height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
             object.append(invisibleHandle);
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            var cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
 
 

@@ -25,9 +25,9 @@ this.grapher_waveWorkspace = function(
 ){
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //main graph
-            var graph = interfacePart.builder('grapher_static', 'graph', {
+            var graph = interfacePart.builder('display','grapher_static', 'graph', {
                 width:width, height:height,
                 style:{
                     foregrounds:foregroundStyles,   
@@ -43,7 +43,7 @@ this.grapher_waveWorkspace = function(
             graph.resolution(10);
             object.append(graph);
         //needle overlay
-            var overlay = interfacePart.builder('needleOverlay', 'overlay', {
+            var overlay = interfacePart.builder('control','needleOverlay', 'overlay', {
                 width:width, height:height, interactable:interactable, selectNeedle:selectNeedle, selectionArea:selectionArea,
             });
             object.append(overlay);

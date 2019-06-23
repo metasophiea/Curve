@@ -73,16 +73,16 @@ this.button_polygon = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup');
+            var subject = interfacePart.builder('basic','group',name+'subGroup');
         //backing
-            var backing = interfacePart.builder('polygonWithOutline','backing',{pointsAsXYArray:points, colour:backing__off__colour, thickness:5 });
+            var backing = interfacePart.builder('basic','polygonWithOutline','backing',{pointsAsXYArray:points, colour:backing__off__colour, thickness:5 });
             subject.append(backing);
         // //outline
         //     var outline = interfacePart.builder('path','outline',{ pointsAsXYArray:points.concat([points[0],points[1]]), thickness:backing__off__lineThickness, colour:backing__off__lineColour, });
         //     subject.append(outline);
         //text
              var avgPoint = _canvas_.library.math.averagePoint(points);
-             var text_centre = interfacePart.builder('text','centre', {
+             var text_centre = interfacePart.builder('basic','text','centre', {
                 x:avgPoint.x, y:avgPoint.y,
                 text:text_centre, 
                 width:text_size,
@@ -95,12 +95,12 @@ this.button_polygon = function(
             });
             subject.append(text_centre);
         //cover
-            subject.cover = interfacePart.builder('polygon','cover',{pointsAsXYArray:points, colour:{r:0,g:0,b:0,a:0}});
+            subject.cover = interfacePart.builder('basic','polygon','cover',{pointsAsXYArray:points, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic button part
         var object = interfacePart.builder(
-            'button_', name, {
+            'control', 'button_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 active:active, hoverable:hoverable, selectable:selectable, pressable:pressable,
 

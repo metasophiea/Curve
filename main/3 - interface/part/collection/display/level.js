@@ -9,18 +9,18 @@ this.level = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
+            var rect = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:backingStyle });
                 object.append(rect);
         //levels
-            var levels = interfacePart.builder('group','levels');
+            var levels = interfacePart.builder('basic','group','levels');
                 object.append(levels);
 
             var level = [];
             for(var a = 0; a < levelStyles.length; a++){
                 values.push(0);
-                var tmp = interfacePart.builder('rectangle','movingRect_'+a,{
+                var tmp = interfacePart.builder('basic','rectangle','movingRect_'+a,{
                     y:height,
                     width:width, height:0,
                     colour:levelStyles[a],

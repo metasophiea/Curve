@@ -18,7 +18,7 @@ this.selectUnit = function(unit,shiftToFront=true){
 
     //colourize space
         var tmp = _canvas_.interface.part.builder( 
-            'polygonWithOutline', 'selectionGlow-'+unit.getAddress(), 
+            'basic', 'polygonWithOutline', 'selectionGlow-'+unit.getAddress(), 
             {
                 pointsAsXYArray:unit.space.originalPoints, 
                 colour:{r:244/255,g:226/255,b:66/255,a:0.25}, lineColour:{r:244/255,g:226/255,b:66/255,a:1}

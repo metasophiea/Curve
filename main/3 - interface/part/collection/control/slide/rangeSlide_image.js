@@ -27,41 +27,41 @@ this.rangeslide_image = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing and slot group
-            var backingAndSlot = interfacePart.builder('group','backingAndSlotGroup');
+            var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
             object.append(backingAndSlot);
             //backing
-                var backing = interfacePart.builder('image','backing',{width:width, height:height, url:backingURL});
+                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
                 backingAndSlot.append(backing);
             //slot
-                var slot = interfacePart.builder('image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
+                var slot = interfacePart.builder('basic','image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
                 backingAndSlot.append(slot);
             //backing and slot cover
-                var backingAndSlotCover = interfacePart.builder('rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
 
         //span
-            var span = interfacePart.builder('image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
+            var span = interfacePart.builder('basic','image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
             object.append(span);
 
         //handles
             var handles = {}
             for(var a = 0; a < handleNames.length; a++){
                 //grouping
-                    handles[handleNames[a]] = interfacePart.builder('group','handle_'+a,{})
+                    handles[handleNames[a]] = interfacePart.builder('basic','group','handle_'+a,{})
                     object.append(handles[handleNames[a]]);
                 //handle
-                    var handle = interfacePart.builder('image','handle',{width:width, height:height*handleHeight, url:handleURL});
+                    var handle = interfacePart.builder('basic','image','handle',{width:width, height:height*handleHeight, url:handleURL});
                     handles[handleNames[a]].append(handle);
                 //invisible handle
                     var invisibleHandleHeight = height*handleHeight + height*0.01;
-                    var invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
+                    var invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:(height*handleHeight - invisibleHandleHeight)/2, width:width, height:invisibleHandleHeight+handleHeight, colour:invisibleHandleStyle});
                     handles[handleNames[a]].append(invisibleHandle);
             }
 
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            var cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             object.append(cover);
 
             

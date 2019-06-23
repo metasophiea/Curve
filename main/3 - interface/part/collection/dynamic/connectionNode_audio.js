@@ -11,7 +11,7 @@ this.connectionNode_audio = function(
     ondisconnect=function(){},
 ){
     //elements
-        var object = interfacePart.builder('connectionNode',name,{
+        var object = interfacePart.builder('dynamic','connectionNode',name,{
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
             cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },

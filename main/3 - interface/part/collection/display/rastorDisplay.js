@@ -6,12 +6,12 @@ this.rastorDisplay = function(
 ){
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backing });
+            var rect = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:backing });
             object.append(rect);
         //pixels
-            var pixelGroup = interfacePart.builder('group','pixels');
+            var pixelGroup = interfacePart.builder('basic','group','pixels');
             object.append(pixelGroup);
 
             var pixels = [];
@@ -23,7 +23,7 @@ this.rastorDisplay = function(
                 var temp_pixels = [];
                 var temp_pixelValues = [];
                 for(var y = 0; y < yCount; y++){
-                    var rect = interfacePart.builder('rectangle',x+'_'+y,{ 
+                    var rect = interfacePart.builder('basic','rectangle',x+'_'+y,{ 
                         x:(x*pixWidth)+xGappage/2,  y:(y*pixHeight)+yGappage/2, 
                         width:pixWidth-xGappage,    height:pixHeight-yGappage,
                         colour:defaultPixelValue,

@@ -12,12 +12,12 @@ this.connectionNode = function(
 ){
     //elements
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
             object._connectionNode = true;
             object._type = type;
             object._direction = direction;
         //node
-            var rectangle = interfacePart.builder('rectangle','node',{ width:width, height:height, colour:dimStyle });
+            var rectangle = interfacePart.builder('basic','rectangle','node',{ width:width, height:height, colour:dimStyle });
                 object.append(rectangle);
 
     //network functions
@@ -95,9 +95,9 @@ this.connectionNode = function(
 
         object._addCable = function(){
             if(cableVersion == 2){
-                cable = interfacePart.builder('cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+                cable = interfacePart.builder('dynamic','cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
             }else{
-                cable = interfacePart.builder('cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
+                cable = interfacePart.builder('dynamic','cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
             }
             
             foreignNode._receiveCable(cable);

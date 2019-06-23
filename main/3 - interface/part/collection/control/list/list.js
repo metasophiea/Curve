@@ -106,7 +106,7 @@ this.list = function(
 
                 switch(item.type){
                     case 'space':
-                        var space_group = interfacePart.builder('group',index+'_space');
+                        var space_group = interfacePart.builder('basic','group',index+'_space');
                         output.elements.push(space_group);
                         output.calculatedListHeight += spacingHeight;
                     break;
@@ -114,7 +114,7 @@ this.list = function(
                         var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
                         var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
 
-                        var rectangleBacking = interfacePart.builder( 'rectangle', index+'_break', {
+                        var rectangleBacking = interfacePart.builder('basic', 'rectangle', index+'_break', {
                             x:xPosition, y:output.calculatedListHeight+itemSpacingHeight/2,
                             width:lineWidth, height:breakHeight,
                             colour:break_style,
@@ -123,9 +123,9 @@ this.list = function(
                         output.calculatedListHeight += itemSpacingHeight+breakHeight;
                     break;
                     case 'textbreak': 
-                        var textbreak_group = interfacePart.builder('group',index+'_textbreak');
+                        var textbreak_group = interfacePart.builder('basic','group',index+'_textbreak');
                             var textXPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
-                            var text = interfacePart.builder('text', 'text', {
+                            var text = interfacePart.builder('basic','text', 'text', {
                                 x:textXPosition, y:output.calculatedListHeight + itemSpacingHeight/2 + breakHeight/2,
                                 width:textbreak_fontSize, height:textbreak_fontSize,
                                 printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
@@ -139,7 +139,7 @@ this.list = function(
                                 breakLine.width( maxWidth - offset );
                             };
 
-                            var breakLine = interfacePart.builder( 'rectangle', 'line', {
+                            var breakLine = interfacePart.builder('basic', 'rectangle', 'line', {
                                 y:output.calculatedListHeight+itemSpacingHeight/2,
                                 height:breakHeight,
                                 colour:textbreak_colour,
@@ -151,8 +151,8 @@ this.list = function(
                         output.calculatedListHeight += itemSpacingHeight+breakHeight;
                     break;
                     case 'checkbox':
-                        var checkbox_group = interfacePart.builder('group',index+'_checkbox');
-                            var rectangleBacking = interfacePart.builder( 'rectangle', 'backing', {
+                        var checkbox_group = interfacePart.builder('basic','group',index+'_checkbox');
+                            var rectangleBacking = interfacePart.builder('basic', 'rectangle', 'backing', {
                                 x:xOffset, y:output.calculatedListHeight,
                                 width:itemWidth, height:itemHeight,
                                 colour:item__up__colour,
@@ -170,14 +170,14 @@ this.list = function(
                                 }
                             })(item);
                                 
-                            var checkbox = interfacePart.builder( 'checkbox_circle', 'checkbox', {
+                            var checkbox = interfacePart.builder('control', 'checkbox_circle', 'checkbox', {
                                 x:xOffset+itemWidth-itemHeight/2, y:output.calculatedListHeight + itemHeight/2,
                                 radius:itemHeight/3, interactable:false, style:{backing:{r:0,g:0,b:0,a:0}, check:break_style}
                             });
                             checkbox_group.append(checkbox);
                             if(item.updateFunction != undefined){checkbox.set(item.updateFunction());}
 
-                            var text = interfacePart.builder('text', 'text', {
+                            var text = interfacePart.builder('basic', 'text', 'text', {
                                 x:xOffset + item_textHorizontalOffsetMux*itemWidth,
                                 y:output.calculatedListHeight + itemHeight*item_textVerticalOffsetMux,
                                 width:item_textSize, height:item_textSize,
@@ -194,8 +194,8 @@ this.list = function(
                     break;
                     case 'list':
                         var sublistName = 'sublist__'+index+'_list';
-                        var list_group = interfacePart.builder('group',index+'_list');
-                            var button = interfacePart.builder('button_rectangle', 'button', {
+                        var list_group = interfacePart.builder('basic', 'group',index+'_list');
+                            var button = interfacePart.builder('control', 'button_rectangle', 'button', {
                                 x:xOffset, y:output.calculatedListHeight,
                                 width:itemWidth, height:itemHeight,
                                 text_left:item.text,
@@ -276,7 +276,7 @@ this.list = function(
 
                             var xOff = xOffset + itemWidth - sublist_arrowSize - item_textHorizontalOffsetMux*itemWidth;
                             var yOff = output.calculatedListHeight + itemHeight/2;
-                            var arrow = interfacePart.builder('polygon', 'arrow', {
+                            var arrow = interfacePart.builder('basic', 'polygon', 'arrow', {
                                 pointsAsXYArray:[ 
                                     {x:xOff,y:yOff-sublist_arrowSize/2}, 
                                     {x:xOff,y:yOff+sublist_arrowSize/2}, 
@@ -289,7 +289,7 @@ this.list = function(
                             list_group.open = (function(sublistName,listItem,y){
                                 return function(){
                                     list_group.getChildByName('button').glow(true);
-                                    var sublist = _canvas_.interface.part.builder( 'list', sublistName, {
+                                    var sublist = _canvas_.interface.part.builder('control', 'list', sublistName, {
                                         x:limitWidthTo<0?itemWidth:limitWidthTo, y:y,
                                         list:listItem.list,
 
@@ -380,7 +380,7 @@ this.list = function(
                     break;
                     case 'item': 
                         var name = index+'_item';
-                        var temp = interfacePart.builder('button_rectangle', name, {
+                        var temp = interfacePart.builder('control', 'button_rectangle', name, {
                             x:xOffset, y:output.calculatedListHeight,
                             width:itemWidth, height:itemHeight, interactable:interactable, 
                             text_left: item.text_left,
@@ -500,24 +500,24 @@ this.list = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing
-            var backing = interfacePart.builder('rectangle','backing',{colour:backing_style});
+            var backing = interfacePart.builder('basic','rectangle','backing',{colour:backing_style});
             object.append(backing);
         //stenciled group
-            var stenciledGroup = interfacePart.builder('group','stenciledGroup');
+            var stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
             object.append(stenciledGroup);
         //sub list group
-            var subListGroup = interfacePart.builder('group','subListGroup');
+            var subListGroup = interfacePart.builder('basic','group','subListGroup');
             object.append(subListGroup);
         //item collection
-            var itemCollection = interfacePart.builder('group','itemCollection');
+            var itemCollection = interfacePart.builder('basic','group','itemCollection');
             stenciledGroup.append(itemCollection);
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+            var cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
             stenciledGroup.append(cover);
         //stencil
-            var stencil = interfacePart.builder('rectangle','stencil');
+            var stencil = interfacePart.builder('basic','rectangle','stencil');
             stenciledGroup.stencil(stencil);
             stenciledGroup.clipActive(true);
 

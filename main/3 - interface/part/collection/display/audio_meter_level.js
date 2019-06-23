@@ -13,9 +13,9 @@ this.audio_meter_level = function(
 ){
     //elements
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //meter
-            var meter = interfacePart.builder('meter_level','meter',{
+            var meter = interfacePart.builder('display','meter_level','meter',{
                 width:width, height:height, markings:markings,
                 style:{
                     backing:backingStyle,

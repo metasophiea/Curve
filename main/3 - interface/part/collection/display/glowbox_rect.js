@@ -5,8 +5,8 @@ this.glowbox_rect = function(
     dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
 ){
     //elements 
-        var object = interfacePart.builder('group',name,{x:x, y:y});
-        var rect = interfacePart.builder('rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
+        var object = interfacePart.builder('basic','group',name,{x:x, y:y});
+        var rect = interfacePart.builder('basic','rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
             object.append(rect);
 
     //methods

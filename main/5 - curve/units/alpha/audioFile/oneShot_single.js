@@ -26,29 +26,29 @@ this.oneShot_single = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:55},{x:0,y:55}], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_data', name:'trigger', data:{
+            {collection:'dynamic', type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_data', name:'trigger', data:{
                 x:220, y:17.5, width:10, height:20,
                 onreceive:function(address, data){ object.elements.button_rectangle.fire.press(); object.elements.button_rectangle.fire.release(); }
             }},
 
             //symbol
-                {type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
-                {type:'circleWithOutline', name:'symbol_outerCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                {type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, colour:style.markings.colour }},
+                {collection:'basic', type:'path', name:'symbol_arrow', data:{ pointsAsXYArray:[{x:19, y:35},{x:25,y:40},{x:19, y:45}], colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line', data:{ x:15, y:39.5, width:6, height:1, colour:style.markings.colour }},
+                {collection:'basic', type:'circleWithOutline', name:'symbol_outerCircle', data:{ x:10, y:40, radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                {collection:'basic', type:'rectangle', name:'symbol_1', data:{ x:9.5, y:37.5, width:1, height:5, colour:style.markings.colour }},
 
-            {type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
+            {collection:'control', type:'button_rectangle', name:'loadFile', data: { x:5, y: 5, width:20, height:10, style:style.button,
                 onpress: function(){
                     object.oneShot.load('file',function(data){
                         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.oneShot.waveformSegment() );
                     });
                 }
             }},
-            {type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
+            {collection:'control', type:'button_rectangle',name:'fire',data:{ x:5, y: 17.5, width:20, height:10, style:style.fire_button,
                 onpress:function(){
                     //no file = don't bother
                         if(object.oneShot.duration() < 0){return;}
@@ -96,7 +96,7 @@ this.oneShot_single = function(x,y,a){
                 },
             }},
 
-            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
+            {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
         ]
     };
 

@@ -13,22 +13,22 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous = fu
 ){
     //elements 
         //main
-            var object = _canvas_.interface.part.builder('group',name,{x:x, y:y, angle:angle});
+            var object = _canvas_.interface.part.builder('basic', 'group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = _canvas_.interface.part.builder('circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
+            var slot = _canvas_.interface.part.builder('basic', 'circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
             object.append(slot);
         
         //handle
-            var handle = _canvas_.interface.part.builder('circle','handle',{radius:radius, detail:50, colour:handleStyle});
+            var handle = _canvas_.interface.part.builder('basic', 'circle','handle',{radius:radius, detail:50, colour:handleStyle});
             object.append(handle);
 
         //needle group
-            var needleGroup = _canvas_.interface.part.builder('group','needleGroup',{ignored:true});
+            var needleGroup = _canvas_.interface.part.builder('basic', 'group','needleGroup',{ignored:true});
             object.append(needleGroup);
 
             //needle
-                var needle = _canvas_.interface.part.builder('rectangleWithRoundEnds','needle',{
+                var needle = _canvas_.interface.part.builder('basic', 'rectangleWithRoundEnds','needle',{
                     x:radius*0.8-radius/2, y:0,
                     angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
                 needleGroup.append(needle);
@@ -135,10 +135,10 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete = func
 ){
     //elements 
         //main
-            var object = _canvas_.interface.part.builder('group',name,{x:x, y:y, angle:angle});
+            var object = _canvas_.interface.part.builder('basic', 'group',name,{x:x, y:y, angle:angle});
         
         //dial
-            var dial = _canvas_.interface.part.builder('dial_colourWithIndent_continuous',name,{
+            var dial = _canvas_.interface.part.builder('control', 'dial_colourWithIndent_continuous',name,{
                 x:0, y:0, radius:radius, angle:0, interactable:interactable,
                 startAngle:startAngle, maxAngle:maxAngle,
                 style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
@@ -244,12 +244,12 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete = func
 };
 
 
-_canvas_.interface.part.partLibrary.dial_colourWithIndent_continuous = function(name,data){ return _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous(
+_canvas_.interface.part.partLibrary.control.dial_colourWithIndent_continuous = function(name,data){ return _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous(
     name, data.x, data.y, data.radius, data.angle, data.interactable, data.value, data.resetValue, data.startAngle, data.maxAngle,
     data.style.handle, data.style.slot, data.style.needle,
     data.onchange, data.onrelease,
 ); }
-_canvas_.interface.part.partLibrary.dial_colourWithIndent_discrete = function(name,data){ return _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete(
+_canvas_.interface.part.partLibrary.control.dial_colourWithIndent_discrete = function(name,data){ return _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete(
     name, data.x, data.y, data.radius, data.angle, data.interactable, data.value, data.resetValue, data.optionCount, data.startAngle, data.maxAngle,
     data.style.handle, data.style.slot, data.style.needle,
     data.onchange, data.onrelease,

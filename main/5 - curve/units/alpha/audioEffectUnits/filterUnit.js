@@ -27,12 +27,12 @@ this.filterUnit = function(x,y,a){
         space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'audioIn', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
-            {type:'connectionNode_audio', name:'audioOut', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
         
-            {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
+            {collection:'display', type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
                 style:{
                     foregrounds:style.graph.foregroundlines, 
                     background_colour:style.graph.backgroundlines.colour, 
@@ -42,43 +42,43 @@ this.filterUnit = function(x,y,a){
                 }}
             },
 
-            {type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_continuous',name:'Q_dial',data:{
+            {collection:'basic', type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'Q_dial',data:{
                 x:82.5, y:68.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_continuous',name:'gain_dial',data:{
+            {collection:'basic', type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'gain_dial',data:{
                 x:62.5, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
             
-            {type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_continuous',name:'frequency_dial',data:{
+            {collection:'basic', type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'frequency_dial',data:{
                 x:40, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_discrete',name:'type_dial',data:{
+            {collection:'basic', type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_discrete',name:'type_dial',data:{
                 x:20, y:67.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, optionCount:8,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
@@ -190,14 +190,14 @@ this.filterUnit_stereo = function(x,y,a){
         space:[ {x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70} ],
         // spaceOutline:true,
         elements:[
-            {type:'connectionNode_audio', name:'audioIn_R', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
-            {type:'connectionNode_audio', name:'audioIn_L', data:{ x:94.8+3.65, y:42, width:10, height:20, angle:-0.14 }},
-            {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-2.3-3.65, y:42, width:10, height:20, angle:0.144, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_R', data:{ x:94.8, y:16, width:10, height:20, angle:-0.14 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_L', data:{ x:94.8+3.65, y:42, width:10, height:20, angle:-0.14 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_R', data:{ x:-2.3, y:16, width:10, height:20, angle:0.144, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_L', data:{ x:-2.3-3.65, y:42, width:10, height:20, angle:0.144, isAudioOutput:true }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:10,y:0}, {x:92.5,y:0}, {x:102.5,y:70}, {x:51.25,y:100}, {x:0,y:70}], colour:style.background }},
         
-            {type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
+            {collection:'display', type:'grapher_static', name:'graph', data:{x:15, y:5, width:72.5, height:50, resolution:15,
                 style:{
                     foregrounds:style.graph.foregroundlines, 
                     background_colour:style.graph.backgroundlines.colour, 
@@ -207,43 +207,43 @@ this.filterUnit_stereo = function(x,y,a){
                 }}
             },
 
-            {type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_continuous',name:'Q_dial',data:{
+            {collection:'basic', type:'text', name:'Q_0',     data:{x:76,   y:75,   text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'Q_1/2',   data:{x:82.5, y:59.5, text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'Q_1',     data:{x:89,   y:75,   text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'Q_title', data:{x:82.5, y:78,   text:'Q',   width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'Q_dial',data:{
                 x:82.5, y:68.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_continuous',name:'gain_dial',data:{
+            {collection:'basic', type:'text', name:'gain_0',     data:{x:56,    y:84,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gain_1/2',   data:{x:62.5,  y:68.5, text:'5',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gain_1',     data:{x:69,    y:84,   text:'10',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'gain_title', data:{x:62.5,  y:87,   text:'Gain', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'gain_dial',data:{
                 x:62.5, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
             
-            {type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_continuous',name:'frequency_dial',data:{
+            {collection:'basic', type:'text', name:'frequency_0',     data:{x:33.5, y:84, text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'frequency_100',   data:{x:40, y:68.5, text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'frequency_20000', data:{x:47.5, y:84, text:'20k',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'frequency_title', data:{x:40, y:87,   text:'Freq', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'frequency_dial',data:{
                 x:40, y:77.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'dial_discrete',name:'type_dial',data:{
+            {collection:'basic', type:'text', name:'type_lowp',  data:{x:13,   y:74.5, text:'lowp',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_highp', data:{x:10,   y:69,   text:'highp', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_band',  data:{x:10.5, y:63,   text:'band',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_lows',  data:{x:16,   y:58.5, text:'lows',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_highs', data:{x:24.5, y:58.5, text:'highs', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_peak',  data:{x:29.5, y:63,   text:'peak',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_notch', data:{x:30.5, y:69,   text:'notch', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_all',   data:{x:26.5, y:74.5, text:'all',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'type_title', data:{x:22,   y:77,   text:'Type',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'control', type:'dial_discrete',name:'type_dial',data:{
                 x:20, y:67.5, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, optionCount:8,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},

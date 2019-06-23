@@ -24,12 +24,12 @@ this.basicSynthesizer_img = function(x,y,angle){
         space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
         // spaceOutline: true,
         elements:[
-            {type:'image', name:'imgBacking', data:{ x:0, y:0, width:240, height:90, url:style.background, points:[{x:0,y:0},{x:1,y:0},{x:1,y:4/9},{x:19/24,y:1},{x:0,y:1}] } },
+            {collection:'basic', type:'image', name:'imgBacking', data:{ x:0, y:0, width:240, height:90, url:style.background, points:[{x:0,y:0},{x:1,y:0},{x:1,y:4/9},{x:19/24,y:1},{x:0,y:1}] } },
 
-            {type:'connectionNode_audio', name:'audioOut', data: {
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut', data: {
                 type: 1, x: -15, y: 5, width: 15, height: 30, isAudioOutput:true 
             }},
-            {type:'connectionNode_data', name:'port_gain', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_gain', data:{
                 x: 12.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     switch(address){
@@ -42,21 +42,21 @@ this.basicSynthesizer_img = function(x,y,angle){
                     }
                 }
             }},
-            {type:'connectionNode_data', name:'port_attack', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_attack', data:{
                 x: 52.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
                     object.elements.dial_continuous_image.attack.set(data);
                 } 
             }},
-            {type:'connectionNode_data', name:'port_release', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_release', data:{
                 x: 92.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
                     object.elements.dial_continuous_image.release.set(data);
                 } 
             }},
-            {type:'connectionNode_data', name:'port_detune', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_detune', data:{
                 x: 132.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){ 
                     switch(address){
@@ -69,56 +69,56 @@ this.basicSynthesizer_img = function(x,y,angle){
                     }
                 }
             }},
-            {type:'connectionNode_data', name:'port_octave', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_octave', data:{
                 x: 170.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != 'discrete'){return;}
                     object.elements.dial_discrete_image.octave.select(data);
                 } 
             }},
-            {type:'connectionNode_data', name:'port_waveType', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_waveType', data:{
                 x: 210.5, y: -7.5, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != 'discrete'){return;}
                     object.elements.dial_discrete_image.waveType.select(data);
                 }
             }},
-            {type:'connectionNode_data', name:'port_periodicWave', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_periodicWave', data:{
                 x: 240, y: 12.5, width: 7.5, height: 15,
                 onreceive: function(address,data){
                     if(address != 'periodicWave'){return;}
                     object.__synthesizer.periodicWave(data);
                 }
             }},
-            {type:'connectionNode_data', name:'port_midiNote', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_midiNote', data:{
                 x:225, y:55, width: 15, height: 30, angle:Math.PI/4,
                 onreceive: function(address,data){
                     if(address != 'midinumber'){return;}
                     object.__synthesizer.perform(data);
                 }
             }},
-            {type:'connectionNode_data', name:'port_gainWobblePeriod', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_gainWobblePeriod', data:{
                 x: 22.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
                     object.elements.dial_continuous_image.gainWobblePeriod.set(data);
                 }
             }},
-            {type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_gainWobbleDepth', data:{
                 x: 57.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
                     object.elements.dial_continuous_image.gainWobbleDepth.set(data);
                 }
             }},
-            {type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_detuneWobblePeriod', data:{
                 x: 107.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
                     object.elements.dial_continuous_image.detuneWobblePeriod.set(data);
                 }
             }},
-            {type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'port_detuneWobbleDepth', data:{
                 x: 142.5, y: 90, width: 15, height: 7.5,
                 onreceive: function(address,data){
                     if(address != '%'){return;}
@@ -127,57 +127,57 @@ this.basicSynthesizer_img = function(x,y,angle){
             }},
 
             //gain dial
-                {type:'dial_continuous_image',name:'dial_gain',data:{
+                {collection:'control', type:'dial_continuous_image',name:'dial_gain',data:{
                     x: 20, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //attack dial
-                {type:'dial_continuous_image',name:'dial_attack',data:{
+                {collection:'control', type:'dial_continuous_image',name:'dial_attack',data:{
                     x: 60, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //release dial
-                {type:'dial_continuous_image',name:'dial_release',data:{
+                {collection:'control', type:'dial_continuous_image',name:'dial_release',data:{
                     x: 100, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //detune dial
-                {type:'dial_continuous_image',name:'dial_detune',data:{
+                {collection:'control', type:'dial_continuous_image',name:'dial_detune',data:{
                     x: 140, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, value:0.5, resetValue:0.5,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //octave dial
-                {type:'dial_discrete_image',name:'dial_octave',data:{
+                {collection:'control', type:'dial_discrete_image',name:'dial_octave',data:{
                     x: 180, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, optionCount: 7, value:3,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //waveType dial
-                {type:'dial_discrete_image',name:'dial_waveType',data:{
+                {collection:'control', type:'dial_discrete_image',name:'dial_waveType',data:{
                     x: 220, y: 23, r: 12, startAngle: (3*Math.PI)/4, maxAngle: (5*Math.PI)/4, optionCount: 5,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //gainWobblePeriod dial
-                {type:'dial_continuous_image', name:'dial_gainWobblePeriod',data:{
+                {collection:'control', type:'dial_continuous_image', name:'dial_gainWobblePeriod',data:{
                     x: 30, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //gainWobbleDepth dial
-                {type:'dial_continuous_image',name:'dial_gainWobbleDepth',data:{
+                {collection:'control', type:'dial_continuous_image',name:'dial_gainWobbleDepth',data:{
                     x: 65, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //detuneWobblePeriod dial
-                {type:'dial_continuous_image',name:'dial_detuneWobblePeriod',data:{
+                {collection:'control', type:'dial_continuous_image',name:'dial_detuneWobblePeriod',data:{
                     x: 114, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
             //detuneWobbleDepth dial
-                {type:'dial_continuous_image',name:'dial_detuneWobbleDepth',data:{
+                {collection:'control', type:'dial_continuous_image',name:'dial_detuneWobbleDepth',data:{
                     x: 149, y: 65, r: 12, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2,
                     handleURL:style.dial.handle, slotURL:style.dial.slot, needleURL:style.dial.needle,
                 }},
 
-            {type:'button_rectangle', name:'panicButton', data: {
+            {collection:'control', type:'button_rectangle', name:'panicButton', data: {
                 x:197.5, y: 47.5, width:20, height:20, angle: Math.PI/4,
                 style:style.button, 
             }},

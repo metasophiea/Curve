@@ -2,7 +2,7 @@
 _canvas_.system.mouse.functionList.onmousedown.push(
     {
         requiredKeys:[],
-        function:function(data){
+        function:function(){
             //close any open menubar dropdowns
                 _canvas_.control.gui.closeAllDropdowns();
         }

@@ -23,10 +23,10 @@ this.universalreadout = function(x,y,a){
         ],
         // spaceOutline: true,
         elements:[
-            {type:'circle', name:'base', data:{
+            {collection:'basic', type:'circle', name:'base', data:{
                 x:10, y:10, radius:20, colour:style.background,
             }},
-            {type:'connectionNode_data', name:'in', data:{
+            {collection:'dynamic', type:'connectionNode_data', name:'in', data:{
                 x: 0, y: 0, width: 20, height: 20,
                 onreceive: function(address,data){ print('address: '+address+' data: '+JSON.stringify(data)); }
             }},
@@ -90,15 +90,15 @@ this.universalreadout2 = function(x,y,a){
         space: [{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}],
         // spaceOutline: true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:55,y:0},{x:55,y:55},{x:0,y:55}], colour:style.background} },
         
-            {type:'connectionNode_data', name:'dataIn', data:{ x:5, y:5, width:20, height:20,
+            {collection:'dynamic', type:'connectionNode_data', name:'dataIn', data:{ x:5, y:5, width:20, height:20,
                 onreceive:function(address,data){ print('data :: address: "'+address+'" - data: "'+JSON.stringify(data)+'"'); }
             }},
-            {type:'connectionNode_signal', name:'signalIn', data:{ x:30, y:5, width:20, height:20,
+            {collection:'dynamic', type:'connectionNode_signal', name:'signalIn', data:{ x:30, y:5, width:20, height:20,
                 onchange:function(value){print('signal :: '+value); },
             }},
-            {type:'connectionNode_voltage', name:'voltageIn', data:{ x:5, y:30, width:20, height:20,
+            {collection:'dynamic', type:'connectionNode_voltage', name:'voltageIn', data:{ x:5, y:30, width:20, height:20,
                 onchange:function(value){print('voltage :: '+value); },
             }},
         ]

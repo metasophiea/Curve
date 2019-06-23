@@ -29,18 +29,20 @@ this.grapher = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing
-            var rect = interfacePart.builder('rectangle','backing',{ width:width, height:height, colour:backingStyle });
+            var rect = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:backingStyle });
             object.append(rect);
         //background group
-            var backgroundGroup = interfacePart.builder( 'group', 'background' );
+            var backgroundGroup = interfacePart.builder( 'basic', 'group', 'background' );
+            backgroundGroup.stopAttributeStartedExtremityUpdate = true;
             object.append(backgroundGroup);
         //foreground group
-            var foregroundGroup = interfacePart.builder( 'group', 'foreground' );
+            var foregroundGroup = interfacePart.builder( 'basic', 'group', 'foreground' );
+            foregroundGroup.stopAttributeStartedExtremityUpdate = true;
             object.append(foregroundGroup);
         //stencil
-            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
+            var stencil = interfacePart.builder('basic','rectangle','stencil',{width:width, height:height});
             object.stencil(stencil);
             object.clipActive(true);
 
@@ -62,17 +64,20 @@ this.grapher = function(
 
                         //add line and text to group
                             //lines
-                                var path = interfacePart.builder( 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineThickness,colour:backgroundStyle_colour} );
+                                var path = interfacePart.builder( 'basic', 'rectangle', 'horizontal_line_'+a, {x:0,y:y,width:width,height:backgroundStyle_lineThickness,colour:backgroundStyle_colour} );
+                                path.stopAttributeStartedExtremityUpdate = true;
                                 backgroundGroup.append(path);
+
                             //text
                                 if( horizontalMarkings.printText ){
-                                    var text = interfacePart.builder( 'text', 'horizontal_text_'+a, {
+                                    var text = interfacePart.builder( 'basic', 'text', 'horizontal_text_'+a, {
                                         x:x+horizontalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                         text:(horizontalMarkings.printingValues && horizontalMarkings.printingValues[a] != undefined) ? horizontalMarkings.printingValues[a] : horizontalMarkings.points[a],
                                         colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
                                         width:backgroundTextStyle_size*fontSizeMux, height:backgroundTextStyle_size*fontSizeMux,
                                         printingMode:{widthCalculation:'absolute',vertical:'top'}
                                     } );
+                                    text.stopAttributeStartedExtremityUpdate = true;
                                     backgroundGroup.append(text);
                                 }
                     }
@@ -91,18 +96,20 @@ this.grapher = function(
 
                         //add line and text to group
                             //lines
-                                var path = interfacePart.builder( 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineThickness,height:height,colour:backgroundStyle_colour} );
+                                var path = interfacePart.builder( 'basic', 'rectangle', 'vertical_line_'+a, {x:x,y:0,width:backgroundStyle_lineThickness,height:height,colour:backgroundStyle_colour} );
+                                path.stopAttributeStartedExtremityUpdate = true;
                                 backgroundGroup.append(path);
                         
                             //text
                                 if( verticalMarkings.printText ){
-                                    var text = interfacePart.builder( 'text', 'vertical_text_'+a, {
+                                    var text = interfacePart.builder( 'basic', 'text', 'vertical_text_'+a, {
                                         x:x+verticalMarkings.textPositionOffset.x, y:y+horizontalMarkings.textPositionOffset.y - backgroundTextStyle_size*fontSizeMux,
                                         text:(verticalMarkings.printingValues && verticalMarkings.printingValues[a] != undefined) ? verticalMarkings.printingValues[a] : verticalMarkings.points[a],
                                         colour:backgroundTextStyle_colour, font:backgroundTextStyle_font,
                                         width:backgroundTextStyle_size*fontSizeMux, height:backgroundTextStyle_size*fontSizeMux,
                                         printingMode:{widthCalculation:'absolute',vertical:'top'}
                                     } );
+                                    text.stopAttributeStartedExtremityUpdate = true;
                                     backgroundGroup.append(text);
                                 }
                     }
@@ -148,13 +155,13 @@ this.grapher = function(
                         }else{console.error('grapher::'+name,':layers are of different length:',layer.y,layer.x);}
 
                     //create path shape and add it to the group
-                        foregroundGroup.append(
-                            interfacePart.builder( 'path', 'layer_'+L, { 
-                                pointsAsXYArray:points, 
-                                colour:foregroundStyles[L].colour,
-                                thickness:foregroundStyles[L].thickness,
-                            })
-                        );
+                        var tmp = interfacePart.builder( 'basic', 'path', 'layer_'+L, { 
+                            pointsAsXYArray:points, 
+                            colour:foregroundStyles[L].colour,
+                            thickness:foregroundStyles[L].thickness,
+                        });
+                        tmp.stopAttributeStartedExtremityUpdate = true;
+                        foregroundGroup.append(tmp);
                 }
         }
 

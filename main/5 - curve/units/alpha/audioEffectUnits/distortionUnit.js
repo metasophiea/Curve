@@ -35,7 +35,7 @@ this.distortionUnit = function(x,y,a){
             ],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[
                 { x:0,           y:10     },
                 { x:10,          y:0      },
                 { x:102.5/3,     y:0      },
@@ -54,50 +54,50 @@ this.distortionUnit = function(x,y,a){
                 { x:0,           y:95-10  }
             ], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:61.5, width:10, height:20}},
-            {type:'connectionNode_audio', name:'audioOut', data:{ x:0, y:81.5, width:10, height:20, isAudioOutput:true, angle:Math.PI }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn', data:{ x:102.5, y:61.5, width:10, height:20}},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut', data:{ x:0, y:81.5, width:10, height:20, isAudioOutput:true, angle:Math.PI }},
         
-            {type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'outGain_dial',data:{
+            {collection:'basic', type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'outGain_dial',data:{
                 x:22.5, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'distortionAmount_dial',data:{
+            {collection:'basic', type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'distortionAmount_dial',data:{
                 x:22.5, y:23, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'resolution_dial',data:{
+            {collection:'basic', type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'resolution_dial',data:{
                 x:52.5, y:47.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_discrete',name:'overSample_dial',data:{
+            {collection:'basic', type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_discrete',name:'overSample_dial',data:{
                 x:80, y:23, radius:12, startAngle:(1.25*Math.PI), maxAngle:0.5*Math.PI, arcDistance:1.35, optionCount:3,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'inGain_dial',data:{
+            {collection:'basic', type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'inGain_dial',data:{
                 x:80, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
@@ -187,7 +187,7 @@ this.distortionUnit_stereo = function(x,y,a){
             ],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[
                 { x:0,           y:10     },
                 { x:10,          y:0      },
                 { x:102.5/3,     y:0      },
@@ -206,52 +206,52 @@ this.distortionUnit_stereo = function(x,y,a){
                 { x:0,           y:95-10  }
             ], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'audioIn_R', data:{ x:102.5, y:35.5, width:10, height:20 }},
-            {type:'connectionNode_audio', name:'audioIn_L', data:{ x:102.5, y:61.5, width:10, height:20 }},
-            {type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:35.5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:61.5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_R', data:{ x:102.5, y:35.5, width:10, height:20 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_L', data:{ x:102.5, y:61.5, width:10, height:20 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_R', data:{ x:-10, y:35.5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_L', data:{ x:-10, y:61.5, width:10, height:20, isAudioOutput:true }},
         
-            {type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'outGain_dial',data:{
+            {collection:'basic', type:'text', name:'outGain_title', data:{x:22.5, y:89,   text:'out', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_0',     data:{x:11,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1/2',   data:{x:22.5, y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'outGain_1',     data:{x:33,   y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'outGain_dial',data:{
                 x:22.5, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'distortionAmount_dial',data:{
+            {collection:'basic', type:'text', name:'distortionAmount_title', data:{x:22.5, y:39.5, text:'dist', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'distortionAmount_0',     data:{x:11,   y:36,   text:'0',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'distortionAmount_50',    data:{x:22.5, y:6.5,  text:'50',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'distortionAmount_100',   data:{x:35,   y:36,   text:'100',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'distortionAmount_dial',data:{
                 x:22.5, y:23, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'resolution_dial',data:{
+            {collection:'basic', type:'text', name:'resolution_title', data:{x:52.5, y:64, text:'res',  width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'resolution_2',     data:{x:41,   y:60, text:'2',    width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'resolution_50',    data:{x:52.5, y:31, text:'500',  width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'resolution_100',   data:{x:65,   y:60, text:'1000', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'resolution_dial',data:{
                 x:52.5, y:47.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_discrete',name:'overSample_dial',data:{
+            {collection:'basic', type:'text', name:'overSample_title', data:{x:80, y:39.5, text:'overSamp', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'overSample_0',     data:{x:65, y:12,   text:'none',     width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'overSample_50',    data:{x:80, y:7.5,  text:'2x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'overSample_100',   data:{x:92, y:12,   text:'4x',       width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_discrete',name:'overSample_dial',data:{
                 x:80, y:23, radius:12, startAngle:(1.25*Math.PI), maxAngle:0.5*Math.PI, arcDistance:1.35, optionCount:3,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},
 
-            {type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'inGain_dial',data:{
+            {collection:'basic', type:'text', name:'inGain_title', data:{x:80,   y:89,   text:'in', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'inGain_0',     data:{x:69,   y:85.5, text:'0',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'inGain_1/2',   data:{x:80,   y:56,   text:'1/2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'inGain_1',     data:{x:90.5, y:85.5, text:'1',   width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'inGain_dial',data:{
                 x:80, y:72.5, radius:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},

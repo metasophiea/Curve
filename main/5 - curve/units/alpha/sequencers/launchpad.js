@@ -26,26 +26,26 @@ this.launchpad = function(x,y,a){
         space:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:125,y:0},{x:125,y:50},{x:100,y:60},{x:100,y:100},{x:0,y:100}], colour:style.background }},
 
             //input data
-                {type:'connectionNode_data', name:'pulse_input', data:{ x: 125, y: 5, width: 5, height: 10 }},
-                {type:'connectionNode_data', name:'nextPage_input', data:{ x: 125, y: 22.5, width: 5, height: 10 }},
-                {type:'connectionNode_data', name:'prevPage_input', data:{ x: 125, y: 35, width: 5, height: 10 }},
+                {collection:'dynamic', type:'connectionNode_data', name:'pulse_input', data:{ x: 125, y: 5, width: 5, height: 10 }},
+                {collection:'dynamic', type:'connectionNode_data', name:'nextPage_input', data:{ x: 125, y: 22.5, width: 5, height: 10 }},
+                {collection:'dynamic', type:'connectionNode_data', name:'prevPage_input', data:{ x: 125, y: 35, width: 5, height: 10 }},
             //pulse
-                {type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
+                {collection:'control', type:'button_rectangle',name:'pulse_button',data:{ x:100, y:5, width:20, height:10, style:style.button }},
             //rastorgrid
-                {type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, colour:style.grid.backing}},
-                {type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
+                {collection:'basic', type:'rectangle', name:'rastorBacking', data:{x:5, y:5, width:90, height:90, colour:style.grid.backing}},
+                {collection:'control', type:'rastorgrid',name:'rastorgrid',data:{ x:5, y:5, width:90, height:90, xCount:values.xCount, yCount:values.yCount, style:style.grid }},
             //page select
-                {type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5}},
-                {type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
-                {type:'button_rectangle',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
+                {collection:'display', type:'sevenSegmentDisplay',name:'pageNumber',data:{ x:100, y:22.5, width:20, height:22.5}},
+                {collection:'control', type:'button_rectangle',name:'nextPage',data:{ x:102.5, y:17.5, width:15, height:5, style:style.button }},
+                {collection:'control', type:'button_rectangle',name:'prevPage',data:{ x:102.5, y:45, width:15, height:5, style:style.button }},
         ]
     };
     //dynamic design
         for(var a = 0; a < values.yCount; a++){
-            design.elements.push( {type:'connectionNode_data', name:'out_'+a, data:{ x: -5, y: a*12.5 + 2.5, width: 5, height: 7.5 }} );
+            design.elements.push( {collection:'dynamic', type:'connectionNode_data', name:'out_'+a, data:{ x: -5, y: a*12.5 + 2.5, width: 5, height: 7.5 }} );
         }
 
 

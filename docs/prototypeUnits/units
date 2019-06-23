@@ -55,7 +55,12 @@ beta units
         - musical keyboard (data:midi)
 
         - launchpad (1 signal in, 8 signal out)
-        - basicSequencer (mode select: signal/voltage/midi)
+        - analogue sequencer (8 step)(mode select: signal/voltage/midi)
+                LED
+                note select
+                octave select
+                power select            direction switch
+                activate button         step button
 
         - signal duplicator
         - voltage duplicator
@@ -95,6 +100,7 @@ beta units
         VERB
         life
         Riven
+        milk
 
         Fysical Utilities (PH.U.) : effect boxes
         CoLoUR : effect boxes
@@ -136,11 +142,19 @@ beta units
         voltage->signal threshold
         signal->voltage activator
         signal->data activator (with area for writing in what the data message should be)
-        data->voltage activator
+        data->voltage activator (must recieve correct instruction)
         signal->data multi-signal encoder
         data->signal multi-signal decoder
 
         custom wave designer (with disks that you can slot into other units)
+            Function generator
+            Arbitrary Waveform Generator
+
+        graphic sequencer (kinda already made)
+
+        Digital pattern generator
+        Voltage pattern generator
+        Data pattern generator
 
         audio waveshaper
         overdrive audio effect unit

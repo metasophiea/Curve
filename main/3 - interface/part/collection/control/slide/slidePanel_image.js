@@ -10,11 +10,11 @@ this.slidePanel_image = function(
 ){
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //slides
             for(var a = 0; a < count; a++){
                 var temp = interfacePart.builder(
-                    'slide_image', 'slide_'+a, {
+                    'control', 'slide_image', 'slide_'+a, {
                         x:a*(width/count), y:0,
                         width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
                         value:startValue, resetValue:resetValue,
@@ -28,7 +28,7 @@ this.slidePanel_image = function(
             }
         //overlay
             if(overlayURL != undefined){
-                var overlay = interfacePart.builder('image','overlay',{width:width, height:height, url:overlayURL});
+                var overlay = interfacePart.builder('basic','image','overlay',{width:width, height:height, url:overlayURL});
                 object.append(overlay);
             }
 

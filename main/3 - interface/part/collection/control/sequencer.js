@@ -86,36 +86,36 @@ this.sequencer = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //static backing
-            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
+            var backing = interfacePart.builder('basic','rectangle','backing',{width:width, height:height, colour:backingStyle});
             object.append(backing);
         //viewport stencil
-            var stencil = interfacePart.builder('rectangle','stencil',{width:width, height:height});
+            var stencil = interfacePart.builder('basic','rectangle','stencil',{width:width, height:height});
             object.stencil(stencil);
             object.clipActive(true);
 
         //workarea
-            var workarea = interfacePart.builder('group','workarea');
+            var workarea = interfacePart.builder('basic','group','workarea');
             object.append(workarea);
             //moveable background
-                var backgroundDrawArea = interfacePart.builder('group','backgroundDrawArea');
+                var backgroundDrawArea = interfacePart.builder('basic','group','backgroundDrawArea');
                 workarea.append(backgroundDrawArea);
-                var backgroundDrawArea_horizontal = interfacePart.builder('group','backgroundDrawArea_horizontal');
+                var backgroundDrawArea_horizontal = interfacePart.builder('basic','group','backgroundDrawArea_horizontal');
                 backgroundDrawArea_horizontal.stopAttributeStartedExtremityUpdate = true;
                 backgroundDrawArea.append(backgroundDrawArea_horizontal);
-                var backgroundDrawArea_vertical = interfacePart.builder('group','backgroundDrawArea_vertical');
+                var backgroundDrawArea_vertical = interfacePart.builder('basic','group','backgroundDrawArea_vertical');
                 backgroundDrawArea_vertical.stopAttributeStartedExtremityUpdate = true;
                 backgroundDrawArea.append(backgroundDrawArea_vertical);
             //interaction pane back
-                var interactionPlane_back = interfacePart.builder('rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:1,g:0,b:0,a:0}});
+                var interactionPlane_back = interfacePart.builder('basic','rectangle','interactionPlane_back',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:1,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_back);
                 interactionPlane_back.onwheel = function(){};
             //signal block area
-                var signalPane = interfacePart.builder('group','signalPane');
+                var signalPane = interfacePart.builder('basic','group','signalPane');
                 workarea.append(signalPane);
             //interaction pane front
-                var interactionPlane_front = interfacePart.builder('rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
+                var interactionPlane_front = interfacePart.builder('basic','rectangle','interactionPlane_front',{width:viewport.totalSize.width, height:viewport.totalSize.height, colour:{r:0,g:0,b:0,a:0}});
                 workarea.append(interactionPlane_front);
                 interactionPlane_front.onwheel = function(){};
     //internal
@@ -154,7 +154,7 @@ this.sequencer = function(
                 backgroundDrawArea_horizontal.clear();
                 for(var a = 0; a < yCount; a++){
                     var style = horizontalStripStyle_styles[horizontalStripStyle_pattern[a%horizontalStripStyle_pattern.length]];
-                    var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_horizontal_'+a,
+                    var tmp = interfacePart.builder('basic','rectangleWithOutline', 'strip_horizontal_'+a,
                         {
                             x:0, y:a*(height/(yCount*zoomLevel_y)),
                             width:viewport.totalSize.width, height:height/(yCount*zoomLevel_y),
@@ -169,7 +169,7 @@ this.sequencer = function(
                 backgroundDrawArea_vertical.clear();
                 for(var a = 0; a < xCount; a++){
                     var style = verticalStripStyle_styles[verticalStripStyle_pattern[a%verticalStripStyle_pattern.length]];
-                    var tmp = interfacePart.builder( 'rectangleWithOutline', 'strip_vertical_'+a,
+                    var tmp = interfacePart.builder('basic','rectangleWithOutline', 'strip_vertical_'+a,
                         {
                             x:a*(width/(xCount*zoomLevel_x)), y:0,
                             width:width/(xCount*zoomLevel_x), height:viewport.totalSize.height,
@@ -636,10 +636,10 @@ this.sequencer = function(
             }
         }
         function makePlayhead(){
-            var newPlayhead = interfacePart.builder('group','playhead');
+            var newPlayhead = interfacePart.builder('basic','group','playhead');
             workarea.append(newPlayhead);
 
-            newPlayhead.main = interfacePart.builder('rectangle','main',{
+            newPlayhead.main = interfacePart.builder('basic','rectangle','main',{
                 x: -playhead.width/2,
                 width:playhead.width,
                 height:viewport.totalSize.height,
@@ -647,7 +647,7 @@ this.sequencer = function(
             });
             newPlayhead.append(newPlayhead.main);
 
-            newPlayhead.invisibleHandle = interfacePart.builder('rectangle','invisibleHandle',{
+            newPlayhead.invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{
                 x:-playhead.width*playhead.invisibleHandleMux/2 + playhead.width/2, 
                 width: playhead.width*playhead.invisibleHandleMux,
                 height:viewport.totalSize.height,
@@ -844,7 +844,7 @@ this.sequencer = function(
                 var initialPositionData = currentMousePosition(event);
                 var livePositionData =    currentMousePosition(event);
     
-                var selectionArea = interfacePart.builder('rectangle','selectionArea',{
+                var selectionArea = interfacePart.builder('basic','rectangle','selectionArea',{
                     x:initialPositionData.x*width, y:initialPositionData.y*height,
                     width:0, height:0,
                     colour:selectionAreaStyle,
@@ -1057,10 +1057,10 @@ this.sequencer.signalBlock = function(
     };
     
     //elements
-        var object = interfacePart.builder('group',String(name),{x:position*unit_x, y:line*unit_y});
-        object.body = interfacePart.builder('rectangleWithOutline','body',{width:length*unit_x, height:unit_y, colour:currentStyles.body.colour, lineColour:currentStyles.body.lineColour, lineThickness:currentStyles.body.lineThickness});
-        object.leftHandle = interfacePart.builder('rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
-        object.rightHandle = interfacePart.builder('rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
+        var object = interfacePart.builder('basic','group',String(name),{x:position*unit_x, y:line*unit_y});
+        object.body = interfacePart.builder('basic','rectangleWithOutline','body',{width:length*unit_x, height:unit_y, colour:currentStyles.body.colour, lineColour:currentStyles.body.lineColour, lineThickness:currentStyles.body.lineThickness});
+        object.leftHandle = interfacePart.builder('basic','rectangle','leftHandle',{x:-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
+        object.rightHandle = interfacePart.builder('basic','rectangle','rightHandle',{x:length*unit_x-handleWidth/2, width:handleWidth, height:unit_y, colour:handleStyle});
         object.append(object.body);
         object.append(object.leftHandle);
         object.append(object.rightHandle);

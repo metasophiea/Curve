@@ -13,30 +13,30 @@ this.dial_2_continuous = function(
 ){
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //slot
-            var slot = interfacePart.builder('circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
+            var slot = interfacePart.builder('basic','circle','slot',{radius:radius*1.1, detail:50, colour:slotStyle});
             object.append(slot);
         
         //handle
-            var handle = interfacePart.builder('circle','handle',{radius:radius, detail:50, colour:handleStyle});
+            var handle = interfacePart.builder('basic','circle','handle',{radius:radius, detail:50, colour:handleStyle});
             object.append(handle);
 
         //needle group
-            var needleGroup = interfacePart.builder('group','needleGroup',{ignored:true});
+            var needleGroup = interfacePart.builder('basic','group','needleGroup',{ignored:true});
             object.append(needleGroup);
 
             //needle
                 var needleWidth = radius/8;
                 var needleLength = radius/2;
-                var needle = interfacePart.builder('rectangle','needle',{x:radius*0.8-needleLength, y:-needleWidth/2, height:needleWidth, width:needleLength, colour:needleStyle});
+                var needle = interfacePart.builder('basic','rectangle','needle',{x:radius*0.8-needleLength, y:-needleWidth/2, height:needleWidth, width:needleLength, colour:needleStyle});
                 needleGroup.append(needle);
 
-                var needleTip = interfacePart.builder('circle','needleTip',{x:radius*0.8, radius:needleWidth/2, detail:10, colour:needleStyle});
+                var needleTip = interfacePart.builder('basic','circle','needleTip',{x:radius*0.8, radius:needleWidth/2, detail:10, colour:needleStyle});
                 needleGroup.append(needleTip);
 
-                var needleBase = interfacePart.builder('circle','needleBase',{x:radius*0.8-needleLength, radius:needleWidth/2, detail:10, colour:needleStyle});
+                var needleBase = interfacePart.builder('basic','circle','needleBase',{x:radius*0.8-needleLength, radius:needleWidth/2, detail:10, colour:needleStyle});
                 needleGroup.append(needleBase);
 
 

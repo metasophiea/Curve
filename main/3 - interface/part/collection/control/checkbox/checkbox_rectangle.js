@@ -9,20 +9,20 @@ this.checkbox_rectangle = function(
 ){
     //adding on the specific shapes
         //main
-            var subject = interfacePart.builder('group',name+'subGroup');
+            var subject = interfacePart.builder('basic','group',name+'subGroup');
         //backing
-            var backing = interfacePart.builder('rectangle','backing',{width:width, height:height, colour:backingStyle});
+            var backing = interfacePart.builder('basic','rectangle','backing',{width:width, height:height, colour:backingStyle});
             subject.append(backing);
         //check
-            var checkrect = interfacePart.builder('rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, colour:{r:0,g:0,b:0,a:0}});
+            var checkrect = interfacePart.builder('basic','rectangle','checkrect',{x:width*0.1,y:height*0.1,width:width*0.8,height:height*0.8, colour:{r:0,g:0,b:0,a:0}});
             subject.append(checkrect);
         //cover
-            subject.cover = interfacePart.builder('rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+            subject.cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
             subject.append(subject.cover);
 
     //generic checkbox part
         var object = interfacePart.builder(
-            'checkbox_', name, {
+            'control', 'checkbox_', name, {
                 x:x, y:y, angle:angle, interactable:interactable,
                 onchange:onchange,
                 subject:subject,

@@ -25,9 +25,9 @@ _canvas_.control = new function(){
             var enableMenubar = true;
             this.enableMenubar = function(bool){
                 if(bool==undefined){return enableMenubar;}
-                // if(devMode){return;}
+                if(devMode){return;}
                 enableMenubar = bool;
-                if(!enableMenubar){ control.gui.hideMenubar(); }
+                if(!enableMenubar){ control.gui.hideMenubar(); }else{ control.gui.showMenubar(); }
             };
             var enableSceneSave = true;
             this.enableSceneSave = function(bool){

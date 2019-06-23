@@ -66,7 +66,7 @@ this.list_image = function(
 
                 switch(item.type){
                     case 'space':
-                        var space_group = interfacePart.builder('group',index+'_space');
+                        var space_group = interfacePart.builder('basic','group',index+'_space');
                         output.elements.push(space_group);
                         output.calculatedListHeight += spacingHeight;
                     break;
@@ -74,7 +74,7 @@ this.list_image = function(
                         var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
                         var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
 
-                        var imageBacking = interfacePart.builder('image',index+'_break',{
+                        var imageBacking = interfacePart.builder('basic','image',index+'_break',{
                             x:xPosition, y:output.calculatedListHeight+itemSpacingHeight/2,
                             width:lineWidth, height:breakHeight,
                             url:breakURL
@@ -86,7 +86,7 @@ this.list_image = function(
                     case 'textbreak': 
                         var lineWidth = limitWidthTo < 0 ? itemWidth*0.9 : itemWidth;
                         var xPosition = limitWidthTo < 0 ? itemWidth*0.05 : xOffset;
-                        var imageBacking = interfacePart.builder('image',index+'_break',{
+                        var imageBacking = interfacePart.builder('basic','image',index+'_break',{
                             x:xPosition, y:output.calculatedListHeight,
                             width:lineWidth, height:itemSpacingHeight+breakHeight,
                             url:breakURL
@@ -96,7 +96,7 @@ this.list_image = function(
                         output.calculatedListHeight += itemSpacingHeight+breakHeight;
                     break;
                     case 'checkbox':
-                        var checkbox = interfacePart.builder( 'checkbox_image', 'checkbox', {
+                        var checkbox = interfacePart.builder( 'control', 'checkbox_image', 'checkbox', {
                             x:xOffset, y:output.calculatedListHeight,
                             width:itemWidth, height:itemHeight,
                             uncheckURL:checkbox_uncheckURL,
@@ -116,8 +116,8 @@ this.list_image = function(
                     break;
                     case 'list':
                         var sublistName = 'sublist__'+index+'_list';
-                        var list_group = interfacePart.builder('group',index+'_list');
-                            var button = interfacePart.builder( 'button_image', 'button', {
+                        var list_group = interfacePart.builder('basic','group',index+'_list');
+                            var button = interfacePart.builder( 'control', 'button_image', 'button', {
                                 x:xOffset, y:output.calculatedListHeight,
                                 width:itemWidth, height:itemHeight, interactable:interactable, 
 
@@ -157,7 +157,7 @@ this.list_image = function(
                             list_group.open = (function(sublistName,listItem,y){
                                 return function(){
                                     list_group.getChildByName('button').glow(true);
-                                    var sublist = _canvas_.interface.part.builder( 'list_image', sublistName, {
+                                    var sublist = _canvas_.interface.part.builder('control', 'list_image', sublistName, {
                                         x:limitWidthTo<0?itemWidth:limitWidthTo, y:y,
                                         list:listItem.list,
                                         active:active, multiSelect:multiSelect, hoverable:hoverable, selectable:selectable, pressable:pressable,
@@ -221,7 +221,7 @@ this.list_image = function(
                     break;
                     case 'item': 
                         var name = index+'_item';
-                        var temp = interfacePart.builder( 'button_image', name, {
+                        var temp = interfacePart.builder('control', 'button_image', name, {
                             x:xOffset, y:output.calculatedListHeight,
                             width:itemWidth, height:itemHeight, interactable:interactable, 
 
@@ -294,24 +294,24 @@ this.list_image = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //backing
-            var backing = interfacePart.builder('image','backing',{url:backingURL});
+            var backing = interfacePart.builder('basic','image','backing',{url:backingURL});
             object.append(backing);
         //stenciled group
-            var stenciledGroup = interfacePart.builder('group','stenciledGroup');
+            var stenciledGroup = interfacePart.builder('basic','group','stenciledGroup');
             object.append(stenciledGroup);
         //sub list group
-            var subListGroup = interfacePart.builder('group','subListGroup');
+            var subListGroup = interfacePart.builder('basic','group','subListGroup');
             object.append(subListGroup);
         //item collection
-            var itemCollection = interfacePart.builder('group','itemCollection');
+            var itemCollection = interfacePart.builder('basic','group','itemCollection');
             stenciledGroup.append(itemCollection);
         //cover
-            var cover = interfacePart.builder('rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
+            var cover = interfacePart.builder('basic','rectangle','cover',{colour:{r:0,g:0,b:0,a:0}});
             stenciledGroup.append(cover);
         //stencil
-            var stencil = interfacePart.builder('rectangle','stencil');
+            var stencil = interfacePart.builder('basic','rectangle','stencil');
             stenciledGroup.stencil(stencil);
             stenciledGroup.clipActive(true);
 

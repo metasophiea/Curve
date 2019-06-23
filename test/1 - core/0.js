@@ -74,6 +74,14 @@ var tmp = _canvas_.core.shape.create('path');
     tmp.name = 'path_1';
     tmp.pointsAsXYArray([ {x:50,y:300}, {x:50,y:400}, {x:600,y:400}, {x:600,y:50}, {x:50,y:50}, {x:300,y:600}, {x:500,y:600}, {x:500,y:300} ].reverse().map(a => ({x:150+a.x/10,y:80+a.y/10})));
     // tmp.pointsAsXYArray([ {x:250,y:600}, {x:250,y:100}, {x:500,y:100}, {x:50,y:400}]);
+    // tmp.pointsAsXYArray(
+    //     (function(){
+    //         var count = 100/4;
+    //         var outputArray = [];
+    //         for(var a = 0; a < count; a++){ outputArray.push({x:Math.sin(Math.PI * a/count)*500 ,y:Math.cos(Math.PI * a/count)*500}); }
+    //         return outputArray;
+    //     })()
+    // );
     tmp.thickness(8);
     tmp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
     _canvas_.core.arrangement.append(tmp);

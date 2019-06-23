@@ -1,14 +1,14 @@
 this.collection = new function(){
     this.basic = new function(){
-        {{include:basic/*}} /**/
-    };
-    this.control = new function(){
-        {{include:control/*}} /**/
+        {{include:basic/_main.js}}
     };
     this.display = new function(){
-        {{include:display/*}} /**/
+        {{include:display/_main.js}}
+    };
+    this.control = new function(){
+        {{include:control/_main.js}}
     };
     this.dynamic = new function(){
-        {{include:dynamic/*}} /**/
+        {{include:dynamic/_main.js}}
     };
 };

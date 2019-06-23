@@ -31,26 +31,26 @@ this.oneShot_multi_multiTrack = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:385},{x:0,y:385}], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
         ]
     };
     //dynamic design
         for(var a = 0; a < trackCount; a++){
             //symbols
                 design.elements = design.elements.concat([
-                    {type:'path', name:'symbol_'+a+'_arrow', data:{ pointsAsXYArray:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], colour:style.markings.colour, thickness:style.markings.thickness }},
-                    {type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, colour:style.markings.colour }},
-                    {type:'circleWithOutline', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                    {type:'circleWithOutline', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
-                    {type:'circleWithOutline', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                    {collection:'basic', type:'path', name:'symbol_'+a+'_arrow', data:{ pointsAsXYArray:[{x:19, y:35+a*(2+45)},{x:25,y:40+a*(2+45)},{x:19, y:45+a*(2+45)}], colour:style.markings.colour, thickness:style.markings.thickness }},
+                    {collection:'basic', type:'rectangle', name:'symbol_'+a+'_line', data:{ x:15, y:39.5+a*(2+45), width:6, height:1, colour:style.markings.colour }},
+                    {collection:'basic', type:'circleWithOutline', name:'symbol_'+a+'l_outerCircle', data:{ x:10, y:40+a*(2+45), radius:5.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                    {collection:'basic', type:'circleWithOutline', name:'symbol_'+a+'_infCircle1', data:{ x:8.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
+                    {collection:'basic', type:'circleWithOutline', name:'symbol_'+a+'_infCircle2', data:{ x:11.5, y:40+a*(2+45), radius:1.5, colour:style.background, lineColour:style.markings.colour, thickness:style.markings.thickness }},
                 ]);
 
             //rate adjust
                 design.elements.push(
-                    {type:'slide', name:'rate_'+a, data:{
+                    {collection:'control', type:'slide', name:'rate_'+a, data:{
                         x:26.25, y:5+a*(2+45), width:5, height:45, value:0.5, resetValue:0.5, style:style.slide,
                         onchange:function(instance){
                             return function(value){
@@ -62,17 +62,17 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //activation light
                 design.elements.push(
-                    {type:'glowbox_rect', name:'glowbox_rect_'+a, data:{ x:32.5, y:5+a*(2+45), width:2.5, height:45 }}
+                    {collection:'display', type:'glowbox_rect', name:'glowbox_rect_'+a, data:{ x:32.5, y:5+a*(2+45), width:2.5, height:45 }}
                 );
 
             //waveport
                 design.elements.push(
-                    {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{ x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true }}
+                    {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{ x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true }}
                 );
 
             //load button
                 design.elements.push(
-                    {type:'button_rectangle', name:'loadFile_'+a, data: { x:5, y: 5+a*(2+45), width:20, height:10, style:style.button,
+                    {collection:'control', type:'button_rectangle', name:'loadFile_'+a, data: { x:5, y: 5+a*(2+45), width:20, height:10, style:style.button,
                         onpress:function(instance){
                             return function(){
                                 object.oneShot_multi_array[instance].load('file',
@@ -89,7 +89,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //fire button
                 design.elements.push(
-                    {type:'button_rectangle',name:'fire_'+a,data:{ x:5, y: 17.5+a*(2+45), width:10, height:10, style:style.fire_button,
+                    {collection:'control', type:'button_rectangle',name:'fire_'+a,data:{ x:5, y: 17.5+a*(2+45), width:10, height:10, style:style.fire_button,
                         onpress:function(instance){
                             return function(){
                                 var filePlayer = object.oneShot_multi_array[instance];
@@ -161,7 +161,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //panic button
                 design.elements.push(
-                    {type:'button_rectangle',name:'panic_'+a,data:{ x:15, y: 17.5+a*(2+45), width:10, height:10, style:style.stop_button,
+                    {collection:'control', type:'button_rectangle',name:'panic_'+a,data:{ x:15, y: 17.5+a*(2+45), width:10, height:10, style:style.stop_button,
                         onpress:function(instance){
                             return function(value){
                                 var filePlayer = object.oneShot_multi_array[instance];
@@ -184,7 +184,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //fire connection
                 design.elements.push(
-                    {type:'connectionNode_data', name:'trigger_'+a, data:{ x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
+                    {collection:'dynamic', type:'connectionNode_data', name:'trigger_'+a, data:{ x: 220, y: 17.5+a*(2+45), width: 10, height: 20,
                         onreceive:function(instance){
                             return function(address,data){
                                 if(address == 'pulse'){ 

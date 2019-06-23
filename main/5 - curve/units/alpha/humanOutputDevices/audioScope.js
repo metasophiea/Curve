@@ -25,17 +25,17 @@ this.audioScope = function(x,y,a){
         space:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}],
         // spaceOutline: true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:195,y:0},{x:195,y:110},{x:0,y:110}], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'input', data:{ x:195, y:5, width:10, height:20 }},
-            {type:'grapher_audioScope_static', name:'waveport', data:{ x:5, y:5, width:150, height:100 }},
-            {type:'button_rectangle', name:'holdKey', data:{ x:160, y:5, width:30, height:20, style:style.button }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ x:195, y:5, width:10, height:20 }},
+            {collection:'display', type:'grapher_audioScope_static', name:'waveport', data:{ x:5, y:5, width:150, height:100 }},
+            {collection:'control', type:'button_rectangle', name:'holdKey', data:{ x:160, y:5, width:30, height:20, style:style.button }},
 
-            {type:'text', name:'framerate_name', data:{x: 175, y: 68, text: 'framerate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'framerate_1',    data:{x: 164, y: 60, text: '1',         width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'framerate_15',   data:{x: 175, y: 32, text: '15',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'framerate_30',   data:{x: 187, y: 60, text: '30',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous', name:'framerate', data:{
+            {collection:'basic', type:'text', name:'framerate_name', data:{x: 175, y: 68, text: 'framerate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'framerate_1',    data:{x: 164, y: 60, text: '1',         width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'framerate_15',   data:{x: 175, y: 32, text: '15',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'framerate_30',   data:{x: 187, y: 60, text: '30',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous', name:'framerate', data:{
                 x:175, y:47.5, radius:12, resetValue:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }},

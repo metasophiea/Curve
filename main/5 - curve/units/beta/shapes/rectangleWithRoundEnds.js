@@ -226,7 +226,7 @@ _canvas_.core.shape.library.rectangleWithRoundEnds = function(){
                 if(self.dotFrame){drawDotFrame();}
         };
 };
-_canvas_.interface.part.collection.basic.rectangleWithRoundEnds = function( name=null, x=0, y=0, angle=0, width=5, height=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1} ){
+_canvas_.interface.part.collection.basic.rectangleWithRoundEnds = function(name=null, x=0, y=0, angle=0, width=5, height=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}){
     var temp = _canvas_.core.shape.create('rectangleWithRoundEnds');
     temp.name = name;
     temp.ignored = ignored;
@@ -243,6 +243,6 @@ _canvas_.interface.part.collection.basic.rectangleWithRoundEnds = function( name
 
     return temp;
 };
-_canvas_.interface.part.partLibrary.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
+_canvas_.interface.part.partLibrary.basic.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
     name, data.x, data.y, data.angle, data.width, data.height, data.detail, data.ignored, data.colour
 ); }

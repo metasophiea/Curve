@@ -33,9 +33,9 @@ this.grapher_audioScope = function(
 
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         //grapher
-            var grapher = interfacePart.builder('grapher',name,{
+            var grapher = interfacePart.builder('display','grapher',name,{
                 x:0, y:0, width:width, height:height,
                 foregroundStyles:[foregroundStyle], foregroundTextStyles:[foregroundTextStyle],
                 backgroundStyle_colour:backgroundStyle_colour, 

@@ -20,45 +20,45 @@ this.basicMixer = function(x,y,a){
         space:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}],
         // spaceOutline: true,
         elements:[
-            {type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'output_0', data:{ x:-10, y:5, width:20, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ x:-10, y:30, width:20, height:20, isAudioOutput:true }},
 
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:100,y:0},{x:100,y:207.5},{x:0,y:207.5}], colour:style.background }},
 
-            {type:'text', name:'gain', data:{ x:85, y:5, text:'gain', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
-            {type:'text', name:'pan', data:{  x:60, y:5, text:'pan', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
+            {collection:'basic', type:'text', name:'gain', data:{ x:85, y:5, text:'gain', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
+            {collection:'basic', type:'text', name:'pan', data:{  x:60, y:5, text:'pan', colour:style.h2.colour, width:style.h2.size, height:style.h2.size, font:style.h2.font, printingMode:style.h2.printingMode } }, 
             
-            {type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, colour:style.markings }},
-            {type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, colour:style.markings }},
-            {type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, colour:style.markings }},
-            {type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, colour:style.markings }},
-            {type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'vertical', data:{ x:22.5, y:6, width:2, height:190, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'overTheTop', data:{ x:10, y:6, width:14, height:2, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'down', data:{ x:10, y:6, width:2, height:35, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'inTo0', data:{ x:2, y:14, width:10, height:2, colour:style.markings }},
+            {collection:'basic', type:'rectangle', name:'inTo1', data:{ x:2, y:39, width:10, height:2, colour:style.markings }},
         ],
     };
 
     //dynamic design
     for(var a = 0; a < connectionCount; a++){
         design.elements.unshift(
-            {type:'connectionNode_audio', name:'input_'+a, data:{ 
+            {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
                 x:90, y:10+(a*25), width:20, height:20 
             }},
         );
 
         design.elements.push(
-            {type:'rectangle', name:'line_'+a, data:{
+            {collection:'basic', type:'rectangle', name:'line_'+a, data:{
                 x:23, y:19.1+a*25, width:75, height:2, 
                 colour:style.markings,
             }}
         );
 
         design.elements.push(
-            {type:'dial_continuous',name:'gain_'+a,data:{
+            {collection:'control', type:'dial_continuous',name:'gain_'+a,data:{
                 x:85, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }}
         );
         design.elements.push(
-            {type:'dial_continuous',name:'pan_'+a,data:{
+            {collection:'control', type:'dial_continuous',name:'pan_'+a,data:{
                 x:60, y:20+a*25, radius:8, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, arcDistance: 1.2, resetValue:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
             }}

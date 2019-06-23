@@ -12,7 +12,7 @@ this.testUnit_4 = function(x,y,angle){
         space:shape,
         spaceOutline: true,
         elements:[
-            {type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:{r:200/255,g:200/255,b:200/255,a:0.1} } },
+            {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:{r:200/255,g:200/255,b:200/255,a:0.1} } },
         ],
     };
 

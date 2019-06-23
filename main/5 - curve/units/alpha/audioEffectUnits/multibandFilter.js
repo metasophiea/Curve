@@ -80,34 +80,34 @@ this.multibandFilter = function(x,y,a){
         ],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[ { x:0,        y:10         }, { x:10,       y:0          },
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[ { x:0,        y:10         }, { x:10,       y:0          },
                 { x:width-10, y:0          }, { x:width,    y:10         },
                 { x:width,    y:height-10  }, { x:width-10, y:height     },
                 { x:10,       y:height     }, { x:0,        y:height-10  },
                 { x:0, y:75 }, { x:-25, y:65 }, { x:-25, y:10 }
             ], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'audioIn_0', data:{x:195, y:15, width:10, height:20}},
-            {type:'connectionNode_audio', name:'audioIn_1', data:{x:195, y:40, width:10, height:20}},
-            {type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
-            {type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
-            {type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, radius:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
-            {type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:15 }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_0', data:{x:195, y:15, width:10, height:20}},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioIn_1', data:{x:195, y:40, width:10, height:20}},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_0', data:{x:-35, y:15, width:10, height:20, isAudioOutput:true}},
+            {collection:'dynamic', type:'connectionNode_audio', name:'audioOut_1', data:{x:-35, y:40, width:10, height:20, isAudioOutput:true}},
+            {collection:'control', type:'dial_continuous',name:'masterGain',data:{ x:-10, y:37.5, radius:10, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, style:style.dial }},
+            {collection:'display', type:'grapher_static', name:'graph', data:{x:10, y:10, width:175, height:75, style:style.graph, resolution:15 }},
         ]
     };
     //dynamic design
     for(var a = 0; a < vars.channelCount; a++){
         design.elements.push(
             //channel strip backing
-                {type:'rectangle', name:'backing_'+a, data:{ x:13.75+a*22, y:87.5, width:12.5, height:157.5, colour:style.panels[a] }},
+                {collection:'basic', type:'rectangle', name:'backing_'+a, data:{ x:13.75+a*22, y:87.5, width:12.5, height:157.5, colour:style.panels[a] }},
             //gain
-                {type:'slide', name:'gainSlide_'+a, data:{ x:15+a*22, y:90, width: 10, height: 80, angle:0, handleHeight:0.05, resetValue:0.5, style:style.slide }},
+                {collection:'control', type:'slide', name:'gainSlide_'+a, data:{ x:15+a*22, y:90, width: 10, height: 80, angle:0, handleHeight:0.05, resetValue:0.5, style:style.slide }},
             //Q
-                {type:'dial_continuous', name:'qDial_'+a, data:{ x:20+a*22, y:180, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
+                {collection:'control', type:'dial_continuous', name:'qDial_'+a, data:{ x:20+a*22, y:180, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
             //frequency
-                {type:'dial_continuous', name:'frequencyDial_'+a, data:{ x:20+a*22, y:200, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
+                {collection:'control', type:'dial_continuous', name:'frequencyDial_'+a, data:{ x:20+a*22, y:200, radius:7, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, style:style.dial }},
             //frequency readout
-                {type:'readout_sixteenSegmentDisplay_static', name:'frequencyReadout_'+a, data:{ x:25+a*22, y:212.5, width:30, height:10, count:8, angle:Math.PI/2, resolution:10 }},
+                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'frequencyReadout_'+a, data:{ x:25+a*22, y:212.5, width:30, height:10, count:8, angle:Math.PI/2, resolution:10 }},
         );
     }
 

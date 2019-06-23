@@ -37,39 +37,39 @@ this.player = function(x,y,a){
         space:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0},{x:220,y:0},{x:220,y:80},{x:0,y:80}], colour:style.background }},
 
-            {type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
-            {type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'outRight', data:{ x:-10, y:5, width:10, height:20, isAudioOutput:true }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'outLeft', data:{ x:-10, y:27.5, width:10, height:20, isAudioOutput:true }},
 
             //symbol
-                {type:'rectangle', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
-                {type:'rectangle', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line1',  data:{ x:3.5,  y:38.5, width:1, height:2,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line2',  data:{ x:5.5,  y:37,   width:1, height:5,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line3',  data:{ x:7.5,  y:35.5, width:1, height:8,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line4',  data:{ x:9.5,  y:34.5, width:1, height:10, colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line5',  data:{ x:11.5, y:35.5, width:1, height:8,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line6',  data:{ x:13.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line7',  data:{ x:15.5, y:39,   width:1, height:1,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line8',  data:{ x:17.5, y:36,   width:1, height:7,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line9',  data:{ x:19.5, y:32,   width:1, height:15, colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line10', data:{ x:21.5, y:34.5, width:1, height:10, colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line11', data:{ x:23.5, y:37,   width:1, height:5,  colour:style.markings.colour }},
+                {collection:'basic', type:'rectangle', name:'symbol_line12', data:{ x:25.5, y:38.5, width:1, height:2,  colour:style.markings.colour }},
                 
-            {type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, count:10, style:style.readout_sixteenSegmentDisplay_static }},
-            {type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{ x: 30, y: 5, angle:0, width:100, height:20, count:10, style:style.readout_sixteenSegmentDisplay_static }},
+            {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{ x: 135, y: 5, angle:0, width:80, height:20, count:8, style:style.readout_sixteenSegmentDisplay_static }},
 
-            {type:'button_rectangle', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
-            {type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:10, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
-            {type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
+            {collection:'control', type:'button_rectangle', name:'load', data: { x:5, y: 5, width:20, height:10, style:style.load_button, onpress:function(){ object.i.loadByFile(); } }},
+            {collection:'control', type:'button_rectangle',name:'start',data:{ x:5, y: 17.5, width:10, height:10, style:style.start_button, onpress:function(){ object.player.start(); } }},
+            {collection:'control', type:'button_rectangle',name:'stop',data:{ x:15, y: 17.5, width:10, height:10, style:style.stop_button, onpress:function(){ object.player.stop(); } }},
 
-            {type:'text', name:'rate_label_name', data:{ x:15, y:77.5, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'rate_label_1', data:{ x:15, y:51.5, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'rate_dial',data:{ x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, resetValue:0.5 }},
+            {collection:'basic', type:'text', name:'rate_label_name', data:{ x:15, y:77.5, text:'rate', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'rate_label_0', data:{ x:5, y:75, text:'0', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'rate_label_1', data:{ x:15, y:51.5, text:'1', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'rate_label_2', data:{ x:25, y:75, text:'2', width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'rate_dial',data:{ x:15, y:65, r: 9, startAngle: (3*Math.PI)/4, maxAngle: 1.5*Math.PI, resetValue:0.5 }},
 
-            {type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ 
+            {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:30, width:185, height:45, selectionArea:false, selectionAreaToggle:function(bool){ 
                 console.log(bool); 
                 object.player.loop({active:bool}); 
             } }},

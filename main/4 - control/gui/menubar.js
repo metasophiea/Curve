@@ -35,8 +35,8 @@ this.menubar = function(x,y){
 
     //elements
         //main
-            var object = _canvas_.interface.part.builder( 'group', 'menubar', {});
-            var bar = _canvas_.interface.part.builder( 'rectangle', 'rectangle', {x:0, y:0, width:vars.height, height:vars.height, colour:style.bar} );
+            var object = _canvas_.interface.part.builder( 'basic', 'group', 'menubar', {});
+            var bar = _canvas_.interface.part.builder( 'basic', 'rectangle', 'rectangle', {x:0, y:0, width:vars.height, height:vars.height, colour:style.bar} );
                 object.append(bar);
 
         //items
@@ -44,7 +44,7 @@ this.menubar = function(x,y){
                 var dropdown = undefined;
 
                 //produce dropdown
-                    dropdown = _canvas_.interface.part.builder( 'list', 'dropdown', {
+                    dropdown = _canvas_.interface.part.builder( 'control', 'list', 'dropdown', {
                         x:x, y:vars.height, style:style.list,
                         itemWidth:self.menubar.dropdowns[a].listWidth,
                         itemHeight:self.menubar.dropdowns[a].listItemHeight,
@@ -81,7 +81,7 @@ this.menubar = function(x,y){
 
             var accWidth = 0;
             for(var a = 0; a < this.menubar.dropdowns.length; a++){
-                var item = _canvas_.interface.part.builder( 'button_rectangle', 'dropdownButton_'+a, {
+                var item = _canvas_.interface.part.builder( 'control', 'button_rectangle', 'dropdownButton_'+a, {
                     x:accWidth, y:0, 
                     width:this.menubar.dropdowns[a].width,
                     height:vars.height, 

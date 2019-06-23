@@ -34,12 +34,12 @@ this.musicalKeyboard = function(x,y,a){
         space:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}],
         // spaceOutline:true,
         elements:[
-            {type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}], colour:style.background }},
+            {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:[{x:0,y:0}, {x:320,y:0}, {x:320,y:62.5}, {x:0,y:62.5}], colour:style.background }},
 
-            {type:'connectionNode_data', name:'midiout', data:{ 
+            {collection:'dynamic', type:'connectionNode_data', name:'midiout', data:{ 
                 x: -5, y: 5, width: 5, height: 10,
             }},
-            {type:'connectionNode_data', name:'midiin', data:{ 
+            {collection:'dynamic', type:'connectionNode_data', name:'midiin', data:{ 
                 x: 320, y: 5, width: 5, height: 10,
                 onreceive:function(address,data){
                     if(address != 'midinumber'){return;}
@@ -49,11 +49,11 @@ this.musicalKeyboard = function(x,y,a){
             }},
 
             //velocity dial
-            {type:'text', name:'velocity_title', data:{x:17.5, y:56, text:'velocity', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
-            {type:'text', name:'velocity_0',     data:{x:8,    y:52, text:'0',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'velocity_1/2',   data:{x:17.5, y:28, text:'1/2',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'text', name:'velocity_1',     data:{x:27,   y:52, text:'1',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
-            {type:'dial_continuous',name:'velocity_dial',data:{
+            {collection:'basic', type:'text', name:'velocity_title', data:{x:17.5, y:56, text:'velocity', width:style.h1.size, height:style.h1.size*style.h1.ratio, colour:style.h1.colour, font:style.h1.font, printingMode:style.h1.printingMode}},
+            {collection:'basic', type:'text', name:'velocity_0',     data:{x:8,    y:52, text:'0',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'velocity_1/2',   data:{x:17.5, y:28, text:'1/2',      width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'basic', type:'text', name:'velocity_1',     data:{x:27,   y:52, text:'1',        width:style.h2.size, height:style.h2.size*style.h2.ratio, colour:style.h2.colour, font:style.h2.font, printingMode:style.h2.printingMode}},
+            {collection:'control', type:'dial_continuous',name:'velocity_dial',data:{
                 x:17.5, y:42, r:12, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, resetValue:0.5, value:0.5,
                 style:{handle:style.dial.handle, slot:style.dial.slot, needle:style.dial.needle},
                 onchange:function(value){ state.velocity = value; }
@@ -71,7 +71,7 @@ this.musicalKeyboard = function(x,y,a){
             for(var a = 0; a < glyphs.length; a++){
                 if( noteNames[a].slice(-1) != '#' ){
                     design.elements.push(
-                        {type:'button_rectangle', name:noteNames[a], data:{
+                        {collection:'control', type:'button_rectangle', name:noteNames[a], data:{
                             x:whiteX, y:12.5, width:whiteKeyWidth, height:50, hoverable:false,
                             style:style.keys.white,
                             onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },
@@ -86,7 +86,7 @@ this.musicalKeyboard = function(x,y,a){
             for(var a = 0; a < glyphs.length; a++){
                 if( noteNames[a].slice(-1) == '#' ){
                     design.elements.push(
-                        {type:'button_rectangle', name:noteNames[a], data:{
+                        {collection:'control', type:'button_rectangle', name:noteNames[a], data:{
                             x:blackX, y:12.5, width:5, height:30, hoverable:false,
                             style:style.keys.black,
                             onpress:function(){ object.io.data.midiout.send('midinumber', { num:_canvas_.library.audio.name2num(this.name), velocity:state.velocity } ); },

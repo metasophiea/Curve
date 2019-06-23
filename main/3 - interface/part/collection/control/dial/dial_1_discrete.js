@@ -13,10 +13,10 @@ this.dial_1_discrete = function(
 ){
     //elements 
         //main
-            var object = interfacePart.builder('group',name,{x:x, y:y, angle:angle});
+            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
         
         //dial
-            var dial = interfacePart.builder('dial_1_continuous',name,{
+            var dial = interfacePart.builder('control','dial_1_continuous',name,{
                 x:0, y:0, radius:radius, angle:0, interactable:interactable,
                 startAngle:startAngle, maxAngle:maxAngle,
                 style:{ handle:handleStyle, slot:slotStyle, needle:needleStyle }
