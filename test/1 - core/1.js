@@ -85,7 +85,7 @@
 //rendering controls
     _canvas_.core.render.active(true);
     _canvas_.core.render.activeLimitToFrameRate(true);
-    _canvas_.core.render.frameRateLimit(10);
+    _canvas_.core.render.frameRateLimit(30);
 
     _canvas_.core.stats.active(true);
     var averages = [];

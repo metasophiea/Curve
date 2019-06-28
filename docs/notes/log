@@ -1,13 +1,29 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
- 2019-06-23
+2019-06-25
+  - improved core.render.adjustCanvasSize to actually get the adjustment right
+    first time
+
+  notes
+  - thinking about redoing the interface parts section..started a document
+    listing the parts and how they could be organised
+  - I worry about the audio circuitry sometimes..I guess when I get back into
+    actually making units, then they'll naturally rearrange and I begin trying
+    to use them
+    
+
+2019-06-24
+  - rewrote the tests for 'pathExtrapolation' (and put them in their own file)
+
+
+2019-06-23
   - painting
 
 
- 2019-06-22
+2019-06-22
   - painting
 
 
- 2019-06-20
+2019-06-20
   - abandoned the "gauge" display part for now
   - reworked the interface/parts section, to allow for easier expansion of the
     collections (caused a lot of rewriting elsewhere too, thanks to the API

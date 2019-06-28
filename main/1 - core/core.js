@@ -139,34 +139,37 @@ this.render = new function(){
                 var Direction = direction.charAt(0).toUpperCase() + direction.slice(1);
     
                 var attribute = canvasElement.getAttribute(__canvasPrefix+'Element'+Direction);
-                if( pageData['selected'+Direction] != attribute || pageData['window'+Direction] != window['inner'+Direction] ){
-                    //save values for future reference
-                        pageData['selected'+Direction] = attribute;
-                        pageData['window'+Direction] = window['inner'+Direction];
-    
-                    //adjust canvas dimension based on the size requirement set out in the canvasElement attribute
-                        var size = {css:0, element:0};
-                        if(attribute == undefined){
-                            size.element = pageData.defaultSize[direction] * window.devicePixelRatio;
-                            size.css = pageData.defaultSize[direction];
-                        }else if( attribute.indexOf('%') == (attribute.length-1) ){
-                            var parentSize = canvasElement.parentElement['offset'+Direction]
-                            var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                            size.element = parentSize * percent * window.devicePixelRatio;
-                            size.css = parentSize * percent;
-                        }else{
-                            size.element = attribute * window.devicePixelRatio;
-                            size.css = attribute;
-                        }
 
-                        pageData[direction] = size.css;
-                        canvasElement[direction] = size.element;
-                        canvasElement.style[direction] = size.css + "px";
-    
-                    changesMade = true;
-                }
+                //save values for future reference
+                    pageData['selected'+Direction] = attribute;
+                    pageData['window'+Direction] = window['inner'+Direction];
+
+                //adjust canvas dimension based on the size requirement set out in the canvasElement attribute
+                    var size = {css:0, element:0};
+                    if(attribute == undefined){
+                        size.element = pageData.defaultSize[direction] * window.devicePixelRatio;
+                        size.css = pageData.defaultSize[direction];
+                    }else if( attribute.indexOf('%') == (attribute.length-1) ){
+                        var parentSize = canvasElement.parentElement['offset'+Direction];
+                        var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
+                        size.element = parentSize * percent * window.devicePixelRatio;
+                        size.css = parentSize * percent;
+                    }else{
+                        size.element = attribute * window.devicePixelRatio;
+                        size.css = attribute;
+                    }
+
+                    pageData[direction] = size.css;
+                    canvasElement[direction] = size.element;
+                    canvasElement.style[direction] = size.css + "px";
+
+                changesMade = true;
             }
     
+            //run everything twice, to cover the event of one of the
+            //first two creating a scrollbar in the browser window
+            dimensionAdjust('height');
+            dimensionAdjust('width');
             dimensionAdjust('height');
             dimensionAdjust('width');
 

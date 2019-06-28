@@ -1,0 +1,181 @@
+current
+    basic
+        canvas
+        circle
+        circleWithOutline
+        group
+        image
+        path
+        polygon
+        polygonWithOutline
+        rectangle
+        rectangleWithOutline
+        text
+
+    control
+        button
+            button_
+            button_circle
+            button_image
+            button_polygon
+            button_rectangle
+        checkbox
+            checkbox_
+            checkbox_circle
+            checkbox_image
+            checkbox_polygon
+            checkbox_rectangle
+        dial
+            dial_1_continuous
+            dial_1_discrete
+            dial_2_continuous
+            dial_2_discrete
+            dial_image_continuous
+            dial_image_discrete
+        list
+            list_image
+            list
+        slide
+            rangeSlide_image
+            rangeSlide
+            slide_image
+            slide
+            slidePanel_image
+            slidePanel
+        grapher_waveWorkspace
+        needleOverlay
+        restorgrid
+        sequencer
+
+    display
+        audio_meter_level
+        glowbox_rect
+        grapher_audioScope
+        grapher_audioScope_static
+        grapher
+        grapher_periodicWave
+        grapher_periodicWave_static
+        grapher_static
+        level
+        meter_level
+        rastorDisplay
+        readout_sixteenSegmentDisplay
+        readout_sixteenSegmentDisplay_static
+        sevenSegmentDisplay
+        sevenSegmentDisplay_static
+        sixteenSegmentDisplay
+        sixteenSegmentDisplay_static
+
+    dynamic
+        cable
+        connectionNode_audio
+        connectionNode_data
+        connectionNode_signal
+        connectionNode_voltage
+        connectionNode
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//what if, you could select whether you wanted the static or non-static version in the part builder? (where applicable)
+//what if, there was a 'style select' option in the part builder? (where applicable)
+
+new
+    basic
+        group
+
+        rectangle
+        rectangleWithOutline
+
+        circle
+        circleWithOutline
+
+        polygon
+        polygonWithOutline
+
+        path
+        text
+        image
+        canvas
+    
+    control
+        button
+            button_
+            button_rectangle
+            button_circle
+            button_polygon
+            button_image
+        checkbox
+            checkbox_
+            checkbox_rectangle
+            checkbox_circle
+            checkbox_polygon
+            checkbox_image
+        dial
+            dial_continuous
+            dial_discrete
+            dial_continuous_image
+            dial_discrete_image
+        slide
+            slide
+            slide_image
+            rangeSlide
+            rangeSlide_image
+
+    display
+        glowbox
+            glowbox_
+            glowbox_rectangle
+            glowbox_circle
+            glowbox_polygon
+            glowbox_image
+
+        level
+        gauge
+
+        graph
+
+        sevenSegmentDisplay
+        sixteenSegmentDisplay
+
+    connection
+        cable
+        connectionNode
+        connectionNode_signal
+        connectionNode_voltage
+        connectionNode_data
+        connectionNode_audio
+
+    advanced display
+        level_audio
+
+        graph_audioScope
+        graph_periodicWave
+
+        sixteenSegmentDisplay_readout
+
+    advanced control
+        slidePanel
+            slidePanel
+            slidePanel_image
+        list
+            list
+            list_image
+        needleOverlay
+            needleOverlay
+            needleOverlay_withGraph
+            
+        restorgrid
+        sequencer

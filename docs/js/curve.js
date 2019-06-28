@@ -1635,9 +1635,8 @@
                          * martinez v0.5.0
                          * Martinez polygon clipping algorithm, does boolean operation on polygons (multipolygons, polygons with holes etc): intersection, union, difference, xor
                          *
-                         * @author Alex Milevski <info@w8r.name>
-                         * @license MIT
-                         * @preserve
+                         * author Alex Milevski <info@w8r.name>
+                         * license MIT
                          */
                         
                         (function (global, factory) {
@@ -23862,34 +23861,37 @@
                                     var Direction = direction.charAt(0).toUpperCase() + direction.slice(1);
                         
                                     var attribute = canvasElement.getAttribute(__canvasPrefix+'Element'+Direction);
-                                    if( pageData['selected'+Direction] != attribute || pageData['window'+Direction] != window['inner'+Direction] ){
-                                        //save values for future reference
-                                            pageData['selected'+Direction] = attribute;
-                                            pageData['window'+Direction] = window['inner'+Direction];
-                        
-                                        //adjust canvas dimension based on the size requirement set out in the canvasElement attribute
-                                            var size = {css:0, element:0};
-                                            if(attribute == undefined){
-                                                size.element = pageData.defaultSize[direction] * window.devicePixelRatio;
-                                                size.css = pageData.defaultSize[direction];
-                                            }else if( attribute.indexOf('%') == (attribute.length-1) ){
-                                                var parentSize = canvasElement.parentElement['offset'+Direction]
-                                                var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                                                size.element = parentSize * percent * window.devicePixelRatio;
-                                                size.css = parentSize * percent;
-                                            }else{
-                                                size.element = attribute * window.devicePixelRatio;
-                                                size.css = attribute;
-                                            }
                     
-                                            pageData[direction] = size.css;
-                                            canvasElement[direction] = size.element;
-                                            canvasElement.style[direction] = size.css + "px";
-                        
-                                        changesMade = true;
-                                    }
+                                    //save values for future reference
+                                        pageData['selected'+Direction] = attribute;
+                                        pageData['window'+Direction] = window['inner'+Direction];
+                    
+                                    //adjust canvas dimension based on the size requirement set out in the canvasElement attribute
+                                        var size = {css:0, element:0};
+                                        if(attribute == undefined){
+                                            size.element = pageData.defaultSize[direction] * window.devicePixelRatio;
+                                            size.css = pageData.defaultSize[direction];
+                                        }else if( attribute.indexOf('%') == (attribute.length-1) ){
+                                            var parentSize = canvasElement.parentElement['offset'+Direction];
+                                            var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
+                                            size.element = parentSize * percent * window.devicePixelRatio;
+                                            size.css = parentSize * percent;
+                                        }else{
+                                            size.element = attribute * window.devicePixelRatio;
+                                            size.css = attribute;
+                                        }
+                    
+                                        pageData[direction] = size.css;
+                                        canvasElement[direction] = size.element;
+                                        canvasElement.style[direction] = size.css + "px";
+                    
+                                    changesMade = true;
                                 }
                         
+                                //run everything twice, to cover the event of one of the
+                                //first two creating a scrollbar in the browser window
+                                dimensionAdjust('height');
+                                dimensionAdjust('width');
                                 dimensionAdjust('height');
                                 dimensionAdjust('width');
                     
@@ -25064,7 +25066,7 @@
                                     var ajaxRequest = new XMLHttpRequest();
                                     ajaxRequest.open('GET', repoURL+'available2.list', true);
                                     ajaxRequest.onload = function() {
-                                        var list = ajaxRequest.response.split('\n'); var temp = '';
+                                        var list = ajaxRequest.response.split('\n');
                                         
                                         list[list.length-1] = list[list.length-1].split(''); 
                                         list[list.length-1].pop();
@@ -25745,7 +25747,7 @@
                             //controls
                                 this.perform = function(note){
                                     if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-                                    else if( !flow.liveOscillators[note.num] ){ 
+                                    else if( !flow.liveOscillators[note.num] && note.velocity != 0 ){ 
                                         //create new tone
                                         flow.liveOscillators[note.num] = flow.OSCmaker.func(
                                             context, 
@@ -25907,6 +25909,21 @@
                                 
                                     return temp;
                                 };
+                                this.polygonWithOutline = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                                    var temp = _canvas_.core.shape.create('polygonWithOutline');
+                                    temp.name = name;
+                                    temp.ignored = ignored;
+                                    temp.colour = colour;
+                                    temp.lineColour = lineColour;
+                                    
+                                    temp.stopAttributeStartedExtremityUpdate = true;
+                                    if(points.length != 0){ temp.points(points); }
+                                    else{ temp.pointsAsXYArray(pointsAsXYArray); }
+                                    temp.thickness(thickness);
+                                    temp.stopAttributeStartedExtremityUpdate = false;
+                                
+                                    return temp;
+                                }
                                 this.canvas = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1 ){
                                     var temp = _canvas_.core.shape.create('canvas');
                                     temp.name = name;
@@ -26011,21 +26028,6 @@
                                     
                                     return temp;
                                 };
-                                this.polygonWithOutline = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
-                                    var temp = _canvas_.core.shape.create('polygonWithOutline');
-                                    temp.name = name;
-                                    temp.ignored = ignored;
-                                    temp.colour = colour;
-                                    temp.lineColour = lineColour;
-                                    
-                                    temp.stopAttributeStartedExtremityUpdate = true;
-                                    if(points.length != 0){ temp.points(points); }
-                                    else{ temp.pointsAsXYArray(pointsAsXYArray); }
-                                    temp.thickness(thickness);
-                                    temp.stopAttributeStartedExtremityUpdate = false;
-                                
-                                    return temp;
-                                }
                                 this.circleWithOutline = function( name=null, x=0, y=0, angle=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
                                     var temp = _canvas_.core.shape.create('circleWithOutline');
                                     temp.name = name;

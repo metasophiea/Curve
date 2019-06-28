@@ -50,7 +50,7 @@ this.reverbUnit = function(
             var ajaxRequest = new XMLHttpRequest();
             ajaxRequest.open('GET', repoURL+'available2.list', true);
             ajaxRequest.onload = function() {
-                var list = ajaxRequest.response.split('\n'); var temp = '';
+                var list = ajaxRequest.response.split('\n');
                 
                 list[list.length-1] = list[list.length-1].split(''); 
                 list[list.length-1].pop();

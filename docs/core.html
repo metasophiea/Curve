@@ -8,6 +8,7 @@
             html, body{
                 margin:0px;
                 width:100%; height:100%;
+                overflow: hidden;
             }
         </style>
     </head>
@@ -19,8 +20,8 @@
 </html>
 
 
-<!-- <script type='text/javascript' src='js/core.js'></script> -->
-<script type='text/javascript' src='js/core.min.js'></script>
+<script type='text/javascript' src='js/core.js'></script>
+<!-- <script type='text/javascript' src='js/core.min.js'></script> -->
 
 <!-- detect demo request -->
 <script>
@@ -256,4 +257,50 @@
             //rendering controls
                 CC.core.render.active(true);
     })();
+</script>
+
+<!-- -->>
+<script>
+    // (function() { if(demoNumber != 4){return;}
+        var CC = document.getElementById('coreGraphicsCanvas');
+        var shapeList = [];
+
+        window.onresize = function(){
+            shapeList.forEach(shape => shape.resize());
+            CC.core.viewport.refresh();
+            CC.core.render.frame();
+        };
+
+        var rectangle1 = CC.core.shape.create('rectangle');
+            rectangle1.name = 'rectangle1';
+            rectangle1.colour = {r:0.8,g:0.8,b:0.8,a:1};
+            rectangle1.resize = function(){
+                var w = CC.parentElement.offsetWidth;
+                this.x(0);
+                this.y(0);
+                this.width(w/2);
+                this.height(30);
+            };
+            rectangle1.resize();
+            CC.core.arrangement.append(rectangle1);
+            shapeList.push(rectangle1);
+
+        var rectangle2 = CC.core.shape.create('rectangle');
+            rectangle2.name = 'rectangle2';
+            rectangle2.colour = {r:0.8,g:0.1,b:0.8,a:1};
+            rectangle2.resize = function(){
+                var w = CC.parentElement.offsetWidth;
+                this.x(w/2);
+                this.y(0);
+                this.width(w/2);
+                this.height(30);
+            };
+            rectangle2.resize();
+            CC.core.arrangement.append(rectangle2);
+            shapeList.push(rectangle2);
+
+
+
+        window.onresize();
+    // })();
 </script>

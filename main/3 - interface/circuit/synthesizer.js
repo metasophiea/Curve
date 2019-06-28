@@ -128,7 +128,7 @@ this.synthesizer = function(
     //controls
         this.perform = function(note){
             if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
-            else if( !flow.liveOscillators[note.num] ){ 
+            else if( !flow.liveOscillators[note.num] && note.velocity != 0 ){ 
                 //create new tone
                 flow.liveOscillators[note.num] = flow.OSCmaker.func(
                     context, 

@@ -2,9 +2,8 @@
  * martinez v0.5.0
  * Martinez polygon clipping algorithm, does boolean operation on polygons (multipolygons, polygons with holes etc): intersection, union, difference, xor
  *
- * @author Alex Milevski <info@w8r.name>
- * @license MIT
- * @preserve
+ * author Alex Milevski <info@w8r.name>
+ * license MIT
  */
 
 (function (global, factory) {

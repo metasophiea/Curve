@@ -342,30 +342,6 @@ console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
         tester(_canvas_.library.math.largestValueFound([-1,-2,-3,-4,-5,-6,-10,-0,-9]),-10);
     console.log('');
 
-//pathToPolygonGenerator
-    console.log('%c- pathToPolygonGenerator', 'font-weight: bold;');
-        tester(
-            _canvas_.library.math.pathExtrapolation.pathToPolygonGenerator([1027,34,1027,355,68,355,68,34],5),
-            [1032,34,1022,34,1032,360,1022,350,63,360,73,350,63,34,73,34]
-        );
-        tester(
-            _canvas_.library.math.pathExtrapolation.pathToPolygonGenerator([0,0,10,0,10,10,0,10],0),
-            [0,0,0,0,10,0,10,0,10,10,10,10,0,10,0,10]
-        );
-    console.log('');
-
-//loopedPathToPolygonGenerator
-    console.log('%c- loopedPathToPolygonGenerator', 'font-weight: bold;');
-        tester(
-            _canvas_.library.math.pathExtrapolation.loopedPathToPolygonGenerator([1027,34,1027,355,68,355,68,34],5),
-            [1032,194.5,1022,194.5,1032,360,1022,350,63,360,73,350,63,29,73,39,1032,29,1022,39,1032,194.5,1022,194.5]
-        );
-        tester(
-            _canvas_.library.math.pathExtrapolation.loopedPathToPolygonGenerator([0,0,10,0,10,10,0,10],0),
-            [5,0,5,0,10,0,10,0,10,10,10,10,0,10,0,10,0,0,0,0,5,0,5,0]
-        );
-    console.log('');
-
 //normalizeStretchArray
     console.log('%c- normalizeStretchArray', 'font-weight: bold;');
     tester( _canvas_.library.math.normalizeStretchArray([0, 1]),[0, 1] );
