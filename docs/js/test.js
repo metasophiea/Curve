@@ -43730,7 +43730,7 @@
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
                                 },
                             ]
                         };
@@ -43745,7 +43745,7 @@
                             design.elements.push(
                                 {collection:'control', type:'slide_image',name:'slide_volume_'+a,data:{
                                     x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                    handleURL:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                    handleURL:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
                                 }}
                             );
                     
@@ -44757,7 +44757,7 @@
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
                                 },
                             ]
                         };
@@ -44772,7 +44772,7 @@
                             design.elements.push(
                                 {collection:'control', type:'slide_image',name:'slide_volume_'+a,data:{
                                     x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                    handleURL:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                    handleURL:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
                                 }}
                             );
                     
