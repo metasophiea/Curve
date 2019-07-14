@@ -4,7 +4,7 @@ echo "running Gravity"
 "$dir"/compilation/comp.sh
 
 echo "running Closure"
-    nameArray=('core' 'workspace' 'curve')
+    nameArray=('core' 'coreSystem' 'workspace' 'curve')
 
     #actual compilation
         for name in ${nameArray[@]}; do 

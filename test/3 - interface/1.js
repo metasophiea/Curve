@@ -3,12 +3,12 @@
 _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
-// view positioning
-_canvas_.core.viewport.scale(6);
-var x = 455;
-var y = 145;
-_canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
-// _canvas_.core.viewport.angle(-0.1);
+// // view positioning
+// _canvas_.core.viewport.scale(6);
+// var x = 10;
+// var y = 300;
+// _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
+// // _canvas_.core.viewport.angle(-0.1);
 
 // _canvas_.core.stats.active(true);
 // var averages = [];
@@ -87,14 +87,12 @@ _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.co
             x:12.5,y:0,
             handleURL:'/images/testImages/expanded-metal-1.jpg',
             backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
         } ); controlGroup.append( si_1 );
         var sp_1 = _canvas_.interface.part.builder( 'control', 'slidePanel', 'test_slidePanel1', {x:25,y:0} ); controlGroup.append( sp_1 );
         var spi_1 = _canvas_.interface.part.builder( 'control', 'slidePanel_image', 'test_slidePanel_image1', {
             x:107.5,y:0,
             handleURL:'/images/testImages/expanded-metal-1.jpg',
             backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
             overlayURL:'/images/units/alpha/glowbox_rect_overlay_1.png',
         } ); controlGroup.append( spi_1 );
         var s_2 = _canvas_.interface.part.builder( 'control', 'slide', 'test_slide2', {x:190,y:10,angle:-Math.PI/2} ); controlGroup.append( s_2 );
@@ -102,21 +100,18 @@ _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.co
             x:190,y:22.5,angle:-Math.PI/2,
             handleURL:'/images/testImages/expanded-metal-1.jpg',
             backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
         } ); controlGroup.append( si_2 );
         var sp_2 = _canvas_.interface.part.builder( 'control', 'slidePanel', 'test_slidePanel2', {x:287.5,y:80,angle:-Math.PI/2} ); controlGroup.append( sp_2 );
         var spi_2 = _canvas_.interface.part.builder( 'control', 'slidePanel_image', 'test_slidePanel_image2', {
             x:287.5,y:162.5,angle:-Math.PI/2,
             handleURL:'/images/testImages/expanded-metal-1.jpg',
             backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
         } ); controlGroup.append( spi_2 );
         var r_1 = _canvas_.interface.part.builder( 'control', 'rangeslide', 'test_rangeslide1', {x:385,y:0} ); controlGroup.append(r_1);
         var ri_1 = _canvas_.interface.part.builder( 'control', 'rangeslide_image', 'test_rangeslide_image1', {
             x:397.5,y:0,
             handleURL:'/images/testImages/expanded-metal-1.jpg',
             backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
             spanURL:'/images/units/alpha/glowbox_rect_overlay_1.png',
         } ); controlGroup.append(ri_1);
         var r_2 = _canvas_.interface.part.builder( 'control', 'rangeslide', 'test_rangeslide2', {x:410,y:10,angle:-Math.PI/2} ); controlGroup.append(r_2);
@@ -124,7 +119,6 @@ _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.co
             x:410,y:22.5,angle:-Math.PI/2,
             handleURL:'/images/testImages/expanded-metal-1.jpg',
             backingURL:'/images/testImages/41-satin-stainless-steel.jpg',
-            slotURL:'/images/testImages/dark-background_1048-3848.jpg?size=338&ext=jpg',
             spanURL:'/images/units/alpha/glowbox_rect_overlay_1.png',
         } ); controlGroup.append(ri_2);
     //dial

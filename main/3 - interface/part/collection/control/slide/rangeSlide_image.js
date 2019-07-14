@@ -3,19 +3,19 @@ this.rangeslide_image = function(
     x, y, width=10, height=95, angle=0, interactable=true,
     handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
 
-    handleURL, backingURL, slotURL,
+    handleURL, backingURL,
     invisibleHandleStyle={r:1,g:0,b:0,a:0},
     spanURL,
 
     onchange=function(){},
     onrelease=function(){},
 ){
-    //default to non-image version if image links are missing
-        if(handleURL == undefined || backingURL == undefined || slotURL == undefined || spanURL == undefined){
+    //default to non-image version if handle image link is missing
+        if(handleURL == undefined){
             return this.rangeslide(
                 name, x, y, width, height, angle, interactable,
                 handleHeight, spanWidth, values, resetValues,
-                undefined, undefined, undefined, invisibleHandleStyle, undefined,
+                undefined, undefined, invisibleHandleStyle, undefined,
                 onchange, onrelease,
             );
         }
@@ -32,17 +32,16 @@ this.rangeslide_image = function(
             var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
             object.append(backingAndSlot);
             //backing
-                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                backingAndSlot.append(backing);
-            //slot
-                var slot = interfacePart.builder('basic','image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                backingAndSlot.append(slot);
+                if(backingURL != undefined){
+                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                    backingAndSlot.append(backing);
+                }
             //backing and slot cover
                 var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
 
         //span
-            var span = interfacePart.builder('basic','image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
+            var span = interfacePart.builder('basic','image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:spanURL});
             object.append(span);
 
         //handles

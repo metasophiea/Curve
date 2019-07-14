@@ -23780,10 +23780,13 @@
                         };
                         this.getElementsUnderPoint = function(x,y){ return design.getElementsUnderPoint(x,y); };
                         this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
-                        this.printTree = function(mode='tabular'){ //modes: tabular / address
+                        this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address
                             function recursivePrint(grouping,prefix=''){
                                 grouping.children.forEach(function(a){
-                                    if(mode == 'tabular'){
+                                    if(mode == 'spaced'){
+                                        console.log(prefix+'- '+a.type +': '+ a.name);
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+'- ') }
+                                    }else if(mode == 'tabular'){
                                         console.log(prefix+'- \t'+a.type +': '+ a.name);
                                         if(a.type == 'group'){ recursivePrint(a, prefix+'-\t') }
                                     }else if(mode == 'address'){
@@ -24138,6 +24141,8 @@
                                 if(!bool){ document.body.style.overflow = ''; }
                             };
                             this.clickVisibility = function(a){ if(a==undefined){return mouseData.clickVisibility;} mouseData.clickVisibility=a; };
+                            this.getHeight = function(){ return viewbox.points.br.y - viewbox.points.tl.y; };        
+                            this.getWidth= function(){ return viewbox.points.br.x - viewbox.points.tl.x; };   
                     };
                     this.viewport.refresh();
                     
@@ -29831,19 +29836,19 @@
                                     x, y, width=10, height=95, angle=0, interactable=true,
                                     handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
                                 
-                                    handleURL, backingURL, slotURL,
+                                    handleURL, backingURL,
                                     invisibleHandleStyle={r:1,g:0,b:0,a:0},
                                     spanURL,
                                 
                                     onchange=function(){},
                                     onrelease=function(){},
                                 ){
-                                    //default to non-image version if image links are missing
-                                        if(handleURL == undefined || backingURL == undefined || slotURL == undefined || spanURL == undefined){
+                                    //default to non-image version if handle image link is missing
+                                        if(handleURL == undefined){
                                             return this.rangeslide(
                                                 name, x, y, width, height, angle, interactable,
                                                 handleHeight, spanWidth, values, resetValues,
-                                                undefined, undefined, undefined, invisibleHandleStyle, undefined,
+                                                undefined, undefined, invisibleHandleStyle, undefined,
                                                 onchange, onrelease,
                                             );
                                         }
@@ -29860,17 +29865,16 @@
                                             var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
                                             object.append(backingAndSlot);
                                             //backing
-                                                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                                                backingAndSlot.append(backing);
-                                            //slot
-                                                var slot = interfacePart.builder('basic','image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                                                backingAndSlot.append(slot);
+                                                if(backingURL != undefined){
+                                                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                                                    backingAndSlot.append(backing);
+                                                }
                                             //backing and slot cover
                                                 var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                                 backingAndSlot.append(backingAndSlotCover);
                                 
                                         //span
-                                            var span = interfacePart.builder('basic','image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
+                                            var span = interfacePart.builder('basic','image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:spanURL});
                                             object.append(span);
                                 
                                         //handles
@@ -30288,18 +30292,18 @@
                                     x, y, width=10, height=95, angle=0, interactable=true,
                                     handleHeight=0.1, value=0, resetValue=-1,
                                     
-                                    handleURL, backingURL, slotURL,
+                                    handleURL, backingURL,
                                 
                                     invisibleHandleStyle = {r:1,g:0,b:0,a:0},
                                     onchange=function(){},
                                     onrelease=function(){},
                                 ){
-                                    //default to non-image version if image links are missing
-                                        if(handleURL == undefined || backingURL == undefined || slotURL == undefined){
+                                    //default to non-image version if handle image link is missing
+                                        if(handleURL == undefined){
                                             return this.slide(
                                                 name, x, y, width, height, angle, interactable,
                                                 handleHeight, value, resetValue,
-                                                handleURL, backingURL, slotURL, invisibleHandleStyle,
+                                                handleURL, backingURL, invisibleHandleStyle,
                                                 onchange, onrelease,
                                             );
                                         }
@@ -30311,11 +30315,10 @@
                                             var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
                                             object.append(backingAndSlot);
                                             //backing
-                                                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                                                backingAndSlot.append(backing);
-                                            //slot
-                                                var slot = interfacePart.builder('basic','image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                                                backingAndSlot.append(slot);
+                                                if(backingURL != undefined){
+                                                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                                                    backingAndSlot.append(backing);
+                                                }
                                             //backing and slot cover
                                                 var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                                 backingAndSlot.append(backingAndSlotCover);
@@ -30421,12 +30424,12 @@
                                                 function(event){
                                                     var numerator = initialY-currentMousePosition(event);
                                                     var divider = _canvas_.core.viewport.scale();
-                                                    set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                    set( initialValue - (numerator/(divider*mux) ) );
                                                 },
                                                 function(event){
                                                     var numerator = initialY-currentMousePosition(event);
                                                     var divider = _canvas_.core.viewport.scale();
-                                                    object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                                                     grappled = false;
                                                 }
                                             );
@@ -34992,7 +34995,7 @@
                                     ); };
                                     interfacePart.partLibrary.control.slide_image = function(name,data){ return interfacePart.collection.control.slide_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
-                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
+                                        data.handleURL, data.backingURL, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     ); };
                                     interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(
@@ -35002,7 +35005,7 @@
                                     ); };
                                     interfacePart.partLibrary.control.slidePanel_image = function(name,data){ return interfacePart.collection.control.slidePanel_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-                                        data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
+                                        data.handleURL, data.backingURL, data.overlayURL, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     ); };
                                     interfacePart.partLibrary.control.rangeslide = function(name,data){ return interfacePart.collection.control.rangeslide(
@@ -35012,7 +35015,7 @@
                                     ); };
                                     interfacePart.partLibrary.control.rangeslide_image = function(name,data){ return interfacePart.collection.control.rangeslide_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
+                                        data.handleURL, data.backingURL, data.style.invisibleHandle, data.spanURL,
                                         data.onchange, data.onrelease
                                     ); };
                                 

@@ -23780,10 +23780,13 @@
                         };
                         this.getElementsUnderPoint = function(x,y){ return design.getElementsUnderPoint(x,y); };
                         this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
-                        this.printTree = function(mode='tabular'){ //modes: tabular / address
+                        this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address
                             function recursivePrint(grouping,prefix=''){
                                 grouping.children.forEach(function(a){
-                                    if(mode == 'tabular'){
+                                    if(mode == 'spaced'){
+                                        console.log(prefix+'- '+a.type +': '+ a.name);
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+'- ') }
+                                    }else if(mode == 'tabular'){
                                         console.log(prefix+'- \t'+a.type +': '+ a.name);
                                         if(a.type == 'group'){ recursivePrint(a, prefix+'-\t') }
                                     }else if(mode == 'address'){
@@ -24138,6 +24141,8 @@
                                 if(!bool){ document.body.style.overflow = ''; }
                             };
                             this.clickVisibility = function(a){ if(a==undefined){return mouseData.clickVisibility;} mouseData.clickVisibility=a; };
+                            this.getHeight = function(){ return viewbox.points.br.y - viewbox.points.tl.y; };        
+                            this.getWidth= function(){ return viewbox.points.br.x - viewbox.points.tl.x; };   
                     };
                     this.viewport.refresh();
                     

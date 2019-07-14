@@ -1,4 +1,23 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-07-14
+  - ladies and gentlemen; the 'Eight Track Mixer' is now functional
+
+
+2019-07-13
+  - updated image based sliders, to remove the slot URL argument (which is
+    superfluous as you can just put whatever graphics in the backing image) and
+    allow for no backing image; which just doesn't add that image shape
+  - more work on the new 'eight track mixer': completed (?) the backing panel, 
+    created the unit with sliders and dials
+    
+
+2019-07-12
+  - added a 'spaced' option to the core.arrangement.printTree function
+  - had to put back in core.viewport.getHeight and .getWidth, because apparently
+    I never put them in in the first place? Despite using them alot in the
+    coreSystem test html
+
+
 2019-06-25
   - improved core.render.adjustCanvasSize to actually get the adjustment right
     first time

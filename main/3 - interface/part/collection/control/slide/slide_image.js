@@ -3,18 +3,18 @@ this.slide_image = function(
     x, y, width=10, height=95, angle=0, interactable=true,
     handleHeight=0.1, value=0, resetValue=-1,
     
-    handleURL, backingURL, slotURL,
+    handleURL, backingURL,
 
     invisibleHandleStyle = {r:1,g:0,b:0,a:0},
     onchange=function(){},
     onrelease=function(){},
 ){
-    //default to non-image version if image links are missing
-        if(handleURL == undefined || backingURL == undefined || slotURL == undefined){
+    //default to non-image version if handle image link is missing
+        if(handleURL == undefined){
             return this.slide(
                 name, x, y, width, height, angle, interactable,
                 handleHeight, value, resetValue,
-                handleURL, backingURL, slotURL, invisibleHandleStyle,
+                handleURL, backingURL, invisibleHandleStyle,
                 onchange, onrelease,
             );
         }
@@ -26,11 +26,10 @@ this.slide_image = function(
             var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
             object.append(backingAndSlot);
             //backing
-                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                backingAndSlot.append(backing);
-            //slot
-                var slot = interfacePart.builder('basic','image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                backingAndSlot.append(slot);
+                if(backingURL != undefined){
+                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                    backingAndSlot.append(backing);
+                }
             //backing and slot cover
                 var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                 backingAndSlot.append(backingAndSlotCover);
@@ -136,12 +135,12 @@ this.slide_image = function(
                 function(event){
                     var numerator = initialY-currentMousePosition(event);
                     var divider = _canvas_.core.viewport.scale();
-                    set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                    set( initialValue - (numerator/(divider*mux) ) );
                 },
                 function(event){
                     var numerator = initialY-currentMousePosition(event);
                     var divider = _canvas_.core.viewport.scale();
-                    object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                     grappled = false;
                 }
             );

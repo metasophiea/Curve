@@ -66,6 +66,9 @@ beta units
         - voltage duplicator
         - data duplicator
         - audio duplicator
+        - signal combiner
+        - voltage combiner
+        - data combiner
 
         - LED board readout (signal readout)
         - voltmeter readout (voltage readout)

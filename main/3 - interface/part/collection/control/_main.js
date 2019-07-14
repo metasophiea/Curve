@@ -253,7 +253,7 @@ interfacePart.partLibrary.control = {};
     ); };
     interfacePart.partLibrary.control.slide_image = function(name,data){ return interfacePart.collection.control.slide_image(
         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
-        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
+        data.handleURL, data.backingURL, data.style.invisibleHandle,
         data.onchange, data.onrelease
     ); };
     interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(
@@ -263,7 +263,7 @@ interfacePart.partLibrary.control = {};
     ); };
     interfacePart.partLibrary.control.slidePanel_image = function(name,data){ return interfacePart.collection.control.slidePanel_image(
         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-        data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
+        data.handleURL, data.backingURL, data.overlayURL, data.style.invisibleHandle,
         data.onchange, data.onrelease
     ); };
     interfacePart.partLibrary.control.rangeslide = function(name,data){ return interfacePart.collection.control.rangeslide(
@@ -273,7 +273,7 @@ interfacePart.partLibrary.control = {};
     ); };
     interfacePart.partLibrary.control.rangeslide_image = function(name,data){ return interfacePart.collection.control.rangeslide_image(
         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
+        data.handleURL, data.backingURL, data.style.invisibleHandle, data.spanURL,
         data.onchange, data.onrelease
     ); };
 

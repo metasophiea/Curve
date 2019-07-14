@@ -23780,10 +23780,13 @@
                         };
                         this.getElementsUnderPoint = function(x,y){ return design.getElementsUnderPoint(x,y); };
                         this.getElementsUnderArea = function(points){ return design.getElementsUnderArea(points); };
-                        this.printTree = function(mode='tabular'){ //modes: tabular / address
+                        this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address
                             function recursivePrint(grouping,prefix=''){
                                 grouping.children.forEach(function(a){
-                                    if(mode == 'tabular'){
+                                    if(mode == 'spaced'){
+                                        console.log(prefix+'- '+a.type +': '+ a.name);
+                                        if(a.type == 'group'){ recursivePrint(a, prefix+'- ') }
+                                    }else if(mode == 'tabular'){
                                         console.log(prefix+'- \t'+a.type +': '+ a.name);
                                         if(a.type == 'group'){ recursivePrint(a, prefix+'-\t') }
                                     }else if(mode == 'address'){
@@ -24138,6 +24141,8 @@
                                 if(!bool){ document.body.style.overflow = ''; }
                             };
                             this.clickVisibility = function(a){ if(a==undefined){return mouseData.clickVisibility;} mouseData.clickVisibility=a; };
+                            this.getHeight = function(){ return viewbox.points.br.y - viewbox.points.tl.y; };        
+                            this.getWidth= function(){ return viewbox.points.br.x - viewbox.points.tl.x; };   
                     };
                     this.viewport.refresh();
                     
@@ -29831,19 +29836,19 @@
                                     x, y, width=10, height=95, angle=0, interactable=true,
                                     handleHeight=0.1, spanWidth=0.75, values={start:0,end:1}, resetValues={start:-1,end:-1},
                                 
-                                    handleURL, backingURL, slotURL,
+                                    handleURL, backingURL,
                                     invisibleHandleStyle={r:1,g:0,b:0,a:0},
                                     spanURL,
                                 
                                     onchange=function(){},
                                     onrelease=function(){},
                                 ){
-                                    //default to non-image version if image links are missing
-                                        if(handleURL == undefined || backingURL == undefined || slotURL == undefined || spanURL == undefined){
+                                    //default to non-image version if handle image link is missing
+                                        if(handleURL == undefined){
                                             return this.rangeslide(
                                                 name, x, y, width, height, angle, interactable,
                                                 handleHeight, spanWidth, values, resetValues,
-                                                undefined, undefined, undefined, invisibleHandleStyle, undefined,
+                                                undefined, undefined, invisibleHandleStyle, undefined,
                                                 onchange, onrelease,
                                             );
                                         }
@@ -29860,17 +29865,16 @@
                                             var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
                                             object.append(backingAndSlot);
                                             //backing
-                                                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                                                backingAndSlot.append(backing);
-                                            //slot
-                                                var slot = interfacePart.builder('basic','image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                                                backingAndSlot.append(slot);
+                                                if(backingURL != undefined){
+                                                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                                                    backingAndSlot.append(backing);
+                                                }
                                             //backing and slot cover
                                                 var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                                 backingAndSlot.append(backingAndSlotCover);
                                 
                                         //span
-                                            var span = interfacePart.builder('basic','image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:slotURL});
+                                            var span = interfacePart.builder('basic','image','span',{x:width*((1-spanWidth)/2), y:height*handleHeight, width:width*spanWidth, height:height - 2*height*handleHeight, url:spanURL});
                                             object.append(span);
                                 
                                         //handles
@@ -30288,18 +30292,18 @@
                                     x, y, width=10, height=95, angle=0, interactable=true,
                                     handleHeight=0.1, value=0, resetValue=-1,
                                     
-                                    handleURL, backingURL, slotURL,
+                                    handleURL, backingURL,
                                 
                                     invisibleHandleStyle = {r:1,g:0,b:0,a:0},
                                     onchange=function(){},
                                     onrelease=function(){},
                                 ){
-                                    //default to non-image version if image links are missing
-                                        if(handleURL == undefined || backingURL == undefined || slotURL == undefined){
+                                    //default to non-image version if handle image link is missing
+                                        if(handleURL == undefined){
                                             return this.slide(
                                                 name, x, y, width, height, angle, interactable,
                                                 handleHeight, value, resetValue,
-                                                handleURL, backingURL, slotURL, invisibleHandleStyle,
+                                                handleURL, backingURL, invisibleHandleStyle,
                                                 onchange, onrelease,
                                             );
                                         }
@@ -30311,11 +30315,10 @@
                                             var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
                                             object.append(backingAndSlot);
                                             //backing
-                                                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                                                backingAndSlot.append(backing);
-                                            //slot
-                                                var slot = interfacePart.builder('basic','image','slot',{x:width*0.45, y:(height*(handleHeight/2)), width:width*0.1, height:height*(1-handleHeight), url:slotURL});
-                                                backingAndSlot.append(slot);
+                                                if(backingURL != undefined){
+                                                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                                                    backingAndSlot.append(backing);
+                                                }
                                             //backing and slot cover
                                                 var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
                                                 backingAndSlot.append(backingAndSlotCover);
@@ -30421,12 +30424,12 @@
                                                 function(event){
                                                     var numerator = initialY-currentMousePosition(event);
                                                     var divider = _canvas_.core.viewport.scale();
-                                                    set( initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                    set( initialValue - (numerator/(divider*mux) ) );
                                                 },
                                                 function(event){
                                                     var numerator = initialY-currentMousePosition(event);
                                                     var divider = _canvas_.core.viewport.scale();
-                                                    object.onrelease(initialValue - (numerator/(divider*mux) * window.devicePixelRatio) );
+                                                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                                                     grappled = false;
                                                 }
                                             );
@@ -34992,7 +34995,7 @@
                                     ); };
                                     interfacePart.partLibrary.control.slide_image = function(name,data){ return interfacePart.collection.control.slide_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
-                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle,
+                                        data.handleURL, data.backingURL, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     ); };
                                     interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(
@@ -35002,7 +35005,7 @@
                                     ); };
                                     interfacePart.partLibrary.control.slidePanel_image = function(name,data){ return interfacePart.collection.control.slidePanel_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-                                        data.handleURL, data.backingURL, data.slotURL, data.overlayURL, data.style.invisibleHandle,
+                                        data.handleURL, data.backingURL, data.overlayURL, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     ); };
                                     interfacePart.partLibrary.control.rangeslide = function(name,data){ return interfacePart.collection.control.rangeslide(
@@ -35012,7 +35015,7 @@
                                     ); };
                                     interfacePart.partLibrary.control.rangeslide_image = function(name,data){ return interfacePart.collection.control.rangeslide_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-                                        data.handleURL, data.backingURL, data.slotURL, data.style.invisibleHandle, data.spanURL,
+                                        data.handleURL, data.backingURL, data.style.invisibleHandle, data.spanURL,
                                         data.onchange, data.onrelease
                                     ); };
                                 
@@ -43633,6 +43636,149 @@
                             category:'misc',
                             helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
                         };
+                        this.eightTrackMixer = function(x,y,a){
+                            var width = 1530; var height = 810;
+                            var shape = [
+                                {x:0,y:0},
+                                {x:width/6,y:0},
+                                {x:width/6,y:height/6},
+                                {x:0,y:height/6},
+                            ];
+                            var colours = [
+                                {r:1,g:0.01,b:0.02,a:1},
+                                {r:1,g:0.55,b:0,a:1},
+                                {r:1,g:0.93,b:0,a:1},
+                                {r:0,g:1,b:0,a:1},
+                                {r:0,g:1,b:0.81,a:1},
+                                {r:0,g:0.62,b:1,a:1},
+                                {r:0.08,g:0,b:1,a:1},
+                                {r:0.68,g:0,b:1,a:1}, 
+                            ];
+                            var design = {
+                                name:'eightTrackMixer',
+                                x:x, y:y, angle:a,
+                                space:shape,
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
+                                        x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        }
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
+                                        x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        }
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
+                                    },
+                                ]
+                            };
+                            //dynamic design
+                            for(var a = 0; a < 8; a++){
+                                design.elements.push(
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_panner_'+a,data:{
+                                        x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5,
+                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }
+                                    }},
+                                );
+                                design.elements.push(
+                                    {collection:'control', type:'slide_image',name:'slide_volume_'+a,data:{
+                                        x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
+                                        handleURL:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                    }}
+                                );
+                        
+                                design.elements.unshift(
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                        x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2,
+                                        style:style.connectionNode.audio,
+                                        style:{
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        }
+                                    }},
+                                );
+                        
+                                design.elements.unshift(
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
+                                        x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.voltage.dim, 
+                                            glow:style.connectionNode.voltage.glow, 
+                                            cable_dim:style.connectionCable.voltage.dim, 
+                                            cable_glow:style.connectionCable.voltage.glow,
+                                        }
+                                    }},
+                                );
+                        
+                                design.elements.unshift(
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
+                                        x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.voltage.dim, 
+                                            glow:style.connectionNode.voltage.glow, 
+                                            cable_dim:style.connectionCable.voltage.dim, 
+                                            cable_glow:style.connectionCable.voltage.glow,
+                                        }
+                                    }},
+                                );
+                            }
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //internal circuitry
+                                for(var a = 0; a < 8; a++){
+                                    object['splitter_'+a] = new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2);
+                                    object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
+                                    object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
+                                    object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
+                        
+                                    object.elements.slide_image['slide_volume_'+a].onchange = function(a){
+                                        return function(value){
+                                            object['splitter_'+a].inGain(2*(1-value));
+                                        }
+                                    }(a);
+                                    object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
+                                        return function(value){
+                                            object['splitter_'+a].outGain(0,value);
+                                            object['splitter_'+a].outGain(1,1-value);
+                                        }
+                                    }(a);
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(track,value){object.elements.slide_image['slide_volume_'+track].set(value);},
+                                    pan:function(track,value){object.elements.dial_colourWithIndent_continuous['dial_panner_'+track].set(value);},
+                                };
+                        
+                            //setup
+                                for(var a = 0; a < 8; a++){
+                                    object.i.gain(a,0.5);
+                                    object.i.pan(a,0.5);
+                                }
+                            
+                            return object;
+                        };
+                        
+                        this.eightTrackMixer.metadata = {
+                            name:'Eight Track Mixer',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
+                        };
                         this.amplifier = function(x,y,a){
                             var shape = [
                                 {x:0,y:0},
@@ -43873,7 +44019,8 @@
                             },
                             connectionCable:{
                                 signal:{
-                                    dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    // dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    dim:{r:240/255,g:145/255,b:53/255,a:1},
                                     glow:{r:237/255,g:154/255,b:132/255,a:1},
                                 },
                                 voltage:{
@@ -44516,6 +44663,149 @@
                             category:'misc',
                             helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
                         };
+                        this.eightTrackMixer = function(x,y,a){
+                            var width = 1530; var height = 810;
+                            var shape = [
+                                {x:0,y:0},
+                                {x:width/6,y:0},
+                                {x:width/6,y:height/6},
+                                {x:0,y:height/6},
+                            ];
+                            var colours = [
+                                {r:1,g:0.01,b:0.02,a:1},
+                                {r:1,g:0.55,b:0,a:1},
+                                {r:1,g:0.93,b:0,a:1},
+                                {r:0,g:1,b:0,a:1},
+                                {r:0,g:1,b:0.81,a:1},
+                                {r:0,g:0.62,b:1,a:1},
+                                {r:0.08,g:0,b:1,a:1},
+                                {r:0.68,g:0,b:1,a:1}, 
+                            ];
+                            var design = {
+                                name:'eightTrackMixer',
+                                x:x, y:y, angle:a,
+                                space:shape,
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
+                                        x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        }
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
+                                        x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        }
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
+                                    },
+                                ]
+                            };
+                            //dynamic design
+                            for(var a = 0; a < 8; a++){
+                                design.elements.push(
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_panner_'+a,data:{
+                                        x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5,
+                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }
+                                    }},
+                                );
+                                design.elements.push(
+                                    {collection:'control', type:'slide_image',name:'slide_volume_'+a,data:{
+                                        x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
+                                        handleURL:'protoTypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                    }}
+                                );
+                        
+                                design.elements.unshift(
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                        x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2,
+                                        style:style.connectionNode.audio,
+                                        style:{
+                                            dim:style.connectionNode.audio.dim, 
+                                            glow:style.connectionNode.audio.glow, 
+                                            cable_dim:style.connectionCable.audio.dim, 
+                                            cable_glow:style.connectionCable.audio.glow,
+                                        }
+                                    }},
+                                );
+                        
+                                design.elements.unshift(
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
+                                        x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.voltage.dim, 
+                                            glow:style.connectionNode.voltage.glow, 
+                                            cable_dim:style.connectionCable.voltage.dim, 
+                                            cable_glow:style.connectionCable.voltage.glow,
+                                        }
+                                    }},
+                                );
+                        
+                                design.elements.unshift(
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
+                                        x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2,
+                                        style:{
+                                            dim:style.connectionNode.voltage.dim, 
+                                            glow:style.connectionNode.voltage.glow, 
+                                            cable_dim:style.connectionCable.voltage.dim, 
+                                            cable_glow:style.connectionCable.voltage.glow,
+                                        }
+                                    }},
+                                );
+                            }
+                        
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //internal circuitry
+                                for(var a = 0; a < 8; a++){
+                                    object['splitter_'+a] = new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2);
+                                    object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
+                                    object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
+                                    object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
+                        
+                                    object.elements.slide_image['slide_volume_'+a].onchange = function(a){
+                                        return function(value){
+                                            object['splitter_'+a].inGain(2*(1-value));
+                                        }
+                                    }(a);
+                                    object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
+                                        return function(value){
+                                            object['splitter_'+a].outGain(0,value);
+                                            object['splitter_'+a].outGain(1,1-value);
+                                        }
+                                    }(a);
+                                }
+                        
+                            //interface
+                                object.i = {
+                                    gain:function(track,value){object.elements.slide_image['slide_volume_'+track].set(value);},
+                                    pan:function(track,value){object.elements.dial_colourWithIndent_continuous['dial_panner_'+track].set(value);},
+                                };
+                        
+                            //setup
+                                for(var a = 0; a < 8; a++){
+                                    object.i.gain(a,0.5);
+                                    object.i.pan(a,0.5);
+                                }
+                            
+                            return object;
+                        };
+                        
+                        this.eightTrackMixer.metadata = {
+                            name:'Eight Track Mixer',
+                            category:'misc',
+                            helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
+                        };
                         this.amplifier = function(x,y,a){
                             var shape = [
                                 {x:0,y:0},
@@ -44756,7 +45046,8 @@
                             },
                             connectionCable:{
                                 signal:{
-                                    dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    // dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    dim:{r:240/255,g:145/255,b:53/255,a:1},
                                     glow:{r:237/255,g:154/255,b:132/255,a:1},
                                 },
                                 voltage:{
@@ -45329,8 +45620,8 @@
                         
                                     //needle
                                         var needle = _canvas_.interface.part.builder('basic', 'rectangleWithRoundEnds','needle',{
-                                            x:radius*0.8-radius/2, y:0,
-                                            angle:-Math.PI/2, height:radius/2, width:radius/8, colour:needleStyle});
+                                            x:radius*0.9-radius/2, y:0,
+                                            angle:-Math.PI/2, height:radius/2.5, width:radius/8, colour:needleStyle});
                                         needleGroup.append(needle);
                         
                         
