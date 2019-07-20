@@ -1,4 +1,25 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-07-20
+  - draw up the new amplifier unit (looking pretty snazzy too)
+  
+
+2019-07-19
+  - group select was borked. Turned out the changes made to the partBuilder
+    weren't accounted for in the group select activation function (one of the 
+    functions added to _canvas_.system.mouse.functionList.onmousedown)
+  - rotated slider control didn't work as expected. It wasn't taking into
+    account the offset angle of any containing group shape. Adding this to its
+    calculations fixed everything
+  - clink-n-drag cables follow the mouse as it makes its way from one connection
+    node in search of another
+
+
+2019-07-16
+  - fixed issue with adjusting slide handles. They used to lurch around when you
+    released the mouse, and attempt to centre the handle on the mouse point. Now
+    they just leave it where you left it. Seems more natural
+
+
 2019-07-14
   - ladies and gentlemen; the 'Eight Track Mixer' is now functional
 

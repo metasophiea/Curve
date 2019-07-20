@@ -60,9 +60,9 @@ this.slide_image = function(
             handle.computeExtremities();
             invisibleHandle.computeExtremities();
         }
-        object.__calculationAngle = angle;
         function currentMousePosition(event){
-            return event.Y*Math.cos(object.__calculationAngle) - event.X*Math.sin(object.__calculationAngle);
+            var calculationAngle = angle + object.getOffset().angle;
+            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
         }
 
 
@@ -123,6 +123,7 @@ this.slide_image = function(
             set(value);
             if(object.onrelease != undefined){object.onrelease(value);}
         };
+        invisibleHandle.onclick = function(x,y,event){};
         invisibleHandle.onmousedown = function(x,y,event){
             if(!interactable){return;}
             grappled = true;
@@ -138,9 +139,6 @@ this.slide_image = function(
                     set( initialValue - (numerator/(divider*mux) ) );
                 },
                 function(event){
-                    var numerator = initialY-currentMousePosition(event);
-                    var divider = _canvas_.core.viewport.scale();
-                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                     grappled = false;
                 }
             );

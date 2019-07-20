@@ -63,7 +63,6 @@ this.eightTrackMixer = function(x,y,a){
         design.elements.unshift(
             {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
                 x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2,
-                style:style.connectionNode.audio,
                 style:{
                     dim:style.connectionNode.audio.dim, 
                     glow:style.connectionNode.audio.glow, 

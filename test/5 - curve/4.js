@@ -10,7 +10,8 @@ _canvas_.control.scene.addUnit(10,10,0,'ruler','beta');
 // _canvas_.control.scene.addUnit(360,30,0,'distortion','beta');
 // _canvas_.control.scene.addUnit(365,105,0,'basicSynthesizer','beta');
 
-_canvas_.control.scene.addUnit(70,10,0,'eightTrackMixer','beta');
+// _canvas_.control.scene.addUnit(70,10,0,'eightTrackMixer','beta');
+_canvas_.control.scene.addUnit(70,10,0,'amplifier','beta');
 
 _canvas_.control.viewport.scale(4);
 // _canvas_.control.viewport.position(-1250, -10);

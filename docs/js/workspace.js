@@ -30150,9 +30150,9 @@
                                             handle.computeExtremities();
                                             invisibleHandle.computeExtremities();
                                         }
-                                        object.__calculationAngle = angle;
                                         function currentMousePosition(event){
-                                            return event.Y*Math.cos(object.__calculationAngle) - event.X*Math.sin(object.__calculationAngle);
+                                            var calculationAngle = angle + object.getOffset().angle;
+                                            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                         }
                                 
                                 
@@ -30213,6 +30213,7 @@
                                             set(value);
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         };
+                                        invisibleHandle.onclick = function(x,y,event){};
                                         invisibleHandle.onmousedown = function(x,y,event){
                                             if(!interactable){return;}
                                             grappled = true;
@@ -30228,9 +30229,6 @@
                                                     set( initialValue - (numerator/(divider*mux) ) );
                                                 },
                                                 function(event){
-                                                    var numerator = initialY-currentMousePosition(event);
-                                                    var divider = _canvas_.core.viewport.scale();
-                                                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                                                     grappled = false;
                                                 }
                                             );
@@ -30349,9 +30347,9 @@
                                             handle.computeExtremities();
                                             invisibleHandle.computeExtremities();
                                         }
-                                        object.__calculationAngle = angle;
                                         function currentMousePosition(event){
-                                            return event.Y*Math.cos(object.__calculationAngle) - event.X*Math.sin(object.__calculationAngle);
+                                            var calculationAngle = angle + object.getOffset().angle;
+                                            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                         }
                                 
                                 
@@ -30412,6 +30410,7 @@
                                             set(value);
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         };
+                                        invisibleHandle.onclick = function(x,y,event){};
                                         invisibleHandle.onmousedown = function(x,y,event){
                                             if(!interactable){return;}
                                             grappled = true;
@@ -30427,9 +30426,6 @@
                                                     set( initialValue - (numerator/(divider*mux) ) );
                                                 },
                                                 function(event){
-                                                    var numerator = initialY-currentMousePosition(event);
-                                                    var divider = _canvas_.core.viewport.scale();
-                                                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                                                     grappled = false;
                                                 }
                                             );
@@ -35555,9 +35551,27 @@
                                 
                                     //mouse interaction
                                         rectangle.onmousedown = function(x,y,event){
+                                            var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+                                            var pointA = object.getCablePoint();
+                                            var tmpCable = interfacePart.builder(
+                                                'dynamic',tempCableType,'tmpCable-'+object.getAddress().replace(/\//g, '_'),
+                                                { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
+                                            );
+                                
+                                            _canvas_.system.pane.getMiddlegroundPane(object).append(tmpCable);
+                                
                                             _canvas_.system.mouse.mouseInteractionHandler(
-                                                undefined,
                                                 function(event){
+                                                    var pointA = object.getCablePoint();
+                                                    var pointB = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                                    pointB.angle = _canvas_.library.math.getAngleOfTwoPoints(pointB,pointA)
+                                
+                                                    tmpCable.draw( pointA.x,pointA.y, pointB.x,pointB.y, pointA.angle,pointB.angle );
+                                                },
+                                                function(event){
+                                                    tmpCable.parent.remove(tmpCable);
+                                                    tmpCable = undefined;
+                                
                                                     var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0]; 
                                                     if(element == undefined){return;}
                                                     
@@ -35579,11 +35593,8 @@
                                         var cable;
                                 
                                         object._addCable = function(){
-                                            if(cableVersion == 2){
-                                                cable = interfacePart.builder('dynamic','cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
-                                            }else{
-                                                cable = interfacePart.builder('dynamic','cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
-                                            }
+                                            var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+                                            cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
                                             
                                             foreignNode._receiveCable(cable);
                                             _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
@@ -36206,10 +36217,10 @@
                 
                 
                 
-                            //creat selection graphic and add it to the foregroud
+                            //create selection graphic and add it to the foregroud
                                 var mouseDownPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
                                 _canvas_.system.mouse.tmp.selectionRectangle = _canvas_.interface.part.builder( 
-                                    'rectangle', 'selectionRectangle', 
+                                    'basic', 'rectangle', 'selectionRectangle', 
                                     { x:mouseDownPoint.x, y:mouseDownPoint.y, width:0, height:0, colour:{r:224/255, g:184/255, b:252/255, a:0.25} } 
                                 );
                                 _canvas_.system.pane.mf.append( _canvas_.system.mouse.tmp.selectionRectangle );

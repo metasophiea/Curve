@@ -28,6 +28,8 @@ echo "running Closure"
         done
 
     #report on how things went
+        echo; echo;
+        echo "- results -";
         for name in ${nameArray[@]}; do 
             fileSize=$(ls -l docs/js/$name.js | awk '{ print $5}')
             closureFileSize=$(ls -l docs/js/$name.min.js | awk '{ print $5}')

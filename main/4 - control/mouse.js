@@ -18,10 +18,10 @@ _canvas_.system.mouse.functionList.onmousedown.push(
 
 
 
-            //creat selection graphic and add it to the foregroud
+            //create selection graphic and add it to the foregroud
                 var mouseDownPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
                 _canvas_.system.mouse.tmp.selectionRectangle = _canvas_.interface.part.builder( 
-                    'rectangle', 'selectionRectangle', 
+                    'basic', 'rectangle', 'selectionRectangle', 
                     { x:mouseDownPoint.x, y:mouseDownPoint.y, width:0, height:0, colour:{r:224/255, g:184/255, b:252/255, a:0.25} } 
                 );
                 _canvas_.system.pane.mf.append( _canvas_.system.mouse.tmp.selectionRectangle );

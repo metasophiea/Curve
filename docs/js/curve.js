@@ -30150,9 +30150,9 @@
                                             handle.computeExtremities();
                                             invisibleHandle.computeExtremities();
                                         }
-                                        object.__calculationAngle = angle;
                                         function currentMousePosition(event){
-                                            return event.Y*Math.cos(object.__calculationAngle) - event.X*Math.sin(object.__calculationAngle);
+                                            var calculationAngle = angle + object.getOffset().angle;
+                                            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                         }
                                 
                                 
@@ -30213,6 +30213,7 @@
                                             set(value);
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         };
+                                        invisibleHandle.onclick = function(x,y,event){};
                                         invisibleHandle.onmousedown = function(x,y,event){
                                             if(!interactable){return;}
                                             grappled = true;
@@ -30228,9 +30229,6 @@
                                                     set( initialValue - (numerator/(divider*mux) ) );
                                                 },
                                                 function(event){
-                                                    var numerator = initialY-currentMousePosition(event);
-                                                    var divider = _canvas_.core.viewport.scale();
-                                                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                                                     grappled = false;
                                                 }
                                             );
@@ -30349,9 +30347,9 @@
                                             handle.computeExtremities();
                                             invisibleHandle.computeExtremities();
                                         }
-                                        object.__calculationAngle = angle;
                                         function currentMousePosition(event){
-                                            return event.Y*Math.cos(object.__calculationAngle) - event.X*Math.sin(object.__calculationAngle);
+                                            var calculationAngle = angle + object.getOffset().angle;
+                                            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                         }
                                 
                                 
@@ -30412,6 +30410,7 @@
                                             set(value);
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         };
+                                        invisibleHandle.onclick = function(x,y,event){};
                                         invisibleHandle.onmousedown = function(x,y,event){
                                             if(!interactable){return;}
                                             grappled = true;
@@ -30427,9 +30426,6 @@
                                                     set( initialValue - (numerator/(divider*mux) ) );
                                                 },
                                                 function(event){
-                                                    var numerator = initialY-currentMousePosition(event);
-                                                    var divider = _canvas_.core.viewport.scale();
-                                                    object.onrelease(initialValue - (numerator/(divider*mux) ) );
                                                     grappled = false;
                                                 }
                                             );
@@ -35555,9 +35551,27 @@
                                 
                                     //mouse interaction
                                         rectangle.onmousedown = function(x,y,event){
+                                            var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+                                            var pointA = object.getCablePoint();
+                                            var tmpCable = interfacePart.builder(
+                                                'dynamic',tempCableType,'tmpCable-'+object.getAddress().replace(/\//g, '_'),
+                                                { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
+                                            );
+                                
+                                            _canvas_.system.pane.getMiddlegroundPane(object).append(tmpCable);
+                                
                                             _canvas_.system.mouse.mouseInteractionHandler(
-                                                undefined,
                                                 function(event){
+                                                    var pointA = object.getCablePoint();
+                                                    var pointB = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                                                    pointB.angle = _canvas_.library.math.getAngleOfTwoPoints(pointB,pointA)
+                                
+                                                    tmpCable.draw( pointA.x,pointA.y, pointB.x,pointB.y, pointA.angle,pointB.angle );
+                                                },
+                                                function(event){
+                                                    tmpCable.parent.remove(tmpCable);
+                                                    tmpCable = undefined;
+                                
                                                     var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0]; 
                                                     if(element == undefined){return;}
                                                     
@@ -35579,11 +35593,8 @@
                                         var cable;
                                 
                                         object._addCable = function(){
-                                            if(cableVersion == 2){
-                                                cable = interfacePart.builder('dynamic','cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
-                                            }else{
-                                                cable = interfacePart.builder('dynamic','cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
-                                            }
+                                            var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+                                            cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
                                             
                                             foreignNode._receiveCable(cable);
                                             _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
@@ -36206,10 +36217,10 @@
                 
                 
                 
-                            //creat selection graphic and add it to the foregroud
+                            //create selection graphic and add it to the foregroud
                                 var mouseDownPoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(data.x,data.y);
                                 _canvas_.system.mouse.tmp.selectionRectangle = _canvas_.interface.part.builder( 
-                                    'rectangle', 'selectionRectangle', 
+                                    'basic', 'rectangle', 'selectionRectangle', 
                                     { x:mouseDownPoint.x, y:mouseDownPoint.y, width:0, height:0, colour:{r:224/255, g:184/255, b:252/255, a:0.25} } 
                                 );
                                 _canvas_.system.pane.mf.append( _canvas_.system.mouse.tmp.selectionRectangle );
@@ -43701,7 +43712,6 @@
                                 design.elements.unshift(
                                     {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
                                         x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2,
-                                        style:style.connectionNode.audio,
                                         style:{
                                             dim:style.connectionNode.audio.dim, 
                                             glow:style.connectionNode.audio.glow, 
@@ -43779,78 +43789,144 @@
                             category:'misc',
                             helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
                         };
+                        // this.amplifier = function(x,y,a){
+                        //     var shape = [
+                        //         {x:0,y:0},
+                        //         {x:150,y:0},
+                        //         {x:150,y:140},
+                        //         {x:0,y:140},
+                        //     ];
+                        //     var design = {
+                        //         name:'amplifier',
+                        //         x:x, y:y, angle:a,
+                        //         space:shape,
+                        //         elements:[
+                        //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                        
+                        //             {collection:'basic', type:'image', name:'grill', data:{x:10,y:10,width:130,height:120,url:'images/units/beta/amplifierGrill.png'} },
+                        //             {collection:'basic', type:'path', name:'grillFrame', data:{
+                        //                 looping:true, 
+                        //                 pointsAsXYArray:[{x:10,y:10}, {x:140,y:10}, {x:140,y:130}, {x:10,y:130}],
+                        //                 thickness:5,
+                        //                 jointType:'round',
+                        //                 colour:{r:24/255,g:24/255,b:24/255,a:1}
+                        //             } },
+                        
+                        //             {collection:'basic', type:'text', name:'label', data:{
+                        //                 x:147.25, y:135, 
+                        //                 width:4,height:4,
+                        //                 angle:-Math.PI/2,
+                        //                 text:'amplifier (true tone)',
+                        //                 font:'AppleGaramond', 
+                        //                 printingMode:{widthCalculation:'absolute'},
+                        //                 colour:style.textColour
+                        //             } },
+                        //             {collection:'basic', type:'path', name:'line', data:{
+                        //                 pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
+                        //                 capType:'round',
+                        //                 thickness:0.5,
+                        //                 colour:style.textColour
+                        //             } },
+                        
+                        //             {collection:'dynamic', type:'connectionNode_audio', name:'input_left', data:{ 
+                        //                 x:150, y:100, width:5, height:15, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.audio.dim, 
+                        //                     glow:style.connectionNode.audio.glow,
+                        //                     cable_dim:style.connectionCable.audio.dim, 
+                        //                     cable_glow:style.connectionCable.audio.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_audio', name:'input_right', data:{ 
+                        //                 x:150, y:120, width:5, height:15, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.audio.dim, 
+                        //                     glow:style.connectionNode.audio.glow,
+                        //                     cable_dim:style.connectionCable.audio.dim, 
+                        //                     cable_glow:style.connectionCable.audio.glow,
+                        //                 },
+                        //             }},
+                        
+                        //         ]
+                        //     };
+                        //     //add bumpers
+                        //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                        //         if(c == shape.length){c = 0;}
+                        
+                        //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                        //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                        
+                        //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                        //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                        //         ], thickness:bumperCoverage.large.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        //     }
+                        
+                        
+                            
+                        //     //main object
+                        //         var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        //     //circuitry
+                        //         var flow = {
+                        //             destination:null,
+                        //             stereoCombiner: null,
+                        //             pan_left:null, pan_right:null,
+                        //         };
+                        
+                        //         //destination
+                        //             flow._destination = _canvas_.library.audio.destination;
+                        
+                        //         //stereo channel combiner
+                        //             flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
+                        
+                        //         //audio connections
+                        //             //inputs to stereo combiner
+                        //                 object.elements.connectionNode_audio.input_left.out().connect(flow.stereoCombiner, 0, 0);
+                        //                 object.elements.connectionNode_audio.input_right.out().connect(flow.stereoCombiner, 0, 1);
+                        //             //stereo combiner to main output
+                        //                 flow.stereoCombiner.connect(flow._destination);
+                        
+                        //     return object;
+                        // };
+                        
+                        
                         this.amplifier = function(x,y,a){
+                            var width = 935; var height = 860;
                             var shape = [
                                 {x:0,y:0},
-                                {x:150,y:0},
-                                {x:150,y:140},
-                                {x:0,y:140},
+                                {x:width/6,y:0},
+                                {x:width/6,y:height/6},
+                                {x:0,y:height/6},
                             ];
                             var design = {
                                 name:'amplifier',
                                 x:x, y:y, angle:a,
                                 space:shape,
                                 elements:[
-                                    {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                        
-                                    {collection:'basic', type:'image', name:'grill', data:{x:10,y:10,width:130,height:120,url:'images/units/beta/amplifierGrill.png'} },
-                                    {collection:'basic', type:'path', name:'grillFrame', data:{
-                                        looping:true, 
-                                        pointsAsXYArray:[{x:10,y:10}, {x:140,y:10}, {x:140,y:130}, {x:10,y:130}],
-                                        thickness:5,
-                                        jointType:'round',
-                                        colour:{r:24/255,g:24/255,b:24/255,a:1}
-                                    } },
-                        
-                                    {collection:'basic', type:'text', name:'label', data:{
-                                        x:147.25, y:135, 
-                                        width:4,height:4,
-                                        angle:-Math.PI/2,
-                                        text:'amplifier (true tone)',
-                                        font:'AppleGaramond', 
-                                        printingMode:{widthCalculation:'absolute'},
-                                        colour:style.textColour
-                                    } },
-                                    {collection:'basic', type:'path', name:'line', data:{
-                                        pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
-                                        capType:'round',
-                                        thickness:0.5,
-                                        colour:style.textColour
-                                    } },
-                        
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_left', data:{ 
-                                        x:150, y:100, width:5, height:15, cableVersion:2,
-                                        style:{ 
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_L', data:{ 
+                                        x:width/6 - 1, y:height/6 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
+                                        style:{
                                             dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
+                                            glow:style.connectionNode.audio.glow, 
                                             cable_dim:style.connectionCable.audio.dim, 
                                             cable_glow:style.connectionCable.audio.glow,
-                                        },
+                                        }
                                     }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_right', data:{ 
-                                        x:150, y:120, width:5, height:15, cableVersion:2,
-                                        style:{ 
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_R', data:{ 
+                                        x:width/6 - 1, y:height/6 - 20 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
+                                        style:{
                                             dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
+                                            glow:style.connectionNode.audio.glow, 
                                             cable_dim:style.connectionCable.audio.dim, 
                                             cable_glow:style.connectionCable.audio.glow,
-                                        },
+                                        }
                                     }},
                         
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Amplifier/amplifier_backing.png' }
+                                    },
                                 ]
                             };
-                            //add bumpers
-                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                                if(c == shape.length){c = 0;}
-                        
-                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                        
-                                design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                                ], thickness:bumperCoverage.large.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                            }
-                        
                         
                             
                             //main object
@@ -43871,13 +43947,15 @@
                         
                                 //audio connections
                                     //inputs to stereo combiner
-                                        object.elements.connectionNode_audio.input_left.out().connect(flow.stereoCombiner, 0, 0);
-                                        object.elements.connectionNode_audio.input_right.out().connect(flow.stereoCombiner, 0, 1);
+                                        object.elements.connectionNode_audio.input_L.out().connect(flow.stereoCombiner, 0, 0);
+                                        object.elements.connectionNode_audio.input_R.out().connect(flow.stereoCombiner, 0, 1);
                                     //stereo combiner to main output
                                         flow.stereoCombiner.connect(flow._destination);
                         
                             return object;
                         };
+                        
+                        
                         
                         this.amplifier.metadata = {
                             name:'Amplifier',
@@ -44728,7 +44806,6 @@
                                 design.elements.unshift(
                                     {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
                                         x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2,
-                                        style:style.connectionNode.audio,
                                         style:{
                                             dim:style.connectionNode.audio.dim, 
                                             glow:style.connectionNode.audio.glow, 
@@ -44806,78 +44883,144 @@
                             category:'misc',
                             helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
                         };
+                        // this.amplifier = function(x,y,a){
+                        //     var shape = [
+                        //         {x:0,y:0},
+                        //         {x:150,y:0},
+                        //         {x:150,y:140},
+                        //         {x:0,y:140},
+                        //     ];
+                        //     var design = {
+                        //         name:'amplifier',
+                        //         x:x, y:y, angle:a,
+                        //         space:shape,
+                        //         elements:[
+                        //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
+                        
+                        //             {collection:'basic', type:'image', name:'grill', data:{x:10,y:10,width:130,height:120,url:'images/units/beta/amplifierGrill.png'} },
+                        //             {collection:'basic', type:'path', name:'grillFrame', data:{
+                        //                 looping:true, 
+                        //                 pointsAsXYArray:[{x:10,y:10}, {x:140,y:10}, {x:140,y:130}, {x:10,y:130}],
+                        //                 thickness:5,
+                        //                 jointType:'round',
+                        //                 colour:{r:24/255,g:24/255,b:24/255,a:1}
+                        //             } },
+                        
+                        //             {collection:'basic', type:'text', name:'label', data:{
+                        //                 x:147.25, y:135, 
+                        //                 width:4,height:4,
+                        //                 angle:-Math.PI/2,
+                        //                 text:'amplifier (true tone)',
+                        //                 font:'AppleGaramond', 
+                        //                 printingMode:{widthCalculation:'absolute'},
+                        //                 colour:style.textColour
+                        //             } },
+                        //             {collection:'basic', type:'path', name:'line', data:{
+                        //                 pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
+                        //                 capType:'round',
+                        //                 thickness:0.5,
+                        //                 colour:style.textColour
+                        //             } },
+                        
+                        //             {collection:'dynamic', type:'connectionNode_audio', name:'input_left', data:{ 
+                        //                 x:150, y:100, width:5, height:15, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.audio.dim, 
+                        //                     glow:style.connectionNode.audio.glow,
+                        //                     cable_dim:style.connectionCable.audio.dim, 
+                        //                     cable_glow:style.connectionCable.audio.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_audio', name:'input_right', data:{ 
+                        //                 x:150, y:120, width:5, height:15, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.audio.dim, 
+                        //                     glow:style.connectionNode.audio.glow,
+                        //                     cable_dim:style.connectionCable.audio.dim, 
+                        //                     cable_glow:style.connectionCable.audio.glow,
+                        //                 },
+                        //             }},
+                        
+                        //         ]
+                        //     };
+                        //     //add bumpers
+                        //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                        //         if(c == shape.length){c = 0;}
+                        
+                        //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                        //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                        
+                        //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                        //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                        //         ], thickness:bumperCoverage.large.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        //     }
+                        
+                        
+                            
+                        //     //main object
+                        //         var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                        //     //circuitry
+                        //         var flow = {
+                        //             destination:null,
+                        //             stereoCombiner: null,
+                        //             pan_left:null, pan_right:null,
+                        //         };
+                        
+                        //         //destination
+                        //             flow._destination = _canvas_.library.audio.destination;
+                        
+                        //         //stereo channel combiner
+                        //             flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
+                        
+                        //         //audio connections
+                        //             //inputs to stereo combiner
+                        //                 object.elements.connectionNode_audio.input_left.out().connect(flow.stereoCombiner, 0, 0);
+                        //                 object.elements.connectionNode_audio.input_right.out().connect(flow.stereoCombiner, 0, 1);
+                        //             //stereo combiner to main output
+                        //                 flow.stereoCombiner.connect(flow._destination);
+                        
+                        //     return object;
+                        // };
+                        
+                        
                         this.amplifier = function(x,y,a){
+                            var width = 935; var height = 860;
                             var shape = [
                                 {x:0,y:0},
-                                {x:150,y:0},
-                                {x:150,y:140},
-                                {x:0,y:140},
+                                {x:width/6,y:0},
+                                {x:width/6,y:height/6},
+                                {x:0,y:height/6},
                             ];
                             var design = {
                                 name:'amplifier',
                                 x:x, y:y, angle:a,
                                 space:shape,
                                 elements:[
-                                    {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                        
-                                    {collection:'basic', type:'image', name:'grill', data:{x:10,y:10,width:130,height:120,url:'images/units/beta/amplifierGrill.png'} },
-                                    {collection:'basic', type:'path', name:'grillFrame', data:{
-                                        looping:true, 
-                                        pointsAsXYArray:[{x:10,y:10}, {x:140,y:10}, {x:140,y:130}, {x:10,y:130}],
-                                        thickness:5,
-                                        jointType:'round',
-                                        colour:{r:24/255,g:24/255,b:24/255,a:1}
-                                    } },
-                        
-                                    {collection:'basic', type:'text', name:'label', data:{
-                                        x:147.25, y:135, 
-                                        width:4,height:4,
-                                        angle:-Math.PI/2,
-                                        text:'amplifier (true tone)',
-                                        font:'AppleGaramond', 
-                                        printingMode:{widthCalculation:'absolute'},
-                                        colour:style.textColour
-                                    } },
-                                    {collection:'basic', type:'path', name:'line', data:{
-                                        pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
-                                        capType:'round',
-                                        thickness:0.5,
-                                        colour:style.textColour
-                                    } },
-                        
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_left', data:{ 
-                                        x:150, y:100, width:5, height:15, cableVersion:2,
-                                        style:{ 
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_L', data:{ 
+                                        x:width/6 - 1, y:height/6 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
+                                        style:{
                                             dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
+                                            glow:style.connectionNode.audio.glow, 
                                             cable_dim:style.connectionCable.audio.dim, 
                                             cable_glow:style.connectionCable.audio.glow,
-                                        },
+                                        }
                                     }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_right', data:{ 
-                                        x:150, y:120, width:5, height:15, cableVersion:2,
-                                        style:{ 
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_R', data:{ 
+                                        x:width/6 - 1, y:height/6 - 20 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
+                                        style:{
                                             dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
+                                            glow:style.connectionNode.audio.glow, 
                                             cable_dim:style.connectionCable.audio.dim, 
                                             cable_glow:style.connectionCable.audio.glow,
-                                        },
+                                        }
                                     }},
                         
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Amplifier/amplifier_backing.png' }
+                                    },
                                 ]
                             };
-                            //add bumpers
-                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                                if(c == shape.length){c = 0;}
-                        
-                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                        
-                                design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                                ], thickness:bumperCoverage.large.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                            }
-                        
                         
                             
                             //main object
@@ -44898,13 +45041,15 @@
                         
                                 //audio connections
                                     //inputs to stereo combiner
-                                        object.elements.connectionNode_audio.input_left.out().connect(flow.stereoCombiner, 0, 0);
-                                        object.elements.connectionNode_audio.input_right.out().connect(flow.stereoCombiner, 0, 1);
+                                        object.elements.connectionNode_audio.input_L.out().connect(flow.stereoCombiner, 0, 0);
+                                        object.elements.connectionNode_audio.input_R.out().connect(flow.stereoCombiner, 0, 1);
                                     //stereo combiner to main output
                                         flow.stereoCombiner.connect(flow._destination);
                         
                             return object;
                         };
+                        
+                        
                         
                         this.amplifier.metadata = {
                             name:'Amplifier',

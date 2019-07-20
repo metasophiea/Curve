@@ -70,9 +70,27 @@ this.connectionNode = function(
 
     //mouse interaction
         rectangle.onmousedown = function(x,y,event){
+            var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+            var pointA = object.getCablePoint();
+            var tmpCable = interfacePart.builder(
+                'dynamic',tempCableType,'tmpCable-'+object.getAddress().replace(/\//g, '_'),
+                { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
+            );
+
+            _canvas_.system.pane.getMiddlegroundPane(object).append(tmpCable);
+
             _canvas_.system.mouse.mouseInteractionHandler(
-                undefined,
                 function(event){
+                    var pointA = object.getCablePoint();
+                    var pointB = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                    pointB.angle = _canvas_.library.math.getAngleOfTwoPoints(pointB,pointA)
+
+                    tmpCable.draw( pointA.x,pointA.y, pointB.x,pointB.y, pointA.angle,pointB.angle );
+                },
+                function(event){
+                    tmpCable.parent.remove(tmpCable);
+                    tmpCable = undefined;
+
                     var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0]; 
                     if(element == undefined){return;}
                     
@@ -94,11 +112,8 @@ this.connectionNode = function(
         var cable;
 
         object._addCable = function(){
-            if(cableVersion == 2){
-                cable = interfacePart.builder('dynamic','cable2','cable2-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
-            }else{
-                cable = interfacePart.builder('dynamic','cable','cable-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
-            }
+            var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+            cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
             
             foreignNode._receiveCable(cable);
             _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
