@@ -59,3 +59,10 @@ this.readout_sixteenSegmentDisplay_static = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.readout_sixteenSegmentDisplay_static = function(name,data){ 
+    return interfacePart.collection.display.readout_sixteenSegmentDisplay_static(
+        name, data.x, data.y, data.width, data.height, data.count, data.angle, data.resolution,
+        data.style.background, data.style.glow, data.style.dim,
+    ); 
+};

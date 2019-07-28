@@ -264,3 +264,9 @@ this.rangeslide_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.rangeslide_image = function(name,data){ return interfacePart.collection.control.rangeslide_image(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+    data.handleURL, data.backingURL, data.style.invisibleHandle, data.spanURL,
+    data.onchange, data.onrelease
+); };

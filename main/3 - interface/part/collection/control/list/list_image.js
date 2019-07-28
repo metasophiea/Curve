@@ -448,3 +448,51 @@ this.list_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.list_image = function(name,data){ return interfacePart.collection.control.list_image(
+    name, data.x, data.y, data.angle, data.interactable, data.list,
+    data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+    data.limitHeightTo, data.limitWidthTo,
+
+    data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+
+    data.backingURL, 
+    data.breakURL,
+    data.textbreakURL,
+    data.sublist__up,
+    data.sublist__hover,
+    data.sublist__glow,
+    data.sublist__hover_glow,
+    data.sublist__hover_glow_press,
+
+    data.checkbox_uncheckURL, 
+    data.checkbox_checkURL, 
+    data.checkbox_uncheckGlowURL, 
+    data.checkbox_checkGlowURL,
+    
+    data.itemURL__off,
+    data.itemURL__up,
+    data.itemURL__press,
+    data.itemURL__select,
+    data.itemURL__select_press,
+    data.itemURL__glow,
+    data.itemURL__glow_press,
+    data.itemURL__glow_select,
+    data.itemURL__glow_select_press,
+    data.itemURL__hover,
+    data.itemURL__hover_press,
+    data.itemURL__hover_select,
+    data.itemURL__hover_select_press,
+    data.itemURL__hover_glow,
+    data.itemURL__hover_glow_press,
+    data.itemURL__hover_glow_select,
+    data.itemURL__hover_glow_select_press,
+
+    data.onenter,
+    data.onleave,
+    data.onpress,
+    data.ondblpress,
+    data.onrelease,
+    data.onselection,
+    data.onpositionchange,
+); };

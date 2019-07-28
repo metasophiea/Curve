@@ -155,3 +155,13 @@ this.slide_continuous_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.slide_continuous_image = function(name,data){ return interfacePart.collection.control.slide_continuous_image(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+    data.handleURL, data.backingURL, data.style.invisibleHandle,
+    data.onchange, data.onrelease
+); };
+interfacePart.partLibrary.control.slide_image = function(name,data){ 
+    console.warn('depreciated - please use slide_continuous_image instead');
+    return interfacePart.partLibrary.control.slide_continuous_image(name,data);
+};

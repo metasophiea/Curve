@@ -156,3 +156,37 @@ this.button_polygon = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.button_polygon = function(name,data){ return interfacePart.collection.control.button_polygon(
+    name, data.x, data.y, data.points, data.angle, data.interactable,
+    data.text_centre,
+    data.active, data.hoverable, data.selectable, data.pressable,
+
+    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+
+    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
+
+    data.onenter,
+    data.onleave,
+    data.onpress,
+    data.ondblpress,
+    data.onrelease,
+    data.onselect,
+    data.ondeselect,
+); };

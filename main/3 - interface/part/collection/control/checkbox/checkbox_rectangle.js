@@ -43,3 +43,9 @@ this.checkbox_rectangle = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.checkbox_rectangle = function(name,data){ return interfacePart.collection.control.checkbox_rectangle(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+    data.onchange,
+); };

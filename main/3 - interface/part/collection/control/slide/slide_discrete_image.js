@@ -127,3 +127,9 @@ this.slide_discrete_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.slide_discrete_image = function(name,data){ return interfacePart.collection.control.slide_discrete_image(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+    data.handleURL, data.backingURL, data.invisibleHandle,
+    data.onchange, data.onrelease
+); };

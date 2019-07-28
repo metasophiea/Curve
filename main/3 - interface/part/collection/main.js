@@ -1,14 +1,18 @@
 this.collection = new function(){
     this.basic = new function(){
-        {{include:basic/_main.js}}
+        interfacePart.partLibrary.basic = {};
+        {{include:basic/*}} /**/
     };
     this.display = new function(){
-        {{include:display/_main.js}}
+        interfacePart.partLibrary.display = {};
+        {{include:display/*}} /**/
     };
     this.control = new function(){
-        {{include:control/_main.js}}
+        interfacePart.partLibrary.control = {};
+        {{include:control/*}} /**/
     };
     this.dynamic = new function(){
-        {{include:dynamic/_main.js}}
+        interfacePart.partLibrary.dynamic = {};
+        {{include:dynamic/*}} /**/
     };
 };

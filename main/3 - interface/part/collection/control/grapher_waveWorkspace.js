@@ -77,3 +77,12 @@ this.grapher_waveWorkspace = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.grapher_waveWorkspace = function(name,data){ return interfacePart.collection.control.grapher_waveWorkspace(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
+    data.style.foregrounds, data.style.foregroundText,
+    data.style.background_colour, data.style.background_lineThickness,
+    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+    data.style.backing,
+    data.onchange, data.onrelease, data.selectionAreaToggle
+); };

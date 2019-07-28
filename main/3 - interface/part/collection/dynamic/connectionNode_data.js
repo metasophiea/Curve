@@ -46,3 +46,11 @@ this.connectionNode_data = function(
 
     return object;
 };
+
+interfacePart.partLibrary.dynamic.connectionNode_data = function(name,data){ 
+    return interfacePart.collection.dynamic.connectionNode_data(
+        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+        data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
+    ); 
+};

@@ -171,3 +171,10 @@ this.sevenSegmentDisplay = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.sevenSegmentDisplay = function(name,data){ 
+    return interfacePart.collection.display.sevenSegmentDisplay(
+        name, data.x, data.y, data.width, data.height, data.angle,
+        data.style.background, data.style.glow, data.style.dim
+    );
+};

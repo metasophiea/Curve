@@ -11,3 +11,7 @@ this.polygon = function( name=null, points=[], pointsAsXYArray=[], ignored=false
 
     return temp;
 }
+
+interfacePart.partLibrary.basic.polygon = function(name,data){ 
+    return interfacePart.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
+};

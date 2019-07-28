@@ -5,9 +5,8 @@
   - managed to bork the slider mouse position calculation function without
     noticing, while fixing it on 2019-07-19. Good job everyone
     Adding the offset angle to the calculations added in the angle of parent 
-    groups as desired, but also added the part's angle again
-  - began work on the 8 step sequencer unit (parts in, but need to create the
-    discrete slider and do wiring)
+    groups as desired, but also added the part's angle again. It should be fine
+    now
   - added slide_discrete and slide_discrete_image parts, renaming 'slide' to 
     'slide_continuous' and 'slide_image' to 'slide_continuous_image' 
     (it probably all needs a clean)
@@ -16,6 +15,10 @@
     everywhere)
   - Ladies and gentlemen; the eight step sequencer (needs deeper testing, bit
     looks pretty good...maybe a clean up)
+  - Cleaned up the the ways parts are added to the partLibrary (now it's all
+    nicely modular, and close to the part generating code)(also removes all
+    those _main.js files)
+  - added import/export to the eightStepSequencer
 
   bugs
   - mousedown on one slider and mouseup on another, causes an onclick on the
@@ -34,7 +37,7 @@
 
 
 2019-07-20
-  - draw up the new amplifier unit (looking pretty snazzy too) and added it to
+  - drew up the new amplifier unit (looking pretty snazzy too) and added it to
     the beta collection
   
 

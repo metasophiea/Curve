@@ -129,3 +129,9 @@ this.slide_discrete = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.slide_discrete = function(name,data){ return interfacePart.collection.control.slide_discrete(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+    data.onchange, data.onrelease
+); };

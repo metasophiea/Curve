@@ -59,3 +59,10 @@ this.readout_sixteenSegmentDisplay = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.readout_sixteenSegmentDisplay = function(name,data){ 
+    return interfacePart.collection.display.readout_sixteenSegmentDisplay(
+        name, data.x, data.y, data.width, data.height, data.count, data.angle, 
+        data.style.background, data.style.glow, data.style.dim,
+    ); 
+};

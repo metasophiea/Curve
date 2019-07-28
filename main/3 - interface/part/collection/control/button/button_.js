@@ -107,3 +107,18 @@ this.button_ = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.button_ = function(name,data){ return interfacePart.collection.control.button_(
+    name, data.x, data.y, data.angle, data.interactable,
+    data.active, data.hoverable, data.selectable, data.pressable,
+
+    data.onenter,
+    data.onleave,
+    data.onpress,
+    data.ondblpress,
+    data.onrelease,
+    data.onselect,
+    data.ondeselect,
+    
+    data.subject,
+); };

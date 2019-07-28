@@ -19,3 +19,7 @@ this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, an
     
     return temp;
 };
+
+interfacePart.partLibrary.basic.text = function(name,data){ 
+    return interfacePart.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing );
+};

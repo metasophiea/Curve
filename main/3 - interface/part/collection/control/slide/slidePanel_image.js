@@ -43,3 +43,9 @@ this.slidePanel_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.slidePanel_image = function(name,data){ return interfacePart.collection.control.slidePanel_image(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+    data.handleURL, data.backingURL, data.overlayURL, data.style.invisibleHandle,
+    data.onchange, data.onrelease
+); };

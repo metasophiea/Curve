@@ -13,3 +13,7 @@ this.polygonWithOutline = function( name=null, points=[], pointsAsXYArray=[], ig
 
     return temp;
 }
+
+interfacePart.partLibrary.basic.polygonWithOutline = function(name,data){ 
+    return interfacePart.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
+};

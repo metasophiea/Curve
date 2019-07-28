@@ -43,3 +43,9 @@ this.checkbox_circle = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.checkbox_circle = function(name,data){ return interfacePart.collection.control.checkbox_circle(
+    name, data.x, data.y, data.radius, data.angle, data.interactable,
+    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+    data.onchange,
+); };

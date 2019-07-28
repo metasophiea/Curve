@@ -38,3 +38,9 @@ this.slidePanel = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+    data.onchange, data.onrelease
+); };

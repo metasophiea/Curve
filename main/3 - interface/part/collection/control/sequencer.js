@@ -1020,7 +1020,16 @@ this.sequencer = function(
     return object;
 };
 
-
+interfacePart.partLibrary.control.sequencer = function(name,data){ return interfacePart.collection.control.sequencer(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
+    data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
+    data.backingStyle, data.selectionAreaStyle,
+    data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
+    data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
+    data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
+    data.playheadStyle,
+    data.onpan, data.onchangeviewarea, data.event,
+); };
 
 
 

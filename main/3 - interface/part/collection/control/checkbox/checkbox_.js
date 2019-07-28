@@ -53,3 +53,8 @@ this.checkbox_ = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.checkbox_ = function(name,data){ return interfacePart.collection.control.checkbox_(
+    name, data.x, data.y, data.angle, data.interactable,
+    data.onchange, data.subject,
+); };

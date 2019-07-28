@@ -19,3 +19,11 @@ this.glowbox_rect = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.glowbox_rectangle = function(name,data){ 
+    return interfacePart.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
+};
+interfacePart.partLibrary.display.glowbox_rect = function(name,data){
+    console.warn('depreciated - please use glowbox_rectangle instead');
+    return interfacePart.partLibrary.display.glowbox_rectangle(name,data);
+};

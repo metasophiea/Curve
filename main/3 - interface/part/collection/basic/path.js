@@ -17,3 +17,7 @@ this.path = function( name=null, points=[], thickness=1, ignored=false, colour={
 
     return temp;
 }
+
+interfacePart.partLibrary.basic.path = function(name,data){ 
+    return interfacePart.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray, data.jointType, data.capType, data.looping, data.jointDetail, data.sharpLimit );
+};

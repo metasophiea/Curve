@@ -396,3 +396,9 @@ this.needleOverlay = function(
         
     return object;
 };
+
+interfacePart.partLibrary.control.needleOverlay = function(name,data){ return interfacePart.collection.control.needleOverlay(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+    data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
+    data.onchange, data.onrelease, data.selectionAreaToggle,
+); };

@@ -11,3 +11,7 @@ this.group = function( name=null, x=0, y=0, angle=0, ignored=false ){
 
     return temp;
 }
+
+interfacePart.partLibrary.basic.group = function(name,data){ 
+    return interfacePart.collection.basic.group( name, data.x, data.y, data.angle, data.ignored );
+};

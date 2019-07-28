@@ -1,14 +1,26 @@
 this.eightStepSequencer = function(x,y,a){
-    var width = 1670; var height = 590;
     var div = 6;
+    var offset = 20/div;
+    var measurements = { 
+        file:{
+            width:1670,
+            height:590,
+        },
+        design:{
+            width:27.5, 
+            height:9.5,
+        },
+    };
+    measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+    
     var shape = [
-        {x:0,y:0},
-        {x:width/div -20/div,y:0},
-        {x:width/div -20/div,y:(height/div)*(5.5/9.5) -10/div},
-        {x:(width/div)*(26/27.5) -20/div,y:(height/div)*(5.5/9.5) -10/div},
-        {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(7/9.5) -10/div},
-        {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(9.5/9.5) -20/div},
-        {x:0,y:height/div -20/div},
+        { x:0,                                                                    y:0                                                                      },
+        { x:measurements.drawing.width -offset,                                   y:0                                                                      },
+        { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+        { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+        { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
+        { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
+        { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
     ];
     var colours = [
         {r:1,g:0.01,b:0.02,a:1},
@@ -27,41 +39,21 @@ this.eightStepSequencer = function(x,y,a){
         elements:[
             {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
                 x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.data.dim, 
-                    glow:style.connectionNode.data.glow, 
-                    cable_dim:style.connectionCable.data.dim, 
-                    cable_glow:style.connectionCable.data.glow 
-                }
+                style:{ dim:style.connectionNode.data.dim, glow:style.connectionNode.data.glow, cable_dim:style.connectionCable.data.dim, cable_glow:style.connectionCable.data.glow }
             }},
             {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
-                x:width/div-0.5 -20/div, y:10, width:5, height:10, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.signal.dim, 
-                    glow:style.connectionNode.signal.glow,
-                    cable_dim:style.connectionCable.signal.dim,
-                    cable_glow:style.connectionCable.signal.glow,
-                },
+                x:measurements.drawing.width-0.5 -offset, y:10, width:5, height:10, cableVersion:2,
+                style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                 onchange:function(value){if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
             }},
             {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
-                x:width/div-0.5 -20/div, y:22, width:5, height:10, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.signal.dim, 
-                    glow:style.connectionNode.signal.glow,
-                    cable_dim:style.connectionCable.signal.dim,
-                    cable_glow:style.connectionCable.signal.glow,
-                },
+                x:measurements.drawing.width-0.5 -offset, y:22, width:5, height:10, cableVersion:2,
+                style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                 onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
             }},
             {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
-                x:width/div-0.5 -20/div, y:33, width:5, height:10, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.signal.dim, 
-                    glow:style.connectionNode.signal.glow,
-                    cable_dim:style.connectionCable.signal.dim,
-                    cable_glow:style.connectionCable.signal.glow,
-                },
+                x:measurements.drawing.width-0.5 -offset, y:33, width:5, height:10, cableVersion:2,
+                style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                 onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
             }},
 
@@ -69,7 +61,7 @@ this.eightStepSequencer = function(x,y,a){
 
 
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x:-10/div, y:-10/div, width:width/div, height:height/div, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
+                data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
             },
 
             {collection:'control', type:'button_image', name:'button_step', data:{
@@ -90,12 +82,7 @@ this.eightStepSequencer = function(x,y,a){
         design.elements.unshift(
             {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
                 x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.signal.dim, 
-                    glow:style.connectionNode.signal.glow,
-                    cable_dim:style.connectionCable.signal.dim,
-                    cable_glow:style.connectionCable.signal.glow,
-                },
+                style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                 onchange:function(a){return function(value){
                     if(!value){return} 
 
@@ -112,12 +99,7 @@ this.eightStepSequencer = function(x,y,a){
         design.elements.unshift(
             {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
                 x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.signal.dim, 
-                    glow:style.connectionNode.signal.glow,
-                    cable_dim:style.connectionCable.signal.dim,
-                    cable_glow:style.connectionCable.signal.glow,
-                },
+                style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                 onchange:function(a){return function(value){
                     if(!value){return}
 
@@ -175,7 +157,7 @@ this.eightStepSequencer = function(x,y,a){
 
         design.elements.unshift(
             {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
-                x:7 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                x:7 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
                 style:{ 
                     dim:style.connectionNode.signal.dim, 
                     glow:style.connectionNode.signal.glow,
@@ -187,13 +169,8 @@ this.eightStepSequencer = function(x,y,a){
         );
         design.elements.unshift(
             {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
-                x:18 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.voltage.dim, 
-                    glow:style.connectionNode.voltage.glow,
-                    cable_dim:style.connectionCable.voltage.dim,
-                    cable_glow:style.connectionCable.voltage.glow,
-                },
+                x:18 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
                 onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
             }}
         );
@@ -203,49 +180,63 @@ this.eightStepSequencer = function(x,y,a){
     //main object
         var object = _canvas_.interface.unit.builder(this.ruler,design);
 
+    //import/export
+        object.exportData = function(){
+            return {
+                stages:(new Array(8).fill(0)).map( (item,index) => {
+                    return {
+                        note: object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].get(),
+                        octave: object.elements.slide_discrete_image['slide_octave_'+index].get(),
+                        velocity: object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].get(),
+                    }
+                }),
+                direction: object.elements.slide_discrete_image.slide_direction.get(),
+            };
+        };
+        object.importData = function(data){
+            if(data == undefined){return;} console.log(data);
+
+            object.elements.slide_discrete_image.slide_direction.set(data.direction);
+
+            data.stages.forEach( (stage,index) => {
+                object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
+                object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
+                object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
+            });
+        };
+
     //internal circuitry
         var state = {
             direction:1,
             previousPosition:-1,
-            requestedNextPosition:-1,
             position:-1,
-            stages:[
-                { note:0, octave:0, velocity:0 },
-                { note:0, octave:0, velocity:0 },
-                { note:0, octave:0, velocity:0 },
-                { note:0, octave:0, velocity:0 },
-                { note:0, octave:0, velocity:0 },
-                { note:0, octave:0, velocity:0 },
-                { note:0, octave:0, velocity:0 },
-                { note:0, octave:0, velocity:0 },
-            ],
+            requestedNextPosition:-1,
+            stages:new Array(8).fill({ note:0, octave:0, velocity:0 }),
             previousMidiNumber:-1,
         }
 
-        function step(){
-            state.previousPosition=state.position;
-            if( state.requestedNextPosition != -1 ){
-                state.position = state.requestedNextPosition;
-                state.requestedNextPosition = -1;
-            }else{
-                state.position = state.position+state.direction;
-            }
-            if(state.position > 7){state.position = 0;}
-            else if(state.position < 0){state.position = 7;}
-
-            var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
-            object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
-            object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
-            state.previousMidiNumber = midiNumber
-
-            if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
-            object.elements.glowbox_rect['LED'+state.position].on(); 
-        }
         function stageToMidiNoteNumber(stage){
             var octaveOffset = 4;
             var note = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][stage.note];
             var octave = stage.octave+octaveOffset;
             return _canvas_.library.audio.name2num(octave+note);
+        }
+        function step(){
+            //figure out what stage to send next
+                state.previousPosition = state.position;
+                state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction
+                state.requestedNextPosition = -1;
+                if(state.position > 7){state.position = 0;}else if(state.position < 0){state.position = 7;}
+
+            //stop previous note and send the new one
+                var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
+                object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
+                object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
+                state.previousMidiNumber = midiNumber
+
+            //light up the appropriate LED
+                if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
+                object.elements.glowbox_rect['LED'+state.position].on(); 
         }
     
     //interface

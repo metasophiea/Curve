@@ -35,3 +35,9 @@ this.checkbox_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.checkbox_image = function(name,data){ return interfacePart.collection.control.checkbox_image(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+    data.uncheckURL, data.checkURL, data.uncheckGlowURL, data.checkGlowURL,
+    data.onchange,
+); };

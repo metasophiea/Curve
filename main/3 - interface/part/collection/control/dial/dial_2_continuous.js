@@ -126,3 +126,12 @@ this.dial_2_continuous = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.dial_2_continuous = function(name,data){ return interfacePart.collection.control.dial_2_continuous(
+    name,
+    data.x, data.y, data.radius, data.angle, data.interactable,
+    data.value, data.resetValue,
+    data.startAngle, data.maxAngle,
+    data.style.handle, data.style.slot, data.style.needle,
+    data.onchange, data.onrelease
+); };

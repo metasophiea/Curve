@@ -41,3 +41,10 @@ this.audio_meter_level = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.audio_meter_level = function(name,data){ 
+    return interfacePart.collection.display.audio_meter_level(
+        name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
+        data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
+    ); 
+};

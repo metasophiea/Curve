@@ -120,3 +120,12 @@ this.dial_2_discrete = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.dial_2_discrete = function(name,data){ return interfacePart.collection.control.dial_2_discrete(
+    name,
+    data.x, data.y, data.radius, data.angle, data.interactable,
+    data.value, data.resetValue, data.optionCount,
+    data.startAngle, data.maxAngle,
+    data.style.handle, data.style.slot, data.style.needle,
+    data.onchange, data.onrelease
+); };

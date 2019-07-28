@@ -76,3 +76,9 @@ this.rastorDisplay = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.rastorDisplay = function(name,data){ 
+    return interfacePart.collection.display.rastorDisplay(
+        name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
+    ); 
+};

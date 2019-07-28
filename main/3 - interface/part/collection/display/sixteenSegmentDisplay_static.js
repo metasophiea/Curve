@@ -811,3 +811,10 @@ this.sixteenSegmentDisplay_static = function(
 
     return object;      
 };
+
+interfacePart.partLibrary.display.sixteenSegmentDisplay_static = function(name,data){ 
+    return interfacePart.collection.display.sixteenSegmentDisplay_static(
+        name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
+        data.style.background, data.style.glow, data.style.dim
+    );
+};

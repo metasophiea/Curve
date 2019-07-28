@@ -93,3 +93,34 @@ this.button_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.button_image = function(name,data){ return interfacePart.collection.control.button_image(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+    data.active, data.hoverable, data.selectable, data.pressable,
+
+    data.backingURL__off,
+    data.backingURL__up,
+    data.backingURL__press,
+    data.backingURL__select,
+    data.backingURL__select_press,
+    data.backingURL__glow,
+    data.backingURL__glow_press,
+    data.backingURL__glow_select,
+    data.backingURL__glow_select_press,
+    data.backingURL__hover,
+    data.backingURL__hover_press,
+    data.backingURL__hover_select,
+    data.backingURL__hover_select_press,
+    data.backingURL__hover_glow,
+    data.backingURL__hover_glow_press,
+    data.backingURL__hover_glow_select,
+    data.backingURL__hover_glow_select_press,
+
+    data.onenter,
+    data.onleave,
+    data.onpress,
+    data.ondblpress,
+    data.onrelease,
+    data.onselect,
+    data.ondeselect,
+); };

@@ -28,7 +28,11 @@ this.cable = function(
     return object;
 };
 
-
+interfacePart.partLibrary.dynamic.cable = function(name,data){ return interfacePart.collection.dynamic.cable(
+        name, data.x1, data.y1, data.x2, data.y2,
+        data.style.dim, data.style.glow,
+    ); 
+};
 
 
 
@@ -126,4 +130,10 @@ this.cable2 = function(
         object._isCable = true;
 
     return object;
+};
+
+interfacePart.partLibrary.dynamic.cable2 = function(name,data){ return interfacePart.collection.dynamic.cable2(
+        name, data.x1, data.y1, data.x2, data.y2,
+        data.style.dim, data.style.glow,
+    ); 
 };

@@ -46,3 +46,9 @@ this.checkbox_polygon = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.checkbox_polygon = function(name,data){ return interfacePart.collection.control.checkbox_polygon(
+    name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
+    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+    data.onchange,
+); };

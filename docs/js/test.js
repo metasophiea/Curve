@@ -25917,6 +25917,7 @@
                     }
                     this.collection = new function(){
                         this.basic = new function(){
+                            interfacePart.partLibrary.basic = {};
                             this.polygon = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1} ){
                                 var temp = _canvas_.core.shape.create('polygon');
                                 temp.name = name;
@@ -25930,6 +25931,10 @@
                             
                                 return temp;
                             }
+                            
+                            interfacePart.partLibrary.basic.polygon = function(name,data){ 
+                                return interfacePart.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
+                            };
                             this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=0, lineColour={r:0,g:0,b:0,a:0} ){
                                 var temp = _canvas_.core.shape.create('rectangleWithOutline');
                                 temp.name = name;
@@ -25949,6 +25954,10 @@
                             
                                 return temp;
                             };
+                            
+                            interfacePart.partLibrary.basic.rectangleWithOutline = function(name,data){ 
+                                return interfacePart.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
+                            };
                             this.circle = function( name=null, x=0, y=0, angle=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1} ){
                                 var temp = _canvas_.core.shape.create('circle');
                                 temp.name = name;
@@ -25965,6 +25974,10 @@
                             
                                 return temp;
                             };
+                            
+                            interfacePart.partLibrary.basic.circle = function(name,data){ 
+                                return interfacePart.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour );
+                            };
                             this.polygonWithOutline = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
                                 var temp = _canvas_.core.shape.create('polygonWithOutline');
                                 temp.name = name;
@@ -25980,6 +25993,10 @@
                             
                                 return temp;
                             }
+                            
+                            interfacePart.partLibrary.basic.polygonWithOutline = function(name,data){ 
+                                return interfacePart.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
+                            };
                             this.canvas = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1 ){
                                 var temp = _canvas_.core.shape.create('canvas');
                                 temp.name = name;
@@ -25997,6 +26014,10 @@
                             
                                 return temp;
                             };
+                            
+                            interfacePart.partLibrary.basic.canvas = function(name,data){ 
+                                return interfacePart.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
+                            },
                             this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url='' ){
                                 var temp = _canvas_.core.shape.create('image');
                                 temp.name = name;
@@ -26013,6 +26034,10 @@
                                 temp.stopAttributeStartedExtremityUpdate = false;
                             
                                 return temp;
+                            };
+                            
+                            interfacePart.partLibrary.basic.image = function(name,data){ 
+                                return interfacePart.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
                             };
                             this.path = function( name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[], jointType='sharp', capType='none', looping=false, jointDetail=25, sharpLimit=4 ){
                                 var temp = _canvas_.core.shape.create('path');
@@ -26033,6 +26058,10 @@
                             
                                 return temp;
                             }
+                            
+                            interfacePart.partLibrary.basic.path = function(name,data){ 
+                                return interfacePart.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray, data.jointType, data.capType, data.looping, data.jointDetail, data.sharpLimit );
+                            };
                             this.rectangle = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1} ){
                                 var temp = _canvas_.core.shape.create('rectangle');
                                 temp.name = name;
@@ -26050,6 +26079,10 @@
                             
                                 return temp;
                             };
+                            
+                            interfacePart.partLibrary.basic.rectangle = function(name,data){ 
+                                return interfacePart.collection.basic.rectangle( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour );
+                            };
                             this.group = function( name=null, x=0, y=0, angle=0, ignored=false ){
                                 var temp = _canvas_.core.shape.create('group');
                                 temp.name = name;
@@ -26063,6 +26096,10 @@
                             
                                 return temp;
                             }
+                            
+                            interfacePart.partLibrary.basic.group = function(name,data){ 
+                                return interfacePart.collection.basic.group( name, data.x, data.y, data.angle, data.ignored );
+                            };
                             this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0 ){
                                 var temp = _canvas_.core.shape.create('characterString');
                                 temp.name = name;
@@ -26084,6 +26121,10 @@
                                 
                                 return temp;
                             };
+                            
+                            interfacePart.partLibrary.basic.text = function(name,data){ 
+                                return interfacePart.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing );
+                            };
                             this.circleWithOutline = function( name=null, x=0, y=0, angle=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
                                 var temp = _canvas_.core.shape.create('circleWithOutline');
                                 temp.name = name;
@@ -26103,43 +26144,12 @@
                                 return temp;
                             };
                             
-                            interfacePart.partLibrary.basic = {
-                                group: function(name,data){ 
-                                    return interfacePart.collection.basic.group( name, data.x, data.y, data.angle, data.ignored );
-                                },
-                                rectangle: function(name,data){ 
-                                    return interfacePart.collection.basic.rectangle( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour );
-                                },
-                                rectangleWithOutline: function(name,data){ 
-                                    return interfacePart.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
-                                },
-                                image: function(name,data){ 
-                                    return interfacePart.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
-                                },
-                                canvas: function(name,data){ 
-                                    return interfacePart.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
-                                },
-                                polygon: function(name,data){ 
-                                    return interfacePart.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
-                                },
-                                polygonWithOutline: function(name,data){ 
-                                    return interfacePart.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
-                                },
-                                circle: function(name,data){ 
-                                    return interfacePart.collection.basic.circle( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour );
-                                },
-                                circleWithOutline: function(name,data){ 
-                                    return interfacePart.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
-                                },
-                                path: function(name,data){ 
-                                    return interfacePart.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray, data.jointType, data.capType, data.looping, data.jointDetail, data.sharpLimit );
-                                },
-                                text: function(name,data){ 
-                                    return interfacePart.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing );
-                                },
+                            interfacePart.partLibrary.basic.circleWithOutline = function(name,data){ 
+                                return interfacePart.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
                             };
                         };
                         this.display = new function(){
+                            interfacePart.partLibrary.display = {};
                             this.grapher_audioScope = function(
                                 name='grapher_audioScope',
                                 x, y, width=120, height=60, angle=0,
@@ -26235,6 +26245,16 @@
                                     setBackground();
                             
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.grapher_audioScope = function(name,data){ 
+                                return interfacePart.collection.display.grapher_audioScope(
+                                    name, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.foregrounds, data.style.foregroundText,
+                                    data.style.background_colour, data.style.background_lineThickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.backing,
+                                ); 
                             };
                             this.sevenSegmentDisplay = function(
                                 name='sevenSegmentDisplay',
@@ -26408,6 +26428,13 @@
                                     };
                             
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.sevenSegmentDisplay = function(name,data){ 
+                                return interfacePart.collection.display.sevenSegmentDisplay(
+                                    name, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.background, data.style.glow, data.style.dim
+                                );
                             };
                             this.sixteenSegmentDisplay = function(
                                 name='sixteenSegmentDisplay',
@@ -27213,6 +27240,13 @@
                             
                                 return object;      
                             };
+                            
+                            interfacePart.partLibrary.display.sixteenSegmentDisplay = function(name,data){ 
+                                return interfacePart.collection.display.sixteenSegmentDisplay(
+                                    name, data.x, data.y, data.width, data.height,  data.angle,
+                                    data.style.background, data.style.glow, data.style.dim
+                                ); 
+                            };
                             this.rastorDisplay = function(
                                 name='rastorDisplay',
                                 x, y, angle=0, width=60, height=60,
@@ -27291,6 +27325,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.display.rastorDisplay = function(name,data){ 
+                                return interfacePart.collection.display.rastorDisplay(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
+                                ); 
+                            };
                             this.glowbox_rect = function(
                                 name='glowbox_rect',
                                 x, y, width=30, height=30, angle=0,
@@ -27311,6 +27351,14 @@
                                     };
                             
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.glowbox_rectangle = function(name,data){ 
+                                return interfacePart.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
+                            };
+                            interfacePart.partLibrary.display.glowbox_rect = function(name,data){
+                                console.warn('depreciated - please use glowbox_rectangle instead');
+                                return interfacePart.partLibrary.display.glowbox_rectangle(name,data);
                             };
                             this.audio_meter_level = function(
                                 name='audio_meter_level',
@@ -27354,6 +27402,13 @@
                                     object.stop = function(){ converter.stop(); };
                             
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.audio_meter_level = function(name,data){ 
+                                return interfacePart.collection.display.audio_meter_level(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
+                                    data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
+                                ); 
                             };
                             this.grapher_static = function(
                                 name='grapher_static',
@@ -27542,6 +27597,16 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.display.grapher_static = function(name,data){ 
+                                return interfacePart.collection.display.grapher_static(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
+                                    data.style.foregrounds, data.style.foregroundText,
+                                    data.style.background_colour, data.style.background_lineThickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.backing,
+                                ); 
+                            };
                             this.grapher_periodicWave_static = function(
                                 name='grapher_periodicWave_static',
                                 x, y, width=120, height=60, angle=0,
@@ -27636,6 +27701,16 @@
                                     };
                                     
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.grapher_periodicWave_static = function(name,data){ 
+                                return interfacePart.collection.display.grapher_periodicWave_static(
+                                    name, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.foregrounds, data.style.foregroundText,
+                                    data.style.background_colour, data.style.background_lineThickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.backing,
+                                ); 
                             };
                             this.grapher = function(
                                 name='grapher',
@@ -27832,6 +27907,16 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.display.grapher = function(name,data){ 
+                                return interfacePart.collection.display.grapher(
+                                    name, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.foregrounds, data.style.foregroundText,
+                                    data.style.background_colour, data.style.background_lineThickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.backing,
+                                );
+                            };
                             this.meter_level = function(
                                 name='meter_level',
                                 x, y, angle=0,
@@ -27906,6 +27991,13 @@
                                     };
                             
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.meter_level = function(name,data){ 
+                                return interfacePart.collection.display.meter_level(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.markings,
+                                    data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
+                                ); 
                             };
                             this.sevenSegmentDisplay_static = function(
                                 name='sevenSegmentDisplay_static',
@@ -28092,6 +28184,13 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.display.sevenSegmentDisplay_static = function(name,data){ 
+                                return interfacePart.collection.display.sevenSegmentDisplay_static(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
+                                    data.style.background, data.style.glow, data.style.dim
+                                );
+                            };
                             this.grapher_periodicWave = function(
                                 name='grapher_periodicWave',
                                 x, y, width=120, height=60, angle=0,
@@ -28186,6 +28285,16 @@
                                     };
                                     
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.grapher_periodicWave = function(name,data){ 
+                                return interfacePart.collection.display.grapher_periodicWave(
+                                    name, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.foregrounds, data.style.foregroundText,
+                                    data.style.background_colour, data.style.background_lineThickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.backing,
+                                ); 
                             };
                             this.sixteenSegmentDisplay_static = function(
                                 name='sixteenSegmentDisplay_static',
@@ -29000,6 +29109,13 @@
                             
                                 return object;      
                             };
+                            
+                            interfacePart.partLibrary.display.sixteenSegmentDisplay_static = function(name,data){ 
+                                return interfacePart.collection.display.sixteenSegmentDisplay_static(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
+                                    data.style.background, data.style.glow, data.style.dim
+                                );
+                            };
                             this.readout_sixteenSegmentDisplay_static = function(
                                 name='readout_sixteenSegmentDisplay_static',
                                 x, y, width=100, height=30, count=5, angle=0, resolution=5, 
@@ -29061,6 +29177,13 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.display.readout_sixteenSegmentDisplay_static = function(name,data){ 
+                                return interfacePart.collection.display.readout_sixteenSegmentDisplay_static(
+                                    name, data.x, data.y, data.width, data.height, data.count, data.angle, data.resolution,
+                                    data.style.background, data.style.glow, data.style.dim,
+                                ); 
+                            };
                             this.readout_sixteenSegmentDisplay = function(
                                 name='readout_sixteenSegmentDisplay',
                                 x, y, width=100, height=30, count=5, angle=0,
@@ -29121,6 +29244,13 @@
                                     };
                             
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.readout_sixteenSegmentDisplay = function(name,data){ 
+                                return interfacePart.collection.display.readout_sixteenSegmentDisplay(
+                                    name, data.x, data.y, data.width, data.height, data.count, data.angle, 
+                                    data.style.background, data.style.glow, data.style.dim,
+                                ); 
                             };
                             this.grapher_audioScope_static = function(
                                 name='grapher_audioScope_static',
@@ -29220,6 +29350,16 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.display.grapher_audioScope_static = function(name,data){ 
+                                return interfacePart.collection.display.grapher_audioScope_static(
+                                    name, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.foregrounds, data.style.foregroundText,
+                                    data.style.background_colour, data.style.background_lineThickness,
+                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                    data.style.backing,
+                                ); 
+                            };
                             this.level = function(
                                 name='level',
                                 x, y, angle=0,
@@ -29273,92 +29413,15 @@
                                 return object;
                             };
                             
-                            interfacePart.partLibrary.display = {
-                                glowbox_rect: function(name,data){ return interfacePart.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim ); },
-                                sevenSegmentDisplay: function(name,data){ return interfacePart.collection.display.sevenSegmentDisplay(
-                                    name, data.x, data.y, data.width, data.height, data.angle,
-                                    data.style.background, data.style.glow, data.style.dim
-                                ); },
-                                sevenSegmentDisplay_static: function(name,data){ return interfacePart.collection.display.sevenSegmentDisplay_static(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
-                                    data.style.background, data.style.glow, data.style.dim
-                                ); },
-                                sixteenSegmentDisplay: function(name,data){ return interfacePart.collection.display.sixteenSegmentDisplay(
-                                    name, data.x, data.y, data.width, data.height,  data.angle,
-                                    data.style.background, data.style.glow, data.style.dim
-                                ); },
-                                sixteenSegmentDisplay_static: function(name,data){ return interfacePart.collection.display.sixteenSegmentDisplay_static(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
-                                    data.style.background, data.style.glow, data.style.dim
-                                ); },
-                                readout_sixteenSegmentDisplay: function(name,data){ return interfacePart.collection.display.readout_sixteenSegmentDisplay(
-                                    name, data.x, data.y, data.width, data.height, data.count, data.angle, 
-                                    data.style.background, data.style.glow, data.style.dim,
-                                ); },
-                                readout_sixteenSegmentDisplay_static: function(name,data){ return interfacePart.collection.display.readout_sixteenSegmentDisplay_static(
-                                    name, data.x, data.y, data.width, data.height, data.count, data.angle, data.resolution,
-                                    data.style.background, data.style.glow, data.style.dim,
-                                ); },
-                                level: function(name,data){ return interfacePart.collection.display.level(
+                            interfacePart.partLibrary.display.level = function(name,data){ 
+                                return interfacePart.collection.display.level(
                                     name, data.x, data.y, data.angle, data.width, data.height, 
                                     data.style.backing, data.style.levels
-                                ); },
-                                meter_level: function(name,data){ return interfacePart.collection.display.meter_level(
-                                    name, data.x, data.y, data.angle, data.width, data.height, data.markings,
-                                    data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
-                                ); },
-                                audio_meter_level: function(name,data){ return interfacePart.collection.display.audio_meter_level(
-                                    name, data.x, data.y, data.angle, data.width, data.height, data.markings, 
-                                    data.style.backing, data.style.levels, data.style.markingStyle_colour, data.style.markingStyle_font, data.style.markingStyle_printingMode, data.style.markingStyle_size
-                                ); },
-                                rastorDisplay: function(name,data){ return interfacePart.collection.display.rastorDisplay(
-                                    name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
-                                ); },
-                                grapher: function(name,data){ return interfacePart.collection.display.grapher(
-                                    name, data.x, data.y, data.width, data.height, data.angle,
-                                    data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_colour, data.style.background_lineThickness,
-                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
-                                    data.style.backing,
-                                ); },
-                                grapher_static: function(name,data){ return interfacePart.collection.display.grapher_static(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
-                                    data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_colour, data.style.background_lineThickness,
-                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
-                                    data.style.backing,
-                                ); },
-                                grapher_periodicWave: function(name,data){ return interfacePart.collection.display.grapher_periodicWave(
-                                    name, data.x, data.y, data.width, data.height, data.angle,
-                                    data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_colour, data.style.background_lineThickness,
-                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
-                                    data.style.backing,
-                                ); },
-                                grapher_periodicWave_static: function(name,data){ return interfacePart.collection.display.grapher_periodicWave_static(
-                                    name, data.x, data.y, data.width, data.height, data.angle,
-                                    data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_colour, data.style.background_lineThickness,
-                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
-                                    data.style.backing,
-                                ); },
-                                grapher_audioScope: function(name,data){ return interfacePart.collection.display.grapher_audioScope(
-                                    name, data.x, data.y, data.width, data.height, data.angle,
-                                    data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_colour, data.style.background_lineThickness,
-                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
-                                    data.style.backing,
-                                ); },
-                                grapher_audioScope_static: function(name,data){ return interfacePart.collection.display.grapher_audioScope_static(
-                                    name, data.x, data.y, data.width, data.height, data.angle,
-                                    data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_colour, data.style.background_lineThickness,
-                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
-                                    data.style.backing,
-                                ); },
+                                ); 
                             };
                         };
                         this.control = new function(){
+                            interfacePart.partLibrary.control = {};
                             this.rastorgrid = function(
                                 name='rastorgrid', 
                                 x, y, width=80, height=80, angle=0, interactable=true,
@@ -29439,6 +29502,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.rastorgrid = function(name,data){ return interfacePart.collection.control.rastorgrid(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
+                                data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                data.onchange
+                            ); };
                             this.needleOverlay = function(
                                 name='needleOverlay',
                                 x, y, width=120, height=60, angle=0, interactable=true, needleWidth=1/Math.pow(2,9), selectNeedle=true, selectionArea=true,
@@ -29837,6 +29906,12 @@
                                     
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.needleOverlay = function(name,data){ return interfacePart.collection.control.needleOverlay(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
+                                data.onchange, data.onrelease, data.selectionAreaToggle,
+                            ); };
                             this.slidePanel_image = function(
                                 name='slidePanel_image', 
                                 x, y, width=80, height=95, angle=0, interactable=true,
@@ -29882,6 +29957,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.slidePanel_image = function(name,data){ return interfacePart.collection.control.slidePanel_image(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                                data.handleURL, data.backingURL, data.overlayURL, data.style.invisibleHandle,
+                                data.onchange, data.onrelease
+                            ); };
                             this.rangeslide_image = function(
                                 name='rangeslide_image', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -30148,6 +30229,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.rangeslide_image = function(name,data){ return interfacePart.collection.control.rangeslide_image(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                                data.handleURL, data.backingURL, data.style.invisibleHandle, data.spanURL,
+                                data.onchange, data.onrelease
+                            ); };
                             this.slide_discrete = function(
                                 name='slide_discrete', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -30279,6 +30366,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.slide_discrete = function(name,data){ return interfacePart.collection.control.slide_discrete(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+                                data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                                data.onchange, data.onrelease
+                            ); };
                             this.slidePanel = function(
                                 name='slidePanel', 
                                 x, y, width=80, height=95, angle=0, interactable=true,
@@ -30319,6 +30412,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
+                                data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                                data.onchange, data.onrelease
+                            ); };
                             this.slide_continuous_image = function(
                                 name='slide_continuous_image', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -30476,6 +30575,16 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.slide_continuous_image = function(name,data){ return interfacePart.collection.control.slide_continuous_image(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+                                data.handleURL, data.backingURL, data.style.invisibleHandle,
+                                data.onchange, data.onrelease
+                            ); };
+                            interfacePart.partLibrary.control.slide_image = function(name,data){ 
+                                console.warn('depreciated - please use slide_continuous_image instead');
+                                return interfacePart.partLibrary.control.slide_continuous_image(name,data);
+                            };
                             this.slide_continuous = function(
                                 name='slide_continuous', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -30624,6 +30733,16 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.slide_continuous = function(name,data){ return interfacePart.collection.control.slide_continuous(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+                                data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                                data.onchange, data.onrelease
+                            ); };
+                            interfacePart.partLibrary.control.slide = function(name,data){ 
+                                console.warn('depreciated - please use slide_continuous instead');
+                                return interfacePart.partLibrary.control.slide_continuous(name,data);
+                            };
                             this.slide_discrete_image = function(
                                 name='slide_discrete_image', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -30753,6 +30872,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.slide_discrete_image = function(name,data){ return interfacePart.collection.control.slide_discrete_image(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+                                data.handleURL, data.backingURL, data.invisibleHandle,
+                                data.onchange, data.onrelease
+                            ); };
                             this.rangeslide = function(
                                 name='rangeslide', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
@@ -31008,6 +31133,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.rangeslide = function(name,data){ return interfacePart.collection.control.rangeslide(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
+                                data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
+                                data.onchange, data.onrelease
+                            ); };
                             this.checkbox_rectangle = function(
                                 name='checkbox_rectangle',
                                 x, y, width=20, height=20, angle=0, interactable=true,
@@ -31053,6 +31184,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.checkbox_rectangle = function(name,data){ return interfacePart.collection.control.checkbox_rectangle(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                data.onchange,
+                            ); };
                             this.checkbox_image = function(
                                 name='checkbox_image',
                                 x, y, width=20, height=20, angle=0, interactable=true,
@@ -31090,6 +31227,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.checkbox_image = function(name,data){ return interfacePart.collection.control.checkbox_image(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                data.uncheckURL, data.checkURL, data.uncheckGlowURL, data.checkGlowURL,
+                                data.onchange,
+                            ); };
                             this.checkbox_ = function(
                                 name='checkbox_',
                                 x, y, angle=0, interactable=true,
@@ -31145,6 +31288,11 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.checkbox_ = function(name,data){ return interfacePart.collection.control.checkbox_(
+                                name, data.x, data.y, data.angle, data.interactable,
+                                data.onchange, data.subject,
+                            ); };
                             this.checkbox_polygon = function(
                                 name='checkbox_polygon',
                                 x, y, 
@@ -31193,6 +31341,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.checkbox_polygon = function(name,data){ return interfacePart.collection.control.checkbox_polygon(
+                                name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
+                                data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                data.onchange,
+                            ); };
                             this.checkbox_circle = function(
                                 name='checkbox_circle',
                                 x, y, radius=10, angle=0, interactable=true,
@@ -31238,6 +31392,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.checkbox_circle = function(name,data){ return interfacePart.collection.control.checkbox_circle(
+                                name, data.x, data.y, data.radius, data.angle, data.interactable,
+                                data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
+                                data.onchange,
+                            ); };
                             this.sequencer = function(
                                 name='sequencer',
                                 x, y, width=300, height=100, angle=0, interactable=true,
@@ -32260,7 +32420,16 @@
                                 return object;
                             };
                             
-                            
+                            interfacePart.partLibrary.control.sequencer = function(name,data){ return interfacePart.collection.control.sequencer(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
+                                data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
+                                data.backingStyle, data.selectionAreaStyle,
+                                data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
+                                data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
+                                data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
+                                data.playheadStyle,
+                                data.onpan, data.onchangeviewarea, data.event,
+                            ); };
                             
                             
                             
@@ -32529,6 +32698,15 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.dial_continuous_image = function(name,data){ return interfacePart.collection.control.dial_continuous_image(
+                                name,
+                                data.x, data.y, data.radius, data.angle, data.interactable,
+                                data.value, data.resetValue,
+                                data.startAngle, data.maxAngle,
+                                data.handleURL, data.slotURL, data.needleURL,
+                                data.onchange, data.onrelease
+                            ); };
                             this.dial_1_discrete = function(
                                 name='dial_1_discrete',
                                 x, y, radius=10, angle=0, interactable=true,
@@ -32651,6 +32829,16 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.dial_1_discrete = function(name,data){ return interfacePart.collection.control.dial_1_discrete(
+                                name,
+                                data.x, data.y, data.radius, data.angle, data.interactable,
+                                data.value, data.resetValue, data.optionCount,
+                                data.startAngle, data.maxAngle,
+                                data.style.handle, data.style.slot, data.style.needle,
+                                data.onchange, data.onrelease
+                            ); };
+                            interfacePart.partLibrary.control.dial_discrete = interfacePart.partLibrary.control.dial_1_discrete;
                             this.dial_2_discrete = function(
                                 name='dial_2_discrete',
                                 x, y, radius=10, angle=0, interactable=true,
@@ -32773,6 +32961,15 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.dial_2_discrete = function(name,data){ return interfacePart.collection.control.dial_2_discrete(
+                                name,
+                                data.x, data.y, data.radius, data.angle, data.interactable,
+                                data.value, data.resetValue, data.optionCount,
+                                data.startAngle, data.maxAngle,
+                                data.style.handle, data.style.slot, data.style.needle,
+                                data.onchange, data.onrelease
+                            ); };
                             this.dial_discrete_image = function(
                                 name='dial_discrete_image',
                                 x, y, radius=10, angle=0, interactable=true,
@@ -32893,6 +33090,15 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.dial_discrete_image = function(name,data){ return interfacePart.collection.control.dial_discrete_image(
+                                name,
+                                data.x, data.y, data.radius, data.angle, data.interactable,
+                                data.value, data.resetValue, data.optionCount,
+                                data.startAngle, data.maxAngle,
+                                data.handleURL, data.slotURL, data.needleURL,
+                                data.onchange, data.onrelease
+                            ); };
                             this.dial_2_continuous = function(
                                 name='dial_2_continuous',
                                 x, y, radius=10, angle=0, interactable=true,
@@ -33021,6 +33227,15 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.dial_2_continuous = function(name,data){ return interfacePart.collection.control.dial_2_continuous(
+                                name,
+                                data.x, data.y, data.radius, data.angle, data.interactable,
+                                data.value, data.resetValue,
+                                data.startAngle, data.maxAngle,
+                                data.style.handle, data.style.slot, data.style.needle,
+                                data.onchange, data.onrelease
+                            ); };
                             this.dial_1_continuous = function(
                                 name='dial_1_continuous',
                                 x, y, radius=10, angle=0, interactable=true,
@@ -33143,6 +33358,16 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.dial_1_continuous = function(name,data){ return interfacePart.collection.control.dial_1_continuous(
+                                name,
+                                data.x, data.y, data.radius, data.angle, data.interactable,
+                                data.value, data.resetValue,
+                                data.startAngle, data.maxAngle,
+                                data.style.handle, data.style.slot, data.style.needle,
+                                data.onchange, data.onrelease
+                            ); };
+                            interfacePart.partLibrary.control.dial_continuous = interfacePart.partLibrary.control.dial_1_continuous;
                             this.button_circle = function(
                                 name='button_circle',
                                 x, y, radius=15,  angle=0, interactable=true,
@@ -33296,6 +33521,40 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.button_circle = function(name,data){ return interfacePart.collection.control.button_circle(
+                                name, data.x, data.y, data.r, data.angle, data.interactable,
+                                data.text_centre,
+                                data.active, data.hoverable, data.selectable, data.pressable,
+                            
+                                data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+                            
+                                data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                                data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                                data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                                data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                                data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                                data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                                data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                                data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                                data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                                data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                                data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                                data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                                data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                                data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                                data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                                data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                                data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
+                            
+                                data.onenter,
+                                data.onleave,
+                                data.onpress,
+                                data.ondblpress,
+                                data.onrelease,
+                                data.onselect,
+                                data.ondeselect,
+                            ); };
                             this.button_rectangle = function(
                                 name='button_rectangle',
                                 x, y, width=30, height=20, angle=0, interactable=true,
@@ -33478,6 +33737,41 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.button_rectangle = function(name,data){ return interfacePart.collection.control.button_rectangle(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                data.text_centre, data.text_left, data.text_right,
+                                data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
+                                data.active, data.hoverable, data.selectable, data.pressable,
+                            
+                                data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+                            
+                                data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                                data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                                data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                                data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                                data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                                data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                                data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                                data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                                data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                                data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                                data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                                data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                                data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                                data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                                data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                                data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                                data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
+                            
+                                data.onenter,
+                                data.onleave,
+                                data.onpress,
+                                data.ondblpress,
+                                data.onrelease,
+                                data.onselect,
+                                data.ondeselect,
+                            ); };
                             this.button_ = function(
                                 name='',
                                 x, y, angle=0, interactable=true,
@@ -33587,6 +33881,21 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.button_ = function(name,data){ return interfacePart.collection.control.button_(
+                                name, data.x, data.y, data.angle, data.interactable,
+                                data.active, data.hoverable, data.selectable, data.pressable,
+                            
+                                data.onenter,
+                                data.onleave,
+                                data.onpress,
+                                data.ondblpress,
+                                data.onrelease,
+                                data.onselect,
+                                data.ondeselect,
+                                
+                                data.subject,
+                            ); };
                             this.button_polygon = function(
                                 name='button_polygon',
                                 x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, interactable=true,
@@ -33745,6 +34054,40 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.button_polygon = function(name,data){ return interfacePart.collection.control.button_polygon(
+                                name, data.x, data.y, data.points, data.angle, data.interactable,
+                                data.text_centre,
+                                data.active, data.hoverable, data.selectable, data.pressable,
+                            
+                                data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+                            
+                                data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
+                                data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
+                                data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
+                                data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
+                                data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
+                                data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
+                                data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
+                                data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
+                                data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
+                                data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
+                                data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
+                                data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
+                                data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
+                                data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
+                                data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
+                                data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
+                                data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
+                            
+                                data.onenter,
+                                data.onleave,
+                                data.onpress,
+                                data.ondblpress,
+                                data.onrelease,
+                                data.onselect,
+                                data.ondeselect,
+                            ); };
                             this.button_image = function(
                                 name='button_image',
                                 x, y, width=30, height=20, angle=0, interactable=true,
@@ -33840,6 +34183,37 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.button_image = function(name,data){ return interfacePart.collection.control.button_image(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
+                                data.active, data.hoverable, data.selectable, data.pressable,
+                            
+                                data.backingURL__off,
+                                data.backingURL__up,
+                                data.backingURL__press,
+                                data.backingURL__select,
+                                data.backingURL__select_press,
+                                data.backingURL__glow,
+                                data.backingURL__glow_press,
+                                data.backingURL__glow_select,
+                                data.backingURL__glow_select_press,
+                                data.backingURL__hover,
+                                data.backingURL__hover_press,
+                                data.backingURL__hover_select,
+                                data.backingURL__hover_select_press,
+                                data.backingURL__hover_glow,
+                                data.backingURL__hover_glow_press,
+                                data.backingURL__hover_glow_select,
+                                data.backingURL__hover_glow_select_press,
+                            
+                                data.onenter,
+                                data.onleave,
+                                data.onpress,
+                                data.ondblpress,
+                                data.onrelease,
+                                data.onselect,
+                                data.ondeselect,
+                            ); };
                             this.grapher_waveWorkspace = function(
                                 name='grapher_waveWorkspace',
                                 x, y, width=120, height=60, angle=0, interactable=true, selectNeedle=true, selectionArea=true,
@@ -33919,6 +34293,15 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.grapher_waveWorkspace = function(name,data){ return interfacePart.collection.control.grapher_waveWorkspace(
+                                name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
+                                data.style.foregrounds, data.style.foregroundText,
+                                data.style.background_colour, data.style.background_lineThickness,
+                                data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                data.style.backing,
+                                data.onchange, data.onrelease, data.selectionAreaToggle
+                            ); };
                             this.list_image = function(
                                 name='list_image', 
                                 x, y, angle=0, interactable=true, list=[],
@@ -34369,6 +34752,54 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.control.list_image = function(name,data){ return interfacePart.collection.control.list_image(
+                                name, data.x, data.y, data.angle, data.interactable, data.list,
+                                data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+                                data.limitHeightTo, data.limitWidthTo,
+                            
+                                data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+                            
+                                data.backingURL, 
+                                data.breakURL,
+                                data.textbreakURL,
+                                data.sublist__up,
+                                data.sublist__hover,
+                                data.sublist__glow,
+                                data.sublist__hover_glow,
+                                data.sublist__hover_glow_press,
+                            
+                                data.checkbox_uncheckURL, 
+                                data.checkbox_checkURL, 
+                                data.checkbox_uncheckGlowURL, 
+                                data.checkbox_checkGlowURL,
+                                
+                                data.itemURL__off,
+                                data.itemURL__up,
+                                data.itemURL__press,
+                                data.itemURL__select,
+                                data.itemURL__select_press,
+                                data.itemURL__glow,
+                                data.itemURL__glow_press,
+                                data.itemURL__glow_select,
+                                data.itemURL__glow_select_press,
+                                data.itemURL__hover,
+                                data.itemURL__hover_press,
+                                data.itemURL__hover_select,
+                                data.itemURL__hover_select_press,
+                                data.itemURL__hover_glow,
+                                data.itemURL__hover_glow_press,
+                                data.itemURL__hover_glow_select,
+                                data.itemURL__hover_glow_select_press,
+                            
+                                data.onenter,
+                                data.onleave,
+                                data.onpress,
+                                data.ondblpress,
+                                data.onrelease,
+                                data.onselection,
+                                data.onpositionchange,
+                            ); };
                             this.list = function(
                                 name='list', 
                                 x, y, angle=0, interactable=true,
@@ -35026,500 +35457,50 @@
                                 return object;
                             };
                             
-                            interfacePart.partLibrary.control = {};
+                            interfacePart.partLibrary.control.list = function(name,data){ return interfacePart.collection.control.list(
+                                name, data.x, data.y, data.angle, data.interactable, data.list,
+                                data.limitHeightTo, data.limitWidthTo,
                             
+                                data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+                                data.textbreak_fontSize, data.textbreak_colour,
+                                data.item_textSize, data.item_textColour, data.item_textFont, data.item_textSpacing, data.item_textInterCharacterSpacing,
+                                data.sublist_arrowSize, data.sublist_arrowColour,
+                                data.item_textVerticalOffsetMux, data.item_textHorizontalOffsetMux,
                             
+                                data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
                             
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            //button
-                                interfacePart.partLibrary.control.button_ = function(name,data){ return interfacePart.collection.control.button_(
-                                    name, data.x, data.y, data.angle, data.interactable,
-                                    data.active, data.hoverable, data.selectable, data.pressable,
-                            
-                                    data.onenter,
-                                    data.onleave,
-                                    data.onpress,
-                                    data.ondblpress,
-                                    data.onrelease,
-                                    data.onselect,
-                                    data.ondeselect,
-                                    
-                                    data.subject,
-                                ); };
-                                interfacePart.partLibrary.control.button_image = function(name,data){ return interfacePart.collection.control.button_image(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                                    data.active, data.hoverable, data.selectable, data.pressable,
-                            
-                                    data.backingURL__off,
-                                    data.backingURL__up,
-                                    data.backingURL__press,
-                                    data.backingURL__select,
-                                    data.backingURL__select_press,
-                                    data.backingURL__glow,
-                                    data.backingURL__glow_press,
-                                    data.backingURL__glow_select,
-                                    data.backingURL__glow_select_press,
-                                    data.backingURL__hover,
-                                    data.backingURL__hover_press,
-                                    data.backingURL__hover_select,
-                                    data.backingURL__hover_select_press,
-                                    data.backingURL__hover_glow,
-                                    data.backingURL__hover_glow_press,
-                                    data.backingURL__hover_glow_select,
-                                    data.backingURL__hover_glow_select_press,
+                                data.style.backing_style,
+                                data.style.break_style,
                                 
-                                    data.onenter,
-                                    data.onleave,
-                                    data.onpress,
-                                    data.ondblpress,
-                                    data.onrelease,
-                                    data.onselect,
-                                    data.ondeselect,
-                                ); };
-                                interfacePart.partLibrary.control.button_circle = function(name,data){ return interfacePart.collection.control.button_circle(
-                                    name, data.x, data.y, data.r, data.angle, data.interactable,
-                                    data.text_centre,
-                                    data.active, data.hoverable, data.selectable, data.pressable,
-                            
-                                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
-                            
-                                    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
-                                    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
-                                    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
-                                    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
-                                    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
-                                    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
-                                    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
-                                    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
-                                    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
-                                    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
-                                    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
-                                    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
-                                    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
-                                    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
-                                    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
-                                    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
-                                    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
-                                
-                                    data.onenter,
-                                    data.onleave,
-                                    data.onpress,
-                                    data.ondblpress,
-                                    data.onrelease,
-                                    data.onselect,
-                                    data.ondeselect,
-                                ); };
-                                interfacePart.partLibrary.control.button_polygon = function(name,data){ return interfacePart.collection.control.button_polygon(
-                                    name, data.x, data.y, data.points, data.angle, data.interactable,
-                                    data.text_centre,
-                                    data.active, data.hoverable, data.selectable, data.pressable,
-                            
-                                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
-                            
-                                    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
-                                    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
-                                    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
-                                    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
-                                    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
-                                    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
-                                    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
-                                    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
-                                    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
-                                    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
-                                    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
-                                    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
-                                    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
-                                    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
-                                    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
-                                    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
-                                    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
-                                
-                                    data.onenter,
-                                    data.onleave,
-                                    data.onpress,
-                                    data.ondblpress,
-                                    data.onrelease,
-                                    data.onselect,
-                                    data.ondeselect,
-                                ); };
-                                interfacePart.partLibrary.control.button_rectangle = function(name,data){ return interfacePart.collection.control.button_rectangle(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                                    data.text_centre, data.text_left, data.text_right,
-                                    data.textVerticalOffsetMux, data.textHorizontalOffsetMux,
-                                    data.active, data.hoverable, data.selectable, data.pressable,
-                            
-                                    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
-                            
-                                    data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
-                                    data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
-                                    data.style.background__press__colour,                   data.style.background__press__lineColour,                   data.style.background__press__lineThickness,
-                                    data.style.background__select__colour,                  data.style.background__select__lineColour,                  data.style.background__select__lineThickness,
-                                    data.style.background__select_press__colour,            data.style.background__select_press__lineColour,            data.style.background__select_press__lineThickness,
-                                    data.style.background__glow__colour,                    data.style.background__glow__lineColour,                    data.style.background__glow__lineThickness,
-                                    data.style.background__glow_press__colour,              data.style.background__glow_press__lineColour,              data.style.background__glow_press__lineThickness,
-                                    data.style.background__glow_select__colour,             data.style.background__glow_select__lineColour,             data.style.background__glow_select__lineThickness,
-                                    data.style.background__glow_select_press__colour,       data.style.background__glow_select_press__lineColour,       data.style.background__glow_select_press__lineThickness,
-                                    data.style.background__hover__colour,                   data.style.background__hover__lineColour,                   data.style.background__hover__lineThickness,
-                                    data.style.background__hover_press__colour,             data.style.background__hover_press__lineColour,             data.style.background__hover_press__lineThickness,
-                                    data.style.background__hover_select__colour,            data.style.background__hover_select__lineColour,            data.style.background__hover_select__lineThickness,
-                                    data.style.background__hover_select_press__colour,      data.style.background__hover_select_press__lineColour,      data.style.background__hover_select_press__lineThickness,
-                                    data.style.background__hover_glow__colour,              data.style.background__hover_glow__lineColour,              data.style.background__hover_glow__lineThickness,
-                                    data.style.background__hover_glow_press__colour,        data.style.background__hover_glow_press__lineColour,        data.style.background__hover_glow_press__lineThickness,
-                                    data.style.background__hover_glow_select__colour,       data.style.background__hover_glow_select__lineColour,       data.style.background__hover_glow_select__lineThickness,
-                                    data.style.background__hover_glow_select_press__colour, data.style.background__hover_glow_select_press__lineColour, data.style.background__hover_glow_select_press__lineThickness,
-                                
-                                    data.onenter,
-                                    data.onleave,
-                                    data.onpress,
-                                    data.ondblpress,
-                                    data.onrelease,
-                                    data.onselect,
-                                    data.ondeselect,
-                                ); };
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            //dial
-                                interfacePart.partLibrary.control.dial_1_continuous = function(name,data){ return interfacePart.collection.control.dial_1_continuous(
-                                    name,
-                                    data.x, data.y, data.radius, data.angle, data.interactable,
-                                    data.value, data.resetValue,
-                                    data.startAngle, data.maxAngle,
-                                    data.style.handle, data.style.slot, data.style.needle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.dial_continuous = interfacePart.partLibrary.control.dial_1_continuous;
-                                interfacePart.partLibrary.control.dial_2_continuous = function(name,data){ return interfacePart.collection.control.dial_2_continuous(
-                                    name,
-                                    data.x, data.y, data.radius, data.angle, data.interactable,
-                                    data.value, data.resetValue,
-                                    data.startAngle, data.maxAngle,
-                                    data.style.handle, data.style.slot, data.style.needle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.dial_1_discrete = function(name,data){ return interfacePart.collection.control.dial_1_discrete(
-                                    name,
-                                    data.x, data.y, data.radius, data.angle, data.interactable,
-                                    data.value, data.resetValue, data.optionCount,
-                                    data.startAngle, data.maxAngle,
-                                    data.style.handle, data.style.slot, data.style.needle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.dial_discrete = interfacePart.partLibrary.control.dial_1_discrete;
-                                interfacePart.partLibrary.control.dial_2_discrete = function(name,data){ return interfacePart.collection.control.dial_2_discrete(
-                                    name,
-                                    data.x, data.y, data.radius, data.angle, data.interactable,
-                                    data.value, data.resetValue, data.optionCount,
-                                    data.startAngle, data.maxAngle,
-                                    data.style.handle, data.style.slot, data.style.needle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.dial_continuous_image = function(name,data){ return interfacePart.collection.control.dial_continuous_image(
-                                    name,
-                                    data.x, data.y, data.radius, data.angle, data.interactable,
-                                    data.value, data.resetValue,
-                                    data.startAngle, data.maxAngle,
-                                    data.handleURL, data.slotURL, data.needleURL,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.dial_discrete_image = function(name,data){ return interfacePart.collection.control.dial_discrete_image(
-                                    name,
-                                    data.x, data.y, data.radius, data.angle, data.interactable,
-                                    data.value, data.resetValue, data.optionCount,
-                                    data.startAngle, data.maxAngle,
-                                    data.handleURL, data.slotURL, data.needleURL,
-                                    data.onchange, data.onrelease
-                                ); };
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            //slide
-                                interfacePart.partLibrary.control.slide_continuous = function(name,data){ return interfacePart.collection.control.slide_continuous(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
-                                    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.slide_continuous_image = function(name,data){ return interfacePart.collection.control.slide_continuous_image(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
-                                    data.handleURL, data.backingURL, data.style.invisibleHandle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.slide = function(name,data){ 
-                                    console.warn('depreciated - please use slide_continuous instead');
-                                    return interfacePart.partLibrary.control.slide_continuous(name,data);
-                                };
-                                interfacePart.partLibrary.control.slide_image = function(name,data){ 
-                                    console.warn('depreciated - please use slide_continuous_image instead');
-                                    return interfacePart.partLibrary.control.slide_continuous_image(name,data);
-                                };
-                                interfacePart.partLibrary.control.slide_discrete = function(name,data){ return interfacePart.collection.control.slide_discrete(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
-                                    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.slide_discrete_image = function(name,data){ return interfacePart.collection.control.slide_discrete_image(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
-                                    data.handleURL, data.backingURL, data.invisibleHandle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-                                    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.slidePanel_image = function(name,data){ return interfacePart.collection.control.slidePanel_image(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.count, data.value, data.resetValue, 
-                                    data.handleURL, data.backingURL, data.overlayURL, data.style.invisibleHandle,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.rangeslide = function(name,data){ return interfacePart.collection.control.rangeslide(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-                                    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle, data.style.span,
-                                    data.onchange, data.onrelease
-                                ); };
-                                interfacePart.partLibrary.control.rangeslide_image = function(name,data){ return interfacePart.collection.control.rangeslide_image(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.spanWidth, data.values, data.resetValues, 
-                                    data.handleURL, data.backingURL, data.style.invisibleHandle, data.spanURL,
-                                    data.onchange, data.onrelease
-                                ); };
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            //list
-                                interfacePart.partLibrary.control.list = function(name,data){ return interfacePart.collection.control.list(
-                                    name, data.x, data.y, data.angle, data.interactable, data.list,
-                                    data.limitHeightTo, data.limitWidthTo,
-                            
-                                    data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
-                                    data.textbreak_fontSize, data.textbreak_colour,
-                                    data.item_textSize, data.item_textColour, data.item_textFont, data.item_textSpacing, data.item_textInterCharacterSpacing,
-                                    data.sublist_arrowSize, data.sublist_arrowColour,
-                                    data.item_textVerticalOffsetMux, data.item_textHorizontalOffsetMux,
-                            
-                                    data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
-                                
-                                    data.style.backing_style,
-                                    data.style.break_style,
-                                    
-                                    data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
-                                    data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
-                                    data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
-                                    data.style.item__select__colour,                  data.style.item__select__lineColour,                  data.style.item__select__lineThickness,
-                                    data.style.item__select_press__colour,            data.style.item__select_press__lineColour,            data.style.item__select_press__lineThickness,
-                                    data.style.item__glow__colour,                    data.style.item__glow__lineColour,                    data.style.item__glow__lineThickness,
-                                    data.style.item__glow_press__colour,              data.style.item__glow_press__lineColour,              data.style.item__glow_press__lineThickness,
-                                    data.style.item__glow_select__colour,             data.style.item__glow_select__lineColour,             data.style.item__glow_select__lineThickness,
-                                    data.style.item__glow_select_press__colour,       data.style.item__glow_select_press__lineColour,       data.style.item__glow_select_press__lineThickness,
-                                    data.style.item__hover__colour,                   data.style.item__hover__lineColour,                   data.style.item__hover__lineThickness,
-                                    data.style.item__hover_press__colour,             data.style.item__hover_press__lineColour,             data.style.item__hover_press__lineThickness,
-                                    data.style.item__hover_select__colour,            data.style.item__hover_select__lineColour,            data.style.item__hover_select__lineThickness,
-                                    data.style.item__hover_select_press__colour,      data.style.item__hover_select_press__lineColour,      data.style.item__hover_select_press__lineThickness,
-                                    data.style.item__hover_glow__colour,              data.style.item__hover_glow__lineColour,              data.style.item__hover_glow__lineThickness,
-                                    data.style.item__hover_glow_press__colour,        data.style.item__hover_glow_press__lineColour,        data.style.item__hover_glow_press__lineThickness,
-                                    data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
-                                    data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
-                                
-                                    data.onenter,
-                                    data.onleave,
-                                    data.onpress,
-                                    data.ondblpress,
-                                    data.onrelease,
-                                    data.onselection,
-                                    data.onpositionchange,
-                                ); };
-                                interfacePart.partLibrary.control.list_image = function(name,data){ return interfacePart.collection.control.list_image(
-                                    name, data.x, data.y, data.angle, data.interactable, data.list,
-                                    data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
-                                    data.limitHeightTo, data.limitWidthTo,
-                            
-                                    data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
-                                
-                                    data.backingURL, 
-                                    data.breakURL,
-                                    data.textbreakURL,
-                                    data.sublist__up,
-                                    data.sublist__hover,
-                                    data.sublist__glow,
-                                    data.sublist__hover_glow,
-                                    data.sublist__hover_glow_press,
-                            
-                                    data.checkbox_uncheckURL, 
-                                    data.checkbox_checkURL, 
-                                    data.checkbox_uncheckGlowURL, 
-                                    data.checkbox_checkGlowURL,
-                                    
-                                    data.itemURL__off,
-                                    data.itemURL__up,
-                                    data.itemURL__press,
-                                    data.itemURL__select,
-                                    data.itemURL__select_press,
-                                    data.itemURL__glow,
-                                    data.itemURL__glow_press,
-                                    data.itemURL__glow_select,
-                                    data.itemURL__glow_select_press,
-                                    data.itemURL__hover,
-                                    data.itemURL__hover_press,
-                                    data.itemURL__hover_select,
-                                    data.itemURL__hover_select_press,
-                                    data.itemURL__hover_glow,
-                                    data.itemURL__hover_glow_press,
-                                    data.itemURL__hover_glow_select,
-                                    data.itemURL__hover_glow_select_press,
-                                
-                                    data.onenter,
-                                    data.onleave,
-                                    data.onpress,
-                                    data.ondblpress,
-                                    data.onrelease,
-                                    data.onselection,
-                                    data.onpositionchange,
-                                ); };
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            //checkbox
-                                interfacePart.partLibrary.control.checkbox_ = function(name,data){ return interfacePart.collection.control.checkbox_(
-                                    name, data.x, data.y, data.angle, data.interactable,
-                                    data.onchange, data.subject,
-                                ); };
-                                interfacePart.partLibrary.control.checkbox_circle = function(name,data){ return interfacePart.collection.control.checkbox_circle(
-                                    name, data.x, data.y, data.radius, data.angle, data.interactable,
-                                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                                    data.onchange,
-                                ); };
-                                interfacePart.partLibrary.control.checkbox_image = function(name,data){ return interfacePart.collection.control.checkbox_image(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                                    data.uncheckURL, data.checkURL, data.uncheckGlowURL, data.checkGlowURL,
-                                    data.onchange,
-                                ); };
-                                interfacePart.partLibrary.control.checkbox_polygon = function(name,data){ return interfacePart.collection.control.checkbox_polygon(
-                                    name, data.x, data.y, data.outterPoints, data.innerPoints, data.angle, data.interactable,
-                                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                                    data.onchange,
-                                ); };
-                                interfacePart.partLibrary.control.checkbox_rectangle = function(name,data){ return interfacePart.collection.control.checkbox_rectangle(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                                    data.onchange,
-                                ); };
-                                interfacePart.partLibrary.control.rastorgrid = function(name,data){ return interfacePart.collection.control.rastorgrid(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.xCount, data.yCount,
-                                    data.style.check, data.style.backing, data.style.checkGlow, data.style.backingGlow,
-                                    data.onchange
-                                ); };
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                                interfacePart.partLibrary.control.needleOverlay = function(name,data){ return interfacePart.collection.control.needleOverlay(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,
-                                    data.needleWidth, data.selectNeedle, data.selectionArea, data.style.needles,
-                                    data.onchange, data.onrelease, data.selectionAreaToggle,
-                                ); };
-                            
-                            
-                            
-                            
-                                interfacePart.partLibrary.control.grapher_waveWorkspace = function(name,data){ return interfacePart.collection.control.grapher_waveWorkspace(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.selectNeedle, data.selectionArea,
-                                    data.style.foregrounds, data.style.foregroundText,
-                                    data.style.background_colour, data.style.background_lineThickness,
-                                    data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
-                                    data.style.backing,
-                                    data.onchange, data.onrelease, data.selectionAreaToggle
-                                ); };
-                            
-                            
-                                
-                            
-                                interfacePart.partLibrary.control.sequencer = function(name,data){ return interfacePart.collection.control.sequencer(
-                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable,             
-                                    data.xCount, data.yCount, data.zoomLevel_x, data.zoomLevel_y,
-                                    data.backingStyle, data.selectionAreaStyle,
-                                    data.blockStyle_body, data.blockStyle_bodyGlow, data.blockStyle_handle, data.blockStyle_handleWidth,
-                                    data.horizontalStripStyle_pattern, data.horizontalStripStyle_glow, data.horizontalStripStyle_styles,
-                                    data.verticalStripStyle_pattern,   data.verticalStripStyle_glow,   data.verticalStripStyle_styles,
-                                    data.playheadStyle,
-                                    data.onpan, data.onchangeviewarea, data.event,
-                                ); };
+                                data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
+                                data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
+                                data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
+                                data.style.item__select__colour,                  data.style.item__select__lineColour,                  data.style.item__select__lineThickness,
+                                data.style.item__select_press__colour,            data.style.item__select_press__lineColour,            data.style.item__select_press__lineThickness,
+                                data.style.item__glow__colour,                    data.style.item__glow__lineColour,                    data.style.item__glow__lineThickness,
+                                data.style.item__glow_press__colour,              data.style.item__glow_press__lineColour,              data.style.item__glow_press__lineThickness,
+                                data.style.item__glow_select__colour,             data.style.item__glow_select__lineColour,             data.style.item__glow_select__lineThickness,
+                                data.style.item__glow_select_press__colour,       data.style.item__glow_select_press__lineColour,       data.style.item__glow_select_press__lineThickness,
+                                data.style.item__hover__colour,                   data.style.item__hover__lineColour,                   data.style.item__hover__lineThickness,
+                                data.style.item__hover_press__colour,             data.style.item__hover_press__lineColour,             data.style.item__hover_press__lineThickness,
+                                data.style.item__hover_select__colour,            data.style.item__hover_select__lineColour,            data.style.item__hover_select__lineThickness,
+                                data.style.item__hover_select_press__colour,      data.style.item__hover_select_press__lineColour,      data.style.item__hover_select_press__lineThickness,
+                                data.style.item__hover_glow__colour,              data.style.item__hover_glow__lineColour,              data.style.item__hover_glow__lineThickness,
+                                data.style.item__hover_glow_press__colour,        data.style.item__hover_glow_press__lineColour,        data.style.item__hover_glow_press__lineThickness,
+                                data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
+                                data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
+                            
+                                data.onenter,
+                                data.onleave,
+                                data.onpress,
+                                data.ondblpress,
+                                data.onrelease,
+                                data.onselection,
+                                data.onpositionchange,
+                            ); };
                         };
                         this.dynamic = new function(){
+                            interfacePart.partLibrary.dynamic = {};
                             this.connectionNode_voltage = function(
                                 name='connectionNode_voltage',
                                 x, y, angle=0, width=20, height=20,
@@ -35570,6 +35551,14 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode_voltage = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode_voltage(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+                                    data.onchange, data.onconnect, data.ondisconnect,
+                                ); 
+                            };
                             this.cable = function(
                                 name='cable', 
                                 x1=0, y1=0, x2=0, y2=0,
@@ -35600,7 +35589,11 @@
                                 return object;
                             };
                             
-                            
+                            interfacePart.partLibrary.dynamic.cable = function(name,data){ return interfacePart.collection.dynamic.cable(
+                                    name, data.x1, data.y1, data.x2, data.y2,
+                                    data.style.dim, data.style.glow,
+                                ); 
+                            };
                             
                             
                             
@@ -35699,6 +35692,12 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.dynamic.cable2 = function(name,data){ return interfacePart.collection.dynamic.cable2(
+                                    name, data.x1, data.y1, data.x2, data.y2,
+                                    data.style.dim, data.style.glow,
+                                ); 
+                            };
                             this.connectionNode_audio = function(
                                 name='connectionNode_audio',
                                 x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
@@ -35736,6 +35735,14 @@
                                     };
                                 
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode_audio = function(name,data){
+                                return interfacePart.collection.dynamic.connectionNode_audio(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableVersion,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+                                    data.onconnect, data.ondisconnect,
+                                ); 
                             };
                             this.connectionNode_data = function(
                                 name='connectionNode_data',
@@ -35784,6 +35791,14 @@
                                     object.ongivedata = ongivedata;
                             
                                 return object;
+                            };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode_data = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode_data(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+                                    data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
+                                ); 
                             };
                             this.connectionNode = function(
                                 name='connectionNode',
@@ -35952,6 +35967,14 @@
                             
                                 return object;
                             };
+                            
+                            interfacePart.partLibrary.dynamic.connectionNode = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode(
+                                    name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+                                    data.onconnect, data.ondisconnect,
+                                ); 
+                            };
                             this.connectionNode_signal = function(
                                 name='connectionNode_signal',
                                 x, y, angle=0, width=20, height=20,
@@ -36003,40 +36026,12 @@
                                 return object;
                             };
                             
-                            interfacePart.partLibrary.dynamic = {
-                                cable: function(name,data){ return interfacePart.collection.dynamic.cable(
-                                    name, data.x1, data.y1, data.x2, data.y2,
-                                    data.style.dim, data.style.glow,
-                                ); },
-                                cable2: function(name,data){ return interfacePart.collection.dynamic.cable2(
-                                    name, data.x1, data.y1, data.x2, data.y2,
-                                    data.style.dim, data.style.glow,
-                                ); },
-                                connectionNode: function(name,data){ return interfacePart.collection.dynamic.connectionNode(
-                                    name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
-                                    data.onconnect, data.ondisconnect,
-                                ); },
-                                connectionNode_signal: function(name,data){ return interfacePart.collection.dynamic.connectionNode_signal(
+                            interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){ 
+                                return interfacePart.collection.dynamic.connectionNode_signal(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
                                     data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
                                     data.onchange, data.onconnect, data.ondisconnect,
-                                ); },
-                                connectionNode_voltage: function(name,data){ return interfacePart.collection.dynamic.connectionNode_voltage(
-                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
-                                    data.onchange, data.onconnect, data.ondisconnect,
-                                ); },
-                                connectionNode_data: function(name,data){ return interfacePart.collection.dynamic.connectionNode_data(
-                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
-                                    data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
-                                ); },
-                                connectionNode_audio: function(name,data){ return interfacePart.collection.dynamic.connectionNode_audio(
-                                    name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableVersion,
-                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
-                                    data.onconnect, data.ondisconnect,
-                                ); },
+                                ); 
                             };
                         };
                     };
@@ -36437,7 +36432,7 @@
                                 if( unit.space.shape != undefined ){
                                     unit.space.shape.pointsAsXYArray(unit.space.originalPoints);
                                 }else{
-                                    unit.space.shape = _canvas_.interface.part.builder( 'basic', 'polygon', 'unit.space.shape', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
+                                    unit.space.shape = _canvas_.interface.part.builder( 'basic', 'polygon', 'personalSpace', { pointsAsXYArray:unit.space.originalPoints, colour:{r:0,g:1,b:0,a:0} } );
                                     unit.space.shape.unit = unit;
                                     unit.prepend( unit.space.shape );
                                 }
@@ -45446,16 +45441,28 @@
                         helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
                     };
                     this.eightStepSequencer = function(x,y,a){
-                        var width = 1670; var height = 590;
                         var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{
+                                width:1670,
+                                height:590,
+                            },
+                            design:{
+                                width:27.5, 
+                                height:9.5,
+                            },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
                         var shape = [
-                            {x:0,y:0},
-                            {x:width/div -20/div,y:0},
-                            {x:width/div -20/div,y:(height/div)*(5.5/9.5) -10/div},
-                            {x:(width/div)*(26/27.5) -20/div,y:(height/div)*(5.5/9.5) -10/div},
-                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(7/9.5) -10/div},
-                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(9.5/9.5) -20/div},
-                            {x:0,y:height/div -20/div},
+                            { x:0,                                                                    y:0                                                                      },
+                            { x:measurements.drawing.width -offset,                                   y:0                                                                      },
+                            { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                            { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                            { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
+                            { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
+                            { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
                         ];
                         var colours = [
                             {r:1,g:0.01,b:0.02,a:1},
@@ -45474,41 +45481,21 @@
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
                                     x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.data.dim, 
-                                        glow:style.connectionNode.data.glow, 
-                                        cable_dim:style.connectionCable.data.dim, 
-                                        cable_glow:style.connectionCable.data.glow 
-                                    }
+                                    style:{ dim:style.connectionNode.data.dim, glow:style.connectionNode.data.glow, cable_dim:style.connectionCable.data.dim, cable_glow:style.connectionCable.data.glow }
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
-                                    x:width/div-0.5 -20/div, y:10, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    x:measurements.drawing.width-0.5 -offset, y:10, width:5, height:10, cableVersion:2,
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(value){if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
-                                    x:width/div-0.5 -20/div, y:22, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    x:measurements.drawing.width-0.5 -offset, y:22, width:5, height:10, cableVersion:2,
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
-                                    x:width/div-0.5 -20/div, y:33, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    x:measurements.drawing.width-0.5 -offset, y:33, width:5, height:10, cableVersion:2,
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
                                 }},
                     
@@ -45516,7 +45503,7 @@
                     
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-10/div, y:-10/div, width:width/div, height:height/div, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
                                 },
                     
                                 {collection:'control', type:'button_image', name:'button_step', data:{
@@ -45537,12 +45524,7 @@
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
                                     x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(a){return function(value){
                                         if(!value){return} 
                     
@@ -45559,12 +45541,7 @@
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
                                     x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(a){return function(value){
                                         if(!value){return}
                     
@@ -45622,7 +45599,7 @@
                     
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
-                                    x:7 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    x:7 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.signal.dim, 
                                         glow:style.connectionNode.signal.glow,
@@ -45634,13 +45611,8 @@
                             );
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
-                                    x:18 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow,
-                                        cable_dim:style.connectionCable.voltage.dim,
-                                        cable_glow:style.connectionCable.voltage.glow,
-                                    },
+                                    x:18 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
                                     onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
                                 }}
                             );
@@ -45650,49 +45622,63 @@
                         //main object
                             var object = _canvas_.interface.unit.builder(this.ruler,design);
                     
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    stages:(new Array(8).fill(0)).map( (item,index) => {
+                                        return {
+                                            note: object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].get(),
+                                            octave: object.elements.slide_discrete_image['slide_octave_'+index].get(),
+                                            velocity: object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].get(),
+                                        }
+                                    }),
+                                    direction: object.elements.slide_discrete_image.slide_direction.get(),
+                                };
+                            };
+                            object.importData = function(data){
+                                if(data == undefined){return;} console.log(data);
+                    
+                                object.elements.slide_discrete_image.slide_direction.set(data.direction);
+                    
+                                data.stages.forEach( (stage,index) => {
+                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
+                                    object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
+                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
+                                });
+                            };
+                    
                         //internal circuitry
                             var state = {
                                 direction:1,
                                 previousPosition:-1,
-                                requestedNextPosition:-1,
                                 position:-1,
-                                stages:[
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                ],
+                                requestedNextPosition:-1,
+                                stages:new Array(8).fill({ note:0, octave:0, velocity:0 }),
                                 previousMidiNumber:-1,
                             }
                     
-                            function step(){
-                                state.previousPosition=state.position;
-                                if( state.requestedNextPosition != -1 ){
-                                    state.position = state.requestedNextPosition;
-                                    state.requestedNextPosition = -1;
-                                }else{
-                                    state.position = state.position+state.direction;
-                                }
-                                if(state.position > 7){state.position = 0;}
-                                else if(state.position < 0){state.position = 7;}
-                    
-                                var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
-                                object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
-                                object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
-                                state.previousMidiNumber = midiNumber
-                    
-                                if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
-                                object.elements.glowbox_rect['LED'+state.position].on(); 
-                            }
                             function stageToMidiNoteNumber(stage){
                                 var octaveOffset = 4;
                                 var note = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][stage.note];
                                 var octave = stage.octave+octaveOffset;
                                 return _canvas_.library.audio.name2num(octave+note);
+                            }
+                            function step(){
+                                //figure out what stage to send next
+                                    state.previousPosition = state.position;
+                                    state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction
+                                    state.requestedNextPosition = -1;
+                                    if(state.position > 7){state.position = 0;}else if(state.position < 0){state.position = 7;}
+                    
+                                //stop previous note and send the new one
+                                    var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
+                                    object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
+                                    object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
+                                    state.previousMidiNumber = midiNumber
+                    
+                                //light up the appropriate LED
+                                    if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
+                                    object.elements.glowbox_rect['LED'+state.position].on(); 
                             }
                         
                         //interface
@@ -45860,16 +45846,28 @@
                         helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
                     };
                     this.eightStepSequencer = function(x,y,a){
-                        var width = 1670; var height = 590;
                         var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{
+                                width:1670,
+                                height:590,
+                            },
+                            design:{
+                                width:27.5, 
+                                height:9.5,
+                            },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
                         var shape = [
-                            {x:0,y:0},
-                            {x:width/div -20/div,y:0},
-                            {x:width/div -20/div,y:(height/div)*(5.5/9.5) -10/div},
-                            {x:(width/div)*(26/27.5) -20/div,y:(height/div)*(5.5/9.5) -10/div},
-                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(7/9.5) -10/div},
-                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(9.5/9.5) -20/div},
-                            {x:0,y:height/div -20/div},
+                            { x:0,                                                                    y:0                                                                      },
+                            { x:measurements.drawing.width -offset,                                   y:0                                                                      },
+                            { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                            { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                            { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
+                            { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
+                            { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
                         ];
                         var colours = [
                             {r:1,g:0.01,b:0.02,a:1},
@@ -45888,41 +45886,21 @@
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
                                     x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.data.dim, 
-                                        glow:style.connectionNode.data.glow, 
-                                        cable_dim:style.connectionCable.data.dim, 
-                                        cable_glow:style.connectionCable.data.glow 
-                                    }
+                                    style:{ dim:style.connectionNode.data.dim, glow:style.connectionNode.data.glow, cable_dim:style.connectionCable.data.dim, cable_glow:style.connectionCable.data.glow }
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
-                                    x:width/div-0.5 -20/div, y:10, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    x:measurements.drawing.width-0.5 -offset, y:10, width:5, height:10, cableVersion:2,
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(value){if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
-                                    x:width/div-0.5 -20/div, y:22, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    x:measurements.drawing.width-0.5 -offset, y:22, width:5, height:10, cableVersion:2,
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
-                                    x:width/div-0.5 -20/div, y:33, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    x:measurements.drawing.width-0.5 -offset, y:33, width:5, height:10, cableVersion:2,
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
                                 }},
                     
@@ -45930,7 +45908,7 @@
                     
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-10/div, y:-10/div, width:width/div, height:height/div, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
                                 },
                     
                                 {collection:'control', type:'button_image', name:'button_step', data:{
@@ -45951,12 +45929,7 @@
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
                                     x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(a){return function(value){
                                         if(!value){return} 
                     
@@ -45973,12 +45946,7 @@
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
                                     x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
+                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                     onchange:function(a){return function(value){
                                         if(!value){return}
                     
@@ -46036,7 +46004,7 @@
                     
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
-                                    x:7 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    x:7 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.signal.dim, 
                                         glow:style.connectionNode.signal.glow,
@@ -46048,13 +46016,8 @@
                             );
                             design.elements.unshift(
                                 {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
-                                    x:18 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow,
-                                        cable_dim:style.connectionCable.voltage.dim,
-                                        cable_glow:style.connectionCable.voltage.glow,
-                                    },
+                                    x:18 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
                                     onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
                                 }}
                             );
@@ -46064,49 +46027,63 @@
                         //main object
                             var object = _canvas_.interface.unit.builder(this.ruler,design);
                     
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    stages:(new Array(8).fill(0)).map( (item,index) => {
+                                        return {
+                                            note: object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].get(),
+                                            octave: object.elements.slide_discrete_image['slide_octave_'+index].get(),
+                                            velocity: object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].get(),
+                                        }
+                                    }),
+                                    direction: object.elements.slide_discrete_image.slide_direction.get(),
+                                };
+                            };
+                            object.importData = function(data){
+                                if(data == undefined){return;} console.log(data);
+                    
+                                object.elements.slide_discrete_image.slide_direction.set(data.direction);
+                    
+                                data.stages.forEach( (stage,index) => {
+                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
+                                    object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
+                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
+                                });
+                            };
+                    
                         //internal circuitry
                             var state = {
                                 direction:1,
                                 previousPosition:-1,
-                                requestedNextPosition:-1,
                                 position:-1,
-                                stages:[
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                ],
+                                requestedNextPosition:-1,
+                                stages:new Array(8).fill({ note:0, octave:0, velocity:0 }),
                                 previousMidiNumber:-1,
                             }
                     
-                            function step(){
-                                state.previousPosition=state.position;
-                                if( state.requestedNextPosition != -1 ){
-                                    state.position = state.requestedNextPosition;
-                                    state.requestedNextPosition = -1;
-                                }else{
-                                    state.position = state.position+state.direction;
-                                }
-                                if(state.position > 7){state.position = 0;}
-                                else if(state.position < 0){state.position = 7;}
-                    
-                                var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
-                                object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
-                                object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
-                                state.previousMidiNumber = midiNumber
-                    
-                                if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
-                                object.elements.glowbox_rect['LED'+state.position].on(); 
-                            }
                             function stageToMidiNoteNumber(stage){
                                 var octaveOffset = 4;
                                 var note = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][stage.note];
                                 var octave = stage.octave+octaveOffset;
                                 return _canvas_.library.audio.name2num(octave+note);
+                            }
+                            function step(){
+                                //figure out what stage to send next
+                                    state.previousPosition = state.position;
+                                    state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction
+                                    state.requestedNextPosition = -1;
+                                    if(state.position > 7){state.position = 0;}else if(state.position < 0){state.position = 7;}
+                    
+                                //stop previous note and send the new one
+                                    var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
+                                    object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
+                                    object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
+                                    state.previousMidiNumber = midiNumber
+                    
+                                //light up the appropriate LED
+                                    if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
+                                    object.elements.glowbox_rect['LED'+state.position].on(); 
                             }
                         
                         //interface

@@ -654,3 +654,45 @@ this.list = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.list = function(name,data){ return interfacePart.collection.control.list(
+    name, data.x, data.y, data.angle, data.interactable, data.list,
+    data.limitHeightTo, data.limitWidthTo,
+
+    data.itemHeight, data.itemWidth, data.itemSpacingHeight, data.spacingHeight, data.breakHeight,
+    data.textbreak_fontSize, data.textbreak_colour,
+    data.item_textSize, data.item_textColour, data.item_textFont, data.item_textSpacing, data.item_textInterCharacterSpacing,
+    data.sublist_arrowSize, data.sublist_arrowColour,
+    data.item_textVerticalOffsetMux, data.item_textHorizontalOffsetMux,
+
+    data.active, data.multiSelect, data.hoverable, data.selectable, data.pressable,
+
+    data.style.backing_style,
+    data.style.break_style,
+    
+    data.style.item__off__colour,                     data.style.item__off__lineColour,                     data.style.item__off__lineThickness,
+    data.style.item__up__colour,                      data.style.item__up__lineColour,                      data.style.item__up__lineThickness,
+    data.style.item__press__colour,                   data.style.item__press__lineColour,                   data.style.item__press__lineThickness,
+    data.style.item__select__colour,                  data.style.item__select__lineColour,                  data.style.item__select__lineThickness,
+    data.style.item__select_press__colour,            data.style.item__select_press__lineColour,            data.style.item__select_press__lineThickness,
+    data.style.item__glow__colour,                    data.style.item__glow__lineColour,                    data.style.item__glow__lineThickness,
+    data.style.item__glow_press__colour,              data.style.item__glow_press__lineColour,              data.style.item__glow_press__lineThickness,
+    data.style.item__glow_select__colour,             data.style.item__glow_select__lineColour,             data.style.item__glow_select__lineThickness,
+    data.style.item__glow_select_press__colour,       data.style.item__glow_select_press__lineColour,       data.style.item__glow_select_press__lineThickness,
+    data.style.item__hover__colour,                   data.style.item__hover__lineColour,                   data.style.item__hover__lineThickness,
+    data.style.item__hover_press__colour,             data.style.item__hover_press__lineColour,             data.style.item__hover_press__lineThickness,
+    data.style.item__hover_select__colour,            data.style.item__hover_select__lineColour,            data.style.item__hover_select__lineThickness,
+    data.style.item__hover_select_press__colour,      data.style.item__hover_select_press__lineColour,      data.style.item__hover_select_press__lineThickness,
+    data.style.item__hover_glow__colour,              data.style.item__hover_glow__lineColour,              data.style.item__hover_glow__lineThickness,
+    data.style.item__hover_glow_press__colour,        data.style.item__hover_glow_press__lineColour,        data.style.item__hover_glow_press__lineThickness,
+    data.style.item__hover_glow_select__colour,       data.style.item__hover_glow_select__lineColour,       data.style.item__hover_glow_select__lineThickness,
+    data.style.item__hover_glow_select_press__colour, data.style.item__hover_glow_select_press__lineColour, data.style.item__hover_glow_select_press__lineThickness,
+
+    data.onenter,
+    data.onleave,
+    data.onpress,
+    data.ondblpress,
+    data.onrelease,
+    data.onselection,
+    data.onpositionchange,
+); };

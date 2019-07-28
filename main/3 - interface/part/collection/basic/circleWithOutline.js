@@ -16,3 +16,7 @@ this.circleWithOutline = function( name=null, x=0, y=0, angle=0, radius=10, deta
 
     return temp;
 };
+
+interfacePart.partLibrary.basic.circleWithOutline = function(name,data){ 
+    return interfacePart.collection.basic.circleWithOutline( name, data.x, data.y, data.angle, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
+};

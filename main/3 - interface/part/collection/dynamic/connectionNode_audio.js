@@ -36,3 +36,11 @@ this.connectionNode_audio = function(
     
     return object;
 };
+
+interfacePart.partLibrary.dynamic.connectionNode_audio = function(name,data){
+    return interfacePart.collection.dynamic.connectionNode_audio(
+        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableVersion,
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
+        data.onconnect, data.ondisconnect,
+    ); 
+};

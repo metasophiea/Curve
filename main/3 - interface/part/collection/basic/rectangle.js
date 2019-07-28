@@ -15,3 +15,7 @@ this.rectangle = function( name=null, x=0, y=0, width=10, height=10, angle=0, an
 
     return temp;
 };
+
+interfacePart.partLibrary.basic.rectangle = function(name,data){ 
+    return interfacePart.collection.basic.rectangle( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour );
+};

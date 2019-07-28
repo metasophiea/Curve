@@ -94,3 +94,13 @@ this.grapher_audioScope = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.grapher_audioScope = function(name,data){ 
+    return interfacePart.collection.display.grapher_audioScope(
+        name, data.x, data.y, data.width, data.height, data.angle,
+        data.style.foregrounds, data.style.foregroundText,
+        data.style.background_colour, data.style.background_lineThickness,
+        data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+        data.style.backing,
+    ); 
+};

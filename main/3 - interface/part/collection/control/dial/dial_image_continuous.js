@@ -128,3 +128,12 @@ this.dial_continuous_image = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.dial_continuous_image = function(name,data){ return interfacePart.collection.control.dial_continuous_image(
+    name,
+    data.x, data.y, data.radius, data.angle, data.interactable,
+    data.value, data.resetValue,
+    data.startAngle, data.maxAngle,
+    data.handleURL, data.slotURL, data.needleURL,
+    data.onchange, data.onrelease
+); };

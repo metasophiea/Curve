@@ -50,3 +50,10 @@ this.level = function(
 
     return object;
 };
+
+interfacePart.partLibrary.display.level = function(name,data){ 
+    return interfacePart.collection.display.level(
+        name, data.x, data.y, data.angle, data.width, data.height, 
+        data.style.backing, data.style.levels
+    ); 
+};

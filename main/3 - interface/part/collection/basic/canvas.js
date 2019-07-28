@@ -15,3 +15,7 @@ this.canvas = function( name=null, x=0, y=0, width=10, height=10, angle=0, ancho
 
     return temp;
 };
+
+interfacePart.partLibrary.basic.canvas = function(name,data){ 
+    return interfacePart.collection.basic.canvas( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution );
+},

@@ -17,3 +17,7 @@ this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, 
 
     return temp;
 };
+
+interfacePart.partLibrary.basic.rectangleWithOutline = function(name,data){ 
+    return interfacePart.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
+};

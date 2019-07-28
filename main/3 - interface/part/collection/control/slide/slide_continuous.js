@@ -146,3 +146,13 @@ this.slide_continuous = function(
 
     return object;
 };
+
+interfacePart.partLibrary.control.slide_continuous = function(name,data){ return interfacePart.collection.control.slide_continuous(
+    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
+    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+    data.onchange, data.onrelease
+); };
+interfacePart.partLibrary.control.slide = function(name,data){ 
+    console.warn('depreciated - please use slide_continuous instead');
+    return interfacePart.partLibrary.control.slide_continuous(name,data);
+};
