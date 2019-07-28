@@ -116,7 +116,7 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous = fu
         object.onrelease = onrelease;
 
     //setup
-        set(value);
+        set(value,false);
 
     return object;
 };
@@ -156,13 +156,12 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete = func
 
 
     //graphical adjust
-        function set(a,update=true){ 
+        function set(a,update=true){
             a = (a>(optionCount-1) ? (optionCount-1) : a);
             a = (a<0 ? 0 : a);
 
-            if(update && object.onchange != undefined){object.onchange(a);}
-
             a = Math.round(a);
+            if(update && object.onchange != undefined && value != a){object.onchange(a);}
             value = a;
             dial.set( value/(optionCount-1) );
         };
@@ -221,7 +220,6 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete = func
                 function(event){
                     var diff = Math.round( (event.Y - initialY)/25 );
                     set( initialValue - diff );
-                    if(object.onchange != undefined){object.onchange(value);}
                 },
                 function(event){
                     grappled = false;
@@ -238,7 +236,7 @@ _canvas_.interface.part.collection.control.dial_colourWithIndent_discrete = func
         object.onrelease = onrelease;
 
     //setup
-        set(value);
+        set(value,false);
 
     return object;
 };

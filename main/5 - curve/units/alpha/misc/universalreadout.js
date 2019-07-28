@@ -55,7 +55,7 @@ this.universalreadout = function(x,y,a){
 
             //write in the new list
             for(var a = 0; a < lines.length; a++){
-                lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
+                lineElements[a] = _canvas_.interface.part.builder('basic','text','universalreadout_'+a,{ x:40, y:a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
                 object.append( lineElements[a] );
             }
         }
@@ -126,7 +126,7 @@ this.universalreadout2 = function(x,y,a){
 
             //write in the new list
             for(var a = 0; a < lines.length; a++){
-                lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:60, y:2.5+a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
+                lineElements[a] = _canvas_.interface.part.builder('basic','text','universalreadout_'+a,{ x:60, y:2.5+a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
                 object.append( lineElements[a] );
             }
         }

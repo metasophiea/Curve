@@ -1,6 +1,41 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-07-28
+  - changed the button_image part to allow for missing URLs. Now if a state is
+    requested for which there is no URL; no change is made to the image shape
+  - managed to bork the slider mouse position calculation function without
+    noticing, while fixing it on 2019-07-19. Good job everyone
+    Adding the offset angle to the calculations added in the angle of parent 
+    groups as desired, but also added the part's angle again
+  - began work on the 8 step sequencer unit (parts in, but need to create the
+    discrete slider and do wiring)
+  - added slide_discrete and slide_discrete_image parts, renaming 'slide' to 
+    'slide_continuous' and 'slide_image' to 'slide_continuous_image' 
+    (it probably all needs a clean)
+  - changed some of the controls to not call their onchange callbacks when the
+    set function is run at the end of their creation (need to make that change
+    everywhere)
+  - Ladies and gentlemen; the eight step sequencer (needs deeper testing, bit
+    looks pretty good...maybe a clean up)
+
+  bugs
+  - mousedown on one slider and mouseup on another, causes an onclick on the
+    second slider
+
+
+2019-07-27
+  - drew up and added the signal, voltage, data and audio duplicators
+  - drew up the 8 step sequencer
+
+  ideas
+  - double click while rotating a unit to reset its angle
+  - discrete slide
+  - gauge part
+  - image glowbox
+
+
 2019-07-20
-  - draw up the new amplifier unit (looking pretty snazzy too)
+  - draw up the new amplifier unit (looking pretty snazzy too) and added it to
+    the beta collection
   
 
 2019-07-19

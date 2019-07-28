@@ -14,7 +14,7 @@ this.slidePanel = function(
         //slides
             for(var a = 0; a < count; a++){
                 var temp = interfacePart.builder(
-                    'control', 'slide', 'slide_'+a, {
+                    'control', 'slide_continuous', 'slide_'+a, {
                         x:a*(width/count), y:0,
                         width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
                         value:startValue, resetValue:resetValue,

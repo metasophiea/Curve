@@ -29802,7 +29802,7 @@
                                         //slides
                                             for(var a = 0; a < count; a++){
                                                 var temp = interfacePart.builder(
-                                                    'control', 'slide_image', 'slide_'+a, {
+                                                    'control', 'slide_continuous_image', 'slide_'+a, {
                                                         x:a*(width/count), y:0,
                                                         width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
                                                         value:startValue, resetValue:resetValue,
@@ -30097,8 +30097,336 @@
                                 
                                     return object;
                                 };
-                                this.slide = function(
-                                    name='slide', 
+                                this.slide_discrete = function(
+                                    name='slide_discrete', 
+                                    x, y, width=10, height=95, angle=0, interactable=true,
+                                    handleHeight=0.1, value=0, resetValue=-1, optionCount=5,
+                                    handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                    backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                    slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
+                                    invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                    onchange=function(){},
+                                    onrelease=function(){},
+                                ){
+                                    //elements 
+                                        //main
+                                            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        
+                                        //slide
+                                            var slide = interfacePart.builder('control','slide_continuous',name,{
+                                                x:0, y:0, width:width, height:height, angle:0, interactable:interactable,
+                                                handleHeight:handleHeight,
+                                                style:{ handle:handleStyle, slot:slotStyle, backing:backingStyle, invisibleHandle:invisibleHandleStyle }
+                                            });
+                                            object.append(slide);
+                                
+                                
+                                    //graphical adjust
+                                        function set(a,update=true){ 
+                                            a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                            a = (a<0 ? 0 : a);
+                                
+                                            a = Math.round(a); 
+                                            if(update && object.onchange != undefined && value != a){object.onchange(a);}
+                                            value = a;
+                                            slide.set( value/(optionCount-1) );
+                                        };
+                                        function currentMousePosition(event){
+                                            var calculationAngle = object.getOffset().angle;
+                                            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
+                                        }
+                                
+                                
+                                    //methods
+                                        var grappled = false;
+                                
+                                        object.set = function(value,update){
+                                            if(grappled){return;}
+                                            set(value,update);
+                                        };
+                                        object.get = function(){return value;};
+                                        object.interactable = function(bool){
+                                            if(bool==undefined){return interactable;}
+                                            interactable = bool;
+                                        };
+                                
+                                
+                                    //interaction
+                                        var acc = 0;
+                                
+                                        slide.getChildByName('cover').ondblclick = function(){
+                                            if(!interactable){return;}
+                                            if(resetValue<0){return;}
+                                            if(grappled){return;}
+                                            
+                                            set(resetValue);
+                                
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        };
+                                        slide.getChildByName('cover').onwheel = function(x,y,event){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                                
+                                            var move = event.deltaY/100;
+                                
+                                            acc += move;
+                                            if( Math.abs(acc) >= 1 ){
+                                                set( value +1*Math.sign(acc) );
+                                                acc = 0;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
+                                        };
+                                        slide.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
+                                            grappled = true;
+                                
+                                            var initialValue = value/(optionCount-1);
+                                            var initialY = currentMousePosition(event);
+                                            var mux = height - height*handleHeight;
+                                
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var numerator = initialY-currentMousePosition(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    set( (initialValue - (numerator/(divider*mux) ))*(optionCount-1) );
+                                                },
+                                                function(event){
+                                                    grappled = false;
+                                                }
+                                            );
+                                        };
+                                        slide.getChildByName('backingAndSlotGroup').getChildByName('backingAndSlotCover').onclick = function(x,y,event){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                                
+                                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var backingAndSlot = slide.getChildByName('backingAndSlotGroup');
+                                                var backingAndSlotCover = backingAndSlot.getChildByName('backingAndSlotCover');
+                                                var offset = backingAndSlot.getOffset();
+                                                var delta = {
+                                                    x: event.X - (backingAndSlot.x() + offset.x),
+                                                    y: event.Y - (backingAndSlot.y() + offset.y),
+                                                    a: 0 - (backingAndSlot.angle() + offset.angle),
+                                                };
+                                                var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
+                                
+                                            //use the distance to calculate the correct value to set the slide to
+                                            //taking into account the slide handle's size also
+                                                var value = d + 0.5*handleHeight*((2*d)-1);
+                                
+                                            set(value*(optionCount-1));
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        };
+                                
+                                
+                                    //callbacks
+                                        object.onchange = onchange; 
+                                        object.onrelease = onrelease;
+                                
+                                    //setup
+                                        set(value);
+                                
+                                    return object;
+                                };
+                                this.slidePanel = function(
+                                    name='slidePanel', 
+                                    x, y, width=80, height=95, angle=0, interactable=true,
+                                    handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                                    handleStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                    backingStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                    slotStyle={r:0.2,g:0.2,b:0.2,a:1},
+                                    onchange=function(){},
+                                    onrelease=function(){},
+                                ){
+                                    //elements 
+                                        //main
+                                            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        //slides
+                                            for(var a = 0; a < count; a++){
+                                                var temp = interfacePart.builder(
+                                                    'control', 'slide_continuous', 'slide_'+a, {
+                                                        x:a*(width/count), y:0,
+                                                        width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
+                                                        value:startValue, resetValue:resetValue,
+                                                        style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
+                                                        onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
+                                                        onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
+                                                    }
+                                                );
+                                                temp.__calculationAngle = angle;
+                                                object.append(temp);
+                                            }
+                                
+                                        object.interactable = function(bool){
+                                            if(bool==undefined){return interactable;}
+                                            interactable = bool;
+                                
+                                            for(var a = 0; a < count; a++){
+                                                object.children()[a].interactable(bool);
+                                            }
+                                        };
+                                
+                                    return object;
+                                };
+                                this.slide_continuous_image = function(
+                                    name='slide_continuous_image', 
+                                    x, y, width=10, height=95, angle=0, interactable=true,
+                                    handleHeight=0.1, value=0, resetValue=-1,
+                                    
+                                    handleURL, backingURL,
+                                
+                                    invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                    onchange=function(){},
+                                    onrelease=function(){},
+                                ){
+                                    //default to non-image version if handle image link is missing
+                                        if(handleURL == undefined){
+                                            return this.slide(
+                                                name, x, y, width, height, angle, interactable,
+                                                handleHeight, value, resetValue,
+                                                handleURL, backingURL, invisibleHandleStyle,
+                                                onchange, onrelease,
+                                            );
+                                        }
+                                
+                                    //elements 
+                                        //main
+                                            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        //backing and slot group
+                                            var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
+                                            object.append(backingAndSlot);
+                                            //backing
+                                                if(backingURL != undefined){
+                                                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                                                    backingAndSlot.append(backing);
+                                                }
+                                            //backing and slot cover
+                                                var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                                backingAndSlot.append(backingAndSlotCover);
+                                        //handle
+                                            var handle = interfacePart.builder('basic','image','handle',{width:width, height:height*handleHeight, url:handleURL});
+                                            object.append(handle);
+                                        //invisible handle
+                                            var invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
+                                            object.append(invisibleHandle);
+                                        //cover
+                                            var cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                            object.append(cover);
+                                
+                                
+                                
+                                
+                                    //graphical adjust
+                                        function set(a,update=true){
+                                            a = (a>1 ? 1 : a);
+                                            a = (a<0 ? 0 : a);
+                                
+                                            if(update && object.onchange != undefined){object.onchange(a);}
+                                            
+                                            value = a;
+                                            handle.y( a*height*(1-handleHeight) );
+                                            invisibleHandle.y( handle.y() - ( height*0.01 )/2 );
+                                
+                                            handle.computeExtremities();
+                                            invisibleHandle.computeExtremities();
+                                        }
+                                        function currentMousePosition(event){
+                                            var calculationAngle = object.getOffset().angle;
+                                            return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
+                                        }
+                                
+                                
+                                
+                                
+                                    //methods
+                                        var grappled = false;
+                                
+                                        object.set = function(value,update){
+                                            if(grappled){return;}
+                                            set(value,update);
+                                        };
+                                        object.get = function(){return value;};
+                                        object.interactable = function(bool){
+                                            if(bool==undefined){return interactable;}
+                                            interactable = bool;
+                                        };
+                                
+                                
+                                
+                                
+                                    //interaction
+                                        cover.ondblclick = function(){
+                                            if(!interactable){return;}
+                                            if(resetValue<0){return;}
+                                            if(grappled){return;}
+                                
+                                            set(resetValue);
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        };
+                                        cover.onwheel = function(){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                                
+                                            var move = event.deltaY/100;
+                                            var globalScale = _canvas_.core.viewport.scale();
+                                            set( value + move/(10*globalScale) );
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        };
+                                        backingAndSlotCover.onmousedown = function(){};//to stop unit selection
+                                        backingAndSlotCover.onclick = function(x,y,event){
+                                            if(!interactable){return;}
+                                            if(grappled){return;}
+                                
+                                            //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var offset = backingAndSlot.getOffset();
+                                                var delta = {
+                                                    x: event.X - (backingAndSlot.x()+ offset.x),
+                                                    y: event.Y - (backingAndSlot.y()+ offset.y),
+                                                    a: 0 - (backingAndSlot.angle() + offset.angle),
+                                                };
+                                                var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
+                                
+                                            //use the distance to calculate the correct value to set the slide to
+                                            //taking into account the slide handle's size also
+                                                var value = d + 0.5*handleHeight*((2*d)-1);
+                                
+                                            set(value);
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        };
+                                        invisibleHandle.onclick = function(x,y,event){};
+                                        invisibleHandle.onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
+                                            grappled = true;
+                                
+                                            var initialValue = value;
+                                            var initialY = currentMousePosition(event);
+                                            var mux = height - height*handleHeight;
+                                
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var numerator = initialY-currentMousePosition(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    set( initialValue - (numerator/(divider*mux) ) );
+                                                },
+                                                function(event){
+                                                    grappled = false;
+                                                }
+                                            );
+                                        };
+                                
+                                
+                                
+                                    //setup
+                                        set(value);
+                                
+                                    //callbacks
+                                        object.onchange = onchange; 
+                                        object.onrelease = onrelease;
+                                
+                                    return object;
+                                };
+                                this.slide_continuous = function(
+                                    name='slide_continuous', 
                                     x, y, width=10, height=95, angle=0, interactable=true,
                                     handleHeight=0.1, value=0, resetValue=-1,
                                     handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
@@ -30151,7 +30479,7 @@
                                             invisibleHandle.computeExtremities();
                                         }
                                         function currentMousePosition(event){
-                                            var calculationAngle = angle + object.getOffset().angle;
+                                            var calculationAngle = object.getOffset().angle;
                                             return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                         }
                                 
@@ -30245,114 +30573,42 @@
                                 
                                     return object;
                                 };
-                                this.slidePanel = function(
-                                    name='slidePanel', 
-                                    x, y, width=80, height=95, angle=0, interactable=true,
-                                    handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                                    handleStyle={r:0.78,g:0.78,b:0.78,a:1},
-                                    backingStyle={r:0.58,g:0.58,b:0.58,a:1},
-                                    slotStyle={r:0.2,g:0.2,b:0.2,a:1},
-                                    onchange=function(){},
-                                    onrelease=function(){},
-                                ){
-                                    //elements 
-                                        //main
-                                            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
-                                        //slides
-                                            for(var a = 0; a < count; a++){
-                                                var temp = interfacePart.builder(
-                                                    'control', 'slide', 'slide_'+a, {
-                                                        x:a*(width/count), y:0,
-                                                        width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
-                                                        value:startValue, resetValue:resetValue,
-                                                        style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                                                        onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
-                                                        onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
-                                                    }
-                                                );
-                                                temp.__calculationAngle = angle;
-                                                object.append(temp);
-                                            }
-                                
-                                        object.interactable = function(bool){
-                                            if(bool==undefined){return interactable;}
-                                            interactable = bool;
-                                
-                                            for(var a = 0; a < count; a++){
-                                                object.children()[a].interactable(bool);
-                                            }
-                                        };
-                                
-                                    return object;
-                                };
-                                this.slide_image = function(
-                                    name='slide_image', 
+                                this.slide_discrete_image = function(
+                                    name='slide_discrete_image', 
                                     x, y, width=10, height=95, angle=0, interactable=true,
-                                    handleHeight=0.1, value=0, resetValue=-1,
-                                    
+                                    handleHeight=0.1, value=0, resetValue=-1, optionCount=5,
                                     handleURL, backingURL,
-                                
                                     invisibleHandleStyle = {r:1,g:0,b:0,a:0},
                                     onchange=function(){},
                                     onrelease=function(){},
                                 ){
-                                    //default to non-image version if handle image link is missing
-                                        if(handleURL == undefined){
-                                            return this.slide(
-                                                name, x, y, width, height, angle, interactable,
-                                                handleHeight, value, resetValue,
-                                                handleURL, backingURL, invisibleHandleStyle,
-                                                onchange, onrelease,
-                                            );
-                                        }
-                                
                                     //elements 
                                         //main
                                             var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
-                                        //backing and slot group
-                                            var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
-                                            object.append(backingAndSlot);
-                                            //backing
-                                                if(backingURL != undefined){
-                                                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                                                    backingAndSlot.append(backing);
-                                                }
-                                            //backing and slot cover
-                                                var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                                backingAndSlot.append(backingAndSlotCover);
-                                        //handle
-                                            var handle = interfacePart.builder('basic','image','handle',{width:width, height:height*handleHeight, url:handleURL});
-                                            object.append(handle);
-                                        //invisible handle
-                                            var invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
-                                            object.append(invisibleHandle);
-                                        //cover
-                                            var cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                            object.append(cover);
-                                
-                                
+                                        
+                                        //slide
+                                            var slide = interfacePart.builder('control','slide_continuous_image',name,{
+                                                x:0, y:0, width:width, height:height, angle:0, interactable:interactable,
+                                                invisibleHandleStyle:invisibleHandleStyle, handleHeight:handleHeight,
+                                                handleURL:handleURL, backingURL:backingURL,
+                                            });
+                                            object.append(slide);
                                 
                                 
                                     //graphical adjust
-                                        function set(a,update=true){
-                                            a = (a>1 ? 1 : a);
+                                        function set(a,update=true){ 
+                                            a = (a>(optionCount-1) ? (optionCount-1) : a);
                                             a = (a<0 ? 0 : a);
                                 
-                                            if(update && object.onchange != undefined){object.onchange(a);}
-                                            
+                                            a = Math.round(a); 
+                                            if(update && object.onchange != undefined && value != a){object.onchange(a);}
                                             value = a;
-                                            handle.y( a*height*(1-handleHeight) );
-                                            invisibleHandle.y( handle.y() - ( height*0.01 )/2 );
-                                
-                                            handle.computeExtremities();
-                                            invisibleHandle.computeExtremities();
-                                        }
+                                            slide.set( value/(optionCount-1) );
+                                        };
                                         function currentMousePosition(event){
-                                            var calculationAngle = angle + object.getOffset().angle;
+                                            var calculationAngle = object.getOffset().angle;
                                             return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                         }
-                                
-                                
                                 
                                 
                                     //methods
@@ -30369,36 +30625,61 @@
                                         };
                                 
                                 
-                                
-                                
                                     //interaction
-                                        cover.ondblclick = function(){
+                                        var acc = 0;
+                                
+                                        slide.getChildByName('cover').ondblclick = function(){
                                             if(!interactable){return;}
                                             if(resetValue<0){return;}
                                             if(grappled){return;}
-                                
+                                            
                                             set(resetValue);
+                                
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         };
-                                        cover.onwheel = function(){
+                                        slide.getChildByName('cover').onwheel = function(x,y,event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                                 
                                             var move = event.deltaY/100;
-                                            var globalScale = _canvas_.core.viewport.scale();
-                                            set( value + move/(10*globalScale) );
-                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                
+                                            acc += move;
+                                            if( Math.abs(acc) >= 1 ){
+                                                set( value +1*Math.sign(acc) );
+                                                acc = 0;
+                                                if(object.onrelease != undefined){object.onrelease(value);}
+                                            }
                                         };
-                                        backingAndSlotCover.onmousedown = function(){};//to stop unit selection
-                                        backingAndSlotCover.onclick = function(x,y,event){
+                                        slide.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                            if(!interactable){return;}
+                                            grappled = true;
+                                
+                                            var initialValue = value/(optionCount-1);
+                                            var initialY = currentMousePosition(event);
+                                            var mux = height - height*handleHeight;
+                                
+                                            _canvas_.system.mouse.mouseInteractionHandler(
+                                                function(event){
+                                                    var numerator = initialY-currentMousePosition(event);
+                                                    var divider = _canvas_.core.viewport.scale();
+                                                    set( (initialValue - (numerator/(divider*mux) ))*(optionCount-1) );
+                                                },
+                                                function(event){
+                                                    grappled = false;
+                                                }
+                                            );
+                                        };
+                                        slide.getChildByName('backingAndSlotGroup').getChildByName('backingAndSlotCover').onclick = function(x,y,event){
                                             if(!interactable){return;}
                                             if(grappled){return;}
                                 
                                             //calculate the distance the click is from the top of the slider (accounting for angle)
+                                                var backingAndSlot = slide.getChildByName('backingAndSlotGroup');
+                                                var backingAndSlotCover = backingAndSlot.getChildByName('backingAndSlotCover');
                                                 var offset = backingAndSlot.getOffset();
                                                 var delta = {
-                                                    x: event.X - (backingAndSlot.x()+ offset.x),
-                                                    y: event.Y - (backingAndSlot.y()+ offset.y),
+                                                    x: event.X - (backingAndSlot.x() + offset.x),
+                                                    y: event.Y - (backingAndSlot.y() + offset.y),
                                                     a: 0 - (backingAndSlot.angle() + offset.angle),
                                                 };
                                                 var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
@@ -30407,38 +30688,17 @@
                                             //taking into account the slide handle's size also
                                                 var value = d + 0.5*handleHeight*((2*d)-1);
                                 
-                                            set(value);
+                                            set(value*(optionCount-1));
                                             if(object.onrelease != undefined){object.onrelease(value);}
                                         };
-                                        invisibleHandle.onclick = function(x,y,event){};
-                                        invisibleHandle.onmousedown = function(x,y,event){
-                                            if(!interactable){return;}
-                                            grappled = true;
                                 
-                                            var initialValue = value;
-                                            var initialY = currentMousePosition(event);
-                                            var mux = height - height*handleHeight;
-                                
-                                            _canvas_.system.mouse.mouseInteractionHandler(
-                                                function(event){
-                                                    var numerator = initialY-currentMousePosition(event);
-                                                    var divider = _canvas_.core.viewport.scale();
-                                                    set( initialValue - (numerator/(divider*mux) ) );
-                                                },
-                                                function(event){
-                                                    grappled = false;
-                                                }
-                                            );
-                                        };
-                                
-                                
-                                
-                                    //setup
-                                        set(value);
                                 
                                     //callbacks
                                         object.onchange = onchange; 
                                         object.onrelease = onrelease;
+                                
+                                    //setup
+                                        set(value);
                                 
                                     return object;
                                 };
@@ -33466,31 +33726,6 @@
                                     onselect = function(event){},
                                     ondeselect = function(event){},
                                 ){
-                                    //default to non-image version if any image links are missing
-                                        if(
-                                            backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
-                                            backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
-                                            backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
-                                            backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
-                                            backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
-                                            backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
-                                        ){
-                                            return this.button_rectangle(
-                                                name, x, y, width, height, angle, interactable,
-                                                undefined, undefined, undefined, undefined, undefined,
-                                                active, hoverable, selectable, pressable,
-                                                undefined, undefined, undefined, undefined, undefined,
-                                                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                                undefined, undefined, undefined, undefined, undefined, undefined,
-                                                onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
-                                            );
-                                        }
-                                
-                                
                                     //adding on the specific shapes
                                         //main
                                             var subject = interfacePart.builder('basic','group',name+'subGroup',{});
@@ -33529,7 +33764,7 @@
                                             if(!hoverable && state.hovering ){ state.hovering = false; }
                                             if(!selectable && state.selected ){ state.selected = false; }
                                 
-                                            backing.imageURL([
+                                            var newImageURL = [
                                                 backingURL__up,                     
                                                 backingURL__press,                  
                                                 backingURL__select,                 
@@ -33546,7 +33781,9 @@
                                                 backingURL__hover_glow_press,       
                                                 backingURL__hover_glow_select,      
                                                 backingURL__hover_glow_select_press,
-                                            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]);
+                                            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]
+                                
+                                            if( newImageURL != undefined ){backing.imageURL(newImageURL);}
                                         };
                                         object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
                                 
@@ -34984,14 +35221,32 @@
                                 
                                 
                                 //slide
-                                    interfacePart.partLibrary.control.slide = function(name,data){ return interfacePart.collection.control.slide(
+                                    interfacePart.partLibrary.control.slide_continuous = function(name,data){ return interfacePart.collection.control.slide_continuous(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
                                         data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                                         data.onchange, data.onrelease
                                     ); };
-                                    interfacePart.partLibrary.control.slide_image = function(name,data){ return interfacePart.collection.control.slide_image(
+                                    interfacePart.partLibrary.control.slide_continuous_image = function(name,data){ return interfacePart.collection.control.slide_continuous_image(
                                         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
                                         data.handleURL, data.backingURL, data.style.invisibleHandle,
+                                        data.onchange, data.onrelease
+                                    ); };
+                                    interfacePart.partLibrary.control.slide = function(name,data){ 
+                                        console.warn('depreciated - please use slide_continuous instead');
+                                        return interfacePart.partLibrary.control.slide_continuous(name,data);
+                                    };
+                                    interfacePart.partLibrary.control.slide_image = function(name,data){ 
+                                        console.warn('depreciated - please use slide_continuous_image instead');
+                                        return interfacePart.partLibrary.control.slide_continuous_image(name,data);
+                                    };
+                                    interfacePart.partLibrary.control.slide_discrete = function(name,data){ return interfacePart.collection.control.slide_discrete(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+                                        data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                                        data.onchange, data.onrelease
+                                    ); };
+                                    interfacePart.partLibrary.control.slide_discrete_image = function(name,data){ return interfacePart.collection.control.slide_discrete_image(
+                                        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+                                        data.handleURL, data.backingURL, data.invisibleHandle,
                                         data.onchange, data.onrelease
                                     ); };
                                     interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(

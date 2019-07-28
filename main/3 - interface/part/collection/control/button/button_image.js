@@ -30,31 +30,6 @@ this.button_image = function(
     onselect = function(event){},
     ondeselect = function(event){},
 ){
-    //default to non-image version if any image links are missing
-        if(
-            backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
-            backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
-            backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
-            backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
-            backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
-            backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
-        ){
-            return this.button_rectangle(
-                name, x, y, width, height, angle, interactable,
-                undefined, undefined, undefined, undefined, undefined,
-                active, hoverable, selectable, pressable,
-                undefined, undefined, undefined, undefined, undefined,
-                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                undefined, undefined, undefined, undefined, undefined, undefined,
-                onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
-            );
-        }
-
-
     //adding on the specific shapes
         //main
             var subject = interfacePart.builder('basic','group',name+'subGroup',{});
@@ -93,7 +68,7 @@ this.button_image = function(
             if(!hoverable && state.hovering ){ state.hovering = false; }
             if(!selectable && state.selected ){ state.selected = false; }
 
-            backing.imageURL([
+            var newImageURL = [
                 backingURL__up,                     
                 backingURL__press,                  
                 backingURL__select,                 
@@ -110,7 +85,9 @@ this.button_image = function(
                 backingURL__hover_glow_press,       
                 backingURL__hover_glow_select,      
                 backingURL__hover_glow_select_press,
-            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]);
+            ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]
+
+            if( newImageURL != undefined ){backing.imageURL(newImageURL);}
         };
         object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
 

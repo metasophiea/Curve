@@ -246,14 +246,32 @@ interfacePart.partLibrary.control = {};
 
 
 //slide
-    interfacePart.partLibrary.control.slide = function(name,data){ return interfacePart.collection.control.slide(
+    interfacePart.partLibrary.control.slide_continuous = function(name,data){ return interfacePart.collection.control.slide_continuous(
         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
         data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
         data.onchange, data.onrelease
     ); };
-    interfacePart.partLibrary.control.slide_image = function(name,data){ return interfacePart.collection.control.slide_image(
+    interfacePart.partLibrary.control.slide_continuous_image = function(name,data){ return interfacePart.collection.control.slide_continuous_image(
         name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
         data.handleURL, data.backingURL, data.style.invisibleHandle,
+        data.onchange, data.onrelease
+    ); };
+    interfacePart.partLibrary.control.slide = function(name,data){ 
+        console.warn('depreciated - please use slide_continuous instead');
+        return interfacePart.partLibrary.control.slide_continuous(name,data);
+    };
+    interfacePart.partLibrary.control.slide_image = function(name,data){ 
+        console.warn('depreciated - please use slide_continuous_image instead');
+        return interfacePart.partLibrary.control.slide_continuous_image(name,data);
+    };
+    interfacePart.partLibrary.control.slide_discrete = function(name,data){ return interfacePart.collection.control.slide_discrete(
+        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+        data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+        data.onchange, data.onrelease
+    ); };
+    interfacePart.partLibrary.control.slide_discrete_image = function(name,data){ return interfacePart.collection.control.slide_discrete_image(
+        name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+        data.handleURL, data.backingURL, data.invisibleHandle,
         data.onchange, data.onrelease
     ); };
     interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(

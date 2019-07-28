@@ -29853,7 +29853,7 @@
                                     //slides
                                         for(var a = 0; a < count; a++){
                                             var temp = interfacePart.builder(
-                                                'control', 'slide_image', 'slide_'+a, {
+                                                'control', 'slide_continuous_image', 'slide_'+a, {
                                                     x:a*(width/count), y:0,
                                                     width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
                                                     value:startValue, resetValue:resetValue,
@@ -30148,8 +30148,336 @@
                             
                                 return object;
                             };
-                            this.slide = function(
-                                name='slide', 
+                            this.slide_discrete = function(
+                                name='slide_discrete', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, value=0, resetValue=-1, optionCount=5,
+                                handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
+                                backingStyle = {r:0.58,g:0.58,b:0.58,a:1},
+                                slotStyle = {r:0.2,g:0.2,b:0.2,a:1},
+                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    
+                                    //slide
+                                        var slide = interfacePart.builder('control','slide_continuous',name,{
+                                            x:0, y:0, width:width, height:height, angle:0, interactable:interactable,
+                                            handleHeight:handleHeight,
+                                            style:{ handle:handleStyle, slot:slotStyle, backing:backingStyle, invisibleHandle:invisibleHandleStyle }
+                                        });
+                                        object.append(slide);
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        a = Math.round(a); 
+                                        if(update && object.onchange != undefined && value != a){object.onchange(a);}
+                                        value = a;
+                                        slide.set( value/(optionCount-1) );
+                                    };
+                                    function currentMousePosition(event){
+                                        var calculationAngle = object.getOffset().angle;
+                                        return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
+                                    }
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                                //interaction
+                                    var acc = 0;
+                            
+                                    slide.getChildByName('cover').ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                                        
+                                        set(resetValue);
+                            
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    slide.getChildByName('cover').onwheel = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value +1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        }
+                                    };
+                                    slide.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        grappled = true;
+                            
+                                        var initialValue = value/(optionCount-1);
+                                        var initialY = currentMousePosition(event);
+                                        var mux = height - height*handleHeight;
+                            
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = _canvas_.core.viewport.scale();
+                                                set( (initialValue - (numerator/(divider*mux) ))*(optionCount-1) );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                            }
+                                        );
+                                    };
+                                    slide.getChildByName('backingAndSlotGroup').getChildByName('backingAndSlotCover').onclick = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var backingAndSlot = slide.getChildByName('backingAndSlotGroup');
+                                            var backingAndSlotCover = backingAndSlot.getChildByName('backingAndSlotCover');
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: event.X - (backingAndSlot.x() + offset.x),
+                                                y: event.Y - (backingAndSlot.y() + offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
+                                            };
+                                            var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
+                            
+                                        //use the distance to calculate the correct value to set the slide to
+                                        //taking into account the slide handle's size also
+                                            var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                        set(value*(optionCount-1));
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                            
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
+                            
+                                return object;
+                            };
+                            this.slidePanel = function(
+                                name='slidePanel', 
+                                x, y, width=80, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
+                                handleStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                backingStyle={r:0.58,g:0.58,b:0.58,a:1},
+                                slotStyle={r:0.2,g:0.2,b:0.2,a:1},
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //slides
+                                        for(var a = 0; a < count; a++){
+                                            var temp = interfacePart.builder(
+                                                'control', 'slide_continuous', 'slide_'+a, {
+                                                    x:a*(width/count), y:0,
+                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
+                                                    value:startValue, resetValue:resetValue,
+                                                    style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
+                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
+                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
+                                                }
+                                            );
+                                            temp.__calculationAngle = angle;
+                                            object.append(temp);
+                                        }
+                            
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                            
+                                        for(var a = 0; a < count; a++){
+                                            object.children()[a].interactable(bool);
+                                        }
+                                    };
+                            
+                                return object;
+                            };
+                            this.slide_continuous_image = function(
+                                name='slide_continuous_image', 
+                                x, y, width=10, height=95, angle=0, interactable=true,
+                                handleHeight=0.1, value=0, resetValue=-1,
+                                
+                                handleURL, backingURL,
+                            
+                                invisibleHandleStyle = {r:1,g:0,b:0,a:0},
+                                onchange=function(){},
+                                onrelease=function(){},
+                            ){
+                                //default to non-image version if handle image link is missing
+                                    if(handleURL == undefined){
+                                        return this.slide(
+                                            name, x, y, width, height, angle, interactable,
+                                            handleHeight, value, resetValue,
+                                            handleURL, backingURL, invisibleHandleStyle,
+                                            onchange, onrelease,
+                                        );
+                                    }
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //backing and slot group
+                                        var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
+                                        object.append(backingAndSlot);
+                                        //backing
+                                            if(backingURL != undefined){
+                                                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
+                                                backingAndSlot.append(backing);
+                                            }
+                                        //backing and slot cover
+                                            var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                            backingAndSlot.append(backingAndSlotCover);
+                                    //handle
+                                        var handle = interfacePart.builder('basic','image','handle',{width:width, height:height*handleHeight, url:handleURL});
+                                        object.append(handle);
+                                    //invisible handle
+                                        var invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
+                                        object.append(invisibleHandle);
+                                    //cover
+                                        var cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
+                                        object.append(cover);
+                            
+                            
+                            
+                            
+                                //graphical adjust
+                                    function set(a,update=true){
+                                        a = (a>1 ? 1 : a);
+                                        a = (a<0 ? 0 : a);
+                            
+                                        if(update && object.onchange != undefined){object.onchange(a);}
+                                        
+                                        value = a;
+                                        handle.y( a*height*(1-handleHeight) );
+                                        invisibleHandle.y( handle.y() - ( height*0.01 )/2 );
+                            
+                                        handle.computeExtremities();
+                                        invisibleHandle.computeExtremities();
+                                    }
+                                    function currentMousePosition(event){
+                                        var calculationAngle = object.getOffset().angle;
+                                        return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
+                                    }
+                            
+                            
+                            
+                            
+                                //methods
+                                    var grappled = false;
+                            
+                                    object.set = function(value,update){
+                                        if(grappled){return;}
+                                        set(value,update);
+                                    };
+                                    object.get = function(){return value;};
+                                    object.interactable = function(bool){
+                                        if(bool==undefined){return interactable;}
+                                        interactable = bool;
+                                    };
+                            
+                            
+                            
+                            
+                                //interaction
+                                    cover.ondblclick = function(){
+                                        if(!interactable){return;}
+                                        if(resetValue<0){return;}
+                                        if(grappled){return;}
+                            
+                                        set(resetValue);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    cover.onwheel = function(){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        var move = event.deltaY/100;
+                                        var globalScale = _canvas_.core.viewport.scale();
+                                        set( value + move/(10*globalScale) );
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    backingAndSlotCover.onmousedown = function(){};//to stop unit selection
+                                    backingAndSlotCover.onclick = function(x,y,event){
+                                        if(!interactable){return;}
+                                        if(grappled){return;}
+                            
+                                        //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var offset = backingAndSlot.getOffset();
+                                            var delta = {
+                                                x: event.X - (backingAndSlot.x()+ offset.x),
+                                                y: event.Y - (backingAndSlot.y()+ offset.y),
+                                                a: 0 - (backingAndSlot.angle() + offset.angle),
+                                            };
+                                            var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
+                            
+                                        //use the distance to calculate the correct value to set the slide to
+                                        //taking into account the slide handle's size also
+                                            var value = d + 0.5*handleHeight*((2*d)-1);
+                            
+                                        set(value);
+                                        if(object.onrelease != undefined){object.onrelease(value);}
+                                    };
+                                    invisibleHandle.onclick = function(x,y,event){};
+                                    invisibleHandle.onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        grappled = true;
+                            
+                                        var initialValue = value;
+                                        var initialY = currentMousePosition(event);
+                                        var mux = height - height*handleHeight;
+                            
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = _canvas_.core.viewport.scale();
+                                                set( initialValue - (numerator/(divider*mux) ) );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                            }
+                                        );
+                                    };
+                            
+                            
+                            
+                                //setup
+                                    set(value);
+                            
+                                //callbacks
+                                    object.onchange = onchange; 
+                                    object.onrelease = onrelease;
+                            
+                                return object;
+                            };
+                            this.slide_continuous = function(
+                                name='slide_continuous', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
                                 handleHeight=0.1, value=0, resetValue=-1,
                                 handleStyle = {r:0.78,g:0.78,b:0.78,a:1},
@@ -30202,7 +30530,7 @@
                                         invisibleHandle.computeExtremities();
                                     }
                                     function currentMousePosition(event){
-                                        var calculationAngle = angle + object.getOffset().angle;
+                                        var calculationAngle = object.getOffset().angle;
                                         return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                     }
                             
@@ -30296,114 +30624,42 @@
                             
                                 return object;
                             };
-                            this.slidePanel = function(
-                                name='slidePanel', 
-                                x, y, width=80, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, count=8, startValue=0, resetValue=0.5,
-                                handleStyle={r:0.78,g:0.78,b:0.78,a:1},
-                                backingStyle={r:0.58,g:0.58,b:0.58,a:1},
-                                slotStyle={r:0.2,g:0.2,b:0.2,a:1},
-                                onchange=function(){},
-                                onrelease=function(){},
-                            ){
-                                //elements 
-                                    //main
-                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
-                                    //slides
-                                        for(var a = 0; a < count; a++){
-                                            var temp = interfacePart.builder(
-                                                'control', 'slide', 'slide_'+a, {
-                                                    x:a*(width/count), y:0,
-                                                    width:width/count, height:height, interactable:interactable, handleHeight:handleHeight,
-                                                    value:startValue, resetValue:resetValue,
-                                                    style:{handle:handleStyle, backing:backingStyle, slot:slotStyle},
-                                                    onchange:function(value){ if(!object.onchange){return;} object.onchange(this.id,value); },
-                                                    onrelease:function(value){ if(!object.onrelease){return;} object.onrelease(this.id,value); },
-                                                }
-                                            );
-                                            temp.__calculationAngle = angle;
-                                            object.append(temp);
-                                        }
-                            
-                                    object.interactable = function(bool){
-                                        if(bool==undefined){return interactable;}
-                                        interactable = bool;
-                            
-                                        for(var a = 0; a < count; a++){
-                                            object.children()[a].interactable(bool);
-                                        }
-                                    };
-                            
-                                return object;
-                            };
-                            this.slide_image = function(
-                                name='slide_image', 
+                            this.slide_discrete_image = function(
+                                name='slide_discrete_image', 
                                 x, y, width=10, height=95, angle=0, interactable=true,
-                                handleHeight=0.1, value=0, resetValue=-1,
-                                
+                                handleHeight=0.1, value=0, resetValue=-1, optionCount=5,
                                 handleURL, backingURL,
-                            
                                 invisibleHandleStyle = {r:1,g:0,b:0,a:0},
                                 onchange=function(){},
                                 onrelease=function(){},
                             ){
-                                //default to non-image version if handle image link is missing
-                                    if(handleURL == undefined){
-                                        return this.slide(
-                                            name, x, y, width, height, angle, interactable,
-                                            handleHeight, value, resetValue,
-                                            handleURL, backingURL, invisibleHandleStyle,
-                                            onchange, onrelease,
-                                        );
-                                    }
-                            
                                 //elements 
                                     //main
                                         var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
-                                    //backing and slot group
-                                        var backingAndSlot = interfacePart.builder('basic','group','backingAndSlotGroup');
-                                        object.append(backingAndSlot);
-                                        //backing
-                                            if(backingURL != undefined){
-                                                var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, url:backingURL});
-                                                backingAndSlot.append(backing);
-                                            }
-                                        //backing and slot cover
-                                            var backingAndSlotCover = interfacePart.builder('basic','rectangle','backingAndSlotCover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                            backingAndSlot.append(backingAndSlotCover);
-                                    //handle
-                                        var handle = interfacePart.builder('basic','image','handle',{width:width, height:height*handleHeight, url:handleURL});
-                                        object.append(handle);
-                                    //invisible handle
-                                        var invisibleHandle = interfacePart.builder('basic','rectangle','invisibleHandle',{y:-( height*0.01 )/2, width:width, height:height*(handleHeight+0.01) + handleHeight, colour:invisibleHandleStyle});
-                                        object.append(invisibleHandle);
-                                    //cover
-                                        var cover = interfacePart.builder('basic','rectangle','cover',{width:width, height:height, colour:{r:0,g:0,b:0,a:0}});
-                                        object.append(cover);
-                            
-                            
+                                    
+                                    //slide
+                                        var slide = interfacePart.builder('control','slide_continuous_image',name,{
+                                            x:0, y:0, width:width, height:height, angle:0, interactable:interactable,
+                                            invisibleHandleStyle:invisibleHandleStyle, handleHeight:handleHeight,
+                                            handleURL:handleURL, backingURL:backingURL,
+                                        });
+                                        object.append(slide);
                             
                             
                                 //graphical adjust
-                                    function set(a,update=true){
-                                        a = (a>1 ? 1 : a);
+                                    function set(a,update=true){ 
+                                        a = (a>(optionCount-1) ? (optionCount-1) : a);
                                         a = (a<0 ? 0 : a);
                             
-                                        if(update && object.onchange != undefined){object.onchange(a);}
-                                        
+                                        a = Math.round(a); 
+                                        if(update && object.onchange != undefined && value != a){object.onchange(a);}
                                         value = a;
-                                        handle.y( a*height*(1-handleHeight) );
-                                        invisibleHandle.y( handle.y() - ( height*0.01 )/2 );
-                            
-                                        handle.computeExtremities();
-                                        invisibleHandle.computeExtremities();
-                                    }
+                                        slide.set( value/(optionCount-1) );
+                                    };
                                     function currentMousePosition(event){
-                                        var calculationAngle = angle + object.getOffset().angle;
+                                        var calculationAngle = object.getOffset().angle;
                                         return event.Y*Math.cos(calculationAngle) - event.X*Math.sin(calculationAngle);
                                     }
-                            
-                            
                             
                             
                                 //methods
@@ -30420,36 +30676,61 @@
                                     };
                             
                             
-                            
-                            
                                 //interaction
-                                    cover.ondblclick = function(){
+                                    var acc = 0;
+                            
+                                    slide.getChildByName('cover').ondblclick = function(){
                                         if(!interactable){return;}
                                         if(resetValue<0){return;}
                                         if(grappled){return;}
-                            
+                                        
                                         set(resetValue);
+                            
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    cover.onwheel = function(){
+                                    slide.getChildByName('cover').onwheel = function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
                                         var move = event.deltaY/100;
-                                        var globalScale = _canvas_.core.viewport.scale();
-                                        set( value + move/(10*globalScale) );
-                                        if(object.onrelease != undefined){object.onrelease(value);}
+                            
+                                        acc += move;
+                                        if( Math.abs(acc) >= 1 ){
+                                            set( value +1*Math.sign(acc) );
+                                            acc = 0;
+                                            if(object.onrelease != undefined){object.onrelease(value);}
+                                        }
                                     };
-                                    backingAndSlotCover.onmousedown = function(){};//to stop unit selection
-                                    backingAndSlotCover.onclick = function(x,y,event){
+                                    slide.getChildByName('invisibleHandle').onmousedown = function(x,y,event){
+                                        if(!interactable){return;}
+                                        grappled = true;
+                            
+                                        var initialValue = value/(optionCount-1);
+                                        var initialY = currentMousePosition(event);
+                                        var mux = height - height*handleHeight;
+                            
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                var numerator = initialY-currentMousePosition(event);
+                                                var divider = _canvas_.core.viewport.scale();
+                                                set( (initialValue - (numerator/(divider*mux) ))*(optionCount-1) );
+                                            },
+                                            function(event){
+                                                grappled = false;
+                                            }
+                                        );
+                                    };
+                                    slide.getChildByName('backingAndSlotGroup').getChildByName('backingAndSlotCover').onclick = function(x,y,event){
                                         if(!interactable){return;}
                                         if(grappled){return;}
                             
                                         //calculate the distance the click is from the top of the slider (accounting for angle)
+                                            var backingAndSlot = slide.getChildByName('backingAndSlotGroup');
+                                            var backingAndSlotCover = backingAndSlot.getChildByName('backingAndSlotCover');
                                             var offset = backingAndSlot.getOffset();
                                             var delta = {
-                                                x: event.X - (backingAndSlot.x()+ offset.x),
-                                                y: event.Y - (backingAndSlot.y()+ offset.y),
+                                                x: event.X - (backingAndSlot.x() + offset.x),
+                                                y: event.Y - (backingAndSlot.y() + offset.y),
                                                 a: 0 - (backingAndSlot.angle() + offset.angle),
                                             };
                                             var d = _canvas_.library.math.cartesianAngleAdjust( delta.x/offset.scale, delta.y/offset.scale, delta.a ).y / backingAndSlotCover.height();
@@ -30458,38 +30739,17 @@
                                         //taking into account the slide handle's size also
                                             var value = d + 0.5*handleHeight*((2*d)-1);
                             
-                                        set(value);
+                                        set(value*(optionCount-1));
                                         if(object.onrelease != undefined){object.onrelease(value);}
                                     };
-                                    invisibleHandle.onclick = function(x,y,event){};
-                                    invisibleHandle.onmousedown = function(x,y,event){
-                                        if(!interactable){return;}
-                                        grappled = true;
                             
-                                        var initialValue = value;
-                                        var initialY = currentMousePosition(event);
-                                        var mux = height - height*handleHeight;
-                            
-                                        _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var numerator = initialY-currentMousePosition(event);
-                                                var divider = _canvas_.core.viewport.scale();
-                                                set( initialValue - (numerator/(divider*mux) ) );
-                                            },
-                                            function(event){
-                                                grappled = false;
-                                            }
-                                        );
-                                    };
-                            
-                            
-                            
-                                //setup
-                                    set(value);
                             
                                 //callbacks
                                     object.onchange = onchange; 
                                     object.onrelease = onrelease;
+                            
+                                //setup
+                                    set(value);
                             
                                 return object;
                             };
@@ -33517,31 +33777,6 @@
                                 onselect = function(event){},
                                 ondeselect = function(event){},
                             ){
-                                //default to non-image version if any image links are missing
-                                    if(
-                                        backingURL__off == undefined ||                backingURL__up == undefined ||                   backingURL__press == undefined || 
-                                        backingURL__select == undefined ||             backingURL__select_press == undefined ||         backingURL__glow == undefined || 
-                                        backingURL__glow_press == undefined ||         backingURL__glow_select == undefined ||          backingURL__glow_select_press == undefined || 
-                                        backingURL__hover == undefined ||              backingURL__hover_press == undefined ||          backingURL__hover_select == undefined ||
-                                        backingURL__hover_select_press == undefined || backingURL__hover_glow == undefined ||           backingURL__hover_glow_press == undefined || 
-                                        backingURL__hover_glow_select == undefined ||  backingURL__hover_glow_select_press == undefined
-                                    ){
-                                        return this.button_rectangle(
-                                            name, x, y, width, height, angle, interactable,
-                                            undefined, undefined, undefined, undefined, undefined,
-                                            active, hoverable, selectable, pressable,
-                                            undefined, undefined, undefined, undefined, undefined,
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-                                            undefined, undefined, undefined, undefined, undefined, undefined,
-                                            onenter, onleave, onpress, ondblpress, onrelease, onselect, ondeselect
-                                        );
-                                    }
-                            
-                            
                                 //adding on the specific shapes
                                     //main
                                         var subject = interfacePart.builder('basic','group',name+'subGroup',{});
@@ -33580,7 +33815,7 @@
                                         if(!hoverable && state.hovering ){ state.hovering = false; }
                                         if(!selectable && state.selected ){ state.selected = false; }
                             
-                                        backing.imageURL([
+                                        var newImageURL = [
                                             backingURL__up,                     
                                             backingURL__press,                  
                                             backingURL__select,                 
@@ -33597,7 +33832,9 @@
                                             backingURL__hover_glow_press,       
                                             backingURL__hover_glow_select,      
                                             backingURL__hover_glow_select_press,
-                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]);
+                                        ][ state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1 ]
+                            
+                                        if( newImageURL != undefined ){backing.imageURL(newImageURL);}
                                     };
                                     object.activateGraphicalState({ hovering:false, glowing:false, selected:false, pressed:false });
                             
@@ -35035,14 +35272,32 @@
                             
                             
                             //slide
-                                interfacePart.partLibrary.control.slide = function(name,data){ return interfacePart.collection.control.slide(
+                                interfacePart.partLibrary.control.slide_continuous = function(name,data){ return interfacePart.collection.control.slide_continuous(
                                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
                                     data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
                                     data.onchange, data.onrelease
                                 ); };
-                                interfacePart.partLibrary.control.slide_image = function(name,data){ return interfacePart.collection.control.slide_image(
+                                interfacePart.partLibrary.control.slide_continuous_image = function(name,data){ return interfacePart.collection.control.slide_continuous_image(
                                     name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, 
                                     data.handleURL, data.backingURL, data.style.invisibleHandle,
+                                    data.onchange, data.onrelease
+                                ); };
+                                interfacePart.partLibrary.control.slide = function(name,data){ 
+                                    console.warn('depreciated - please use slide_continuous instead');
+                                    return interfacePart.partLibrary.control.slide_continuous(name,data);
+                                };
+                                interfacePart.partLibrary.control.slide_image = function(name,data){ 
+                                    console.warn('depreciated - please use slide_continuous_image instead');
+                                    return interfacePart.partLibrary.control.slide_continuous_image(name,data);
+                                };
+                                interfacePart.partLibrary.control.slide_discrete = function(name,data){ return interfacePart.collection.control.slide_discrete(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+                                    data.style.handle, data.style.backing, data.style.slot, data.style.invisibleHandle,
+                                    data.onchange, data.onrelease
+                                ); };
+                                interfacePart.partLibrary.control.slide_discrete_image = function(name,data){ return interfacePart.collection.control.slide_discrete_image(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.interactable, data.handleHeight, data.value, data.resetValue, data.optionCount,
+                                    data.handleURL, data.backingURL, data.invisibleHandle,
                                     data.onchange, data.onrelease
                                 ); };
                                 interfacePart.partLibrary.control.slidePanel = function(name,data){ return interfacePart.collection.control.slidePanel(
@@ -37759,7 +38014,7 @@
                     
                                 //write in the new list
                                 for(var a = 0; a < lines.length; a++){
-                                    lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:40, y:a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
+                                    lineElements[a] = _canvas_.interface.part.builder('basic','text','universalreadout_'+a,{ x:40, y:a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
                                     object.append( lineElements[a] );
                                 }
                             }
@@ -37830,7 +38085,7 @@
                     
                                 //write in the new list
                                 for(var a = 0; a < lines.length; a++){
-                                    lineElements[a] = _canvas_.interface.part.builder('text','universalreadout_'+a,{ x:60, y:2.5+a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
+                                    lineElements[a] = _canvas_.interface.part.builder('basic','text','universalreadout_'+a,{ x:60, y:2.5+a*5, width:style.text.size, height:style.text.size, text:lines[a], colour:style.text.colour, font:style.text.font, printingMode:style.text.printingMode })
                                     object.append( lineElements[a] );
                                 }
                             }
@@ -43318,46 +43573,213 @@
                     _canvas_.interface.part.partLibrary.basic.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
                         name, data.x, data.y, data.angle, data.width, data.height, data.detail, data.ignored, data.colour
                     ); }
-                    this.duplicator_data = function(x,y,a){
+                    this.audio_duplicator = function(x,y,a){
+                        var width = 320; var height = 320;
+                        var div = 6.4;
                         var shape = [
                             {x:0,y:0},
-                            {x:30,y:0},
-                            {x:50,y:10},
-                            {x:50,y:40},
-                            {x:30,y:50},
-                            {x:0,y:50}
+                            {x:width/div*(0.85/5),y:0},
+                            {x:width/div*(4.5/5),y:height/div*(1/5)},
+                            {x:width/div*(4.5/5),y:height/div*(4/5)},
+                            {x:width/div*(0.85/5),y:height/div},
+                            {x:0,y:height/div},
+                    
+                            {x:-width/div*(0.9/10),y:height/div*(4/5)},
+                            {x:-width/div*(1.25/10),y:height/div*(2.5/5)},
+                            {x:-width/div*(0.9/10),y:height/div*(1/5)},
                         ];
                         var design = {
-                            name:'duplicator_data',
+                            name:'audio_duplicator',
                             x:x, y:y, angle:a,
                             space:shape,
                             elements:[
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:29, y:47.5, 
-                                    width:3,height:3,
-                                    angle:-0.475,
-                                    text:'data duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:(width/div)*(4.5/5)-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
+                                    x:-width/div*(0.9/10), y:(height/div)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow, 
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
+                                    x:-width/div*(0.45/10), y:(height/div) - 7.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow, 
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow 
+                                    }
+                                }},
+                    
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/audio_duplicator/audio_duplicator_backing.png' }
                                 },
+                            ]
+                        };
                     
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:45,y:25}, {x:20,y:25}, {x:10,y:35}, {x:5,y:35}, {x:7.5,y:32},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:5,y:35}, {x:7.5,y:38},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:35,y:25}, {x:25,y:15}, {x:5,y:15}, {x:7.5,y:12},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:15}, {x:7.5,y:18},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
                     
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.audio_duplicator.metadata = {
+                        name:'Audio Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/audio_duplicator/'
+                    };
+                    this.signal_duplicator = function(x,y,a){
+                        var width = 260; var height = 260;
+                        var div = 6.5;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div,y:height/(div*4)},
+                            {x:width/div,y:height/div - height/(div*4)},
+                            {x:0,y:height/div},
+                        ];
+                        var design = {
+                            name:'signal_duplicator',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
+                                    x:width/div-0.5, y:(height/div)/2 - 5, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
+                                    x:0, y:(height/div)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow, 
+                                        cable_dim:style.connectionCable.signal.dim, 
+                                        cable_glow:style.connectionCable.signal.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
+                                    x:0, y:(height/div)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow, 
+                                        cable_dim:style.connectionCable.signal.dim, 
+                                        cable_glow:style.connectionCable.signal.glow 
+                                    }
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/signal_duplicator/signal_duplicator_backing.png' }
+                                },
+                            ]
+                        };
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_duplicator.metadata = {
+                        name:'Signal Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/signal_duplicator/'
+                    };
+                    this.voltage_duplicator = function(x,y,a){
+                        var width = 260; var height = 260;
+                        var div = 6.5;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div,y:height/(div*4)*2},
+                            {x:width/div,y:height/div},
+                            {x:0,y:height/div},
+                        ];
+                        var design = {
+                            name:'voltage_duplicator',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
+                                    x:width/div-0.5, y:(height/div)*0.75 - 5, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow,
+                                        cable_dim:style.connectionCable.voltage.dim,
+                                        cable_glow:style.connectionCable.voltage.glow,
+                                    },
+                                    onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
+                                    x:0, y:(height/div)/2, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow, 
+                                        cable_dim:style.connectionCable.voltage.dim, 
+                                        cable_glow:style.connectionCable.voltage.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
+                                    x:0, y:(height/div)*0.75 + 5, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow, 
+                                        cable_dim:style.connectionCable.voltage.dim, 
+                                        cable_glow:style.connectionCable.voltage.glow 
+                                    }
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/voltage_duplicator/voltage_duplicator_backing.png' }
+                                },
+                            ]
+                        };
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_duplicator.metadata = {
+                        name:'Voltage Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/voltage_duplicator/'
+                    };
+                    this.data_duplicator = function(x,y,a){
+                        var width = 320; var height = 320;
+                        var div = 6.4;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div*(3/5),y:0},
+                            {x:width/div,y:height/div*(1/5)},
+                            {x:width/div,y:height/div*(4/5)},
+                            {x:width/div*(3/5),y:height/div},
+                            {x:0,y:height/div},
+                        ];
+                        var design = {
+                            name:'data_duplicator',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
                                 {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
-                                    x:50, y:17.5, width:5, height:15, cableVersion:2,
+                                    x:width/div-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.data.dim, 
                                         glow:style.connectionNode.data.glow,
@@ -43370,7 +43792,7 @@
                                     } 
                                 }},
                                 {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
-                                    x:0, y:22.5, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    x:0, y:(height/div)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.data.dim, 
                                         glow:style.connectionNode.data.glow, 
@@ -43379,7 +43801,7 @@
                                     }
                                 }},
                                 {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
-                                    x:0, y:42.5, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    x:0, y:(height/div) - 7.5, width:5, height:15, angle:Math.PI, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.data.dim, 
                                         glow:style.connectionNode.data.glow, 
@@ -43387,316 +43809,25 @@
                                         cable_glow:style.connectionCable.data.glow 
                                     }
                                 }},
+                    
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/data_duplicator/data_duplicator_backing.png' }
+                                },
                             ]
                         };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
                     
                         //main object
                             var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
+                    
                         return object;
                     };
                     
-                    this.duplicator_data.metadata = {
+                    
+                    
+                    this.data_duplicator.metadata = {
                         name:'Data Duplicator',
                         category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_data/'
-                    };
-                    this.duplicator_signal = function(x,y,a){
-                        var shape = [
-                            {x:0,y:0},
-                            {x:40,y:10},
-                            {x:40,y:30},
-                            {x:0,y:40}
-                        ];
-                        var design = {
-                            name:'duplicator_signal',
-                            x:x, y:y, angle:a,
-                            space:shape,
-                            elements:[
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:15.75, y:33.5, 
-                                    width:3,height:3,
-                                    angle:-0.24497866312686423,
-                                    text:'signal duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
-                                },
-                    
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:35,y:20}, {x:27.5,y:20}, {x:17.5,y:12.5}, {x:5,y:12.5}, {x:7.5,y:9.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:5,y:12.5}, {x:7.5,y:15.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:27.5,y:20}, {x:17.5,y:27.5}, {x:5,y:27.5}, {x:7.5,y:30.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:27.5}, {x:7.5,y:24.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                    
-                    
-                                {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
-                                    x:40, y:15, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
-                                    onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
-                                    x:0, y:17.5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow, 
-                                        cable_dim:style.connectionCable.signal.dim, 
-                                        cable_glow:style.connectionCable.signal.glow 
-                                    }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
-                                    x:0, y:32.5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow, 
-                                        cable_dim:style.connectionCable.signal.dim, 
-                                        cable_glow:style.connectionCable.signal.glow 
-                                    }
-                                }},
-                            ]
-                        };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
-                        return object;
-                    };
-                    
-                    this.duplicator_signal.metadata = {
-                        name:'Signal Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_signal/'
-                    };
-                    this.duplicator_voltage = function(x,y,a){
-                        var shape = [
-                            {x:0,y:0},
-                            {x:40,y:20},
-                            {x:40,y:40},
-                            {x:0,y:40}
-                        ];
-                        var design = {
-                            name:'duplicator_voltage',
-                            x:x, y:y, angle:a,
-                            space:shape,
-                            elements:[
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:12.5, y:37.5, 
-                                    width:3,height:3,
-                                    text:'voltage duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
-                                },
-                    
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:35,y:30}, {x:20,y:30}, {x:15,y:28.5}, {x:5,y:28.5}, {x:7.5,y:25.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:25,y:30}, {x:15,y:14}, {x:5,y:14}, {x:7.5,y:11},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:5,y:14}, {x:7.5,y:17},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:28.5}, {x:7.5,y:31.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                    
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
-                                    x:40, y:23.75, width:5, height:12.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow, 
-                                        cable_dim:style.connectionCable.voltage.dim, 
-                                        cable_glow:style.connectionCable.voltage.glow,
-                                    },
-                                    onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
-                                    x:0, y:20, width:5, height:12.5, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow, 
-                                        cable_dim:style.connectionCable.voltage.dim, 
-                                        cable_glow:style.connectionCable.voltage.glow 
-                                    }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{ 
-                                    x:0, y:35, width:5, height:12.5, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow, 
-                                        cable_dim:style.connectionCable.voltage.dim, 
-                                        cable_glow:style.connectionCable.voltage.glow 
-                                    }
-                                }},
-                            ]
-                        };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
-                        return object;
-                    };
-                    
-                    this.duplicator_voltage.metadata = {
-                        name:'Voltage Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_voltage/'
-                    };
-                    this.duplicator_audio = function(x,y,a){
-                        var shape = [
-                            {x:5,y:50},
-                            {x:15,y:50},
-                            {x:55,y:40},
-                            {x:55,y:10},
-                            {x:15,y:0},
-                            {x:5,y:0},
-                    
-                            {x:3,y:5},
-                            {x:0.75,y:15},
-                            {x:0,y:25},
-                            {x:0.75,y:35},
-                            {x:3,y:45},
-                        ];
-                        var design = {
-                            name:'duplicator_audio',
-                            x:x, y:y, angle:a,
-                            space:shape,
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                    x:55, y:17.5, width:5, height:15, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.audio.dim, 
-                                        glow:style.connectionNode.audio.glow,
-                                        cable_dim:style.connectionCable.audio.dim, 
-                                        cable_glow:style.connectionCable.audio.glow,
-                                    },
-                                }},
-                                {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
-                                    x:0.25, y:15+7.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.audio.dim, 
-                                        glow:style.connectionNode.audio.glow, 
-                                        cable_dim:style.connectionCable.audio.dim, 
-                                        cable_glow:style.connectionCable.audio.glow 
-                                    }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
-                                    x:2.5, y:15+27.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.audio.dim, 
-                                        glow:style.connectionNode.audio.glow, 
-                                        cable_dim:style.connectionCable.audio.dim, 
-                                        cable_glow:style.connectionCable.audio.glow 
-                                    }
-                                }},
-                    
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                    
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:50,y:25}, {x:5,y:34}, {x:7,y:30}, 
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:5,y:34}, {x:8.5,y:37}, 
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:50,y:25}, {x:5,y:16}, {x:7,y:20},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:16}, {x:8.5,y:13}, 
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                    
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:30.5, y:43.5, 
-                                    width:3,height:3,
-                                    angle:-0.25,
-                                    text:'audio duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
-                                },
-                            ]
-                        };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < 6; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
-                    
-                        //circuitry
-                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
-                        
-                        return object;
-                    };
-                    
-                    this.duplicator_audio.metadata = {
-                        name:'Audio Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/data_duplicator/'
                     };
                     this.eightTrackMixer = function(x,y,a){
                         var width = 1530; var height = 810;
@@ -43741,7 +43872,7 @@
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_backing.png' }
                                 },
                             ]
                         };
@@ -43754,9 +43885,9 @@
                                 }},
                             );
                             design.elements.push(
-                                {collection:'control', type:'slide_image',name:'slide_volume_'+a,data:{
+                                {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
                                     x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                    handleURL:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                    handleURL:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
                                 }}
                             );
                     
@@ -43840,107 +43971,6 @@
                         category:'misc',
                         helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
                     };
-                    // this.amplifier = function(x,y,a){
-                    //     var shape = [
-                    //         {x:0,y:0},
-                    //         {x:150,y:0},
-                    //         {x:150,y:140},
-                    //         {x:0,y:140},
-                    //     ];
-                    //     var design = {
-                    //         name:'amplifier',
-                    //         x:x, y:y, angle:a,
-                    //         space:shape,
-                    //         elements:[
-                    //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                    
-                    //             {collection:'basic', type:'image', name:'grill', data:{x:10,y:10,width:130,height:120,url:'images/units/beta/amplifierGrill.png'} },
-                    //             {collection:'basic', type:'path', name:'grillFrame', data:{
-                    //                 looping:true, 
-                    //                 pointsAsXYArray:[{x:10,y:10}, {x:140,y:10}, {x:140,y:130}, {x:10,y:130}],
-                    //                 thickness:5,
-                    //                 jointType:'round',
-                    //                 colour:{r:24/255,g:24/255,b:24/255,a:1}
-                    //             } },
-                    
-                    //             {collection:'basic', type:'text', name:'label', data:{
-                    //                 x:147.25, y:135, 
-                    //                 width:4,height:4,
-                    //                 angle:-Math.PI/2,
-                    //                 text:'amplifier (true tone)',
-                    //                 font:'AppleGaramond', 
-                    //                 printingMode:{widthCalculation:'absolute'},
-                    //                 colour:style.textColour
-                    //             } },
-                    //             {collection:'basic', type:'path', name:'line', data:{
-                    //                 pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
-                    //                 capType:'round',
-                    //                 thickness:0.5,
-                    //                 colour:style.textColour
-                    //             } },
-                    
-                    //             {collection:'dynamic', type:'connectionNode_audio', name:'input_left', data:{ 
-                    //                 x:150, y:100, width:5, height:15, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.audio.dim, 
-                    //                     glow:style.connectionNode.audio.glow,
-                    //                     cable_dim:style.connectionCable.audio.dim, 
-                    //                     cable_glow:style.connectionCable.audio.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_audio', name:'input_right', data:{ 
-                    //                 x:150, y:120, width:5, height:15, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.audio.dim, 
-                    //                     glow:style.connectionNode.audio.glow,
-                    //                     cable_dim:style.connectionCable.audio.dim, 
-                    //                     cable_glow:style.connectionCable.audio.glow,
-                    //                 },
-                    //             }},
-                    
-                    //         ]
-                    //     };
-                    //     //add bumpers
-                    //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                    //         if(c == shape.length){c = 0;}
-                    
-                    //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                    //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                    //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                    //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                    //         ], thickness:bumperCoverage.large.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                    //     }
-                    
-                    
-                        
-                    //     //main object
-                    //         var object = _canvas_.interface.unit.builder(this.ruler,design);
-                    
-                    //     //circuitry
-                    //         var flow = {
-                    //             destination:null,
-                    //             stereoCombiner: null,
-                    //             pan_left:null, pan_right:null,
-                    //         };
-                    
-                    //         //destination
-                    //             flow._destination = _canvas_.library.audio.destination;
-                    
-                    //         //stereo channel combiner
-                    //             flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
-                    
-                    //         //audio connections
-                    //             //inputs to stereo combiner
-                    //                 object.elements.connectionNode_audio.input_left.out().connect(flow.stereoCombiner, 0, 0);
-                    //                 object.elements.connectionNode_audio.input_right.out().connect(flow.stereoCombiner, 0, 1);
-                    //             //stereo combiner to main output
-                    //                 flow.stereoCombiner.connect(flow._destination);
-                    
-                    //     return object;
-                    // };
-                    
-                    
                     this.amplifier = function(x,y,a){
                         var width = 935; var height = 860;
                         var shape = [
@@ -43974,7 +44004,7 @@
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Amplifier/amplifier_backing.png' }
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/amplifier/amplifier_backing.png' }
                                 },
                             ]
                         };
@@ -44148,8 +44178,7 @@
                         },
                         connectionCable:{
                             signal:{
-                                // dim:{r:235/255,g:98/255,b:61/255,a:1},
-                                dim:{r:240/255,g:145/255,b:53/255,a:1},
+                                dim:{r:235/255,g:98/255,b:61/255,a:1},
                                 glow:{r:237/255,g:154/255,b:132/255,a:1},
                             },
                             voltage:{
@@ -44412,46 +44441,213 @@
                         category:'synthesizer',
                         helpURL:'https://curve.metasophiea.com/help/units/beta/basicSynthesizer/'
                     };
-                    this.duplicator_data = function(x,y,a){
+                    this.audio_duplicator = function(x,y,a){
+                        var width = 320; var height = 320;
+                        var div = 6.4;
                         var shape = [
                             {x:0,y:0},
-                            {x:30,y:0},
-                            {x:50,y:10},
-                            {x:50,y:40},
-                            {x:30,y:50},
-                            {x:0,y:50}
+                            {x:width/div*(0.85/5),y:0},
+                            {x:width/div*(4.5/5),y:height/div*(1/5)},
+                            {x:width/div*(4.5/5),y:height/div*(4/5)},
+                            {x:width/div*(0.85/5),y:height/div},
+                            {x:0,y:height/div},
+                    
+                            {x:-width/div*(0.9/10),y:height/div*(4/5)},
+                            {x:-width/div*(1.25/10),y:height/div*(2.5/5)},
+                            {x:-width/div*(0.9/10),y:height/div*(1/5)},
                         ];
                         var design = {
-                            name:'duplicator_data',
+                            name:'audio_duplicator',
                             x:x, y:y, angle:a,
                             space:shape,
                             elements:[
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:29, y:47.5, 
-                                    width:3,height:3,
-                                    angle:-0.475,
-                                    text:'data duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
+                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                    x:(width/div)*(4.5/5)-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow,
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow,
+                                    },
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
+                                    x:-width/div*(0.9/10), y:(height/div)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow, 
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
+                                    x:-width/div*(0.45/10), y:(height/div) - 7.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.audio.dim, 
+                                        glow:style.connectionNode.audio.glow, 
+                                        cable_dim:style.connectionCable.audio.dim, 
+                                        cable_glow:style.connectionCable.audio.glow 
+                                    }
+                                }},
+                    
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/audio_duplicator/audio_duplicator_backing.png' }
                                 },
+                            ]
+                        };
                     
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:45,y:25}, {x:20,y:25}, {x:10,y:35}, {x:5,y:35}, {x:7.5,y:32},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:5,y:35}, {x:7.5,y:38},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:35,y:25}, {x:25,y:15}, {x:5,y:15}, {x:7.5,y:12},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:15}, {x:7.5,y:18},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.data} },
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
                     
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.audio_duplicator.metadata = {
+                        name:'Audio Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/audio_duplicator/'
+                    };
+                    this.signal_duplicator = function(x,y,a){
+                        var width = 260; var height = 260;
+                        var div = 6.5;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div,y:height/(div*4)},
+                            {x:width/div,y:height/div - height/(div*4)},
+                            {x:0,y:height/div},
+                        ];
+                        var design = {
+                            name:'signal_duplicator',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
+                                    x:width/div-0.5, y:(height/div)/2 - 5, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
+                                    x:0, y:(height/div)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow, 
+                                        cable_dim:style.connectionCable.signal.dim, 
+                                        cable_glow:style.connectionCable.signal.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
+                                    x:0, y:(height/div)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow, 
+                                        cable_dim:style.connectionCable.signal.dim, 
+                                        cable_glow:style.connectionCable.signal.glow 
+                                    }
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/signal_duplicator/signal_duplicator_backing.png' }
+                                },
+                            ]
+                        };
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_duplicator.metadata = {
+                        name:'Signal Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/signal_duplicator/'
+                    };
+                    this.voltage_duplicator = function(x,y,a){
+                        var width = 260; var height = 260;
+                        var div = 6.5;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div,y:height/(div*4)*2},
+                            {x:width/div,y:height/div},
+                            {x:0,y:height/div},
+                        ];
+                        var design = {
+                            name:'voltage_duplicator',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
+                                    x:width/div-0.5, y:(height/div)*0.75 - 5, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow,
+                                        cable_dim:style.connectionCable.voltage.dim,
+                                        cable_glow:style.connectionCable.voltage.glow,
+                                    },
+                                    onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
+                                    x:0, y:(height/div)/2, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow, 
+                                        cable_dim:style.connectionCable.voltage.dim, 
+                                        cable_glow:style.connectionCable.voltage.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
+                                    x:0, y:(height/div)*0.75 + 5, width:5, height:10, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow, 
+                                        cable_dim:style.connectionCable.voltage.dim, 
+                                        cable_glow:style.connectionCable.voltage.glow 
+                                    }
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/voltage_duplicator/voltage_duplicator_backing.png' }
+                                },
+                            ]
+                        };
+                    
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_duplicator.metadata = {
+                        name:'Voltage Duplicator',
+                        category:'misc',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/voltage_duplicator/'
+                    };
+                    this.data_duplicator = function(x,y,a){
+                        var width = 320; var height = 320;
+                        var div = 6.4;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div*(3/5),y:0},
+                            {x:width/div,y:height/div*(1/5)},
+                            {x:width/div,y:height/div*(4/5)},
+                            {x:width/div*(3/5),y:height/div},
+                            {x:0,y:height/div},
+                        ];
+                        var design = {
+                            name:'data_duplicator',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
                                 {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
-                                    x:50, y:17.5, width:5, height:15, cableVersion:2,
+                                    x:width/div-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.data.dim, 
                                         glow:style.connectionNode.data.glow,
@@ -44464,7 +44660,7 @@
                                     } 
                                 }},
                                 {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
-                                    x:0, y:22.5, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    x:0, y:(height/div)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.data.dim, 
                                         glow:style.connectionNode.data.glow, 
@@ -44473,7 +44669,7 @@
                                     }
                                 }},
                                 {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
-                                    x:0, y:42.5, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    x:0, y:(height/div) - 7.5, width:5, height:15, angle:Math.PI, cableVersion:2,
                                     style:{ 
                                         dim:style.connectionNode.data.dim, 
                                         glow:style.connectionNode.data.glow, 
@@ -44481,316 +44677,25 @@
                                         cable_glow:style.connectionCable.data.glow 
                                     }
                                 }},
+                    
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/data_duplicator/data_duplicator_backing.png' }
+                                },
                             ]
                         };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
                     
                         //main object
                             var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
+                    
                         return object;
                     };
                     
-                    this.duplicator_data.metadata = {
+                    
+                    
+                    this.data_duplicator.metadata = {
                         name:'Data Duplicator',
                         category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_data/'
-                    };
-                    this.duplicator_signal = function(x,y,a){
-                        var shape = [
-                            {x:0,y:0},
-                            {x:40,y:10},
-                            {x:40,y:30},
-                            {x:0,y:40}
-                        ];
-                        var design = {
-                            name:'duplicator_signal',
-                            x:x, y:y, angle:a,
-                            space:shape,
-                            elements:[
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:15.75, y:33.5, 
-                                    width:3,height:3,
-                                    angle:-0.24497866312686423,
-                                    text:'signal duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
-                                },
-                    
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:35,y:20}, {x:27.5,y:20}, {x:17.5,y:12.5}, {x:5,y:12.5}, {x:7.5,y:9.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:5,y:12.5}, {x:7.5,y:15.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:27.5,y:20}, {x:17.5,y:27.5}, {x:5,y:27.5}, {x:7.5,y:30.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:27.5}, {x:7.5,y:24.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.signal} },
-                    
-                    
-                                {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
-                                    x:40, y:15, width:5, height:10, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow,
-                                        cable_dim:style.connectionCable.signal.dim,
-                                        cable_glow:style.connectionCable.signal.glow,
-                                    },
-                                    onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
-                                    x:0, y:17.5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow, 
-                                        cable_dim:style.connectionCable.signal.dim, 
-                                        cable_glow:style.connectionCable.signal.glow 
-                                    }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
-                                    x:0, y:32.5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.signal.dim, 
-                                        glow:style.connectionNode.signal.glow, 
-                                        cable_dim:style.connectionCable.signal.dim, 
-                                        cable_glow:style.connectionCable.signal.glow 
-                                    }
-                                }},
-                            ]
-                        };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
-                        return object;
-                    };
-                    
-                    this.duplicator_signal.metadata = {
-                        name:'Signal Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_signal/'
-                    };
-                    this.duplicator_voltage = function(x,y,a){
-                        var shape = [
-                            {x:0,y:0},
-                            {x:40,y:20},
-                            {x:40,y:40},
-                            {x:0,y:40}
-                        ];
-                        var design = {
-                            name:'duplicator_voltage',
-                            x:x, y:y, angle:a,
-                            space:shape,
-                            elements:[
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:12.5, y:37.5, 
-                                    width:3,height:3,
-                                    text:'voltage duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
-                                },
-                    
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:35,y:30}, {x:20,y:30}, {x:15,y:28.5}, {x:5,y:28.5}, {x:7.5,y:25.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:25,y:30}, {x:15,y:14}, {x:5,y:14}, {x:7.5,y:11},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:5,y:14}, {x:7.5,y:17},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:28.5}, {x:7.5,y:31.5},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.voltage} },
-                    
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
-                                    x:40, y:23.75, width:5, height:12.5, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow, 
-                                        cable_dim:style.connectionCable.voltage.dim, 
-                                        cable_glow:style.connectionCable.voltage.glow,
-                                    },
-                                    onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
-                                    x:0, y:20, width:5, height:12.5, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow, 
-                                        cable_dim:style.connectionCable.voltage.dim, 
-                                        cable_glow:style.connectionCable.voltage.glow 
-                                    }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{ 
-                                    x:0, y:35, width:5, height:12.5, angle:Math.PI, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.voltage.dim, 
-                                        glow:style.connectionNode.voltage.glow, 
-                                        cable_dim:style.connectionCable.voltage.dim, 
-                                        cable_glow:style.connectionCable.voltage.glow 
-                                    }
-                                }},
-                            ]
-                        };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
-                    
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
-                        return object;
-                    };
-                    
-                    this.duplicator_voltage.metadata = {
-                        name:'Voltage Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_voltage/'
-                    };
-                    this.duplicator_audio = function(x,y,a){
-                        var shape = [
-                            {x:5,y:50},
-                            {x:15,y:50},
-                            {x:55,y:40},
-                            {x:55,y:10},
-                            {x:15,y:0},
-                            {x:5,y:0},
-                    
-                            {x:3,y:5},
-                            {x:0.75,y:15},
-                            {x:0,y:25},
-                            {x:0.75,y:35},
-                            {x:3,y:45},
-                        ];
-                        var design = {
-                            name:'duplicator_audio',
-                            x:x, y:y, angle:a,
-                            space:shape,
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                    x:55, y:17.5, width:5, height:15, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.audio.dim, 
-                                        glow:style.connectionNode.audio.glow,
-                                        cable_dim:style.connectionCable.audio.dim, 
-                                        cable_glow:style.connectionCable.audio.glow,
-                                    },
-                                }},
-                                {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
-                                    x:0.25, y:15+7.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.audio.dim, 
-                                        glow:style.connectionNode.audio.glow, 
-                                        cable_dim:style.connectionCable.audio.dim, 
-                                        cable_glow:style.connectionCable.audio.glow 
-                                    }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
-                                    x:2.5, y:15+27.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                    style:{ 
-                                        dim:style.connectionNode.audio.dim, 
-                                        glow:style.connectionNode.audio.glow, 
-                                        cable_dim:style.connectionCable.audio.dim, 
-                                        cable_glow:style.connectionCable.audio.glow 
-                                    }
-                                }},
-                    
-                                {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                    
-                                {collection:'basic', type:'path', name:'marking_1', data:{pointsAsXYArray:[
-                                    {x:50,y:25}, {x:5,y:34}, {x:7,y:30}, 
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                                {collection:'basic', type:'path', name:'marking_2', data:{pointsAsXYArray:[
-                                    {x:5,y:34}, {x:8.5,y:37}, 
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                                {collection:'basic', type:'path', name:'marking_3', data:{pointsAsXYArray:[
-                                    {x:50,y:25}, {x:5,y:16}, {x:7,y:20},
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                                {collection:'basic', type:'path', name:'marking_4', data:{pointsAsXYArray:[
-                                    {x:5,y:16}, {x:8.5,y:13}, 
-                                ], thickness:1.25, jointType:'round', capType:'round', colour:style.marking.audio} },
-                    
-                                {collection:'basic', type:'text', name:'label', data:{
-                                    x:30.5, y:43.5, 
-                                    width:3,height:3,
-                                    angle:-0.25,
-                                    text:'audio duplicator',
-                                    font:'AppleGaramond', 
-                                    printingMode:{widthCalculation:'absolute'},
-                                    colour:style.textColour}
-                                },
-                            ]
-                        };
-                        //add bumpers
-                        for(var a = shape.length-1, b=0, c=1; b < 6; a=b, b++, c++){
-                            if(c == shape.length){c = 0;}
-                    
-                            var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                            var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.small.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                            design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                            ], thickness:bumperCoverage.small.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                        }
-                    
-                    
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
-                    
-                        //circuitry
-                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                            object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
-                        
-                        return object;
-                    };
-                    
-                    this.duplicator_audio.metadata = {
-                        name:'Audio Duplicator',
-                        category:'misc',
-                        helpURL:'https://curve.metasophiea.com/help/units/beta/duplicator_audio/'
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/data_duplicator/'
                     };
                     this.eightTrackMixer = function(x,y,a){
                         var width = 1530; var height = 810;
@@ -44835,7 +44740,7 @@
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_backing.png' }
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_backing.png' }
                                 },
                             ]
                         };
@@ -44848,9 +44753,9 @@
                                 }},
                             );
                             design.elements.push(
-                                {collection:'control', type:'slide_image',name:'slide_volume_'+a,data:{
+                                {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
                                     x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                    handleURL:'prototypeUnits/beta/2/Eight%20Track%20Mixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                    handleURL:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
                                 }}
                             );
                     
@@ -44934,107 +44839,6 @@
                         category:'misc',
                         helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
                     };
-                    // this.amplifier = function(x,y,a){
-                    //     var shape = [
-                    //         {x:0,y:0},
-                    //         {x:150,y:0},
-                    //         {x:150,y:140},
-                    //         {x:0,y:140},
-                    //     ];
-                    //     var design = {
-                    //         name:'amplifier',
-                    //         x:x, y:y, angle:a,
-                    //         space:shape,
-                    //         elements:[
-                    //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background} },
-                    
-                    //             {collection:'basic', type:'image', name:'grill', data:{x:10,y:10,width:130,height:120,url:'images/units/beta/amplifierGrill.png'} },
-                    //             {collection:'basic', type:'path', name:'grillFrame', data:{
-                    //                 looping:true, 
-                    //                 pointsAsXYArray:[{x:10,y:10}, {x:140,y:10}, {x:140,y:130}, {x:10,y:130}],
-                    //                 thickness:5,
-                    //                 jointType:'round',
-                    //                 colour:{r:24/255,g:24/255,b:24/255,a:1}
-                    //             } },
-                    
-                    //             {collection:'basic', type:'text', name:'label', data:{
-                    //                 x:147.25, y:135, 
-                    //                 width:4,height:4,
-                    //                 angle:-Math.PI/2,
-                    //                 text:'amplifier (true tone)',
-                    //                 font:'AppleGaramond', 
-                    //                 printingMode:{widthCalculation:'absolute'},
-                    //                 colour:style.textColour
-                    //             } },
-                    //             {collection:'basic', type:'path', name:'line', data:{
-                    //                 pointsAsXYArray:[{x:146,y:5}, {x:146,y:92.5} ],
-                    //                 capType:'round',
-                    //                 thickness:0.5,
-                    //                 colour:style.textColour
-                    //             } },
-                    
-                    //             {collection:'dynamic', type:'connectionNode_audio', name:'input_left', data:{ 
-                    //                 x:150, y:100, width:5, height:15, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.audio.dim, 
-                    //                     glow:style.connectionNode.audio.glow,
-                    //                     cable_dim:style.connectionCable.audio.dim, 
-                    //                     cable_glow:style.connectionCable.audio.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_audio', name:'input_right', data:{ 
-                    //                 x:150, y:120, width:5, height:15, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.audio.dim, 
-                    //                     glow:style.connectionNode.audio.glow,
-                    //                     cable_dim:style.connectionCable.audio.dim, 
-                    //                     cable_glow:style.connectionCable.audio.glow,
-                    //                 },
-                    //             }},
-                    
-                    //         ]
-                    //     };
-                    //     //add bumpers
-                    //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                    //         if(c == shape.length){c = 0;}
-                    
-                    //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                    //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.large.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                    
-                    //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                    //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                    //         ], thickness:bumperCoverage.large.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                    //     }
-                    
-                    
-                        
-                    //     //main object
-                    //         var object = _canvas_.interface.unit.builder(this.ruler,design);
-                    
-                    //     //circuitry
-                    //         var flow = {
-                    //             destination:null,
-                    //             stereoCombiner: null,
-                    //             pan_left:null, pan_right:null,
-                    //         };
-                    
-                    //         //destination
-                    //             flow._destination = _canvas_.library.audio.destination;
-                    
-                    //         //stereo channel combiner
-                    //             flow.stereoCombiner = new ChannelMergerNode(_canvas_.library.audio.context, {numberOfInputs:2});
-                    
-                    //         //audio connections
-                    //             //inputs to stereo combiner
-                    //                 object.elements.connectionNode_audio.input_left.out().connect(flow.stereoCombiner, 0, 0);
-                    //                 object.elements.connectionNode_audio.input_right.out().connect(flow.stereoCombiner, 0, 1);
-                    //             //stereo combiner to main output
-                    //                 flow.stereoCombiner.connect(flow._destination);
-                    
-                    //     return object;
-                    // };
-                    
-                    
                     this.amplifier = function(x,y,a){
                         var width = 935; var height = 860;
                         var shape = [
@@ -45068,7 +44872,7 @@
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/Amplifier/amplifier_backing.png' }
+                                    data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/amplifier/amplifier_backing.png' }
                                 },
                             ]
                         };
@@ -45242,8 +45046,7 @@
                         },
                         connectionCable:{
                             signal:{
-                                // dim:{r:235/255,g:98/255,b:61/255,a:1},
-                                dim:{r:240/255,g:145/255,b:53/255,a:1},
+                                dim:{r:235/255,g:98/255,b:61/255,a:1},
                                 glow:{r:237/255,g:154/255,b:132/255,a:1},
                             },
                             voltage:{
@@ -45641,6 +45444,276 @@
                         name:'Distortion',
                         category:'effects',
                         helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
+                    };
+                    this.eightStepSequencer = function(x,y,a){
+                        var width = 1670; var height = 590;
+                        var div = 6;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div -20/div,y:0},
+                            {x:width/div -20/div,y:(height/div)*(5.5/9.5) -10/div},
+                            {x:(width/div)*(26/27.5) -20/div,y:(height/div)*(5.5/9.5) -10/div},
+                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(7/9.5) -10/div},
+                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(9.5/9.5) -20/div},
+                            {x:0,y:height/div -20/div},
+                        ];
+                        var colours = [
+                            {r:1,g:0.01,b:0.02,a:1},
+                            {r:1,g:0.55,b:0,a:1},
+                            {r:1,g:0.93,b:0,a:1},
+                            {r:0,g:1,b:0,a:1},
+                            {r:0,g:1,b:0.81,a:1},
+                            {r:0,g:0.62,b:1,a:1},
+                            {r:0.08,g:0,b:1,a:1},
+                            {r:0.68,g:0,b:1,a:1}, 
+                        ];
+                        var design = {
+                            name:'eightStepSequencer',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
+                                    x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.data.dim, 
+                                        glow:style.connectionNode.data.glow, 
+                                        cable_dim:style.connectionCable.data.dim, 
+                                        cable_glow:style.connectionCable.data.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
+                                    x:width/div-0.5 -20/div, y:10, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
+                                    x:width/div-0.5 -20/div, y:22, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
+                                    x:width/div-0.5 -20/div, y:33, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
+                                }},
+                    
+                    
+                    
+                    
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-10/div, y:-10/div, width:width/div, height:height/div, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
+                                },
+                    
+                                {collection:'control', type:'button_image', name:'button_step', data:{
+                                    x:243.25, y:4.5, width:21, height:21, hoverable:false, 
+                                    backingURL__up:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_up.png',
+                                    backingURL__press:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_down.png',
+                                    onpress:step,
+                                }},
+                                {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
+                                    x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
+                                    handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_directionSlideHandle.png',
+                                    onchange:function(value){ state.direction = value*2 - 1; }
+                                }},
+                            ]
+                        };
+                        //dynamic design
+                        for(var a = 0; a < 8; a++){
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
+                                    x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(a){return function(value){
+                                        if(!value){return} 
+                    
+                                        var newNote = state.stages[a].note - 1;
+                                        var newOctave = state.stages[a].octave;
+                                        if(newNote < 0){ newNote = 11; newOctave--; }
+                                        if(newOctave < -1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
+                                    } }(a),
+                                }}
+                            );
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
+                                    x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(a){return function(value){
+                                        if(!value){return}
+                    
+                                        var newNote = state.stages[a].note + 1;
+                                        var newOctave = state.stages[a].octave;
+                                        if(newNote > 11){ newNote = 0; newOctave++; }
+                                        if(newOctave > 1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
+                                    } }(a),
+                                }}
+                            );
+                    
+                            design.elements.push(
+                                {collection:'display', type:'glowbox_rect',name:'LED'+a,data:{
+                                    x:12.5 +30*a, y:2.5, width:10, height:2.5, 
+                                    style:{
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1},
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    }
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
+                                    x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    onchange:function(a){return function(value){state.stages[a].note=value}}(a),
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
+                                    x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
+                                    handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_octaveSlideHandle_'+a+'.png',
+                                    onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
+                                    x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
+                                    x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
+                                    style:{
+                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1},
+                                        background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1}
+                                    },
+                                    onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
+                                }}
+                            );
+                    
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
+                                    x:7 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(a){ return function(value){ if(!value){return} object.elements.button_rectangle['button_activate_'+a].press(); object.elements.button_rectangle['button_activate_'+a].release(); } }(a),
+                                }}
+                            );
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
+                                    x:18 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow,
+                                        cable_dim:style.connectionCable.voltage.dim,
+                                        cable_glow:style.connectionCable.voltage.glow,
+                                    },
+                                    onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
+                                }}
+                            );
+                        }
+                    
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //internal circuitry
+                            var state = {
+                                direction:1,
+                                previousPosition:-1,
+                                requestedNextPosition:-1,
+                                position:-1,
+                                stages:[
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                ],
+                                previousMidiNumber:-1,
+                            }
+                    
+                            function step(){
+                                state.previousPosition=state.position;
+                                if( state.requestedNextPosition != -1 ){
+                                    state.position = state.requestedNextPosition;
+                                    state.requestedNextPosition = -1;
+                                }else{
+                                    state.position = state.position+state.direction;
+                                }
+                                if(state.position > 7){state.position = 0;}
+                                else if(state.position < 0){state.position = 7;}
+                    
+                                var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
+                                object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
+                                object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
+                                state.previousMidiNumber = midiNumber
+                    
+                                if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
+                                object.elements.glowbox_rect['LED'+state.position].on(); 
+                            }
+                            function stageToMidiNoteNumber(stage){
+                                var octaveOffset = 4;
+                                var note = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][stage.note];
+                                var octave = stage.octave+octaveOffset;
+                                return _canvas_.library.audio.name2num(octave+note);
+                            }
+                        
+                        //interface
+                            object.i = {
+                                step:function(){ object.elements.button_image.button_step.press(); },
+                                direction:function(value){ object.elements.slide_discrete_image.slide_direction.set(value); },
+                                noteDial:function(number,value){ object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].set(value); },
+                                octaveSlider:function(number,value){ object.elements.slide_discrete_image['slide_octave_'+number].set(value); },
+                                velocityDial:function(number,value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].set(value); },
+                                activateStep:function(number){ object.elements.button_rectangle['button_activate_'+number].press(); },
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.eightStepSequencer.metadata = {
+                        name:'Eight Step Sequencer',
+                        category:'sequencers',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/eightStepSequencer/'
                     };
                     
                     this._categoryData = {
@@ -45648,6 +45721,7 @@
                         misc:{ printingName:'Miscellaneous' },
                         monitors:{ printingName:'Monitors' },
                         effects:{ printingName:'Effect Units'},
+                        sequencers:{ printingName:'Sequencers'},
                     };
                     this.distortion = function(x,y,a){
                         var shape = [
@@ -45784,6 +45858,276 @@
                         name:'Distortion',
                         category:'effects',
                         helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
+                    };
+                    this.eightStepSequencer = function(x,y,a){
+                        var width = 1670; var height = 590;
+                        var div = 6;
+                        var shape = [
+                            {x:0,y:0},
+                            {x:width/div -20/div,y:0},
+                            {x:width/div -20/div,y:(height/div)*(5.5/9.5) -10/div},
+                            {x:(width/div)*(26/27.5) -20/div,y:(height/div)*(5.5/9.5) -10/div},
+                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(7/9.5) -10/div},
+                            {x:(width/div)*(24.5/27.5) -20/div,y:(height/div)*(9.5/9.5) -20/div},
+                            {x:0,y:height/div -20/div},
+                        ];
+                        var colours = [
+                            {r:1,g:0.01,b:0.02,a:1},
+                            {r:1,g:0.55,b:0,a:1},
+                            {r:1,g:0.93,b:0,a:1},
+                            {r:0,g:1,b:0,a:1},
+                            {r:0,g:1,b:0.81,a:1},
+                            {r:0,g:0.62,b:1,a:1},
+                            {r:0.08,g:0,b:1,a:1},
+                            {r:0.68,g:0,b:1,a:1}, 
+                        ];
+                        var design = {
+                            name:'eightStepSequencer',
+                            x:x, y:y, angle:a,
+                            space:shape,
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
+                                    x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.data.dim, 
+                                        glow:style.connectionNode.data.glow, 
+                                        cable_dim:style.connectionCable.data.dim, 
+                                        cable_glow:style.connectionCable.data.glow 
+                                    }
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
+                                    x:width/div-0.5 -20/div, y:10, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
+                                    x:width/div-0.5 -20/div, y:22, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
+                                    x:width/div-0.5 -20/div, y:33, width:5, height:10, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
+                                }},
+                    
+                    
+                    
+                    
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-10/div, y:-10/div, width:width/div, height:height/div, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
+                                },
+                    
+                                {collection:'control', type:'button_image', name:'button_step', data:{
+                                    x:243.25, y:4.5, width:21, height:21, hoverable:false, 
+                                    backingURL__up:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_up.png',
+                                    backingURL__press:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_down.png',
+                                    onpress:step,
+                                }},
+                                {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
+                                    x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
+                                    handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_directionSlideHandle.png',
+                                    onchange:function(value){ state.direction = value*2 - 1; }
+                                }},
+                            ]
+                        };
+                        //dynamic design
+                        for(var a = 0; a < 8; a++){
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
+                                    x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(a){return function(value){
+                                        if(!value){return} 
+                    
+                                        var newNote = state.stages[a].note - 1;
+                                        var newOctave = state.stages[a].octave;
+                                        if(newNote < 0){ newNote = 11; newOctave--; }
+                                        if(newOctave < -1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
+                                    } }(a),
+                                }}
+                            );
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
+                                    x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(a){return function(value){
+                                        if(!value){return}
+                    
+                                        var newNote = state.stages[a].note + 1;
+                                        var newOctave = state.stages[a].octave;
+                                        if(newNote > 11){ newNote = 0; newOctave++; }
+                                        if(newOctave > 1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
+                                    } }(a),
+                                }}
+                            );
+                    
+                            design.elements.push(
+                                {collection:'display', type:'glowbox_rect',name:'LED'+a,data:{
+                                    x:12.5 +30*a, y:2.5, width:10, height:2.5, 
+                                    style:{
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1},
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    }
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
+                                    x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    onchange:function(a){return function(value){state.stages[a].note=value}}(a),
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
+                                    x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
+                                    handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_octaveSlideHandle_'+a+'.png',
+                                    onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
+                                    x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
+                                }}
+                            );
+                            design.elements.push(
+                                {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
+                                    x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
+                                    style:{
+                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1},
+                                        background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1}
+                                    },
+                                    onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
+                                }}
+                            );
+                    
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
+                                    x:7 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.signal.dim, 
+                                        glow:style.connectionNode.signal.glow,
+                                        cable_dim:style.connectionCable.signal.dim,
+                                        cable_glow:style.connectionCable.signal.glow,
+                                    },
+                                    onchange:function(a){ return function(value){ if(!value){return} object.elements.button_rectangle['button_activate_'+a].press(); object.elements.button_rectangle['button_activate_'+a].release(); } }(a),
+                                }}
+                            );
+                            design.elements.unshift(
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
+                                    x:18 +30*a, y:height/div -20/div + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                    style:{ 
+                                        dim:style.connectionNode.voltage.dim, 
+                                        glow:style.connectionNode.voltage.glow,
+                                        cable_dim:style.connectionCable.voltage.dim,
+                                        cable_glow:style.connectionCable.voltage.glow,
+                                    },
+                                    onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
+                                }}
+                            );
+                        }
+                    
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //internal circuitry
+                            var state = {
+                                direction:1,
+                                previousPosition:-1,
+                                requestedNextPosition:-1,
+                                position:-1,
+                                stages:[
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                    { note:0, octave:0, velocity:0 },
+                                ],
+                                previousMidiNumber:-1,
+                            }
+                    
+                            function step(){
+                                state.previousPosition=state.position;
+                                if( state.requestedNextPosition != -1 ){
+                                    state.position = state.requestedNextPosition;
+                                    state.requestedNextPosition = -1;
+                                }else{
+                                    state.position = state.position+state.direction;
+                                }
+                                if(state.position > 7){state.position = 0;}
+                                else if(state.position < 0){state.position = 7;}
+                    
+                                var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
+                                object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
+                                object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
+                                state.previousMidiNumber = midiNumber
+                    
+                                if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
+                                object.elements.glowbox_rect['LED'+state.position].on(); 
+                            }
+                            function stageToMidiNoteNumber(stage){
+                                var octaveOffset = 4;
+                                var note = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][stage.note];
+                                var octave = stage.octave+octaveOffset;
+                                return _canvas_.library.audio.name2num(octave+note);
+                            }
+                        
+                        //interface
+                            object.i = {
+                                step:function(){ object.elements.button_image.button_step.press(); },
+                                direction:function(value){ object.elements.slide_discrete_image.slide_direction.set(value); },
+                                noteDial:function(number,value){ object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].set(value); },
+                                octaveSlider:function(number,value){ object.elements.slide_discrete_image['slide_octave_'+number].set(value); },
+                                velocityDial:function(number,value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].set(value); },
+                                activateStep:function(number){ object.elements.button_rectangle['button_activate_'+number].press(); },
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.eightStepSequencer.metadata = {
+                        name:'Eight Step Sequencer',
+                        category:'sequencers',
+                        helpURL:'https://curve.metasophiea.com/help/units/beta/eightStepSequencer/'
                     };
                     _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous = function(
                         name='dial_colourWithIndent_continuous',
@@ -45903,7 +46247,7 @@
                             object.onrelease = onrelease;
                     
                         //setup
-                            set(value);
+                            set(value,false);
                     
                         return object;
                     };
@@ -45943,13 +46287,12 @@
                     
                     
                         //graphical adjust
-                            function set(a,update=true){ 
+                            function set(a,update=true){
                                 a = (a>(optionCount-1) ? (optionCount-1) : a);
                                 a = (a<0 ? 0 : a);
                     
-                                if(update && object.onchange != undefined){object.onchange(a);}
-                    
                                 a = Math.round(a);
+                                if(update && object.onchange != undefined && value != a){object.onchange(a);}
                                 value = a;
                                 dial.set( value/(optionCount-1) );
                             };
@@ -46008,7 +46351,6 @@
                                     function(event){
                                         var diff = Math.round( (event.Y - initialY)/25 );
                                         set( initialValue - diff );
-                                        if(object.onchange != undefined){object.onchange(value);}
                                     },
                                     function(event){
                                         grappled = false;
@@ -46025,7 +46367,7 @@
                             object.onrelease = onrelease;
                     
                         //setup
-                            set(value);
+                            set(value,false);
                     
                         return object;
                     };
@@ -46230,18 +46572,21 @@
             
             _canvas_.control.scene.addUnit(10,10,0,'ruler','beta');
             
-            // _canvas_.control.scene.addUnit(70,30,0,'duplicator_signal','beta');
-            // _canvas_.control.scene.addUnit(70,80,0,'duplicator_voltage','beta');
-            // _canvas_.control.scene.addUnit(125,30,0,'duplicator_data','beta');
-            // _canvas_.control.scene.addUnit(125,85,0,'duplicator_audio','beta');
+            
+            // _canvas_.control.scene.addUnit(70,10,0,'eightTrackMixer','beta');
             
             // _canvas_.control.scene.addUnit(200,30,0,'amplifier','beta');
+            
+            // _canvas_.control.scene.addUnit(70,30,0,'signal_duplicator','beta');
+            // _canvas_.control.scene.addUnit(70,80,0,'voltage_duplicator','beta');
+            // _canvas_.control.scene.addUnit(125,30,0,'data_duplicator','beta');
+            // _canvas_.control.scene.addUnit(125,85,0,'audio_duplicator','beta');
+            
+            _canvas_.control.scene.addUnit(70,10,0,'eightStepSequencer','beta');
             
             // _canvas_.control.scene.addUnit(360,30,0,'distortion','beta');
             // _canvas_.control.scene.addUnit(365,105,0,'basicSynthesizer','beta');
             
-            // _canvas_.control.scene.addUnit(70,10,0,'eightTrackMixer','beta');
-            _canvas_.control.scene.addUnit(70,10,0,'amplifier','beta');
             
             _canvas_.control.viewport.scale(4);
             // _canvas_.control.viewport.position(-1250, -10);
