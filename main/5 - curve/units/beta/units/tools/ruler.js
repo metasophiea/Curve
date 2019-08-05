@@ -99,5 +99,5 @@ this.ruler = function(x,y,a){
 this.ruler.metadata = {
     name:'Ruler',
     category:'tools',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/ruler/'
+    helpURL:'/help/units/beta/ruler/'
 };

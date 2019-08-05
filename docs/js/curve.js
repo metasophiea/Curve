@@ -22160,6 +22160,7 @@
                                     this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
                                     function producePoints(){
                                         points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
+                                        if(self.devMode && vectorLibrary[font][character] == undefined){ console.log(self.getAddress()+'::character - unknown character: "'+character+'"'); }
                             
                                         //adjust for vertical printingMode
                                             var horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;
@@ -23201,7 +23202,7 @@
                             };
                             
                             //correct font to be compatible with the new way of fonting
-                            reducedGlyphSet.forEach(key => {
+                            reducedGlyphSet.concat(['default','']).forEach(key => {
                                 //generate limits
                                     this.character.vectorLibrary.defaultThick[key].top = this.character.vectorLibrary.defaultThick[key].ratio != undefined && this.character.vectorLibrary.defaultThick[key].ratio.y != undefined ? -this.character.vectorLibrary.defaultThick[key].ratio.y : -1;
                                     this.character.vectorLibrary.defaultThick[key].right = this.character.vectorLibrary.defaultThick[key].ratio != undefined && this.character.vectorLibrary.defaultThick[key].ratio.x != undefined ? this.character.vectorLibrary.defaultThick[key].ratio.x + 0.1 : 1.1;
@@ -23694,7 +23695,7 @@
                             
                             
                             //correct font to be compatible with the new way of fonting
-                            reducedGlyphSet.forEach(key => {
+                            reducedGlyphSet.concat(['default','']).forEach(key => {
                                 //generate limits
                                     this.character.vectorLibrary.defaultThin[key].top = this.character.vectorLibrary.defaultThin[key].ratio != undefined && this.character.vectorLibrary.defaultThin[key].ratio.y != undefined ? -this.character.vectorLibrary.defaultThin[key].ratio.y : -1;
                                     this.character.vectorLibrary.defaultThin[key].right = this.character.vectorLibrary.defaultThin[key].ratio != undefined && this.character.vectorLibrary.defaultThin[key].ratio.x != undefined ? this.character.vectorLibrary.defaultThin[key].ratio.x + 0.1 : 1.1;
@@ -23872,29 +23873,49 @@
                                     //adjust canvas dimension based on the size requirement set out in the canvasElement attribute
                                         var size = {css:0, element:0};
                                         if(attribute == undefined){
-                                            size.element = pageData.defaultSize[direction] * window.devicePixelRatio;
                                             size.css = pageData.defaultSize[direction];
                                         }else if( attribute.indexOf('%') == (attribute.length-1) ){
                                             var parentSize = canvasElement.parentElement['offset'+Direction];
-                                            var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                                            size.element = parentSize * percent * window.devicePixelRatio;
+                                            var percent = parseFloat(attribute.slice(0,-1)) / 100;
+                                            if( isNaN(percent) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
                                             size.css = parentSize * percent;
+                                        }else if( attribute.indexOf('px') != -1 ){
+                                            var val = parseFloat(attribute.slice(0,-2));
+                                            if( isNaN(val) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
+                                            size.css = val;
                                         }else{
-                                            size.element = attribute * window.devicePixelRatio;
-                                            size.css = attribute;
+                                            var val = parseFloat(attribute);
+                                            if( isNaN(val) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
+                                            size.css = val;
                                         }
                     
-                                        pageData[direction] = size.css;
-                                        canvasElement[direction] = size.element;
-                                        canvasElement.style[direction] = size.css + "px";
+                                    //adjust value to account for min/max attributes
+                                        var attribute_min = canvasElement.getAttribute(__canvasPrefix+'ElementMin'+Direction);
+                                        if(attribute_min != undefined){
+                                            if( attribute_min.indexOf('px') != -1 ){ attribute_min = attribute_min.slice(0,-2); }
+                                            if( attribute_min.indexOf('%') != -1 ){ console.warn(__canvasPrefix+'ElementMin'+Direction,'is of an unparseable format:',attribute_min,'(cannot use percentage in a max/min value)'); }
+                                            attribute_min = parseFloat(attribute_min);
+                                            if( isNaN(attribute_min) ){console.warn(__canvasPrefix+'ElementMin'+Direction,'is of an unparseable format:',attribute_min);return;}
+                                            if( attribute_min > size.css ){ size.css = attribute_min; }
+                                        }
+                                        var attribute_max = canvasElement.getAttribute(__canvasPrefix+'ElementMax'+Direction);
+                                        if(attribute_max != undefined){
+                                            if( attribute_max.indexOf('px') != -1 ){attribute_max = attribute_max.slice(0,-2); }
+                                            if( attribute_max.indexOf('%') != -1 ){console.warn(__canvasPrefix+'ElementMax'+Direction,'is of an unparseable format:',attribute_max,'(cannot use percentage in a max/min value)'); }
+                                            attribute_max = parseFloat(attribute_max);
+                                            if( isNaN(attribute_max) ){console.warn(__canvasPrefix+'ElementMax'+Direction,'is of an unparseable format:',attribute_max);return;}
+                                            if( attribute_max < size.css ){ size.css = attribute_max; }
+                                        }
+                    
+                                    size.element = size.css * window.devicePixelRatio;
+                    
+                                    pageData[direction] = size.css;
+                                    canvasElement[direction] = size.element;
+                                    canvasElement.style[direction] = size.css + "px";
                     
                                     changesMade = true;
                                 }
                         
-                                //run everything twice, to cover the event of one of the
-                                //first two creating a scrollbar in the browser window
-                                dimensionAdjust('height');
-                                dimensionAdjust('width');
                                 dimensionAdjust('height');
                                 dimensionAdjust('width');
                     
@@ -23924,7 +23945,7 @@
                                 this.clearColour(clearColour);
                                 this.adjustCanvasSize();
                                 this.refreshCoordinates();
-                            };this.refresh();
+                            };
                     
                         //frame rate control
                             var frameRateControl = { active:false, previousRenderTime:Date.now(), limit:30, interval:0 };
@@ -24330,12 +24351,14 @@
                                             var data = gatherDetails(event,'onmouseup',core.callback.functions.onmouseup.length);
                                             core.callback.functions.onmouseup( data.point.x, data.point.y, event, data.shapes );
                                         }
-                    
                                 };
+                                var recentlyClickedDoubleClickableShapeList = [];
                                 _canvas_.onclick = function(){
                                     if(core.callback.functions.onclick){
                                         event.X = event.offsetX; event.Y = event.offsetY;
+                                        recentlyClickedDoubleClickableShapeList = gatherDetails(event,'ondblclick',core.callback.functions.onclick.length).shapes;
                                         var data = gatherDetails(event,'onclick',core.callback.functions.onclick.length);
+                                        data.shapes = data.shapes.filter( shape => shapeMouseclickList.includes(shape) );
                                         core.callback.functions.onclick( data.point.x, data.point.y, event, data.shapes );
                                     }
                                 };
@@ -24343,6 +24366,7 @@
                                     if(core.callback.functions.ondblclick){
                                         event.X = event.offsetX; event.Y = event.offsetY;
                                         var data = gatherDetails(event,'ondblclick',core.callback.functions.ondblclick.length);
+                                        data.shapes = data.shapes.filter( shape => recentlyClickedDoubleClickableShapeList.includes(shape) );
                                         core.callback.functions.ondblclick( data.point.x, data.point.y, event, data.shapes );
                                     }
                                 };
@@ -24444,8 +24468,13 @@
                                 customKeyInterpreter(event,true);
                             
                             //perform action
-                                if(shapes.length > 0){ shapes[0].onkeydown(x,y,event); }
-                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                                for(var a = 0; a < shapes.length; a++){
+                                    if(shapes[a].glyphs.includes(event.key)){
+                                        shapes[a].onkeydown(x,y,event);
+                                        return;
+                                    }
+                                }
+                                _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                         };
                     
                         _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
@@ -24455,8 +24484,13 @@
                                 customKeyInterpreter(event,false);
                             
                             //perform action
-                                if(shapes.length > 0){ shapes[0].onkeyup(x,y,event); }
-                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                                for(var a = 0; a < shapes.length; a++){
+                                    if(shapes[a].glyphs.includes(event.key)){
+                                        shapes[a].onkeyup(x,y,event);
+                                        return;
+                                    }
+                                }
+                                _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                         };
                 };
                 
@@ -25113,10 +25147,17 @@
                                     flow.outAggregator.gain=a;
                                     _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
                                 };
-                                this.wetdry = function(a){
-                                    if(a==null){return flow.reverbGain.gain;}
-                                    flow.reverbGain.gain=a;
-                                    flow.bypassGain.gain=1-a;
+                                this.wetdry = function(a,w,d){
+                                    if(a=='manualControl'){
+                                        if(a==null){return {w:flow.reverbGain.gain,d:flow.bypassGain.gain};}
+                                        flow.reverbGain.gain=w;
+                                        flow.bypassGain.gain=d;
+                                    }else{
+                                        if(a==null){return flow.reverbGain.gain;}
+                                        flow.reverbGain.gain=a;
+                                        flow.bypassGain.gain=1-a;
+                                    }
+                        
                                     _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
                                     _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
                                 };
@@ -26099,6 +26140,35 @@
                             };
                             this.display = new function(){
                                 interfacePart.partLibrary.display = {};
+                                this.glowbox_rect = function(
+                                    name='glowbox_rect',
+                                    x, y, width=30, height=30, angle=0,
+                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                                ){
+                                    //elements 
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y});
+                                        var rect = interfacePart.builder('basic','rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
+                                            object.append(rect);
+                                
+                                    //methods
+                                        object.on = function(){
+                                            rect.colour = glowStyle;
+                                        };
+                                        object.off = function(){
+                                            rect.colour = dimStyle;
+                                        };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.glowbox_rectangle = function(name,data){ 
+                                    return interfacePart.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
+                                };
+                                interfacePart.partLibrary.display.glowbox_rect = function(name,data){
+                                    console.warn('depreciated - please use glowbox_rectangle instead');
+                                    return interfacePart.partLibrary.display.glowbox_rectangle(name,data);
+                                };
                                 this.grapher_audioScope = function(
                                     name='grapher_audioScope',
                                     x, y, width=120, height=60, angle=0,
@@ -27280,35 +27350,6 @@
                                         name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
                                     ); 
                                 };
-                                this.glowbox_rect = function(
-                                    name='glowbox_rect',
-                                    x, y, width=30, height=30, angle=0,
-                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
-                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
-                                ){
-                                    //elements 
-                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y});
-                                        var rect = interfacePart.builder('basic','rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
-                                            object.append(rect);
-                                
-                                    //methods
-                                        object.on = function(){
-                                            rect.colour = glowStyle;
-                                        };
-                                        object.off = function(){
-                                            rect.colour = dimStyle;
-                                        };
-                                
-                                    return object;
-                                };
-                                
-                                interfacePart.partLibrary.display.glowbox_rectangle = function(name,data){ 
-                                    return interfacePart.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
-                                };
-                                interfacePart.partLibrary.display.glowbox_rect = function(name,data){
-                                    console.warn('depreciated - please use glowbox_rectangle instead');
-                                    return interfacePart.partLibrary.display.glowbox_rectangle(name,data);
-                                };
                                 this.audio_meter_level = function(
                                     name='audio_meter_level',
                                     x, y, angle=0,
@@ -28100,7 +28141,7 @@
                                             stamp[segment].state = state;
                                             drawChar();
                                         };
-                                        object.get = function(segment){ return stamp[segment].state; };
+                                        object.get = function(segment){ if(segment==undefined){console.error('sevenSegmentDisplay_static::get: must provide segment value'); return;} return stamp[segment].state; };
                                         object.clear = function(){
                                             for(var a = 0; a < stamp.length; a++){
                                                 this.set(a,false);
@@ -29200,6 +29241,31 @@
                                         name, data.x, data.y, data.width, data.height, data.count, data.angle, 
                                         data.style.background, data.style.glow, data.style.dim,
                                     ); 
+                                };
+                                this.glowbox_circle = function(
+                                    name='glowbox_circle',
+                                    x, y, radius=10,
+                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                                ){
+                                    //elements 
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y});
+                                        var circle = interfacePart.builder('basic','circle','light',{ radius:radius, colour:dimStyle });
+                                            object.append(circle);
+                                
+                                    //methods
+                                        object.on = function(){
+                                            circle.colour = glowStyle;
+                                        };
+                                        object.off = function(){
+                                            circle.colour = dimStyle;
+                                        };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.glowbox_circle = function(name,data){ 
+                                    return interfacePart.collection.display.glowbox_circle( name, data.x, data.y, data.radius, data.style.glow, data.style.dim );
                                 };
                                 this.grapher_audioScope_static = function(
                                     name='grapher_audioScope_static',
@@ -35477,7 +35543,7 @@
                                         object._update = function(a){
                                             if(a>0){ object.activate(); }
                                             else{ object.deactivate(); }
-                                            onchange(a);
+                                            object.onchange(a);
                                         }
                                 
                                         object.set = function(a){
@@ -35489,14 +35555,19 @@
                                         };
                                         object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
                                 
-                                        object.onconnect = function(instigator){
-                                            if(onconnect){onconnect(instigator);}
+                                        object._onconnect = function(instigator){
+                                            if(onconnect){object.onconnect(instigator);}
                                             object._update(object.read());
                                         };
-                                        object.ondisconnect = function(instigator){
-                                            if(ondisconnect){ondisconnect(instigator);}
+                                        object._ondisconnect = function(instigator){
+                                            if(ondisconnect){object.ondisconnect(instigator);}
                                             object._update(localValue);
                                         };
+                                
+                                    //callbacks
+                                        object.onchange = onchange;
+                                        object.onconnect = onconnect;
+                                        object.ondisconnect = ondisconnect;
                                 
                                     return object;
                                 };
@@ -35674,14 +35745,18 @@
                                             object.out = function(){return object.audioNode;};
                                             object.in = function(){return object.audioNode;};
                                 
-                                        object.onconnect = function(instigator){
+                                        object._onconnect = function(instigator){
                                             if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                                            if(onconnect){onconnect(instigator);}
+                                            if(onconnect){object.onconnect(instigator);}
                                         };
-                                        object.ondisconnect = function(instigator){
+                                        object._ondisconnect = function(instigator){
                                             if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                                            if(ondisconnect){ondisconnect(instigator);}
+                                            if(ondisconnect){object.ondisconnect(instigator);}
                                         };
+                                
+                                    //callbacks
+                                        object.onconnect = onconnect;
+                                        object.ondisconnect = ondisconnect;
                                     
                                     return object;
                                 };
@@ -35702,8 +35777,8 @@
                                     cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
                                     cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
                                     cableVersion=0,
-                                    onreceivedata=function(address, data){},
-                                    ongivedata=function(address){},
+                                    onreceive=function(address, data){},
+                                    ongive=function(address){},
                                     onconnect=function(){},
                                     ondisconnect=function(){},
                                 ){
@@ -35728,16 +35803,16 @@
                                         object.send = function(address,data){
                                             flash(object);
                                 
-                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceive(address,data); }
                                         };
                                         object.request = function(address){
                                             flash(object);
                                 
-                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongive(address); }
                                         };
                                 
-                                        object.onreceivedata = onreceivedata;
-                                        object.ongivedata = ongivedata;
+                                        object.onreceive = onreceive;
+                                        object.ongive = ongive;
                                 
                                     return object;
                                 };
@@ -35795,7 +35870,7 @@
                                             this.disconnect();
                                 
                                             foreignNode = new_foreignNode;
-                                            if(onconnect!=undefined){this.onconnect(true);}
+                                            if(this.onconnect!=undefined){this.onconnect(true);}
                                             foreignNode._receiveConnection(this);
                                 
                                             this._addCable(this);
@@ -35803,18 +35878,18 @@
                                         object._receiveConnection = function(new_foreignNode){
                                             this.disconnect();
                                             foreignNode = new_foreignNode;
-                                            if(onconnect!=undefined){this.onconnect(false);}
+                                            if(this.onconnect!=undefined){this.onconnect(false);}
                                         };
                                         object.disconnect = function(){
                                             if( foreignNode == undefined ){return;}
                                 
                                             this._removeCable();
-                                            if(ondisconnect!=undefined){this.ondisconnect(true);}
+                                            if(this.ondisconnect!=undefined){this.ondisconnect(true);}
                                             foreignNode._receiveDisconnection();
                                             foreignNode = null;
                                         };
                                         object._receiveDisconnection = function(){
-                                            if(ondisconnect!=undefined){this.ondisconnect(false);}
+                                            if(this.ondisconnect!=undefined){this.ondisconnect(false);}
                                             foreignNode = null;
                                         };
                                         object.getForeignNode = function(){ return foreignNode; };
@@ -35952,7 +36027,7 @@
                                             var val = object.read();
                                             if(val){ object.activate(); }
                                             else{ object.deactivate(); }
-                                            onchange(val);
+                                            object.onchange(val);
                                         }
                                 
                                         object.set = function(a){
@@ -35963,14 +36038,19 @@
                                         };
                                         object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
                                 
-                                        object.onconnect = function(instigator){
-                                            if(onconnect){onconnect(instigator);}
+                                        object._onconnect = function(instigator){
+                                            if(onconnect){object.onconnect(instigator);}
                                             object._update();
                                         };
-                                        object.ondisconnect = function(instigator){
-                                            if(ondisconnect){ondisconnect(instigator);}
+                                        object._ondisconnect = function(instigator){
+                                            if(ondisconnect){object.ondisconnect(instigator);}
                                             object._update();
                                         };
+                                
+                                    //callbacks
+                                        object.onchange = onchange;
+                                        object.onconnect = onconnect;
+                                        object.ondisconnect = ondisconnect;
                                 
                                     return object;
                                 };
@@ -36647,10 +36727,15 @@
                                 devMode = bool;
                 
                                 //if we're in dev mode; enable all switches
+                                //(except 'enableUnloadWarning' which should be disabled)
                                     if(devMode){
                                         for(item in this){
                                             if(item != 'devMode'){
-                                                this[item](true);
+                                                if(item == 'enableUnloadWarning'){
+                                                    this[item](false);
+                                                }else{
+                                                    this[item](true);
+                                                }
                                             }
                                         }
                                     }
@@ -36675,7 +36760,28 @@
                                 if(bool==undefined){return enableSceneLoad;}
                                 if(devMode){return;}
                                 enableSceneLoad = bool;
-                        };
+                            };
+                            var enableUnloadWarning = false;
+                
+                        //window
+                            var enableUnloadWarning_message = "Unsaved work will be lost";
+                            this.enableUnloadWarning = function(bool,message){
+                                if(bool==undefined){return enableUnloadWarning;}
+                                if(devMode){return;}
+                                enableUnloadWarning = bool;
+                                enableUnloadWarning_message = message;
+                
+                                if( enableUnloadWarning ){ window.onbeforeunload = function(){ return enableUnloadWarning_message; }; }
+                                else{ window.onbeforeunload = undefined; }
+                            };
+                            var enableWindowScrollbarRemoval = true;
+                            this.enableWindowScrollbarRemoval = function(bool){
+                                if(bool==undefined){return enableWindowScrollbarRemoval;}
+                                if(devMode){return;}
+                                enableWindowScrollbarRemoval = bool;
+                
+                                control.viewport.stopMouseScroll(enableWindowScrollbarRemoval);
+                            };
                 
                         //unit modifications
                             var enableUnitAdditionRemoval = true;
@@ -43532,6 +43638,7 @@
                                 {x:-width/div*(1.25/10),y:height/div*(2.5/5)},
                                 {x:-width/div*(0.9/10),y:height/div*(1/5)},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
                             var design = {
                                 name:'audio_duplicator',
                                 x:x, y:y, angle:a,
@@ -43566,13 +43673,17 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/audio_duplicator/audio_duplicator_backing.png' }
+                                        data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
                         
                             //main object
                                 var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
                         
                             return object;
                         };
@@ -43582,7 +43693,7 @@
                         this.audio_duplicator.metadata = {
                             name:'Audio Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/audio_duplicator/'
+                            helpURL:'/help/units/beta/audio_duplicator/'
                         };
                         this.signal_duplicator = function(x,y,a){
                             var width = 260; var height = 260;
@@ -43593,6 +43704,7 @@
                                 {x:width/div,y:height/div - height/(div*4)},
                                 {x:0,y:height/div},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
                             var design = {
                                 name:'signal_duplicator',
                                 x:x, y:y, angle:a,
@@ -43627,7 +43739,7 @@
                                         }
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/signal_duplicator/signal_duplicator_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -43643,7 +43755,7 @@
                         this.signal_duplicator.metadata = {
                             name:'Signal Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/signal_duplicator/'
+                            helpURL:'/help/units/beta/signal_duplicator/'
                         };
                         this.voltage_duplicator = function(x,y,a){
                             var width = 260; var height = 260;
@@ -43654,6 +43766,7 @@
                                 {x:width/div,y:height/div},
                                 {x:0,y:height/div},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
                             var design = {
                                 name:'voltage_duplicator',
                                 x:x, y:y, angle:a,
@@ -43688,7 +43801,7 @@
                                         }
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/voltage_duplicator/voltage_duplicator_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -43704,7 +43817,7 @@
                         this.voltage_duplicator.metadata = {
                             name:'Voltage Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/voltage_duplicator/'
+                            helpURL:'/help/units/beta/voltage_duplicator/'
                         };
                         this.data_duplicator = function(x,y,a){
                             var width = 320; var height = 320;
@@ -43717,6 +43830,7 @@
                                 {x:width/div*(3/5),y:height/div},
                                 {x:0,y:height/div},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
                             var design = {
                                 name:'data_duplicator',
                                 x:x, y:y, angle:a,
@@ -43755,7 +43869,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/data_duplicator/data_duplicator_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -43771,7 +43885,7 @@
                         this.data_duplicator.metadata = {
                             name:'Data Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/data_duplicator/'
+                            helpURL:'/help/units/beta/data_duplicator/'
                         };
                         this.eightTrackMixer = function(x,y,a){
                             var width = 1530; var height = 810;
@@ -43791,6 +43905,7 @@
                                 {r:0.08,g:0,b:1,a:1},
                                 {r:0.68,g:0,b:1,a:1}, 
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
                             var design = {
                                 name:'eightTrackMixer',
                                 x:x, y:y, angle:a,
@@ -43816,7 +43931,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -43831,7 +43946,7 @@
                                 design.elements.push(
                                     {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
                                         x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                        handleURL:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                        handleURL:imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
                                     }}
                                 );
                         
@@ -43882,7 +43997,7 @@
                                     object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
                                     object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
                         
-                                    object.elements.slide_image['slide_volume_'+a].onchange = function(a){
+                                    object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
                                         return function(value){
                                             object['splitter_'+a].inGain(2*(1-value));
                                         }
@@ -43897,7 +44012,7 @@
                         
                             //interface
                                 object.i = {
-                                    gain:function(track,value){object.elements.slide_image['slide_volume_'+track].set(value);},
+                                    gain:function(track,value){object.elements.slide_continuous_image['slide_volume_'+track].set(value);},
                                     pan:function(track,value){object.elements.dial_colourWithIndent_continuous['dial_panner_'+track].set(value);},
                                 };
                         
@@ -43913,7 +44028,7 @@
                         this.eightTrackMixer.metadata = {
                             name:'Eight Track Mixer',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
+                            helpURL:'/help/units/beta/eightTrackMixer/'
                         };
                         this.amplifier = function(x,y,a){
                             var width = 935; var height = 860;
@@ -43923,6 +44038,7 @@
                                 {x:width/6,y:height/6},
                                 {x:0,y:height/6},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
                             var design = {
                                 name:'amplifier',
                                 x:x, y:y, angle:a,
@@ -43948,7 +44064,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/amplifier/amplifier_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -43985,7 +44101,110 @@
                         this.amplifier.metadata = {
                             name:'Amplifier',
                             category:'monitors',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/amplifier/'
+                            helpURL:'/help/units/beta/amplifier/'
+                        };
+                        this.data_readout = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:1220, height:920 },
+                                design:{ width:20, height:15 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            
+                            var design = {
+                                name:'data_readout',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_data', name:'in', data:{ 
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-30, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                                ]
+                            };
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                var lineCount = 0;
+                                var maxLineCount = 25;
+                                var lines = [];
+                                var lineElements = [];
+                                var textStyle = {
+                                    colour:{r:1,g:1,b:1,a:1}, 
+                                    size:4, 
+                                    font:'defaultThin', 
+                                    printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}
+                                };
+                                var maxPrintingWidth = 175;
+                                
+                                function printLine(line){
+                                    //add the new text to the list, and if the list becomes too long, remove the oldest item
+                                        lines.unshift( { prefix:(lineCount++)+':/> ', line:line } );
+                        
+                                    //empty screen of text
+                                        for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
+                                        lineElements = [];
+                        
+                                    //write all lines to screen
+                                        for(var a = 0; a < lines.length; a++){
+                                            lineElements[a] = _canvas_.interface.part.builder('basic','text','screenText_'+a,{ 
+                                                x:12.5, y:12.5 + a*5, 
+                                                width:textStyle.size,
+                                                height:textStyle.size, 
+                                                text:lines[a].prefix + lines[a].line, 
+                                                colour:textStyle.colour, 
+                                                font:textStyle.font, 
+                                                printingMode:textStyle.printingMode
+                                            });
+                        
+                                            //check the width of the created line, trim characters off until its within the defined width (storing the characters)
+                                            var leftOvers = '';
+                                            while( lineElements[a].resultingWidth() > maxPrintingWidth ){
+                                                leftOvers = lineElements[a].string().substring(lineElements[a].string().length-1) + leftOvers;
+                                                lineElements[a].string( lineElements[a].string().slice(0,-1) );
+                                            }
+                        
+                                            //if there are characters that were trimmed, add them in their own line
+                                            //also correct the original line
+                                            if(leftOvers.length > 0){
+                                                lines.splice(a+1,0,{prefix:lines[a].prefix,line:leftOvers});
+                                                lines[a].line = lineElements[a].string().slice(lines[a].prefix.length);
+                                            }
+                        
+                                            object.append( lineElements[a] );
+                        
+                                        //if there are too many lines, cut off the oldest
+                                            while(lines.length > maxLineCount){ lines.pop(); }
+                                    }
+                                }
+                        
+                            //wiring
+                                object.elements.connectionNode_data.in.onreceive = function(address,data){
+                                    printLine( JSON.stringify({address:address, data:data}) );
+                                };
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.data_readout.metadata = {
+                            name:'Data Readout',
+                            category:'monitors',
+                            helpURL:'/help/units/beta/data_readout/'
                         };
                         this.ruler = function(x,y,a){
                             var style = {
@@ -44088,12 +44307,194 @@
                         this.ruler.metadata = {
                             name:'Ruler',
                             category:'tools',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/ruler/'
+                            helpURL:'/help/units/beta/ruler/'
                         };
+                        this.musicalKeyboard = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
+                            var keyCount = 49;
+                            var midiNumberOffset = 60;
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:3800, height:800 },
+                                design:{ width:63.5, height:13 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            var colours = {
+                                whiteKey:{
+                                    background__up__colour:{r:0.97,g:0.97,b:0.97,a:1},
+                                    background__hover__colour:{r:1,g:1,b:1,a:1},
+                                    background__press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                    background__hover_press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                },
+                                blackKey:{ 
+                                    background__up__colour:{r:0.18,g:0.18,b:0.18,a:1}, 
+                                    background__hover__colour:{r:0.28,g:0.28,b:0.28,a:1}, 
+                                    background__press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                    background__hover_press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                },
+                                LEDs:{
+                                    glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                    dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                },
+                            };
+                            
+                            var design = {
+                                name:'musicalKeyboard',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_data', name:'midiIn', data:{ 
+                                        x:measurements.drawing.width-3.5, y:10, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                        onreceive:function(address, data){ if(address != 'midinumber'){return;} sendMidiData(data.num-midiNumberOffset,data.velocity>0?'press':'release'); },
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_data', name:'midiOut', data:{ 
+                                        x:0, y:117.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'velocityIn', data:{ 
+                                        x:25, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
+                                        style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
+                                        onchange:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                        
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'velocity',data:{
+                                        x:20, y:110, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    }},
+                                ]
+                            };
+                            //dynamic design
+                                var keyPattern = 'wbwbwwbwbwbw'.split('');
+                        
+                                //white keys
+                                    var whiteOffset = 0;
+                                    for(var a = 0; a < keyCount; a++){
+                                        var keyType = keyPattern[a%keyPattern.length];
+                            
+                                        if(keyType == 'w'){
+                                            design.elements.unshift(
+                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                    x:55 +whiteOffset - 0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
+                                                }},
+                                            );
+                                            design.elements.push(
+                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:41.25 +whiteOffset, y:6, width:17.5, height:1, style:colours.LEDs }},
+                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
+                                                    x:40.5 +whiteOffset, y:10, width:19, height:120, style:colours.whiteKey,
+                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
+                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
+                                                }},
+                                            );
+                                            whiteOffset += 20;
+                                        }
+                                    }
+                                //black keys
+                                    var blackOffset = 0;
+                        
+                                    for(var a = 0; a < keyCount; a++){
+                                        var keyType = keyPattern[a%keyPattern.length];
+                            
+                                        if(keyType == 'b'){
+                                            design.elements.unshift(
+                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                    x:65 +blackOffset - 0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
+                                                }},
+                                            );
+                                            design.elements.push(
+                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:51.25 +blackOffset, y:2.75, width:17.5, height:1, style:colours.LEDs }},
+                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
+                                                    x:55 +blackOffset, y:10, width:10, height:70, style:colours.blackKey,
+                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
+                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
+                                                }},
+                                            );
+                                            blackOffset += 20;
+                                        }
+                                        if(keyType == keyPattern[(a-1)%keyPattern.length]){ blackOffset += 20; }
+                                    }
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //keycapture
+                                object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
+                                object.elements.image.backing.onkeydown = function(x,y,event){
+                                    if( this.glyphs.includes(event.key) ){
+                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].press();
+                                    }
+                                };
+                                object.elements.image.backing.onkeyup = function(x,y,event){
+                                    if( this.glyphs.includes(event.key) ){
+                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].release();
+                                    }
+                                };
+                        
+                            //circuitry
+                                function sendMidiData(keyNumber,mode){
+                                    if(keyNumber < 0){return;}
+                        
+                                    if(mode == 'press'){
+                                        object.elements.glowbox_rectangle['LED'+keyNumber].on();
+                                    }else{
+                                        object.elements.glowbox_rectangle['LED'+keyNumber].off();
+                                    }
+                        
+                                    object.io.data.midiOut.send('midinumber', { 
+                                        num:keyNumber+midiNumberOffset,
+                                        velocity: mode == 'press' ? object.elements.dial_colourWithIndent_continuous.velocity.get() : 0,
+                                    } );
+                                }
+                        
+                            //import/export
+                                object.exportData = function(){ return {velocity:object.elements.dial_colourWithIndent_continuous.velocity.get()}; };
+                                object.importData = function(data){ object.elements.dial_colourWithIndent_continuous.velocity.set(data.velocity); };
+                        
+                            //interface
+                                object.i = {
+                                    velocity:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
+                                    pushKey:function(key){ object.elements.button_rectangle['key_'+key].press(); },
+                                    releaseKey:function(key){ object.elements.button_rectangle['key_'+key].release();},
+                                    releaseAllKeys:function(){ for(var a = 0; a < keyCount; a++){ object.elements.button_rectangle['key_'+a].release(); } },
+                                };
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.musicalKeyboard.metadata = {
+                            name:'Musical Keyboard',
+                            category:'humanInterfaceDevices',
+                            helpURL:'/help/units/beta/musicalKeyboard/'
+                        };
+                        var imageStoreURL = 'images/units/beta/';
                         var style = {
                             background:{r:70/255,g:70/255,b:70/255,a:1},
                             bumper:{r:0.125,g:0.125,b:0.125,a:1},
                             textColour:{r:0.7,g:0.7,b:0.7,a:1},
+                        
+                            primaryEight:[
+                                {r:1,g:0.01,b:0.02,a:1},
+                                {r:1,g:0.55,b:0,a:1},
+                                {r:1,g:0.93,b:0,a:1},
+                                {r:0,g:1,b:0,a:1},
+                                {r:0,g:1,b:0.81,a:1},
+                                {r:0,g:0.62,b:1,a:1},
+                                {r:0.08,g:0,b:1,a:1},
+                                {r:0.68,g:0,b:1,a:1}, 
+                            ],
                         
                             marking:{
                                 default:{r:0.7,g:0.7,b:0.7,a:1},
@@ -44106,18 +44507,26 @@
                                 signal:{
                                     dim:{r:235/255,g:98/255,b:61/255,a:1},
                                     glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                    cable_dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    cable_glow:{r:237/255,g:154/255,b:132/255,a:1},
                                 },
                                 voltage:{
                                     dim:{r:170/255,g:251/255,b:89/255,a:1},
                                     glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                    cable_dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    cable_glow:{r:210/255,g:255/255,b:165/255,a:1},
                                 },
                                 data:{
                                     dim:{r:114/255,g:176/255,b:248/255,a:1},
                                     glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                    cable_dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    cable_glow:{r:168/255,g:208/255,b:255/255,a:1},
                                 },
                                 audio:{
                                     dim:{r:243/255,g:173/255,b:61/255,a:1},
                                     glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                    cable_dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
                                 },
                             },
                             connectionCable:{
@@ -44139,252 +44548,252 @@
                                 },
                             },
                         };
-                        var bumperCoverage = {
-                            small:{
-                                length:5,
-                                thickness:5/2,
-                            },
-                            medium:{
-                                length:10,
-                                thickness:10/3,
-                            },
-                            large:{
-                                length:15,
-                                thickness:15/4,
-                            },
-                        };
-                        this.basicSynthesizer = function(x,y,a){
-                            var shape = [
-                                {x:0,y:0},
-                                {x:185,y:0},
-                                {x:185,y:45},
-                                {x:120,y:110},
-                                {x:0,y:110},
-                            ];
+                        // var bumperCoverage = {
+                        //     small:{
+                        //         length:5,
+                        //         thickness:5/2,
+                        //     },
+                        //     medium:{
+                        //         length:10,
+                        //         thickness:10/3,
+                        //     },
+                        //     large:{
+                        //         length:15,
+                        //         thickness:15/4,
+                        //     },
+                        // };
+                        // this.basicSynthesizer = function(x,y,a){
+                        //     var shape = [
+                        //         {x:0,y:0},
+                        //         {x:185,y:0},
+                        //         {x:185,y:45},
+                        //         {x:120,y:110},
+                        //         {x:0,y:110},
+                        //     ];
                         
                         
-                            var design = {
-                                name:'basicSynthesizer',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                        //     var design = {
+                        //         name:'basicSynthesizer',
+                        //         x:x, y:y, angle:a,
+                        //         space:shape,
+                        //         elements:[
+                        //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
                         
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'noteInput', data:{ 
-                                        x:185, y:15, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow,
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'waveTypeInput', data:{ 
-                                        x:152.5, y:77.5, width:5, height:15, cableVersion:2, angle:Math.PI/4, 
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow,
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_gain', data:{ 
-                                        x:12.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_attack', data:{ 
-                                        x:52.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_release', data:{ 
-                                        x:82.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_detune', data:{ 
-                                        x:122.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_octave', data:{ 
-                                        x:152.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_rate', data:{ 
-                                        x:35, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_depth', data:{ 
-                                        x:52.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_rate', data:{ 
-                                        x:85, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_depth', data:{ 
-                                        x:102.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
+                        //             {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                        //                 x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.audio.dim, 
+                        //                     glow:style.connectionNode.audio.glow,
+                        //                     cable_dim:style.connectionCable.audio.dim, 
+                        //                     cable_glow:style.connectionCable.audio.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_data', name:'noteInput', data:{ 
+                        //                 x:185, y:15, width:5, height:15, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.data.dim, 
+                        //                     glow:style.connectionNode.data.glow,
+                        //                     cable_dim:style.connectionCable.data.dim, 
+                        //                     cable_glow:style.connectionCable.data.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_data', name:'waveTypeInput', data:{ 
+                        //                 x:152.5, y:77.5, width:5, height:15, cableVersion:2, angle:Math.PI/4, 
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.data.dim, 
+                        //                     glow:style.connectionNode.data.glow,
+                        //                     cable_dim:style.connectionCable.data.dim, 
+                        //                     cable_glow:style.connectionCable.data.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_gain', data:{ 
+                        //                 x:12.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_attack', data:{ 
+                        //                 x:52.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_release', data:{ 
+                        //                 x:82.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_detune', data:{ 
+                        //                 x:122.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_octave', data:{ 
+                        //                 x:152.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_rate', data:{ 
+                        //                 x:35, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_depth', data:{ 
+                        //                 x:52.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_rate', data:{ 
+                        //                 x:85, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_depth', data:{ 
+                        //                 x:102.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_gain',data:{
-                                        x:30-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:235/255,g:113/255,b:81/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_attack',data:{
-                                        x:70-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:251/255,g:235/255,b:79/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_release',data:{
-                                        x:100-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:249/255,b:209/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_detune',data:{
-                                        x:140-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:159/255,g:43/255,b:245/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_octave',data:{
-                                        x:170-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, optionCount:7,
-                                        style:{
-                                            handle:{r:233/255,g:52/255,b:119/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_rate',data:{
-                                        x:50-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:155/255,g:250/255,b:78/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_depth',data:{
-                                        x:50-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:249/255,b:159/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_rate',data:{
-                                        x:100-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:239/255,g:145/255,b:53/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_depth',data:{
-                                        x:100-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:244/255,g:193/255,b:66/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_waveType',data:{
-                                        x:150-15, y:85-15, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:175/255,g:175/255,b:175/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_gain',data:{
+                        //                 x:30-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:235/255,g:113/255,b:81/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_attack',data:{
+                        //                 x:70-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:251/255,g:235/255,b:79/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_release',data:{
+                        //                 x:100-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:117/255,g:249/255,b:209/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_detune',data:{
+                        //                 x:140-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:159/255,g:43/255,b:245/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_octave',data:{
+                        //                 x:170-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, optionCount:7,
+                        //                 style:{
+                        //                     handle:{r:233/255,g:52/255,b:119/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_rate',data:{
+                        //                 x:50-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:155/255,g:250/255,b:78/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_depth',data:{
+                        //                 x:50-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:117/255,g:249/255,b:159/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_rate',data:{
+                        //                 x:100-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:239/255,g:145/255,b:53/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_depth',data:{
+                        //                 x:100-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:244/255,g:193/255,b:66/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_waveType',data:{
+                        //                 x:150-15, y:85-15, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:175/255,g:175/255,b:175/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
                         
-                                ],
-                            };
-                            //add bumpers
-                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                                if(c == shape.length){c = 0;}
+                        //         ],
+                        //     };
+                        //     //add bumpers
+                        //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                        //         if(c == shape.length){c = 0;}
                         
-                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                        //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                        //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
                         
-                                design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                                ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                            }
+                        //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                        //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                        //         ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        //     }
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        //     //main object
+                        //         var object = _canvas_.interface.unit.builder(this.ruler,design);
                         
-                            return object;
-                        };
+                        //     return object;
+                        // };
                         
-                        this.basicSynthesizer.metadata = {
-                            name:'Basic Synthesizer',
-                            category:'synthesizer',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/basicSynthesizer/'
-                        };
+                        // this.basicSynthesizer.metadata = {
+                        //     name:'Basic Synthesizer',
+                        //     category:'synthesizer',
+                        //     helpURL:'https://curve.metasophiea.com/help/units/beta/basicSynthesizer/'
+                        // };
                         this.audio_duplicator = function(x,y,a){
                             var width = 320; var height = 320;
                             var div = 6.4;
@@ -44400,6 +44809,7 @@
                                 {x:-width/div*(1.25/10),y:height/div*(2.5/5)},
                                 {x:-width/div*(0.9/10),y:height/div*(1/5)},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
                             var design = {
                                 name:'audio_duplicator',
                                 x:x, y:y, angle:a,
@@ -44434,13 +44844,17 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/audio_duplicator/audio_duplicator_backing.png' }
+                                        data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
                         
                             //main object
                                 var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
                         
                             return object;
                         };
@@ -44450,7 +44864,7 @@
                         this.audio_duplicator.metadata = {
                             name:'Audio Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/audio_duplicator/'
+                            helpURL:'/help/units/beta/audio_duplicator/'
                         };
                         this.signal_duplicator = function(x,y,a){
                             var width = 260; var height = 260;
@@ -44461,6 +44875,7 @@
                                 {x:width/div,y:height/div - height/(div*4)},
                                 {x:0,y:height/div},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
                             var design = {
                                 name:'signal_duplicator',
                                 x:x, y:y, angle:a,
@@ -44495,7 +44910,7 @@
                                         }
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/signal_duplicator/signal_duplicator_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -44511,7 +44926,7 @@
                         this.signal_duplicator.metadata = {
                             name:'Signal Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/signal_duplicator/'
+                            helpURL:'/help/units/beta/signal_duplicator/'
                         };
                         this.voltage_duplicator = function(x,y,a){
                             var width = 260; var height = 260;
@@ -44522,6 +44937,7 @@
                                 {x:width/div,y:height/div},
                                 {x:0,y:height/div},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
                             var design = {
                                 name:'voltage_duplicator',
                                 x:x, y:y, angle:a,
@@ -44556,7 +44972,7 @@
                                         }
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/voltage_duplicator/voltage_duplicator_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -44572,7 +44988,7 @@
                         this.voltage_duplicator.metadata = {
                             name:'Voltage Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/voltage_duplicator/'
+                            helpURL:'/help/units/beta/voltage_duplicator/'
                         };
                         this.data_duplicator = function(x,y,a){
                             var width = 320; var height = 320;
@@ -44585,6 +45001,7 @@
                                 {x:width/div*(3/5),y:height/div},
                                 {x:0,y:height/div},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
                             var design = {
                                 name:'data_duplicator',
                                 x:x, y:y, angle:a,
@@ -44623,7 +45040,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/data_duplicator/data_duplicator_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -44639,7 +45056,7 @@
                         this.data_duplicator.metadata = {
                             name:'Data Duplicator',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/data_duplicator/'
+                            helpURL:'/help/units/beta/data_duplicator/'
                         };
                         this.eightTrackMixer = function(x,y,a){
                             var width = 1530; var height = 810;
@@ -44659,6 +45076,7 @@
                                 {r:0.08,g:0,b:1,a:1},
                                 {r:0.68,g:0,b:1,a:1}, 
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
                             var design = {
                                 name:'eightTrackMixer',
                                 x:x, y:y, angle:a,
@@ -44684,7 +45102,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -44699,7 +45117,7 @@
                                 design.elements.push(
                                     {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
                                         x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                        handleURL:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                                        handleURL:imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
                                     }}
                                 );
                         
@@ -44750,7 +45168,7 @@
                                     object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
                                     object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
                         
-                                    object.elements.slide_image['slide_volume_'+a].onchange = function(a){
+                                    object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
                                         return function(value){
                                             object['splitter_'+a].inGain(2*(1-value));
                                         }
@@ -44765,7 +45183,7 @@
                         
                             //interface
                                 object.i = {
-                                    gain:function(track,value){object.elements.slide_image['slide_volume_'+track].set(value);},
+                                    gain:function(track,value){object.elements.slide_continuous_image['slide_volume_'+track].set(value);},
                                     pan:function(track,value){object.elements.dial_colourWithIndent_continuous['dial_panner_'+track].set(value);},
                                 };
                         
@@ -44781,7 +45199,7 @@
                         this.eightTrackMixer.metadata = {
                             name:'Eight Track Mixer',
                             category:'misc',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
+                            helpURL:'/help/units/beta/eightTrackMixer/'
                         };
                         this.amplifier = function(x,y,a){
                             var width = 935; var height = 860;
@@ -44791,6 +45209,7 @@
                                 {x:width/6,y:height/6},
                                 {x:0,y:height/6},
                             ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
                             var design = {
                                 name:'amplifier',
                                 x:x, y:y, angle:a,
@@ -44816,7 +45235,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/amplifier/amplifier_backing.png' }
+                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                                 ]
                             };
@@ -44853,7 +45272,110 @@
                         this.amplifier.metadata = {
                             name:'Amplifier',
                             category:'monitors',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/amplifier/'
+                            helpURL:'/help/units/beta/amplifier/'
+                        };
+                        this.data_readout = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:1220, height:920 },
+                                design:{ width:20, height:15 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            
+                            var design = {
+                                name:'data_readout',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_data', name:'in', data:{ 
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-30, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                                ]
+                            };
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                var lineCount = 0;
+                                var maxLineCount = 25;
+                                var lines = [];
+                                var lineElements = [];
+                                var textStyle = {
+                                    colour:{r:1,g:1,b:1,a:1}, 
+                                    size:4, 
+                                    font:'defaultThin', 
+                                    printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}
+                                };
+                                var maxPrintingWidth = 175;
+                                
+                                function printLine(line){
+                                    //add the new text to the list, and if the list becomes too long, remove the oldest item
+                                        lines.unshift( { prefix:(lineCount++)+':/> ', line:line } );
+                        
+                                    //empty screen of text
+                                        for(var a = 0; a < lineElements.length; a++){ lineElements[a].parent.remove(lineElements[a]); }
+                                        lineElements = [];
+                        
+                                    //write all lines to screen
+                                        for(var a = 0; a < lines.length; a++){
+                                            lineElements[a] = _canvas_.interface.part.builder('basic','text','screenText_'+a,{ 
+                                                x:12.5, y:12.5 + a*5, 
+                                                width:textStyle.size,
+                                                height:textStyle.size, 
+                                                text:lines[a].prefix + lines[a].line, 
+                                                colour:textStyle.colour, 
+                                                font:textStyle.font, 
+                                                printingMode:textStyle.printingMode
+                                            });
+                        
+                                            //check the width of the created line, trim characters off until its within the defined width (storing the characters)
+                                            var leftOvers = '';
+                                            while( lineElements[a].resultingWidth() > maxPrintingWidth ){
+                                                leftOvers = lineElements[a].string().substring(lineElements[a].string().length-1) + leftOvers;
+                                                lineElements[a].string( lineElements[a].string().slice(0,-1) );
+                                            }
+                        
+                                            //if there are characters that were trimmed, add them in their own line
+                                            //also correct the original line
+                                            if(leftOvers.length > 0){
+                                                lines.splice(a+1,0,{prefix:lines[a].prefix,line:leftOvers});
+                                                lines[a].line = lineElements[a].string().slice(lines[a].prefix.length);
+                                            }
+                        
+                                            object.append( lineElements[a] );
+                        
+                                        //if there are too many lines, cut off the oldest
+                                            while(lines.length > maxLineCount){ lines.pop(); }
+                                    }
+                                }
+                        
+                            //wiring
+                                object.elements.connectionNode_data.in.onreceive = function(address,data){
+                                    printLine( JSON.stringify({address:address, data:data}) );
+                                };
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.data_readout.metadata = {
+                            name:'Data Readout',
+                            category:'monitors',
+                            helpURL:'/help/units/beta/data_readout/'
                         };
                         this.ruler = function(x,y,a){
                             var style = {
@@ -44956,12 +45478,194 @@
                         this.ruler.metadata = {
                             name:'Ruler',
                             category:'tools',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/ruler/'
+                            helpURL:'/help/units/beta/ruler/'
                         };
+                        this.musicalKeyboard = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
+                            var keyCount = 49;
+                            var midiNumberOffset = 60;
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:3800, height:800 },
+                                design:{ width:63.5, height:13 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            var colours = {
+                                whiteKey:{
+                                    background__up__colour:{r:0.97,g:0.97,b:0.97,a:1},
+                                    background__hover__colour:{r:1,g:1,b:1,a:1},
+                                    background__press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                    background__hover_press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                },
+                                blackKey:{ 
+                                    background__up__colour:{r:0.18,g:0.18,b:0.18,a:1}, 
+                                    background__hover__colour:{r:0.28,g:0.28,b:0.28,a:1}, 
+                                    background__press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                    background__hover_press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                },
+                                LEDs:{
+                                    glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                    dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                },
+                            };
+                            
+                            var design = {
+                                name:'musicalKeyboard',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_data', name:'midiIn', data:{ 
+                                        x:measurements.drawing.width-3.5, y:10, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                        onreceive:function(address, data){ if(address != 'midinumber'){return;} sendMidiData(data.num-midiNumberOffset,data.velocity>0?'press':'release'); },
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_data', name:'midiOut', data:{ 
+                                        x:0, y:117.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'velocityIn', data:{ 
+                                        x:25, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
+                                        style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
+                                        onchange:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                        
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'velocity',data:{
+                                        x:20, y:110, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    }},
+                                ]
+                            };
+                            //dynamic design
+                                var keyPattern = 'wbwbwwbwbwbw'.split('');
+                        
+                                //white keys
+                                    var whiteOffset = 0;
+                                    for(var a = 0; a < keyCount; a++){
+                                        var keyType = keyPattern[a%keyPattern.length];
+                            
+                                        if(keyType == 'w'){
+                                            design.elements.unshift(
+                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                    x:55 +whiteOffset - 0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
+                                                }},
+                                            );
+                                            design.elements.push(
+                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:41.25 +whiteOffset, y:6, width:17.5, height:1, style:colours.LEDs }},
+                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
+                                                    x:40.5 +whiteOffset, y:10, width:19, height:120, style:colours.whiteKey,
+                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
+                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
+                                                }},
+                                            );
+                                            whiteOffset += 20;
+                                        }
+                                    }
+                                //black keys
+                                    var blackOffset = 0;
+                        
+                                    for(var a = 0; a < keyCount; a++){
+                                        var keyType = keyPattern[a%keyPattern.length];
+                            
+                                        if(keyType == 'b'){
+                                            design.elements.unshift(
+                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                    x:65 +blackOffset - 0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
+                                                }},
+                                            );
+                                            design.elements.push(
+                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:51.25 +blackOffset, y:2.75, width:17.5, height:1, style:colours.LEDs }},
+                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
+                                                    x:55 +blackOffset, y:10, width:10, height:70, style:colours.blackKey,
+                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
+                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
+                                                }},
+                                            );
+                                            blackOffset += 20;
+                                        }
+                                        if(keyType == keyPattern[(a-1)%keyPattern.length]){ blackOffset += 20; }
+                                    }
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //keycapture
+                                object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
+                                object.elements.image.backing.onkeydown = function(x,y,event){
+                                    if( this.glyphs.includes(event.key) ){
+                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].press();
+                                    }
+                                };
+                                object.elements.image.backing.onkeyup = function(x,y,event){
+                                    if( this.glyphs.includes(event.key) ){
+                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].release();
+                                    }
+                                };
+                        
+                            //circuitry
+                                function sendMidiData(keyNumber,mode){
+                                    if(keyNumber < 0){return;}
+                        
+                                    if(mode == 'press'){
+                                        object.elements.glowbox_rectangle['LED'+keyNumber].on();
+                                    }else{
+                                        object.elements.glowbox_rectangle['LED'+keyNumber].off();
+                                    }
+                        
+                                    object.io.data.midiOut.send('midinumber', { 
+                                        num:keyNumber+midiNumberOffset,
+                                        velocity: mode == 'press' ? object.elements.dial_colourWithIndent_continuous.velocity.get() : 0,
+                                    } );
+                                }
+                        
+                            //import/export
+                                object.exportData = function(){ return {velocity:object.elements.dial_colourWithIndent_continuous.velocity.get()}; };
+                                object.importData = function(data){ object.elements.dial_colourWithIndent_continuous.velocity.set(data.velocity); };
+                        
+                            //interface
+                                object.i = {
+                                    velocity:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
+                                    pushKey:function(key){ object.elements.button_rectangle['key_'+key].press(); },
+                                    releaseKey:function(key){ object.elements.button_rectangle['key_'+key].release();},
+                                    releaseAllKeys:function(){ for(var a = 0; a < keyCount; a++){ object.elements.button_rectangle['key_'+a].release(); } },
+                                };
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.musicalKeyboard.metadata = {
+                            name:'Musical Keyboard',
+                            category:'humanInterfaceDevices',
+                            helpURL:'/help/units/beta/musicalKeyboard/'
+                        };
+                        var imageStoreURL = 'images/units/beta/';
                         var style = {
                             background:{r:70/255,g:70/255,b:70/255,a:1},
                             bumper:{r:0.125,g:0.125,b:0.125,a:1},
                             textColour:{r:0.7,g:0.7,b:0.7,a:1},
+                        
+                            primaryEight:[
+                                {r:1,g:0.01,b:0.02,a:1},
+                                {r:1,g:0.55,b:0,a:1},
+                                {r:1,g:0.93,b:0,a:1},
+                                {r:0,g:1,b:0,a:1},
+                                {r:0,g:1,b:0.81,a:1},
+                                {r:0,g:0.62,b:1,a:1},
+                                {r:0.08,g:0,b:1,a:1},
+                                {r:0.68,g:0,b:1,a:1}, 
+                            ],
                         
                             marking:{
                                 default:{r:0.7,g:0.7,b:0.7,a:1},
@@ -44974,18 +45678,26 @@
                                 signal:{
                                     dim:{r:235/255,g:98/255,b:61/255,a:1},
                                     glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                    cable_dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    cable_glow:{r:237/255,g:154/255,b:132/255,a:1},
                                 },
                                 voltage:{
                                     dim:{r:170/255,g:251/255,b:89/255,a:1},
                                     glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                    cable_dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    cable_glow:{r:210/255,g:255/255,b:165/255,a:1},
                                 },
                                 data:{
                                     dim:{r:114/255,g:176/255,b:248/255,a:1},
                                     glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                    cable_dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    cable_glow:{r:168/255,g:208/255,b:255/255,a:1},
                                 },
                                 audio:{
                                     dim:{r:243/255,g:173/255,b:61/255,a:1},
                                     glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                    cable_dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
                                 },
                             },
                             connectionCable:{
@@ -45007,426 +45719,608 @@
                                 },
                             },
                         };
-                        var bumperCoverage = {
-                            small:{
-                                length:5,
-                                thickness:5/2,
-                            },
-                            medium:{
-                                length:10,
-                                thickness:10/3,
-                            },
-                            large:{
-                                length:15,
-                                thickness:15/4,
-                            },
-                        };
-                        this.basicSynthesizer = function(x,y,a){
-                            var shape = [
-                                {x:0,y:0},
-                                {x:185,y:0},
-                                {x:185,y:45},
-                                {x:120,y:110},
-                                {x:0,y:110},
-                            ];
+                        // var bumperCoverage = {
+                        //     small:{
+                        //         length:5,
+                        //         thickness:5/2,
+                        //     },
+                        //     medium:{
+                        //         length:10,
+                        //         thickness:10/3,
+                        //     },
+                        //     large:{
+                        //         length:15,
+                        //         thickness:15/4,
+                        //     },
+                        // };
+                        // this.basicSynthesizer = function(x,y,a){
+                        //     var shape = [
+                        //         {x:0,y:0},
+                        //         {x:185,y:0},
+                        //         {x:185,y:45},
+                        //         {x:120,y:110},
+                        //         {x:0,y:110},
+                        //     ];
                         
                         
-                            var design = {
-                                name:'basicSynthesizer',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                        //     var design = {
+                        //         name:'basicSynthesizer',
+                        //         x:x, y:y, angle:a,
+                        //         space:shape,
+                        //         elements:[
+                        //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
                         
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'noteInput', data:{ 
-                                        x:185, y:15, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow,
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'waveTypeInput', data:{ 
-                                        x:152.5, y:77.5, width:5, height:15, cableVersion:2, angle:Math.PI/4, 
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow,
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_gain', data:{ 
-                                        x:12.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_attack', data:{ 
-                                        x:52.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_release', data:{ 
-                                        x:82.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_detune', data:{ 
-                                        x:122.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_octave', data:{ 
-                                        x:152.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_rate', data:{ 
-                                        x:35, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_depth', data:{ 
-                                        x:52.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_rate', data:{ 
-                                        x:85, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_depth', data:{ 
-                                        x:102.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                    }},
+                        //             {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                        //                 x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.audio.dim, 
+                        //                     glow:style.connectionNode.audio.glow,
+                        //                     cable_dim:style.connectionCable.audio.dim, 
+                        //                     cable_glow:style.connectionCable.audio.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_data', name:'noteInput', data:{ 
+                        //                 x:185, y:15, width:5, height:15, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.data.dim, 
+                        //                     glow:style.connectionNode.data.glow,
+                        //                     cable_dim:style.connectionCable.data.dim, 
+                        //                     cable_glow:style.connectionCable.data.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_data', name:'waveTypeInput', data:{ 
+                        //                 x:152.5, y:77.5, width:5, height:15, cableVersion:2, angle:Math.PI/4, 
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.data.dim, 
+                        //                     glow:style.connectionNode.data.glow,
+                        //                     cable_dim:style.connectionCable.data.dim, 
+                        //                     cable_glow:style.connectionCable.data.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_gain', data:{ 
+                        //                 x:12.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_attack', data:{ 
+                        //                 x:52.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_release', data:{ 
+                        //                 x:82.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_detune', data:{ 
+                        //                 x:122.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_octave', data:{ 
+                        //                 x:152.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_rate', data:{ 
+                        //                 x:35, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_depth', data:{ 
+                        //                 x:52.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_rate', data:{ 
+                        //                 x:85, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
+                        //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_depth', data:{ 
+                        //                 x:102.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
+                        //                 style:{ 
+                        //                     dim:style.connectionNode.voltage.dim, 
+                        //                     glow:style.connectionNode.voltage.glow, 
+                        //                     cable_dim:style.connectionCable.voltage.dim, 
+                        //                     cable_glow:style.connectionCable.voltage.glow,
+                        //                 },
+                        //             }},
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_gain',data:{
-                                        x:30-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:235/255,g:113/255,b:81/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_attack',data:{
-                                        x:70-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:251/255,g:235/255,b:79/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_release',data:{
-                                        x:100-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:249/255,b:209/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_detune',data:{
-                                        x:140-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:159/255,g:43/255,b:245/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_octave',data:{
-                                        x:170-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, optionCount:7,
-                                        style:{
-                                            handle:{r:233/255,g:52/255,b:119/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_rate',data:{
-                                        x:50-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:155/255,g:250/255,b:78/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_depth',data:{
-                                        x:50-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:249/255,b:159/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_rate',data:{
-                                        x:100-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:239/255,g:145/255,b:53/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_depth',data:{
-                                        x:100-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:244/255,g:193/255,b:66/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_waveType',data:{
-                                        x:150-15, y:85-15, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:175/255,g:175/255,b:175/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
-                                    }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_gain',data:{
+                        //                 x:30-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:235/255,g:113/255,b:81/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_attack',data:{
+                        //                 x:70-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:251/255,g:235/255,b:79/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_release',data:{
+                        //                 x:100-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:117/255,g:249/255,b:209/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_detune',data:{
+                        //                 x:140-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:159/255,g:43/255,b:245/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_octave',data:{
+                        //                 x:170-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, optionCount:7,
+                        //                 style:{
+                        //                     handle:{r:233/255,g:52/255,b:119/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_rate',data:{
+                        //                 x:50-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:155/255,g:250/255,b:78/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_depth',data:{
+                        //                 x:50-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:117/255,g:249/255,b:159/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_rate',data:{
+                        //                 x:100-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:239/255,g:145/255,b:53/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_depth',data:{
+                        //                 x:100-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:244/255,g:193/255,b:66/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
+                        //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_waveType',data:{
+                        //                 x:150-15, y:85-15, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
+                        //                 style:{
+                        //                     handle:{r:175/255,g:175/255,b:175/255,a:1},
+                        //                     slot:{r:0,g:0,b:0,a:0},
+                        //                     needle:{r:1,g:1,b:1,a:1},
+                        //                 }
+                        //             }},
                         
-                                ],
-                            };
-                            //add bumpers
-                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                                if(c == shape.length){c = 0;}
+                        //         ],
+                        //     };
+                        //     //add bumpers
+                        //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
+                        //         if(c == shape.length){c = 0;}
                         
-                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                        //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
+                        //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
                         
-                                design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                                ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                            }
+                        //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
+                        //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
+                        //         ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
+                        //     }
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        //     //main object
+                        //         var object = _canvas_.interface.unit.builder(this.ruler,design);
                         
-                            return object;
-                        };
+                        //     return object;
+                        // };
                         
-                        this.basicSynthesizer.metadata = {
-                            name:'Basic Synthesizer',
-                            category:'synthesizer',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/basicSynthesizer/'
-                        };
+                        // this.basicSynthesizer.metadata = {
+                        //     name:'Basic Synthesizer',
+                        //     category:'synthesizer',
+                        //     helpURL:'https://curve.metasophiea.com/help/units/beta/basicSynthesizer/'
+                        // };
                         this.distortion = function(x,y,a){
-                            var shape = [
-                                {x:0,y:0},
-                                {x:120,y:0},
-                                {x:120,y:65},
-                                {x:0,y:65},
-                            ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'distortion/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:719, height:389 },
+                                design:{ width:11.75, height:6.25 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            
                             var design = {
                                 name:'distortion',
                                 x:x, y:y, angle:a,
-                                space:shape,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
                                 elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:60, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
-                                    }},
                                     {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:120, y:45, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
+                                        x:measurements.drawing.width-2.9, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'inGain_connection', data:{ 
+                                        x:97, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'resolution_connection', data:{ 
+                                        x:67, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'distortion_connection', data:{ 
+                                        x:32, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'outGain_connection', data:{ 
+                                        x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
+                                        x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
+                                        x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                         
-                                    {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
-                                    {collection:'basic', type:'image', name:'markings', data:{x:0,y:0,width:120,height:65,url:'images/units/beta/distortionMarkings.png'} },
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                    },
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'in_dial',data:{
-                                        x:92.5, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:236/255,g:97/255,b:43/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'inGain',data:{
+                                        x:92, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[1], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'res_dial',data:{
-                                        x:72.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:175/255,g:46/255,b:246/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'resolution',data:{
+                                        x:72, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[7], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'overSample_dial',data:{
-                                        x:55, y:50, radius:15/2, startAngle:1.1*Math.PI, maxAngle:0.8*Math.PI, arcDistance:1.2, optionCount:3, 
-                                        style:{
-                                            handle:{r:181/255,g:251/255,b:99/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'distortion',data:{
+                                        x:37, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[4], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
-                                        x:37.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:251/255,b:237/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'outGain',data:{
+                                        x:17, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'out_dial',data:{
-                                        x:20, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:234/255,g:52/255,b:119/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                        
+                                    {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
+                                        x:41, y:57, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
+                                        handleURL:imageStoreURL_localPrefix+'handle.png',
                                     }},
                                 ]
                             };
-                            //add bumpers
-                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                                if(c == shape.length){c = 0;}
-                        
-                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                        
-                                design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                                ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                            }
-                        
-                        
                             
                             //main object
                                 var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
-                            //import/export
-                                object.importData = function(data){
-                                    object.elements.dial_colourWithIndent_continuous.out_dial.set(data.outGain);
-                                    object.elements.dial_colourWithIndent_continuous.dist_dial.set(data.distortionAmount);
-                                    object.elements.dial_colourWithIndent_continuous.res_dial.set(data.resolution);
-                                    object.elements.dial_colourWithIndent_discrete.overSample_dial.set(data.overSample);
-                                    object.elements.dial_colourWithIndent_continuous.in_dial.set(data.inGain);
-                                };
-                                object.exportData = function(){
-                                    return {
-                                        outGain:         object.elements.dial_colourWithIndent_continuous.out_dial.get(), 
-                                        distortionAmount:object.elements.dial_colourWithIndent_continuous.dist_dial.get(), 
-                                        resolution:      object.elements.dial_colourWithIndent_continuous.res_dial.get(), 
-                                        overSample:      object.elements.dial_colourWithIndent_discrete.overSample_dial.get(), 
-                                        inGain:          object.elements.dial_colourWithIndent_continuous.in_dial.get()
-                                    };
-                                };
-                        
+                                
                             //circuitry
                                 object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
                                 object.elements.connectionNode_audio.input.out().connect( object.distortionCircuit.in() );
                                 object.distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
                         
                             //wiring
-                                object.elements.dial_colourWithIndent_continuous.out_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
-                                object.elements.dial_colourWithIndent_continuous.dist_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
-                                object.elements.dial_colourWithIndent_continuous.res_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
-                                object.elements.dial_colourWithIndent_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
-                                object.elements.dial_colourWithIndent_continuous.in_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+                                object.elements.dial_colourWithIndent_continuous.inGain.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+                                object.elements.dial_colourWithIndent_continuous.resolution.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
+                                object.elements.dial_colourWithIndent_continuous.distortion.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
+                                object.elements.dial_colourWithIndent_continuous.outGain.onchange = function(value){object.distortionCircuit.outGain(value);};
+                                object.elements.slide_discrete_image.oversample.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
+                                object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
+                                object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
+                                object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.inGain.set(value); };
+                                object.elements.connectionNode_voltage.resolution_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.resolution.set(value); };
+                                object.elements.connectionNode_voltage.distortion_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.distortion.set(value); };
+                                object.elements.connectionNode_voltage.outGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.outGain.set(value); };
                         
                             //setup
-                                object.elements.dial_colourWithIndent_continuous.res_dial.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.in_dial.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.out_dial.set(1);
+                                object.elements.dial_colourWithIndent_continuous.resolution.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.inGain.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.outGain.set(1);
                             
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.outGain.set(data.outGain);
+                                    object.elements.dial_colourWithIndent_continuous.distortion.set(data.distortionAmount);
+                                    object.elements.dial_colourWithIndent_continuous.resolution.set(data.resolution);
+                                    object.elements.slide_discrete_image.oversample.set(data.overSample);
+                                    object.elements.dial_colourWithIndent_continuous.inGain.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:          object.elements.dial_colourWithIndent_continuous.outGain.get(), 
+                                        distortionAmount: object.elements.dial_colourWithIndent_continuous.distortion.get(), 
+                                        resolution:       object.elements.dial_colourWithIndent_continuous.resolution.get(), 
+                                        overSample:       object.elements.slide_discrete_image.oversample.get(), 
+                                        inGain:           object.elements.dial_colourWithIndent_continuous.inGain.get()
+                                    };
+                                };
+                            
+                            //interface
+                                object.i = {
+                                    outGain:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.outGain.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.outGain.set(value);
+                                    },
+                                    distortionAmount:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.distortion.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.distortion.set(value);
+                                    },
+                                    resolution:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.resolution.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.resolution.set(value);
+                                    },
+                                    overSample:function(value){
+                                        if(value==undefined){ return object.elements.slide_discrete_image.oversample.get(); }
+                                        object.elements.slide_discrete_image.oversample.set(value);
+                                    },
+                                    inGain:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.inGain.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.inGain.set(value);
+                                    },
+                        
+                                };
+                        
                             return object;
                         };
+                        
+                        
                         
                         this.distortion.metadata = {
                             name:'Distortion',
                             category:'effects',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
+                            helpURL:'/help/units/beta/distortion/'
                         };
-                        this.eightStepSequencer = function(x,y,a){
+                        this.reverb = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'reverb/';
+                        
                             var div = 6;
                             var offset = 20/div;
                             var measurements = { 
-                                file:{
-                                    width:1670,
-                                    height:590,
-                                },
-                                design:{
-                                    width:27.5, 
-                                    height:9.5,
-                                },
+                                file:{ width:885, height:320 },
+                                design:{ width:14.5, height:5 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            var colour = {
+                                LCD:{
+                                    background:{r:0.1,g:0.1,b:0.1,a:1},
+                                    glow:{r:0.3,g:0.64,b:0.22,a:1},
+                                    dim:{r:0.1,g:0.24,b:0.12,a:1}
+                                }
+                            };
+                            
+                            var design = {
+                                name:'reverb',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                        x:measurements.drawing.width-3.5, y:30, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:45, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'wet_connection', data:{ 
+                                        x:87.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'dry_connection', data:{ 
+                                        x:87.5+32.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_down_connection', data:{ 
+                                        x:69, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_up_connection', data:{ 
+                                        x:59, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                    },
+                        
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'wet',data:{
+                                        x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    }},
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dry',data:{
+                                        x:87.5+32.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[2], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    }},
+                                    {collection:'control', type:'button_image', name:'rocker_up', data:{
+                                        x:58.7, y:10, width:10, height:15, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'rocker_up_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'rocker_up_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'rocker_down', data:{
+                                        x:58.7, y:10+15, width:10, height:15, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'rocker_down_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'rocker_down_down.png',
+                                    }},
+                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, style:colour.LCD }},
+                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, style:colour.LCD }},
+                                ]
+                            };
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                var state = {
+                                    reverbTypeSelected:0,
+                                    availableTypes:[],
+                                    wet:0.5,
+                                    dry:0.5,
+                                };
+                        
+                                //reverb
+                                    object.reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.input.out().connect( object.reverbCircuit.in() );
+                                    object.reverbCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                    object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
+                                    
+                                //internal functions
+                                    function setReadout(num){
+                                        num = ("0" + num).slice(-2);
+                        
+                                        object.elements.sevenSegmentDisplay_static.LCD_10.enterCharacter(num[0]);
+                                        object.elements.sevenSegmentDisplay_static.LCD_1.enterCharacter(num[1]);
+                                    }
+                                    function setReverbType(a){
+                                        if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return; }
+                        
+                                        if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
+                                        else if( a < 0 ){a = 0;}
+                            
+                                        state.reverbTypeSelected = a;
+                                        object.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                                    }
+                                    function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
+                                    function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
+                                    function updateWetDry(){ object.reverbCircuit.wetdry('manualControl',state.wet,state.dry); }
+                        
+                                //wiring
+                                    object.elements.dial_colourWithIndent_continuous.wet.onchange = function(value){ state.wet = value; updateWetDry(); };
+                                    object.elements.dial_colourWithIndent_continuous.dry.onchange = function(value){ state.dry = value; updateWetDry(); };
+                                    object.elements.button_image.rocker_up.onpress = function(){ incReverbType(); };
+                                    object.elements.button_image.rocker_down.onpress = function(){ decReverbType(); };
+                                    object.elements.connectionNode_voltage.wet_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.wet.set(value); };
+                                    object.elements.connectionNode_voltage.dry_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.dry.set(value); };
+                                    object.elements.connectionNode_signal.rocker_down_connection.onchange = function(value){
+                                        if(value){
+                                            object.elements.button_image.rocker_down.press();
+                                        }else{
+                                            object.elements.button_image.rocker_down.release();
+                                        }
+                                    };
+                                    object.elements.connectionNode_signal.rocker_up_connection.onchange = function(value){
+                                        if(value){
+                                            object.elements.button_image.rocker_up.press();
+                                        }else{
+                                            object.elements.button_image.rocker_up.release();
+                                        }
+                                    };
+                                    
+                                //import/export
+                                    object.exportData = function(){
+                                        return {
+                                            wet: object.elements.dial_colourWithIndent_continuous.wet.get(),
+                                            dry: object.elements.dial_colourWithIndent_continuous.dry.get(),
+                                            reverbNumber: state.reverbTypeSelected,
+                                        };
+                                    };
+                                    object.importData = function(data){
+                                        object.elements.dial_colourWithIndent_continuous.wet.set(data.wet);
+                                        object.elements.dial_colourWithIndent_continuous.dry.set(data.dry);
+                                        state.reverbTypeSelected = data.reverbNumber;
+                                    };
+                        
+                                //interface 
+                                    object.i = {
+                                        wet: function(value){
+                                            if(value == undefined){
+                                                return object.elements.dial_colourWithIndent_continuous.wet.get();
+                                            }else{
+                                                object.elements.dial_colourWithIndent_continuous.wet.set(value);
+                                            }
+                                        },
+                                        dry: function(value){
+                                            if(value == undefined){
+                                                return object.elements.dial_colourWithIndent_continuous.dry.get();
+                                            }else{
+                                                object.elements.dial_colourWithIndent_continuous.dry.set(value);
+                                            }
+                                        },
+                                        reverbNumber: function(number){ if(value == undefined){ return state.reverbTypeSelected; }else{ setReverbType(number); } }
+                                    };
+                        
+                                //setup
+                                    setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.reverb.metadata = {
+                            name:'Reverb',
+                            category:'effects',
+                            helpURL:'/help/units/beta/reverb/'
+                        };
+                        this.eightStepSequencer = function(x,y,a){
+                            var stepCount = 8;
+                            var imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:1670, height:590 },
+                                design:{ width:27.5, height:9.5 },
                             };
                             measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
                             
-                            var shape = [
-                                { x:0,                                                                    y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
-                                { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
-                            ];
-                            var colours = [
-                                {r:1,g:0.01,b:0.02,a:1},
-                                {r:1,g:0.55,b:0,a:1},
-                                {r:1,g:0.93,b:0,a:1},
-                                {r:0,g:1,b:0,a:1},
-                                {r:0,g:1,b:0.81,a:1},
-                                {r:0,g:0.62,b:1,a:1},
-                                {r:0.08,g:0,b:1,a:1},
-                                {r:0.68,g:0,b:1,a:1}, 
-                            ];
                             var design = {
                                 name:'eightStepSequencer',
                                 x:x, y:y, angle:a,
-                                space:shape,
+                                space:[
+                                    { x:0,                                                                    y:0                                                                      },
+                                    { x:measurements.drawing.width -offset,                                   y:0                                                                      },
+                                    { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                                    { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                                    { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
+                                    { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
+                                    { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
+                                ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
                                         x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
@@ -45448,28 +46342,52 @@
                                         onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
                                     }},
                         
-                        
-                        
-                        
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                         
                                     {collection:'control', type:'button_image', name:'button_step', data:{
                                         x:243.25, y:4.5, width:21, height:21, hoverable:false, 
-                                        backingURL__up:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_up.png',
-                                        backingURL__press:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_down.png',
+                                        backingURL__up:imageStoreURL_localPrefix+'stepButton_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'stepButton_down.png',
                                         onpress:step,
                                     }},
                                     {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
-                                        x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
-                                        handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_directionSlideHandle.png',
+                                        x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
+                                        handleURL:imageStoreURL_localPrefix+'directionSlideHandle.png',
                                         onchange:function(value){ state.direction = value*2 - 1; }
                                     }},
                                 ]
                             };
                             //dynamic design
-                            for(var a = 0; a < 8; a++){
+                            for(var a = 0; a < stepCount; a++){
+                                design.elements.push(
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{
+                                        x:12.5 +30*a, y:2.5, width:10, height:2.5, 
+                                        style:{ glow:{r:232/255, g:160/255, b:111/255, a:1}, dim:{r:164/255, g:80/255, b:61/255, a:1} }
+                                    }},
+                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
+                                        x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                        onchange:function(a){return function(value){state.stages[a].note=value}}(a),
+                                    }},
+                                    {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
+                                        x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
+                                        handleURL:imageStoreURL_localPrefix+'octaveSlideHandle_'+a+'.png',
+                                        onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
+                                    }},
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
+                                        x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                        onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
+                                    }},
+                                    {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
+                                        x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
+                                        style:{ background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1} },
+                                        onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
+                                    }},
+                                );
+                        
                                 design.elements.unshift(
                                     {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
                                         x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
@@ -45485,9 +46403,7 @@
                                             object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
                                             object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
                                         } }(a),
-                                    }}
-                                );
-                                design.elements.unshift(
+                                    }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
                                         x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
                                         style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
@@ -45502,65 +46418,14 @@
                                             object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
                                             object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
                                         } }(a),
-                                    }}
-                                );
-                        
-                                design.elements.push(
-                                    {collection:'display', type:'glowbox_rect',name:'LED'+a,data:{
-                                        x:12.5 +30*a, y:2.5, width:10, height:2.5, 
-                                        style:{
-                                            glow:{r:232/255, g:160/255, b:111/255, a:1},
-                                            dim:{r:164/255, g:80/255, b:61/255, a:1},
-                                        }
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
-                                        x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                        onchange:function(a){return function(value){state.stages[a].note=value}}(a),
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
-                                        x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
-                                        handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_octaveSlideHandle_'+a+'.png',
-                                        onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
-                                        x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                        onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
-                                        x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
-                                        style:{
-                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1},
-                                            background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1}
-                                        },
-                                        onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
-                                    }}
-                                );
-                        
-                                design.elements.unshift(
+                                    }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
-                                        x:7 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow,
-                                            cable_dim:style.connectionCable.signal.dim,
-                                            cable_glow:style.connectionCable.signal.glow,
-                                        },
+                                        x:17 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
+                                        style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                         onchange:function(a){ return function(value){ if(!value){return} object.elements.button_rectangle['button_activate_'+a].press(); object.elements.button_rectangle['button_activate_'+a].release(); } }(a),
-                                    }}
-                                );
-                                design.elements.unshift(
+                                    }},
                                     {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
-                                        x:18 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                        x:28 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
                                         style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
                                         onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
                                     }}
@@ -45574,7 +46439,7 @@
                             //import/export
                                 object.exportData = function(){
                                     return {
-                                        stages:(new Array(8).fill(0)).map( (item,index) => {
+                                        stages:(new Array(stepCount).fill(0)).map( (item,index) => {
                                             return {
                                                 note: object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].get(),
                                                 octave: object.elements.slide_discrete_image['slide_octave_'+index].get(),
@@ -45585,7 +46450,7 @@
                                     };
                                 };
                                 object.importData = function(data){
-                                    if(data == undefined){return;} console.log(data);
+                                    if(data == undefined){return;}
                         
                                     object.elements.slide_discrete_image.slide_direction.set(data.direction);
                         
@@ -45602,7 +46467,16 @@
                                     previousPosition:-1,
                                     position:-1,
                                     requestedNextPosition:-1,
-                                    stages:new Array(8).fill({ note:0, octave:0, velocity:0 }),
+                                    stages:[
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                    ],
                                     previousMidiNumber:-1,
                                 }
                         
@@ -45613,31 +46487,47 @@
                                     return _canvas_.library.audio.name2num(octave+note);
                                 }
                                 function step(){
-                                    //figure out what stage to send next
+                                    //figure out what stage to step to next
                                         state.previousPosition = state.position;
-                                        state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction
+                                        state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction;
                                         state.requestedNextPosition = -1;
-                                        if(state.position > 7){state.position = 0;}else if(state.position < 0){state.position = 7;}
+                                        if(state.position > stepCount-1){state.position = 0;}else if(state.position < 0){state.position = stepCount-1;}
                         
-                                    //stop previous note and send the new one
+                                    //stop previous note (unless there wasn't one) and send the new one
                                         var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
-                                        object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
+                                        if(state.previousMidiNumber != -1){object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});}
                                         object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
-                                        state.previousMidiNumber = midiNumber
+                                        state.previousMidiNumber = midiNumber;
                         
                                     //light up the appropriate LED
-                                        if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
-                                        object.elements.glowbox_rect['LED'+state.position].on(); 
+                                        if(state.previousPosition != -1){ object.elements.glowbox_rectangle['LED'+state.previousPosition].off(); }
+                                        object.elements.glowbox_rectangle['LED'+state.position].on(); 
                                 }
                             
                             //interface
                                 object.i = {
                                     step:function(){ object.elements.button_image.button_step.press(); },
-                                    direction:function(value){ object.elements.slide_discrete_image.slide_direction.set(value); },
-                                    noteDial:function(number,value){ object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].set(value); },
-                                    octaveSlider:function(number,value){ object.elements.slide_discrete_image['slide_octave_'+number].set(value); },
-                                    velocityDial:function(number,value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].set(value); },
+                                    direction:function(value){ 
+                                        if(value == undefined){ return object.elements.slide_discrete_image.slide_direction.get(); }
+                                        object.elements.slide_discrete_image.slide_direction.set(value);
+                                    },
+                                    noteDial:function(number,value){ 
+                                        if(number == undefined){return null;}
+                                        if(value == undefined){ object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].get(); }
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].set(value);
+                                    },
+                                    octaveSlider:function(number,value){ 
+                                        if(number == undefined){return null;}
+                                        if(value == undefined){ object.elements.slide_discrete_image['slide_octave_'+number].get(); }
+                                        object.elements.slide_discrete_image['slide_octave_'+number].set(value);
+                                    },
+                                    velocityDial:function(number,value){ 
+                                        if(number == undefined){return null;}
+                                        if(value == undefined){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].get(); }
+                                        object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].set(value);
+                                    },
                                     activateStep:function(number){ object.elements.button_rectangle['button_activate_'+number].press(); },
+                                    getStages:function(){return state.stages;},
                                 };
                         
                             return object;
@@ -45648,7 +46538,212 @@
                         this.eightStepSequencer.metadata = {
                             name:'Eight Step Sequencer',
                             category:'sequencers',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/eightStepSequencer/'
+                            helpURL:'/help/units/beta/eightStepSequencer/'
+                        };
+                        this.launchpad = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'launchpad/';
+                            var colour = {
+                                checkbox:{
+                                    check:{r:0.56,g:0.42,b:0.61,a:1},
+                                    backing:{r:0.74,g:0.53,b:0.8,a:1},
+                                    checkGlow:{r:0.56+0.15,g:0.42+0.15,b:0.61+0.15,a:1},
+                                    backingGlow:{r:0.74+0.1,g:0.53+0.1,b:0.8+0.15,a:1},
+                                }
+                            }
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:1370, height:1200 },
+                                design:{ width:22.5, height:19.5 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            
+                            var design = {
+                                name:'launchpad',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_step', data:{ 
+                                        x:measurements.drawing.width-3.5, y:6.65 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        onchange:function(value){if(value){step();}},
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_upPage', data:{ 
+                                        x:measurements.drawing.width-3.5, y:6.65+140 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        onchange:function(value){if(value){backPage();}},
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_downPage', data:{ 
+                                        x:measurements.drawing.width-3.5, y:6.65+163.35 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        onchange:function(value){if(value){nextPage();}},
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                    },
+                        
+                                    {collection:'control', type:'button_image', name:'step', data:{
+                                        x:193.35, y:6.65, width:20, height:20, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'step_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'step_down.png',
+                                        onpress:step,
+                                    }},
+                                    {collection:'control', type:'button_image', name:'upPage', data:{
+                                        x:193.35, y:6.65+140, width:20, height:20, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'upPage_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'upPage_down.png',
+                                        onpress:backPage,
+                                    }},
+                                    {collection:'control', type:'button_image', name:'downPage', data:{
+                                        x:193.35, y:6.65+163.35, width:20, height:20, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'downPage_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'downPage_down.png',
+                                        onpress:nextPage,
+                                    }},
+                                ]
+                            };
+                            //dynamic design
+                                for(var y = 0; y < 8; y++){
+                                    design.elements.unshift(
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output_'+y, data:{
+                                            x:0, y:6.65+4.6+10 + 23.34*y, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                    );
+                        
+                                    design.elements.push(
+                                        {collection:'display', type:'glowbox_circle', name:'LED_'+y, data:{
+                                            x:203.35, y:40 + 13.33*y, radius:2,
+                                            style:{glow:{r:0.97,g:0.89,b:0.99,a:1},dim:{r:0.1,g:0.1,b:0.1,a:1}},
+                                        }}
+                                    );
+                        
+                                    for(var x = 0; x < 8; x++){
+                                        design.elements.push(
+                                            {collection:'control', type:'checkbox_rectangle', name:y+'_'+x, data:{
+                                                x:6.65 + 23.34*x, y:6.65 + 23.34*y, width:20, height:20, 
+                                                style:{ check:colour.checkbox.check, backing:colour.checkbox.backing, checkGlow:colour.checkbox.checkGlow, backingGlow:colour.checkbox.backingGlow },
+                                                onchange:(function(x,y){return function(value){ state.pages[state.currentPage][y][x] = value; }})(x,y),
+                                            }}
+                                        );
+                                    }
+                                }
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                var state = {
+                                    currentColumn:-1,
+                                    currentPage:0,
+                                    pages:[],
+                                };
+                        
+                                //populate pages
+                                    for(var page = 0; page < 8; page++){
+                                        state.pages.push([]);
+                                        for(var y = 0; y < 8; y++){
+                                            state.pages[page].push([]);
+                                            for(var x = 0; x < 8; x++){
+                                                state.pages[page][y].push(false);
+                                            }
+                                        }
+                                    }
+                        
+                                function refresh(){
+                                    for(var y = 0; y < 8; y++){
+                                        object.elements.glowbox_circle['LED_'+y].off();
+                                        for(var x = 0; x < 8; x++){
+                                            object.elements.checkbox_rectangle[y+'_'+x].set( state.pages[state.currentPage][y][x] );
+                                        }
+                                    }
+                                    object.elements.glowbox_circle['LED_'+state.currentPage].on();
+                                }
+                                function changeToColumn(column){
+                                    state.currentColumn = column;
+                        
+                                    for(var x = 0; x < 8; x++){
+                                        for(var y = 0; y < 8; y++){
+                                            object.elements.checkbox_rectangle[y+'_'+x].light(false);
+                                        }
+                                    }
+                        
+                                    for(var y = 0; y < 8; y++){
+                                        object.elements.connectionNode_signal['output_'+y].set(false);
+                                        object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(true);
+                                        if( state.pages[state.currentPage][y][state.currentColumn] ){
+                                            object.elements.connectionNode_signal['output_'+y].set(true);
+                                        }
+                                    }
+                                }
+                                function step(){
+                                    state.currentColumn++; if(state.currentColumn > 7){state.currentColumn = 0;}
+                                    changeToColumn(state.currentColumn);
+                                }
+                                function changeToPage(pageNumber){
+                                    state.currentPage = pageNumber;
+                                    refresh();
+                                }
+                                function nextPage(){
+                                    state.currentPage++;
+                                    if(state.currentPage > 7){state.currentPage = 0}
+                                    changeToPage(state.currentPage);
+                                }
+                                function backPage(){
+                                    state.currentPage--;
+                                    if(state.currentPage < 0){state.currentPage = 7}
+                                    changeToPage(state.currentPage);
+                                }
+                        
+                                changeToPage(0);
+                        
+                            //import/export
+                                object.exportData = function(){ return {
+                                    currentPage:state.currentPage,
+                                    currentColumn:state.currentColumn,
+                                    pages:JSON.stringify(state.pages),
+                                }; };
+                                object.importData = function(data){
+                                    state = {
+                                        currentColumn:data.currentColumn,
+                                        currentPage:data.currentPage,
+                                        pages:JSON.parse(data.pages),
+                                    };
+                                    refresh();
+                                };
+                        
+                            //interface
+                                object.i = {
+                                    getPages:function(){return state.pages;},
+                                    currentPage:function(value){
+                                        if(value==undefined){return state.currentPage;}
+                                        changeToPage(value);
+                                    },
+                                    columnPosition:function(value){
+                                        if(value==undefined){return state.currentColumn;}
+                                        changeToColumn(value);
+                                    },
+                                    step:step,
+                                    data:function(page,x,y,value){
+                                        if(page == undefined || x == undefined || y == undefined){return;}
+                                        if(value == undefined){ return state.pages[page][y][x]; }
+                                        state.pages[page][y][x] = value;
+                                        refresh();
+                                    }
+                                };
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.launchpad.metadata = {
+                            name:'Launchpad',
+                            category:'sequencers',
+                            helpURL:'/help/units/beta/launchpad/'
                         };
                         
                         this._categoryData = {
@@ -45657,181 +46752,364 @@
                             monitors:{ printingName:'Monitors' },
                             effects:{ printingName:'Effect Units'},
                             sequencers:{ printingName:'Sequencers'},
+                            humanInterfaceDevices:{ printingName:'Human Interface Devices'},
                         };
                         this.distortion = function(x,y,a){
-                            var shape = [
-                                {x:0,y:0},
-                                {x:120,y:0},
-                                {x:120,y:65},
-                                {x:0,y:65},
-                            ];
+                            var imageStoreURL_localPrefix = imageStoreURL+'distortion/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:719, height:389 },
+                                design:{ width:11.75, height:6.25 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            
                             var design = {
                                 name:'distortion',
                                 x:x, y:y, angle:a,
-                                space:shape,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
                                 elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:60, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
-                                    }},
                                     {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:120, y:45, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        },
+                                        x:measurements.drawing.width-2.9, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'inGain_connection', data:{ 
+                                        x:97, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'resolution_connection', data:{ 
+                                        x:67, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'distortion_connection', data:{ 
+                                        x:32, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'outGain_connection', data:{ 
+                                        x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
+                                        x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
+                                        x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                         
-                                    {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
-                                    {collection:'basic', type:'image', name:'markings', data:{x:0,y:0,width:120,height:65,url:'images/units/beta/distortionMarkings.png'} },
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                    },
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'in_dial',data:{
-                                        x:92.5, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:236/255,g:97/255,b:43/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'inGain',data:{
+                                        x:92, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[1], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'res_dial',data:{
-                                        x:72.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:175/255,g:46/255,b:246/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'resolution',data:{
+                                        x:72, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[7], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'overSample_dial',data:{
-                                        x:55, y:50, radius:15/2, startAngle:1.1*Math.PI, maxAngle:0.8*Math.PI, arcDistance:1.2, optionCount:3, 
-                                        style:{
-                                            handle:{r:181/255,g:251/255,b:99/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'distortion',data:{
+                                        x:37, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[4], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
-                                        x:37.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:117/255,g:251/255,b:237/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'outGain',data:{
+                                        x:17, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
                                     }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'out_dial',data:{
-                                        x:20, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                                        style:{
-                                            handle:{r:234/255,g:52/255,b:119/255,a:1},
-                                            slot:{r:0,g:0,b:0,a:0},
-                                            needle:{r:1,g:1,b:1,a:1},
-                                        }
+                        
+                                    {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
+                                        x:41, y:57, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
+                                        handleURL:imageStoreURL_localPrefix+'handle.png',
                                     }},
                                 ]
                             };
-                            //add bumpers
-                            for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                                if(c == shape.length){c = 0;}
-                        
-                                var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                                var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-                        
-                                design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                                    { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                                ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                            }
-                        
-                        
                             
                             //main object
                                 var object = _canvas_.interface.unit.builder(this.ruler,design);
-                        
-                            //import/export
-                                object.importData = function(data){
-                                    object.elements.dial_colourWithIndent_continuous.out_dial.set(data.outGain);
-                                    object.elements.dial_colourWithIndent_continuous.dist_dial.set(data.distortionAmount);
-                                    object.elements.dial_colourWithIndent_continuous.res_dial.set(data.resolution);
-                                    object.elements.dial_colourWithIndent_discrete.overSample_dial.set(data.overSample);
-                                    object.elements.dial_colourWithIndent_continuous.in_dial.set(data.inGain);
-                                };
-                                object.exportData = function(){
-                                    return {
-                                        outGain:         object.elements.dial_colourWithIndent_continuous.out_dial.get(), 
-                                        distortionAmount:object.elements.dial_colourWithIndent_continuous.dist_dial.get(), 
-                                        resolution:      object.elements.dial_colourWithIndent_continuous.res_dial.get(), 
-                                        overSample:      object.elements.dial_colourWithIndent_discrete.overSample_dial.get(), 
-                                        inGain:          object.elements.dial_colourWithIndent_continuous.in_dial.get()
-                                    };
-                                };
-                        
+                                
                             //circuitry
                                 object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
                                 object.elements.connectionNode_audio.input.out().connect( object.distortionCircuit.in() );
                                 object.distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
                         
                             //wiring
-                                object.elements.dial_colourWithIndent_continuous.out_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
-                                object.elements.dial_colourWithIndent_continuous.dist_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
-                                object.elements.dial_colourWithIndent_continuous.res_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
-                                object.elements.dial_colourWithIndent_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
-                                object.elements.dial_colourWithIndent_continuous.in_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+                                object.elements.dial_colourWithIndent_continuous.inGain.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+                                object.elements.dial_colourWithIndent_continuous.resolution.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
+                                object.elements.dial_colourWithIndent_continuous.distortion.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
+                                object.elements.dial_colourWithIndent_continuous.outGain.onchange = function(value){object.distortionCircuit.outGain(value);};
+                                object.elements.slide_discrete_image.oversample.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
+                                object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
+                                object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
+                                object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.inGain.set(value); };
+                                object.elements.connectionNode_voltage.resolution_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.resolution.set(value); };
+                                object.elements.connectionNode_voltage.distortion_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.distortion.set(value); };
+                                object.elements.connectionNode_voltage.outGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.outGain.set(value); };
                         
                             //setup
-                                object.elements.dial_colourWithIndent_continuous.res_dial.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.in_dial.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.out_dial.set(1);
+                                object.elements.dial_colourWithIndent_continuous.resolution.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.inGain.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.outGain.set(1);
                             
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.outGain.set(data.outGain);
+                                    object.elements.dial_colourWithIndent_continuous.distortion.set(data.distortionAmount);
+                                    object.elements.dial_colourWithIndent_continuous.resolution.set(data.resolution);
+                                    object.elements.slide_discrete_image.oversample.set(data.overSample);
+                                    object.elements.dial_colourWithIndent_continuous.inGain.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:          object.elements.dial_colourWithIndent_continuous.outGain.get(), 
+                                        distortionAmount: object.elements.dial_colourWithIndent_continuous.distortion.get(), 
+                                        resolution:       object.elements.dial_colourWithIndent_continuous.resolution.get(), 
+                                        overSample:       object.elements.slide_discrete_image.oversample.get(), 
+                                        inGain:           object.elements.dial_colourWithIndent_continuous.inGain.get()
+                                    };
+                                };
+                            
+                            //interface
+                                object.i = {
+                                    outGain:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.outGain.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.outGain.set(value);
+                                    },
+                                    distortionAmount:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.distortion.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.distortion.set(value);
+                                    },
+                                    resolution:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.resolution.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.resolution.set(value);
+                                    },
+                                    overSample:function(value){
+                                        if(value==undefined){ return object.elements.slide_discrete_image.oversample.get(); }
+                                        object.elements.slide_discrete_image.oversample.set(value);
+                                    },
+                                    inGain:function(value){
+                                        if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.inGain.get(); }
+                                        object.elements.dial_colourWithIndent_continuous.inGain.set(value);
+                                    },
+                        
+                                };
+                        
                             return object;
                         };
+                        
+                        
                         
                         this.distortion.metadata = {
                             name:'Distortion',
                             category:'effects',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
+                            helpURL:'/help/units/beta/distortion/'
                         };
-                        this.eightStepSequencer = function(x,y,a){
+                        this.reverb = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'reverb/';
+                        
                             var div = 6;
                             var offset = 20/div;
                             var measurements = { 
-                                file:{
-                                    width:1670,
-                                    height:590,
-                                },
-                                design:{
-                                    width:27.5, 
-                                    height:9.5,
-                                },
+                                file:{ width:885, height:320 },
+                                design:{ width:14.5, height:5 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            var colour = {
+                                LCD:{
+                                    background:{r:0.1,g:0.1,b:0.1,a:1},
+                                    glow:{r:0.3,g:0.64,b:0.22,a:1},
+                                    dim:{r:0.1,g:0.24,b:0.12,a:1}
+                                }
+                            };
+                            
+                            var design = {
+                                name:'reverb',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                        x:measurements.drawing.width-3.5, y:30, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                        x:0, y:45, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'wet_connection', data:{ 
+                                        x:87.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'dry_connection', data:{ 
+                                        x:87.5+32.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_down_connection', data:{ 
+                                        x:69, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_up_connection', data:{ 
+                                        x:59, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                    },
+                        
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'wet',data:{
+                                        x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    }},
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dry',data:{
+                                        x:87.5+32.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[2], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                    }},
+                                    {collection:'control', type:'button_image', name:'rocker_up', data:{
+                                        x:58.7, y:10, width:10, height:15, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'rocker_up_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'rocker_up_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'rocker_down', data:{
+                                        x:58.7, y:10+15, width:10, height:15, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'rocker_down_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'rocker_down_down.png',
+                                    }},
+                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, style:colour.LCD }},
+                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, style:colour.LCD }},
+                                ]
+                            };
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                var state = {
+                                    reverbTypeSelected:0,
+                                    availableTypes:[],
+                                    wet:0.5,
+                                    dry:0.5,
+                                };
+                        
+                                //reverb
+                                    object.reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
+                                    object.elements.connectionNode_audio.input.out().connect( object.reverbCircuit.in() );
+                                    object.reverbCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                    object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
+                                    
+                                //internal functions
+                                    function setReadout(num){
+                                        num = ("0" + num).slice(-2);
+                        
+                                        object.elements.sevenSegmentDisplay_static.LCD_10.enterCharacter(num[0]);
+                                        object.elements.sevenSegmentDisplay_static.LCD_1.enterCharacter(num[1]);
+                                    }
+                                    function setReverbType(a){
+                                        if( state.availableTypes.length == 0 ){ console.log('broken or not yet ready'); return; }
+                        
+                                        if( a >= state.availableTypes.length ){a = state.availableTypes.length-1;}
+                                        else if( a < 0 ){a = 0;}
+                            
+                                        state.reverbTypeSelected = a;
+                                        object.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                                    }
+                                    function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
+                                    function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
+                                    function updateWetDry(){ object.reverbCircuit.wetdry('manualControl',state.wet,state.dry); }
+                        
+                                //wiring
+                                    object.elements.dial_colourWithIndent_continuous.wet.onchange = function(value){ state.wet = value; updateWetDry(); };
+                                    object.elements.dial_colourWithIndent_continuous.dry.onchange = function(value){ state.dry = value; updateWetDry(); };
+                                    object.elements.button_image.rocker_up.onpress = function(){ incReverbType(); };
+                                    object.elements.button_image.rocker_down.onpress = function(){ decReverbType(); };
+                                    object.elements.connectionNode_voltage.wet_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.wet.set(value); };
+                                    object.elements.connectionNode_voltage.dry_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.dry.set(value); };
+                                    object.elements.connectionNode_signal.rocker_down_connection.onchange = function(value){
+                                        if(value){
+                                            object.elements.button_image.rocker_down.press();
+                                        }else{
+                                            object.elements.button_image.rocker_down.release();
+                                        }
+                                    };
+                                    object.elements.connectionNode_signal.rocker_up_connection.onchange = function(value){
+                                        if(value){
+                                            object.elements.button_image.rocker_up.press();
+                                        }else{
+                                            object.elements.button_image.rocker_up.release();
+                                        }
+                                    };
+                                    
+                                //import/export
+                                    object.exportData = function(){
+                                        return {
+                                            wet: object.elements.dial_colourWithIndent_continuous.wet.get(),
+                                            dry: object.elements.dial_colourWithIndent_continuous.dry.get(),
+                                            reverbNumber: state.reverbTypeSelected,
+                                        };
+                                    };
+                                    object.importData = function(data){
+                                        object.elements.dial_colourWithIndent_continuous.wet.set(data.wet);
+                                        object.elements.dial_colourWithIndent_continuous.dry.set(data.dry);
+                                        state.reverbTypeSelected = data.reverbNumber;
+                                    };
+                        
+                                //interface 
+                                    object.i = {
+                                        wet: function(value){
+                                            if(value == undefined){
+                                                return object.elements.dial_colourWithIndent_continuous.wet.get();
+                                            }else{
+                                                object.elements.dial_colourWithIndent_continuous.wet.set(value);
+                                            }
+                                        },
+                                        dry: function(value){
+                                            if(value == undefined){
+                                                return object.elements.dial_colourWithIndent_continuous.dry.get();
+                                            }else{
+                                                object.elements.dial_colourWithIndent_continuous.dry.set(value);
+                                            }
+                                        },
+                                        reverbNumber: function(number){ if(value == undefined){ return state.reverbTypeSelected; }else{ setReverbType(number); } }
+                                    };
+                        
+                                //setup
+                                    setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.reverb.metadata = {
+                            name:'Reverb',
+                            category:'effects',
+                            helpURL:'/help/units/beta/reverb/'
+                        };
+                        this.eightStepSequencer = function(x,y,a){
+                            var stepCount = 8;
+                            var imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:1670, height:590 },
+                                design:{ width:27.5, height:9.5 },
                             };
                             measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
                             
-                            var shape = [
-                                { x:0,                                                                    y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
-                                { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
-                            ];
-                            var colours = [
-                                {r:1,g:0.01,b:0.02,a:1},
-                                {r:1,g:0.55,b:0,a:1},
-                                {r:1,g:0.93,b:0,a:1},
-                                {r:0,g:1,b:0,a:1},
-                                {r:0,g:1,b:0.81,a:1},
-                                {r:0,g:0.62,b:1,a:1},
-                                {r:0.08,g:0,b:1,a:1},
-                                {r:0.68,g:0,b:1,a:1}, 
-                            ];
                             var design = {
                                 name:'eightStepSequencer',
                                 x:x, y:y, angle:a,
-                                space:shape,
+                                space:[
+                                    { x:0,                                                                    y:0                                                                      },
+                                    { x:measurements.drawing.width -offset,                                   y:0                                                                      },
+                                    { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                                    { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
+                                    { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
+                                    { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
+                                    { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
+                                ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
                                         x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
@@ -45853,28 +47131,52 @@
                                         onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
                                     }},
                         
-                        
-                        
-                        
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_backing.png' }
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                         
                                     {collection:'control', type:'button_image', name:'button_step', data:{
                                         x:243.25, y:4.5, width:21, height:21, hoverable:false, 
-                                        backingURL__up:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_up.png',
-                                        backingURL__press:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_stepButton_down.png',
+                                        backingURL__up:imageStoreURL_localPrefix+'stepButton_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'stepButton_down.png',
                                         onpress:step,
                                     }},
                                     {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
-                                        x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
-                                        handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_directionSlideHandle.png',
+                                        x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
+                                        handleURL:imageStoreURL_localPrefix+'directionSlideHandle.png',
                                         onchange:function(value){ state.direction = value*2 - 1; }
                                     }},
                                 ]
                             };
                             //dynamic design
-                            for(var a = 0; a < 8; a++){
+                            for(var a = 0; a < stepCount; a++){
+                                design.elements.push(
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{
+                                        x:12.5 +30*a, y:2.5, width:10, height:2.5, 
+                                        style:{ glow:{r:232/255, g:160/255, b:111/255, a:1}, dim:{r:164/255, g:80/255, b:61/255, a:1} }
+                                    }},
+                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
+                                        x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                        onchange:function(a){return function(value){state.stages[a].note=value}}(a),
+                                    }},
+                                    {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
+                                        x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
+                                        handleURL:imageStoreURL_localPrefix+'octaveSlideHandle_'+a+'.png',
+                                        onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
+                                    }},
+                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
+                                        x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                        style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                        onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
+                                    }},
+                                    {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
+                                        x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
+                                        style:{ background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1} },
+                                        onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
+                                    }},
+                                );
+                        
                                 design.elements.unshift(
                                     {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
                                         x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
@@ -45890,9 +47192,7 @@
                                             object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
                                             object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
                                         } }(a),
-                                    }}
-                                );
-                                design.elements.unshift(
+                                    }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
                                         x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
                                         style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
@@ -45907,65 +47207,14 @@
                                             object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
                                             object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
                                         } }(a),
-                                    }}
-                                );
-                        
-                                design.elements.push(
-                                    {collection:'display', type:'glowbox_rect',name:'LED'+a,data:{
-                                        x:12.5 +30*a, y:2.5, width:10, height:2.5, 
-                                        style:{
-                                            glow:{r:232/255, g:160/255, b:111/255, a:1},
-                                            dim:{r:164/255, g:80/255, b:61/255, a:1},
-                                        }
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
-                                        x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                        onchange:function(a){return function(value){state.stages[a].note=value}}(a),
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
-                                        x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, value:0, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
-                                        handleURL:'protoTypeUnits/beta/2/eightStepSequencer/eightStepSequencer_octaveSlideHandle_'+a+'.png',
-                                        onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
-                                        x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                        onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
-                                    }}
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
-                                        x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
-                                        style:{
-                                            background__up__colour:{r:175/255,g:175/255,b:175/255,a:1},
-                                            background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1}
-                                        },
-                                        onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
-                                    }}
-                                );
-                        
-                                design.elements.unshift(
+                                    }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
-                                        x:7 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow,
-                                            cable_dim:style.connectionCable.signal.dim,
-                                            cable_glow:style.connectionCable.signal.glow,
-                                        },
+                                        x:17 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
+                                        style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
                                         onchange:function(a){ return function(value){ if(!value){return} object.elements.button_rectangle['button_activate_'+a].press(); object.elements.button_rectangle['button_activate_'+a].release(); } }(a),
-                                    }}
-                                );
-                                design.elements.unshift(
+                                    }},
                                     {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
-                                        x:18 +30*a, y:measurements.drawing.height -offset + 5, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2,
+                                        x:28 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
                                         style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
                                         onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
                                     }}
@@ -45979,7 +47228,7 @@
                             //import/export
                                 object.exportData = function(){
                                     return {
-                                        stages:(new Array(8).fill(0)).map( (item,index) => {
+                                        stages:(new Array(stepCount).fill(0)).map( (item,index) => {
                                             return {
                                                 note: object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].get(),
                                                 octave: object.elements.slide_discrete_image['slide_octave_'+index].get(),
@@ -45990,7 +47239,7 @@
                                     };
                                 };
                                 object.importData = function(data){
-                                    if(data == undefined){return;} console.log(data);
+                                    if(data == undefined){return;}
                         
                                     object.elements.slide_discrete_image.slide_direction.set(data.direction);
                         
@@ -46007,7 +47256,16 @@
                                     previousPosition:-1,
                                     position:-1,
                                     requestedNextPosition:-1,
-                                    stages:new Array(8).fill({ note:0, octave:0, velocity:0 }),
+                                    stages:[
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                        { note:0, octave:0, velocity:0 },
+                                    ],
                                     previousMidiNumber:-1,
                                 }
                         
@@ -46018,31 +47276,47 @@
                                     return _canvas_.library.audio.name2num(octave+note);
                                 }
                                 function step(){
-                                    //figure out what stage to send next
+                                    //figure out what stage to step to next
                                         state.previousPosition = state.position;
-                                        state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction
+                                        state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction;
                                         state.requestedNextPosition = -1;
-                                        if(state.position > 7){state.position = 0;}else if(state.position < 0){state.position = 7;}
+                                        if(state.position > stepCount-1){state.position = 0;}else if(state.position < 0){state.position = stepCount-1;}
                         
-                                    //stop previous note and send the new one
+                                    //stop previous note (unless there wasn't one) and send the new one
                                         var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
-                                        object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});
+                                        if(state.previousMidiNumber != -1){object.elements.connectionNode_data.output.send('midinumber',{num:state.previousMidiNumber, velocity:0});}
                                         object.elements.connectionNode_data.output.send('midinumber',{num:midiNumber, velocity:state.stages[state.position].velocity});
-                                        state.previousMidiNumber = midiNumber
+                                        state.previousMidiNumber = midiNumber;
                         
                                     //light up the appropriate LED
-                                        if(state.previousPosition != -1){ object.elements.glowbox_rect['LED'+state.previousPosition].off(); }
-                                        object.elements.glowbox_rect['LED'+state.position].on(); 
+                                        if(state.previousPosition != -1){ object.elements.glowbox_rectangle['LED'+state.previousPosition].off(); }
+                                        object.elements.glowbox_rectangle['LED'+state.position].on(); 
                                 }
                             
                             //interface
                                 object.i = {
                                     step:function(){ object.elements.button_image.button_step.press(); },
-                                    direction:function(value){ object.elements.slide_discrete_image.slide_direction.set(value); },
-                                    noteDial:function(number,value){ object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].set(value); },
-                                    octaveSlider:function(number,value){ object.elements.slide_discrete_image['slide_octave_'+number].set(value); },
-                                    velocityDial:function(number,value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].set(value); },
+                                    direction:function(value){ 
+                                        if(value == undefined){ return object.elements.slide_discrete_image.slide_direction.get(); }
+                                        object.elements.slide_discrete_image.slide_direction.set(value);
+                                    },
+                                    noteDial:function(number,value){ 
+                                        if(number == undefined){return null;}
+                                        if(value == undefined){ object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].get(); }
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+number].set(value);
+                                    },
+                                    octaveSlider:function(number,value){ 
+                                        if(number == undefined){return null;}
+                                        if(value == undefined){ object.elements.slide_discrete_image['slide_octave_'+number].get(); }
+                                        object.elements.slide_discrete_image['slide_octave_'+number].set(value);
+                                    },
+                                    velocityDial:function(number,value){ 
+                                        if(number == undefined){return null;}
+                                        if(value == undefined){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].get(); }
+                                        object.elements.dial_colourWithIndent_continuous['dial_velocity_'+number].set(value);
+                                    },
                                     activateStep:function(number){ object.elements.button_rectangle['button_activate_'+number].press(); },
+                                    getStages:function(){return state.stages;},
                                 };
                         
                             return object;
@@ -46053,7 +47327,212 @@
                         this.eightStepSequencer.metadata = {
                             name:'Eight Step Sequencer',
                             category:'sequencers',
-                            helpURL:'https://curve.metasophiea.com/help/units/beta/eightStepSequencer/'
+                            helpURL:'/help/units/beta/eightStepSequencer/'
+                        };
+                        this.launchpad = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'launchpad/';
+                            var colour = {
+                                checkbox:{
+                                    check:{r:0.56,g:0.42,b:0.61,a:1},
+                                    backing:{r:0.74,g:0.53,b:0.8,a:1},
+                                    checkGlow:{r:0.56+0.15,g:0.42+0.15,b:0.61+0.15,a:1},
+                                    backingGlow:{r:0.74+0.1,g:0.53+0.1,b:0.8+0.15,a:1},
+                                }
+                            }
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:1370, height:1200 },
+                                design:{ width:22.5, height:19.5 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            
+                            var design = {
+                                name:'launchpad',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                  y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:0                                     },
+                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                    { x:0,                                  y:measurements.drawing.height -offset   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_step', data:{ 
+                                        x:measurements.drawing.width-3.5, y:6.65 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        onchange:function(value){if(value){step();}},
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_upPage', data:{ 
+                                        x:measurements.drawing.width-3.5, y:6.65+140 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        onchange:function(value){if(value){backPage();}},
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_downPage', data:{ 
+                                        x:measurements.drawing.width-3.5, y:6.65+163.35 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        onchange:function(value){if(value){nextPage();}},
+                                    }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                    },
+                        
+                                    {collection:'control', type:'button_image', name:'step', data:{
+                                        x:193.35, y:6.65, width:20, height:20, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'step_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'step_down.png',
+                                        onpress:step,
+                                    }},
+                                    {collection:'control', type:'button_image', name:'upPage', data:{
+                                        x:193.35, y:6.65+140, width:20, height:20, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'upPage_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'upPage_down.png',
+                                        onpress:backPage,
+                                    }},
+                                    {collection:'control', type:'button_image', name:'downPage', data:{
+                                        x:193.35, y:6.65+163.35, width:20, height:20, hoverable:false, 
+                                        backingURL__up:imageStoreURL_localPrefix+'downPage_up.png',
+                                        backingURL__press:imageStoreURL_localPrefix+'downPage_down.png',
+                                        onpress:nextPage,
+                                    }},
+                                ]
+                            };
+                            //dynamic design
+                                for(var y = 0; y < 8; y++){
+                                    design.elements.unshift(
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output_'+y, data:{
+                                            x:0, y:6.65+4.6+10 + 23.34*y, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                    );
+                        
+                                    design.elements.push(
+                                        {collection:'display', type:'glowbox_circle', name:'LED_'+y, data:{
+                                            x:203.35, y:40 + 13.33*y, radius:2,
+                                            style:{glow:{r:0.97,g:0.89,b:0.99,a:1},dim:{r:0.1,g:0.1,b:0.1,a:1}},
+                                        }}
+                                    );
+                        
+                                    for(var x = 0; x < 8; x++){
+                                        design.elements.push(
+                                            {collection:'control', type:'checkbox_rectangle', name:y+'_'+x, data:{
+                                                x:6.65 + 23.34*x, y:6.65 + 23.34*y, width:20, height:20, 
+                                                style:{ check:colour.checkbox.check, backing:colour.checkbox.backing, checkGlow:colour.checkbox.checkGlow, backingGlow:colour.checkbox.backingGlow },
+                                                onchange:(function(x,y){return function(value){ state.pages[state.currentPage][y][x] = value; }})(x,y),
+                                            }}
+                                        );
+                                    }
+                                }
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //circuitry
+                                var state = {
+                                    currentColumn:-1,
+                                    currentPage:0,
+                                    pages:[],
+                                };
+                        
+                                //populate pages
+                                    for(var page = 0; page < 8; page++){
+                                        state.pages.push([]);
+                                        for(var y = 0; y < 8; y++){
+                                            state.pages[page].push([]);
+                                            for(var x = 0; x < 8; x++){
+                                                state.pages[page][y].push(false);
+                                            }
+                                        }
+                                    }
+                        
+                                function refresh(){
+                                    for(var y = 0; y < 8; y++){
+                                        object.elements.glowbox_circle['LED_'+y].off();
+                                        for(var x = 0; x < 8; x++){
+                                            object.elements.checkbox_rectangle[y+'_'+x].set( state.pages[state.currentPage][y][x] );
+                                        }
+                                    }
+                                    object.elements.glowbox_circle['LED_'+state.currentPage].on();
+                                }
+                                function changeToColumn(column){
+                                    state.currentColumn = column;
+                        
+                                    for(var x = 0; x < 8; x++){
+                                        for(var y = 0; y < 8; y++){
+                                            object.elements.checkbox_rectangle[y+'_'+x].light(false);
+                                        }
+                                    }
+                        
+                                    for(var y = 0; y < 8; y++){
+                                        object.elements.connectionNode_signal['output_'+y].set(false);
+                                        object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(true);
+                                        if( state.pages[state.currentPage][y][state.currentColumn] ){
+                                            object.elements.connectionNode_signal['output_'+y].set(true);
+                                        }
+                                    }
+                                }
+                                function step(){
+                                    state.currentColumn++; if(state.currentColumn > 7){state.currentColumn = 0;}
+                                    changeToColumn(state.currentColumn);
+                                }
+                                function changeToPage(pageNumber){
+                                    state.currentPage = pageNumber;
+                                    refresh();
+                                }
+                                function nextPage(){
+                                    state.currentPage++;
+                                    if(state.currentPage > 7){state.currentPage = 0}
+                                    changeToPage(state.currentPage);
+                                }
+                                function backPage(){
+                                    state.currentPage--;
+                                    if(state.currentPage < 0){state.currentPage = 7}
+                                    changeToPage(state.currentPage);
+                                }
+                        
+                                changeToPage(0);
+                        
+                            //import/export
+                                object.exportData = function(){ return {
+                                    currentPage:state.currentPage,
+                                    currentColumn:state.currentColumn,
+                                    pages:JSON.stringify(state.pages),
+                                }; };
+                                object.importData = function(data){
+                                    state = {
+                                        currentColumn:data.currentColumn,
+                                        currentPage:data.currentPage,
+                                        pages:JSON.parse(data.pages),
+                                    };
+                                    refresh();
+                                };
+                        
+                            //interface
+                                object.i = {
+                                    getPages:function(){return state.pages;},
+                                    currentPage:function(value){
+                                        if(value==undefined){return state.currentPage;}
+                                        changeToPage(value);
+                                    },
+                                    columnPosition:function(value){
+                                        if(value==undefined){return state.currentColumn;}
+                                        changeToColumn(value);
+                                    },
+                                    step:step,
+                                    data:function(page,x,y,value){
+                                        if(page == undefined || x == undefined || y == undefined){return;}
+                                        if(value == undefined){ return state.pages[page][y][x]; }
+                                        state.pages[page][y][x] = value;
+                                        refresh();
+                                    }
+                                };
+                                
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.launchpad.metadata = {
+                            name:'Launchpad',
+                            category:'sequencers',
+                            helpURL:'/help/units/beta/launchpad/'
                         };
                         _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous = function(
                             name='dial_colourWithIndent_continuous',
@@ -46490,7 +47969,24 @@
                         },
                     );
                 
-                if( !_canvas_.control.interaction.devMode() ){ window.onbeforeunload = function(){ return "Unsaved work will be lost"; }; }
+                //dev tools
+                    if(_canvas_.control.interaction.devMode()){
+                        _canvas_.control.gui.elements.menubar.dropdowns.push(
+                            {
+                                text:'dev',
+                                width:50,
+                                listWidth:210,
+                                listItemHeight:22.5,
+                                breakHeight: 0.5,
+                                spaceHeight: 1,
+                                itemList:[
+                                    {type:'item', text_left:'Release All Keyboard Keys', function:function(){ _canvas_.system.keyboard.releaseAll(); } },
+                                ]
+                            }
+                        );
+                    }
+                
+                _canvas_.control.interaction.enableUnloadWarning(true,"Unsaved work will be lost");
                 _canvas_.control.gui.showMenubar();
                 _canvas_.control.viewport.stopMouseScroll(true);
                 _canvas_.control.viewport.activeRender(true);

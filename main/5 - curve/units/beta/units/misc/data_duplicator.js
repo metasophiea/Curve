@@ -9,6 +9,7 @@ this.data_duplicator = function(x,y,a){
         {x:width/div*(3/5),y:height/div},
         {x:0,y:height/div},
     ];
+    var imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
     var design = {
         name:'data_duplicator',
         x:x, y:y, angle:a,
@@ -47,7 +48,7 @@ this.data_duplicator = function(x,y,a){
             }},
 
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/data_duplicator/data_duplicator_backing.png' }
+                data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
             },
         ]
     };
@@ -63,5 +64,5 @@ this.data_duplicator = function(x,y,a){
 this.data_duplicator.metadata = {
     name:'Data Duplicator',
     category:'misc',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/data_duplicator/'
+    helpURL:'/help/units/beta/data_duplicator/'
 };

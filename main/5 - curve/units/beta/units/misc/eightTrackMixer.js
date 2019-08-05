@@ -16,6 +16,7 @@ this.eightTrackMixer = function(x,y,a){
         {r:0.08,g:0,b:1,a:1},
         {r:0.68,g:0,b:1,a:1}, 
     ];
+    var imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
     var design = {
         name:'eightTrackMixer',
         x:x, y:y, angle:a,
@@ -41,7 +42,7 @@ this.eightTrackMixer = function(x,y,a){
             }},
 
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_backing.png' }
+                data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
             },
         ]
     };
@@ -56,7 +57,7 @@ this.eightTrackMixer = function(x,y,a){
         design.elements.push(
             {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
                 x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                handleURL:'prototypeUnits/beta/2/eightTrackMixer/eightTrackMixer_volumeSlideHandles_'+a+'.png'
+                handleURL:imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
             }}
         );
 
@@ -107,7 +108,7 @@ this.eightTrackMixer = function(x,y,a){
             object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
             object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
 
-            object.elements.slide_image['slide_volume_'+a].onchange = function(a){
+            object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
                 return function(value){
                     object['splitter_'+a].inGain(2*(1-value));
                 }
@@ -122,7 +123,7 @@ this.eightTrackMixer = function(x,y,a){
 
     //interface
         object.i = {
-            gain:function(track,value){object.elements.slide_image['slide_volume_'+track].set(value);},
+            gain:function(track,value){object.elements.slide_continuous_image['slide_volume_'+track].set(value);},
             pan:function(track,value){object.elements.dial_colourWithIndent_continuous['dial_panner_'+track].set(value);},
         };
 
@@ -138,5 +139,5 @@ this.eightTrackMixer = function(x,y,a){
 this.eightTrackMixer.metadata = {
     name:'Eight Track Mixer',
     category:'misc',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/eightTrackMixer/'
+    helpURL:'/help/units/beta/eightTrackMixer/'
 };

@@ -92,10 +92,17 @@ this.reverbUnit = function(
             flow.outAggregator.gain=a;
             _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
         };
-        this.wetdry = function(a){
-            if(a==null){return flow.reverbGain.gain;}
-            flow.reverbGain.gain=a;
-            flow.bypassGain.gain=1-a;
+        this.wetdry = function(a,w,d){
+            if(a=='manualControl'){
+                if(a==null){return {w:flow.reverbGain.gain,d:flow.bypassGain.gain};}
+                flow.reverbGain.gain=w;
+                flow.bypassGain.gain=d;
+            }else{
+                if(a==null){return flow.reverbGain.gain;}
+                flow.reverbGain.gain=a;
+                flow.bypassGain.gain=1-a;
+            }
+
             _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
             _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
         };

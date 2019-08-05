@@ -175,3 +175,20 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
             ]
         },
     );
+
+//dev tools
+    if(_canvas_.control.interaction.devMode()){
+        _canvas_.control.gui.elements.menubar.dropdowns.push(
+            {
+                text:'dev',
+                width:50,
+                listWidth:210,
+                listItemHeight:22.5,
+                breakHeight: 0.5,
+                spaceHeight: 1,
+                itemList:[
+                    {type:'item', text_left:'Release All Keyboard Keys', function:function(){ _canvas_.system.keyboard.releaseAll(); } },
+                ]
+            }
+        );
+    }

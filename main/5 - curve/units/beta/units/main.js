@@ -6,4 +6,5 @@ this._categoryData = {
     monitors:{ printingName:'Monitors' },
     effects:{ printingName:'Effect Units'},
     sequencers:{ printingName:'Sequencers'},
+    humanInterfaceDevices:{ printingName:'Human Interface Devices'},
 };

@@ -1,7 +1,7 @@
 var dynamicGroup = _canvas_.core.shape.create('group');
 dynamicGroup.name = 'dynamicGroup';
 dynamicGroup.heedCamera = true;
-dynamicGroup.stopExtremityCalculations(true);
+// dynamicGroup.stopExtremityCalculations(true);
 _canvas_.core.arrangement.append(dynamicGroup);
 
     var tmp = _canvas_.core.shape.create('rectangle');
@@ -47,7 +47,7 @@ _canvas_.core.arrangement.append(dynamicGroup);
 
 var staticGroup = _canvas_.core.shape.create('group');
 staticGroup.name = 'staticGroup';
-staticGroup.stopExtremityCalculations(true);
+// staticGroup.stopExtremityCalculations(true);
 staticGroup.x(100);
 staticGroup.y(200);
 staticGroup.angle(0);

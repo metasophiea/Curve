@@ -13,6 +13,7 @@ this.audio_duplicator = function(x,y,a){
         {x:-width/div*(1.25/10),y:height/div*(2.5/5)},
         {x:-width/div*(0.9/10),y:height/div*(1/5)},
     ];
+    var imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
     var design = {
         name:'audio_duplicator',
         x:x, y:y, angle:a,
@@ -47,13 +48,17 @@ this.audio_duplicator = function(x,y,a){
             }},
 
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/audio_duplicator/audio_duplicator_backing.png' }
+                data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
             },
         ]
     };
 
     //main object
         var object = _canvas_.interface.unit.builder(this.ruler,design);
+
+    //circuitry
+        object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
+        object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
 
     return object;
 };
@@ -63,5 +68,5 @@ this.audio_duplicator = function(x,y,a){
 this.audio_duplicator.metadata = {
     name:'Audio Duplicator',
     category:'misc',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/audio_duplicator/'
+    helpURL:'/help/units/beta/audio_duplicator/'
 };

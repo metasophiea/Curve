@@ -457,7 +457,7 @@ this.character.vectorLibrary.defaultThin = {
 
 
 //correct font to be compatible with the new way of fonting
-reducedGlyphSet.forEach(key => {
+reducedGlyphSet.concat(['default','']).forEach(key => {
     //generate limits
         this.character.vectorLibrary.defaultThin[key].top = this.character.vectorLibrary.defaultThin[key].ratio != undefined && this.character.vectorLibrary.defaultThin[key].ratio.y != undefined ? -this.character.vectorLibrary.defaultThin[key].ratio.y : -1;
         this.character.vectorLibrary.defaultThin[key].right = this.character.vectorLibrary.defaultThin[key].ratio != undefined && this.character.vectorLibrary.defaultThin[key].ratio.x != undefined ? this.character.vectorLibrary.defaultThin[key].ratio.x + 0.1 : 1.1;

@@ -85,6 +85,7 @@ this.character = function(){
         this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
         function producePoints(){
             points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
+            if(self.devMode && vectorLibrary[font][character] == undefined){ console.log(self.getAddress()+'::character - unknown character: "'+character+'"'); }
 
             //adjust for vertical printingMode
                 var horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;

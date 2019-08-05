@@ -7,6 +7,7 @@ this.voltage_duplicator = function(x,y,a){
         {x:width/div,y:height/div},
         {x:0,y:height/div},
     ];
+    var imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
     var design = {
         name:'voltage_duplicator',
         x:x, y:y, angle:a,
@@ -41,7 +42,7 @@ this.voltage_duplicator = function(x,y,a){
                 }
             }},
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/voltage_duplicator/voltage_duplicator_backing.png' }
+                data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
             },
         ]
     };
@@ -57,5 +58,5 @@ this.voltage_duplicator = function(x,y,a){
 this.voltage_duplicator.metadata = {
     name:'Voltage Duplicator',
     category:'misc',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/voltage_duplicator/'
+    helpURL:'/help/units/beta/voltage_duplicator/'
 };

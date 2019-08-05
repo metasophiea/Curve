@@ -12,10 +12,15 @@ _canvas_.control = new function(){
                 devMode = bool;
 
                 //if we're in dev mode; enable all switches
+                //(except 'enableUnloadWarning' which should be disabled)
                     if(devMode){
                         for(item in this){
                             if(item != 'devMode'){
-                                this[item](true);
+                                if(item == 'enableUnloadWarning'){
+                                    this[item](false);
+                                }else{
+                                    this[item](true);
+                                }
                             }
                         }
                     }
@@ -40,7 +45,28 @@ _canvas_.control = new function(){
                 if(bool==undefined){return enableSceneLoad;}
                 if(devMode){return;}
                 enableSceneLoad = bool;
-        };
+            };
+            var enableUnloadWarning = false;
+
+        //window
+            var enableUnloadWarning_message = "Unsaved work will be lost";
+            this.enableUnloadWarning = function(bool,message){
+                if(bool==undefined){return enableUnloadWarning;}
+                if(devMode){return;}
+                enableUnloadWarning = bool;
+                enableUnloadWarning_message = message;
+
+                if( enableUnloadWarning ){ window.onbeforeunload = function(){ return enableUnloadWarning_message; }; }
+                else{ window.onbeforeunload = undefined; }
+            };
+            var enableWindowScrollbarRemoval = true;
+            this.enableWindowScrollbarRemoval = function(bool){
+                if(bool==undefined){return enableWindowScrollbarRemoval;}
+                if(devMode){return;}
+                enableWindowScrollbarRemoval = bool;
+
+                control.viewport.stopMouseScroll(enableWindowScrollbarRemoval);
+            };
 
         //unit modifications
             var enableUnitAdditionRemoval = true;

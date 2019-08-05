@@ -1,4 +1,75 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-08-05
+  - added the distortion unit
+  - made some structural changes to the connection nodes, to allow for callbacks
+    to be added after the part is created..I'm a little worried about it, so
+    some testing is needed
+  - added all the possible connection nodes to the distortion unit
+  - augmented the reverb circuit to allow for more control over the wet/dry
+    split
+  - added the reverb unit
+  - core's default fonts weren't calculating the default character correctly,
+    tis fixed now, sire
+  - added data_readout (thought it works fine, the printing system needs to be
+    less silly)
+
+
+2019-08-04
+  - cleaned up the musical keyboard 
+  - improved system's keyboard way of dealing with shapes that have 'onkeydown'
+    of 'onkeyup' callbacks. Now shapes have to populate a .glyphs value and 
+    system will only run the callbacks if a key with a glyph from that list is
+    found. (fixes the duplication bug? maybe?)
+  - moved the eight primary colours to the style object
+  - added part 'glowbox_circle'
+  - added the launchpad
+ 
+ 
+2019-08-03
+  - forgot to add the circuitry to the audio duplicator. Good job me
+  - added the musical keyboard (as always, some review needed)
+
+  bugs
+  - buttons atop buttons don't hover right
+  - sometimes duplicate mode is stuck on...I can't see why
+
+
+2019-08-02
+  - updated core.render.adjustCanvasSize::dimensionAdjust a little more to be
+    more robust and handle more errors for the attributes
+
+
+2019-08-01
+  - updated core.render.adjustCanvasSize::dimensionAdjust again to allow the
+    width and height to be set in pixels (eg, 300px)
+
+
+2019-07-31
+  - moved the new beta unit art from docs/prototypeUnits/2 to docs/images/beta
+  - moved the ability to enable/disable that unload pop-up thing into the
+    control layer.
+  - added max/min width/height attribute functionality to
+    core.render.adjustCanvasSize::dimensionAdjust. Also rearranged the math a
+    little (should have no effect)
+  - added "enableWindowScrollbarRemoval"
+
+  bugs
+  - control.interaction.mouseGripPanningEnabled when disabled doesn't allow for
+    "click anywhere else" unit deselection
+
+
+2019-07-29
+  - changed the beta units a little to pull the url for the images out, so it's
+    easier to change later. Also changed the name of all the files to remove the
+    unnecessary prefixes
+  - cleaned up the eightStepSequencer unit code a little
+  - fixed the slider onclick issue. Seemed to run much deeper, down into core
+    itself. The callback handling code for the system and core layers is rather
+    messy...it probably needs a rewrite, though hopefully this messy version
+    should be enough as is and so I won't have to do any work on it
+    -thumbs up emoji-
+
+
 2019-07-28
   - changed the button_image part to allow for missing URLs. Now if a state is
     requested for which there is no URL; no change is made to the image shape
@@ -13,7 +84,7 @@
   - changed some of the controls to not call their onchange callbacks when the
     set function is run at the end of their creation (need to make that change
     everywhere)
-  - Ladies and gentlemen; the eight step sequencer (needs deeper testing, bit
+  - Ladies and gentlemen; the eight step sequencer (needs deeper testing, but
     looks pretty good...maybe a clean up)
   - Cleaned up the the ways parts are added to the partLibrary (now it's all
     nicely modular, and close to the part generating code)(also removes all

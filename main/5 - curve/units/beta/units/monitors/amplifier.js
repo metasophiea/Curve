@@ -6,6 +6,7 @@ this.amplifier = function(x,y,a){
         {x:width/6,y:height/6},
         {x:0,y:height/6},
     ];
+    var imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
     var design = {
         name:'amplifier',
         x:x, y:y, angle:a,
@@ -31,7 +32,7 @@ this.amplifier = function(x,y,a){
             }},
 
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:'prototypeUnits/beta/2/amplifier/amplifier_backing.png' }
+                data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
             },
         ]
     };
@@ -68,5 +69,5 @@ this.amplifier = function(x,y,a){
 this.amplifier.metadata = {
     name:'Amplifier',
     category:'monitors',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/amplifier/'
+    helpURL:'/help/units/beta/amplifier/'
 };

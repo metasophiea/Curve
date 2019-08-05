@@ -22160,6 +22160,7 @@
                                     this.right = function(){ return vectorLibrary[font][character] == undefined ? 1 : vectorLibrary[font][character].right; };
                                     function producePoints(){
                                         points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
+                                        if(self.devMode && vectorLibrary[font][character] == undefined){ console.log(self.getAddress()+'::character - unknown character: "'+character+'"'); }
                             
                                         //adjust for vertical printingMode
                                             var horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;
@@ -23201,7 +23202,7 @@
                             };
                             
                             //correct font to be compatible with the new way of fonting
-                            reducedGlyphSet.forEach(key => {
+                            reducedGlyphSet.concat(['default','']).forEach(key => {
                                 //generate limits
                                     this.character.vectorLibrary.defaultThick[key].top = this.character.vectorLibrary.defaultThick[key].ratio != undefined && this.character.vectorLibrary.defaultThick[key].ratio.y != undefined ? -this.character.vectorLibrary.defaultThick[key].ratio.y : -1;
                                     this.character.vectorLibrary.defaultThick[key].right = this.character.vectorLibrary.defaultThick[key].ratio != undefined && this.character.vectorLibrary.defaultThick[key].ratio.x != undefined ? this.character.vectorLibrary.defaultThick[key].ratio.x + 0.1 : 1.1;
@@ -23694,7 +23695,7 @@
                             
                             
                             //correct font to be compatible with the new way of fonting
-                            reducedGlyphSet.forEach(key => {
+                            reducedGlyphSet.concat(['default','']).forEach(key => {
                                 //generate limits
                                     this.character.vectorLibrary.defaultThin[key].top = this.character.vectorLibrary.defaultThin[key].ratio != undefined && this.character.vectorLibrary.defaultThin[key].ratio.y != undefined ? -this.character.vectorLibrary.defaultThin[key].ratio.y : -1;
                                     this.character.vectorLibrary.defaultThin[key].right = this.character.vectorLibrary.defaultThin[key].ratio != undefined && this.character.vectorLibrary.defaultThin[key].ratio.x != undefined ? this.character.vectorLibrary.defaultThin[key].ratio.x + 0.1 : 1.1;
@@ -23872,29 +23873,49 @@
                                     //adjust canvas dimension based on the size requirement set out in the canvasElement attribute
                                         var size = {css:0, element:0};
                                         if(attribute == undefined){
-                                            size.element = pageData.defaultSize[direction] * window.devicePixelRatio;
                                             size.css = pageData.defaultSize[direction];
                                         }else if( attribute.indexOf('%') == (attribute.length-1) ){
                                             var parentSize = canvasElement.parentElement['offset'+Direction];
-                                            var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                                            size.element = parentSize * percent * window.devicePixelRatio;
+                                            var percent = parseFloat(attribute.slice(0,-1)) / 100;
+                                            if( isNaN(percent) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
                                             size.css = parentSize * percent;
+                                        }else if( attribute.indexOf('px') != -1 ){
+                                            var val = parseFloat(attribute.slice(0,-2));
+                                            if( isNaN(val) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
+                                            size.css = val;
                                         }else{
-                                            size.element = attribute * window.devicePixelRatio;
-                                            size.css = attribute;
+                                            var val = parseFloat(attribute);
+                                            if( isNaN(val) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
+                                            size.css = val;
                                         }
                     
-                                        pageData[direction] = size.css;
-                                        canvasElement[direction] = size.element;
-                                        canvasElement.style[direction] = size.css + "px";
+                                    //adjust value to account for min/max attributes
+                                        var attribute_min = canvasElement.getAttribute(__canvasPrefix+'ElementMin'+Direction);
+                                        if(attribute_min != undefined){
+                                            if( attribute_min.indexOf('px') != -1 ){ attribute_min = attribute_min.slice(0,-2); }
+                                            if( attribute_min.indexOf('%') != -1 ){ console.warn(__canvasPrefix+'ElementMin'+Direction,'is of an unparseable format:',attribute_min,'(cannot use percentage in a max/min value)'); }
+                                            attribute_min = parseFloat(attribute_min);
+                                            if( isNaN(attribute_min) ){console.warn(__canvasPrefix+'ElementMin'+Direction,'is of an unparseable format:',attribute_min);return;}
+                                            if( attribute_min > size.css ){ size.css = attribute_min; }
+                                        }
+                                        var attribute_max = canvasElement.getAttribute(__canvasPrefix+'ElementMax'+Direction);
+                                        if(attribute_max != undefined){
+                                            if( attribute_max.indexOf('px') != -1 ){attribute_max = attribute_max.slice(0,-2); }
+                                            if( attribute_max.indexOf('%') != -1 ){console.warn(__canvasPrefix+'ElementMax'+Direction,'is of an unparseable format:',attribute_max,'(cannot use percentage in a max/min value)'); }
+                                            attribute_max = parseFloat(attribute_max);
+                                            if( isNaN(attribute_max) ){console.warn(__canvasPrefix+'ElementMax'+Direction,'is of an unparseable format:',attribute_max);return;}
+                                            if( attribute_max < size.css ){ size.css = attribute_max; }
+                                        }
+                    
+                                    size.element = size.css * window.devicePixelRatio;
+                    
+                                    pageData[direction] = size.css;
+                                    canvasElement[direction] = size.element;
+                                    canvasElement.style[direction] = size.css + "px";
                     
                                     changesMade = true;
                                 }
                         
-                                //run everything twice, to cover the event of one of the
-                                //first two creating a scrollbar in the browser window
-                                dimensionAdjust('height');
-                                dimensionAdjust('width');
                                 dimensionAdjust('height');
                                 dimensionAdjust('width');
                     
@@ -23924,7 +23945,7 @@
                                 this.clearColour(clearColour);
                                 this.adjustCanvasSize();
                                 this.refreshCoordinates();
-                            };this.refresh();
+                            };
                     
                         //frame rate control
                             var frameRateControl = { active:false, previousRenderTime:Date.now(), limit:30, interval:0 };
@@ -24330,12 +24351,14 @@
                                             var data = gatherDetails(event,'onmouseup',core.callback.functions.onmouseup.length);
                                             core.callback.functions.onmouseup( data.point.x, data.point.y, event, data.shapes );
                                         }
-                    
                                 };
+                                var recentlyClickedDoubleClickableShapeList = [];
                                 _canvas_.onclick = function(){
                                     if(core.callback.functions.onclick){
                                         event.X = event.offsetX; event.Y = event.offsetY;
+                                        recentlyClickedDoubleClickableShapeList = gatherDetails(event,'ondblclick',core.callback.functions.onclick.length).shapes;
                                         var data = gatherDetails(event,'onclick',core.callback.functions.onclick.length);
+                                        data.shapes = data.shapes.filter( shape => shapeMouseclickList.includes(shape) );
                                         core.callback.functions.onclick( data.point.x, data.point.y, event, data.shapes );
                                     }
                                 };
@@ -24343,6 +24366,7 @@
                                     if(core.callback.functions.ondblclick){
                                         event.X = event.offsetX; event.Y = event.offsetY;
                                         var data = gatherDetails(event,'ondblclick',core.callback.functions.ondblclick.length);
+                                        data.shapes = data.shapes.filter( shape => recentlyClickedDoubleClickableShapeList.includes(shape) );
                                         core.callback.functions.ondblclick( data.point.x, data.point.y, event, data.shapes );
                                     }
                                 };
@@ -24444,8 +24468,13 @@
                                 customKeyInterpreter(event,true);
                             
                             //perform action
-                                if(shapes.length > 0){ shapes[0].onkeydown(x,y,event); }
-                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                                for(var a = 0; a < shapes.length; a++){
+                                    if(shapes[a].glyphs.includes(event.key)){
+                                        shapes[a].onkeydown(x,y,event);
+                                        return;
+                                    }
+                                }
+                                _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                         };
                     
                         _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
@@ -24455,8 +24484,13 @@
                                 customKeyInterpreter(event,false);
                             
                             //perform action
-                                if(shapes.length > 0){ shapes[0].onkeyup(x,y,event); }
-                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                                for(var a = 0; a < shapes.length; a++){
+                                    if(shapes[a].glyphs.includes(event.key)){
+                                        shapes[a].onkeyup(x,y,event);
+                                        return;
+                                    }
+                                }
+                                _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                         };
                 };
                 
@@ -25113,10 +25147,17 @@
                                     flow.outAggregator.gain=a;
                                     _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
                                 };
-                                this.wetdry = function(a){
-                                    if(a==null){return flow.reverbGain.gain;}
-                                    flow.reverbGain.gain=a;
-                                    flow.bypassGain.gain=1-a;
+                                this.wetdry = function(a,w,d){
+                                    if(a=='manualControl'){
+                                        if(a==null){return {w:flow.reverbGain.gain,d:flow.bypassGain.gain};}
+                                        flow.reverbGain.gain=w;
+                                        flow.bypassGain.gain=d;
+                                    }else{
+                                        if(a==null){return flow.reverbGain.gain;}
+                                        flow.reverbGain.gain=a;
+                                        flow.bypassGain.gain=1-a;
+                                    }
+                        
                                     _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
                                     _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
                                 };
@@ -26099,6 +26140,35 @@
                             };
                             this.display = new function(){
                                 interfacePart.partLibrary.display = {};
+                                this.glowbox_rect = function(
+                                    name='glowbox_rect',
+                                    x, y, width=30, height=30, angle=0,
+                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                                ){
+                                    //elements 
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y});
+                                        var rect = interfacePart.builder('basic','rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
+                                            object.append(rect);
+                                
+                                    //methods
+                                        object.on = function(){
+                                            rect.colour = glowStyle;
+                                        };
+                                        object.off = function(){
+                                            rect.colour = dimStyle;
+                                        };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.glowbox_rectangle = function(name,data){ 
+                                    return interfacePart.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
+                                };
+                                interfacePart.partLibrary.display.glowbox_rect = function(name,data){
+                                    console.warn('depreciated - please use glowbox_rectangle instead');
+                                    return interfacePart.partLibrary.display.glowbox_rectangle(name,data);
+                                };
                                 this.grapher_audioScope = function(
                                     name='grapher_audioScope',
                                     x, y, width=120, height=60, angle=0,
@@ -27280,35 +27350,6 @@
                                         name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
                                     ); 
                                 };
-                                this.glowbox_rect = function(
-                                    name='glowbox_rect',
-                                    x, y, width=30, height=30, angle=0,
-                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
-                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
-                                ){
-                                    //elements 
-                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y});
-                                        var rect = interfacePart.builder('basic','rectangle','light',{ width:width, height:height, angle:angle, colour:dimStyle });
-                                            object.append(rect);
-                                
-                                    //methods
-                                        object.on = function(){
-                                            rect.colour = glowStyle;
-                                        };
-                                        object.off = function(){
-                                            rect.colour = dimStyle;
-                                        };
-                                
-                                    return object;
-                                };
-                                
-                                interfacePart.partLibrary.display.glowbox_rectangle = function(name,data){ 
-                                    return interfacePart.collection.display.glowbox_rect( name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim );
-                                };
-                                interfacePart.partLibrary.display.glowbox_rect = function(name,data){
-                                    console.warn('depreciated - please use glowbox_rectangle instead');
-                                    return interfacePart.partLibrary.display.glowbox_rectangle(name,data);
-                                };
                                 this.audio_meter_level = function(
                                     name='audio_meter_level',
                                     x, y, angle=0,
@@ -28100,7 +28141,7 @@
                                             stamp[segment].state = state;
                                             drawChar();
                                         };
-                                        object.get = function(segment){ return stamp[segment].state; };
+                                        object.get = function(segment){ if(segment==undefined){console.error('sevenSegmentDisplay_static::get: must provide segment value'); return;} return stamp[segment].state; };
                                         object.clear = function(){
                                             for(var a = 0; a < stamp.length; a++){
                                                 this.set(a,false);
@@ -29200,6 +29241,31 @@
                                         name, data.x, data.y, data.width, data.height, data.count, data.angle, 
                                         data.style.background, data.style.glow, data.style.dim,
                                     ); 
+                                };
+                                this.glowbox_circle = function(
+                                    name='glowbox_circle',
+                                    x, y, radius=10,
+                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                                ){
+                                    //elements 
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y});
+                                        var circle = interfacePart.builder('basic','circle','light',{ radius:radius, colour:dimStyle });
+                                            object.append(circle);
+                                
+                                    //methods
+                                        object.on = function(){
+                                            circle.colour = glowStyle;
+                                        };
+                                        object.off = function(){
+                                            circle.colour = dimStyle;
+                                        };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.glowbox_circle = function(name,data){ 
+                                    return interfacePart.collection.display.glowbox_circle( name, data.x, data.y, data.radius, data.style.glow, data.style.dim );
                                 };
                                 this.grapher_audioScope_static = function(
                                     name='grapher_audioScope_static',
@@ -35477,7 +35543,7 @@
                                         object._update = function(a){
                                             if(a>0){ object.activate(); }
                                             else{ object.deactivate(); }
-                                            onchange(a);
+                                            object.onchange(a);
                                         }
                                 
                                         object.set = function(a){
@@ -35489,14 +35555,19 @@
                                         };
                                         object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
                                 
-                                        object.onconnect = function(instigator){
-                                            if(onconnect){onconnect(instigator);}
+                                        object._onconnect = function(instigator){
+                                            if(onconnect){object.onconnect(instigator);}
                                             object._update(object.read());
                                         };
-                                        object.ondisconnect = function(instigator){
-                                            if(ondisconnect){ondisconnect(instigator);}
+                                        object._ondisconnect = function(instigator){
+                                            if(ondisconnect){object.ondisconnect(instigator);}
                                             object._update(localValue);
                                         };
+                                
+                                    //callbacks
+                                        object.onchange = onchange;
+                                        object.onconnect = onconnect;
+                                        object.ondisconnect = ondisconnect;
                                 
                                     return object;
                                 };
@@ -35674,14 +35745,18 @@
                                             object.out = function(){return object.audioNode;};
                                             object.in = function(){return object.audioNode;};
                                 
-                                        object.onconnect = function(instigator){
+                                        object._onconnect = function(instigator){
                                             if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                                            if(onconnect){onconnect(instigator);}
+                                            if(onconnect){object.onconnect(instigator);}
                                         };
-                                        object.ondisconnect = function(instigator){
+                                        object._ondisconnect = function(instigator){
                                             if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                                            if(ondisconnect){ondisconnect(instigator);}
+                                            if(ondisconnect){object.ondisconnect(instigator);}
                                         };
+                                
+                                    //callbacks
+                                        object.onconnect = onconnect;
+                                        object.ondisconnect = ondisconnect;
                                     
                                     return object;
                                 };
@@ -35702,8 +35777,8 @@
                                     cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
                                     cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
                                     cableVersion=0,
-                                    onreceivedata=function(address, data){},
-                                    ongivedata=function(address){},
+                                    onreceive=function(address, data){},
+                                    ongive=function(address){},
                                     onconnect=function(){},
                                     ondisconnect=function(){},
                                 ){
@@ -35728,16 +35803,16 @@
                                         object.send = function(address,data){
                                             flash(object);
                                 
-                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceive(address,data); }
                                         };
                                         object.request = function(address){
                                             flash(object);
                                 
-                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongive(address); }
                                         };
                                 
-                                        object.onreceivedata = onreceivedata;
-                                        object.ongivedata = ongivedata;
+                                        object.onreceive = onreceive;
+                                        object.ongive = ongive;
                                 
                                     return object;
                                 };
@@ -35795,7 +35870,7 @@
                                             this.disconnect();
                                 
                                             foreignNode = new_foreignNode;
-                                            if(onconnect!=undefined){this.onconnect(true);}
+                                            if(this.onconnect!=undefined){this.onconnect(true);}
                                             foreignNode._receiveConnection(this);
                                 
                                             this._addCable(this);
@@ -35803,18 +35878,18 @@
                                         object._receiveConnection = function(new_foreignNode){
                                             this.disconnect();
                                             foreignNode = new_foreignNode;
-                                            if(onconnect!=undefined){this.onconnect(false);}
+                                            if(this.onconnect!=undefined){this.onconnect(false);}
                                         };
                                         object.disconnect = function(){
                                             if( foreignNode == undefined ){return;}
                                 
                                             this._removeCable();
-                                            if(ondisconnect!=undefined){this.ondisconnect(true);}
+                                            if(this.ondisconnect!=undefined){this.ondisconnect(true);}
                                             foreignNode._receiveDisconnection();
                                             foreignNode = null;
                                         };
                                         object._receiveDisconnection = function(){
-                                            if(ondisconnect!=undefined){this.ondisconnect(false);}
+                                            if(this.ondisconnect!=undefined){this.ondisconnect(false);}
                                             foreignNode = null;
                                         };
                                         object.getForeignNode = function(){ return foreignNode; };
@@ -35952,7 +36027,7 @@
                                             var val = object.read();
                                             if(val){ object.activate(); }
                                             else{ object.deactivate(); }
-                                            onchange(val);
+                                            object.onchange(val);
                                         }
                                 
                                         object.set = function(a){
@@ -35963,14 +36038,19 @@
                                         };
                                         object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
                                 
-                                        object.onconnect = function(instigator){
-                                            if(onconnect){onconnect(instigator);}
+                                        object._onconnect = function(instigator){
+                                            if(onconnect){object.onconnect(instigator);}
                                             object._update();
                                         };
-                                        object.ondisconnect = function(instigator){
-                                            if(ondisconnect){ondisconnect(instigator);}
+                                        object._ondisconnect = function(instigator){
+                                            if(ondisconnect){object.ondisconnect(instigator);}
                                             object._update();
                                         };
+                                
+                                    //callbacks
+                                        object.onchange = onchange;
+                                        object.onconnect = onconnect;
+                                        object.ondisconnect = ondisconnect;
                                 
                                     return object;
                                 };
@@ -36647,10 +36727,15 @@
                                 devMode = bool;
                 
                                 //if we're in dev mode; enable all switches
+                                //(except 'enableUnloadWarning' which should be disabled)
                                     if(devMode){
                                         for(item in this){
                                             if(item != 'devMode'){
-                                                this[item](true);
+                                                if(item == 'enableUnloadWarning'){
+                                                    this[item](false);
+                                                }else{
+                                                    this[item](true);
+                                                }
                                             }
                                         }
                                     }
@@ -36675,7 +36760,28 @@
                                 if(bool==undefined){return enableSceneLoad;}
                                 if(devMode){return;}
                                 enableSceneLoad = bool;
-                        };
+                            };
+                            var enableUnloadWarning = false;
+                
+                        //window
+                            var enableUnloadWarning_message = "Unsaved work will be lost";
+                            this.enableUnloadWarning = function(bool,message){
+                                if(bool==undefined){return enableUnloadWarning;}
+                                if(devMode){return;}
+                                enableUnloadWarning = bool;
+                                enableUnloadWarning_message = message;
+                
+                                if( enableUnloadWarning ){ window.onbeforeunload = function(){ return enableUnloadWarning_message; }; }
+                                else{ window.onbeforeunload = undefined; }
+                            };
+                            var enableWindowScrollbarRemoval = true;
+                            this.enableWindowScrollbarRemoval = function(bool){
+                                if(bool==undefined){return enableWindowScrollbarRemoval;}
+                                if(devMode){return;}
+                                enableWindowScrollbarRemoval = bool;
+                
+                                control.viewport.stopMouseScroll(enableWindowScrollbarRemoval);
+                            };
                 
                         //unit modifications
                             var enableUnitAdditionRemoval = true;

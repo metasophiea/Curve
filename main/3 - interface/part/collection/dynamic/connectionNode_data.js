@@ -7,8 +7,8 @@ this.connectionNode_data = function(
     cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
     cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
     cableVersion=0,
-    onreceivedata=function(address, data){},
-    ongivedata=function(address){},
+    onreceive=function(address, data){},
+    ongive=function(address){},
     onconnect=function(){},
     ondisconnect=function(){},
 ){
@@ -33,16 +33,16 @@ this.connectionNode_data = function(
         object.send = function(address,data){
             flash(object);
 
-            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceivedata(address,data); }
+            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceive(address,data); }
         };
         object.request = function(address){
             flash(object);
 
-            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongivedata(address); }
+            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongive(address); }
         };
 
-        object.onreceivedata = onreceivedata;
-        object.ongivedata = ongivedata;
+        object.onreceive = onreceive;
+        object.ongive = ongive;
 
     return object;
 };

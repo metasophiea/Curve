@@ -38,8 +38,13 @@
             customKeyInterpreter(event,true);
         
         //perform action
-            if(shapes.length > 0){ shapes[0].onkeydown(x,y,event); }
-            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+            for(var a = 0; a < shapes.length; a++){
+                if(shapes[a].glyphs.includes(event.key)){
+                    shapes[a].onkeydown(x,y,event);
+                    return;
+                }
+            }
+            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
     };
 
     _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
@@ -49,6 +54,11 @@
             customKeyInterpreter(event,false);
         
         //perform action
-            if(shapes.length > 0){ shapes[0].onkeyup(x,y,event); }
-            else{ _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+            for(var a = 0; a < shapes.length; a++){
+                if(shapes[a].glyphs.includes(event.key)){
+                    shapes[a].onkeyup(x,y,event);
+                    return;
+                }
+            }
+            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
     };

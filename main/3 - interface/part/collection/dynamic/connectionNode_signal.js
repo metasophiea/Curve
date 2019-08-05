@@ -26,7 +26,7 @@ this.connectionNode_signal = function(
             var val = object.read();
             if(val){ object.activate(); }
             else{ object.deactivate(); }
-            onchange(val);
+            object.onchange(val);
         }
 
         object.set = function(a){
@@ -37,14 +37,19 @@ this.connectionNode_signal = function(
         };
         object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
 
-        object.onconnect = function(instigator){
-            if(onconnect){onconnect(instigator);}
+        object._onconnect = function(instigator){
+            if(onconnect){object.onconnect(instigator);}
             object._update();
         };
-        object.ondisconnect = function(instigator){
-            if(ondisconnect){ondisconnect(instigator);}
+        object._ondisconnect = function(instigator){
+            if(ondisconnect){object.ondisconnect(instigator);}
             object._update();
         };
+
+    //callbacks
+        object.onchange = onchange;
+        object.onconnect = onconnect;
+        object.ondisconnect = ondisconnect;
 
     return object;
 };

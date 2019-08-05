@@ -1,136 +1,153 @@
 this.distortion = function(x,y,a){
-    var shape = [
-        {x:0,y:0},
-        {x:120,y:0},
-        {x:120,y:65},
-        {x:0,y:65},
-    ];
+    var imageStoreURL_localPrefix = imageStoreURL+'distortion/';
+
+    var div = 6;
+    var offset = 20/div;
+    var measurements = { 
+        file:{ width:719, height:389 },
+        design:{ width:11.75, height:6.25 },
+    };
+    measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+    
     var design = {
         name:'distortion',
         x:x, y:y, angle:a,
-        space:shape,
+        space:[
+            { x:0,                                  y:0                                     },
+            { x:measurements.drawing.width -offset, y:0                                     },
+            { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+            { x:0,                                  y:measurements.drawing.height -offset   },
+        ],
         elements:[
-            {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                x:0, y:60, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
-                style:{ 
-                    dim:style.connectionNode.audio.dim, 
-                    glow:style.connectionNode.audio.glow,
-                    cable_dim:style.connectionCable.audio.dim, 
-                    cable_glow:style.connectionCable.audio.glow,
-                },
-            }},
             {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                x:120, y:45, width:5, height:15, cableVersion:2,
-                style:{ 
-                    dim:style.connectionNode.audio.dim, 
-                    glow:style.connectionNode.audio.glow,
-                    cable_dim:style.connectionCable.audio.dim, 
-                    cable_glow:style.connectionCable.audio.glow,
-                },
+                x:measurements.drawing.width-2.9, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+            }},
+            {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+            }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'inGain_connection', data:{ 
+                x:97, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+            }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'resolution_connection', data:{ 
+                x:67, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+            }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'distortion_connection', data:{ 
+                x:32, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+            }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'outGain_connection', data:{ 
+                x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+            }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
+                x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+            }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
+                x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
             }},
 
-            {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
-            {collection:'basic', type:'image', name:'markings', data:{x:0,y:0,width:120,height:65,url:'images/units/beta/distortionMarkings.png'} },
+            {collection:'basic', type:'image', name:'backing', 
+                data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+            },
 
-            {collection:'control', type:'dial_colourWithIndent_continuous',name:'in_dial',data:{
-                x:92.5, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                style:{
-                    handle:{r:236/255,g:97/255,b:43/255,a:1},
-                    slot:{r:0,g:0,b:0,a:0},
-                    needle:{r:1,g:1,b:1,a:1},
-                }
+            {collection:'control', type:'dial_colourWithIndent_continuous',name:'inGain',data:{
+                x:92, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                style:{ handle:style.primaryEight[1], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
             }},
-            {collection:'control', type:'dial_colourWithIndent_continuous',name:'res_dial',data:{
-                x:72.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                style:{
-                    handle:{r:175/255,g:46/255,b:246/255,a:1},
-                    slot:{r:0,g:0,b:0,a:0},
-                    needle:{r:1,g:1,b:1,a:1},
-                }
+            {collection:'control', type:'dial_colourWithIndent_continuous',name:'resolution',data:{
+                x:72, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                style:{ handle:style.primaryEight[7], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
             }},
-            {collection:'control', type:'dial_colourWithIndent_discrete',name:'overSample_dial',data:{
-                x:55, y:50, radius:15/2, startAngle:1.1*Math.PI, maxAngle:0.8*Math.PI, arcDistance:1.2, optionCount:3, 
-                style:{
-                    handle:{r:181/255,g:251/255,b:99/255,a:1},
-                    slot:{r:0,g:0,b:0,a:0},
-                    needle:{r:1,g:1,b:1,a:1},
-                }
+            {collection:'control', type:'dial_colourWithIndent_continuous',name:'distortion',data:{
+                x:37, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                style:{ handle:style.primaryEight[4], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
             }},
-            {collection:'control', type:'dial_colourWithIndent_continuous',name:'dist_dial',data:{
-                x:37.5, y:18.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                style:{
-                    handle:{r:117/255,g:251/255,b:237/255,a:1},
-                    slot:{r:0,g:0,b:0,a:0},
-                    needle:{r:1,g:1,b:1,a:1},
-                }
+            {collection:'control', type:'dial_colourWithIndent_continuous',name:'outGain',data:{
+                x:17, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                style:{ handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
             }},
-            {collection:'control', type:'dial_colourWithIndent_continuous',name:'out_dial',data:{
-                x:20, y:47.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                style:{
-                    handle:{r:234/255,g:52/255,b:119/255,a:1},
-                    slot:{r:0,g:0,b:0,a:0},
-                    needle:{r:1,g:1,b:1,a:1},
-                }
+
+            {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
+                x:41, y:57, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
+                handleURL:imageStoreURL_localPrefix+'handle.png',
             }},
         ]
     };
-    //add bumpers
-    for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-        if(c == shape.length){c = 0;}
-
-        var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-        var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
-
-        design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-            { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-        ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-    }
-
-
     
     //main object
         var object = _canvas_.interface.unit.builder(this.ruler,design);
-
-    //import/export
-        object.importData = function(data){
-            object.elements.dial_colourWithIndent_continuous.out_dial.set(data.outGain);
-            object.elements.dial_colourWithIndent_continuous.dist_dial.set(data.distortionAmount);
-            object.elements.dial_colourWithIndent_continuous.res_dial.set(data.resolution);
-            object.elements.dial_colourWithIndent_discrete.overSample_dial.set(data.overSample);
-            object.elements.dial_colourWithIndent_continuous.in_dial.set(data.inGain);
-        };
-        object.exportData = function(){
-            return {
-                outGain:         object.elements.dial_colourWithIndent_continuous.out_dial.get(), 
-                distortionAmount:object.elements.dial_colourWithIndent_continuous.dist_dial.get(), 
-                resolution:      object.elements.dial_colourWithIndent_continuous.res_dial.get(), 
-                overSample:      object.elements.dial_colourWithIndent_discrete.overSample_dial.get(), 
-                inGain:          object.elements.dial_colourWithIndent_continuous.in_dial.get()
-            };
-        };
-
+        
     //circuitry
         object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
         object.elements.connectionNode_audio.input.out().connect( object.distortionCircuit.in() );
         object.distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
 
     //wiring
-        object.elements.dial_colourWithIndent_continuous.out_dial.onchange = function(value){object.distortionCircuit.outGain(value);};
-        object.elements.dial_colourWithIndent_continuous.dist_dial.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
-        object.elements.dial_colourWithIndent_continuous.res_dial.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
-        object.elements.dial_colourWithIndent_discrete.overSample_dial.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
-        object.elements.dial_colourWithIndent_continuous.in_dial.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+        object.elements.dial_colourWithIndent_continuous.inGain.onchange = function(value){object.distortionCircuit.inGain(2*value);};
+        object.elements.dial_colourWithIndent_continuous.resolution.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
+        object.elements.dial_colourWithIndent_continuous.distortion.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
+        object.elements.dial_colourWithIndent_continuous.outGain.onchange = function(value){object.distortionCircuit.outGain(value);};
+        object.elements.slide_discrete_image.oversample.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
+        object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
+        object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
+        object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.inGain.set(value); };
+        object.elements.connectionNode_voltage.resolution_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.resolution.set(value); };
+        object.elements.connectionNode_voltage.distortion_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.distortion.set(value); };
+        object.elements.connectionNode_voltage.outGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.outGain.set(value); };
 
     //setup
-        object.elements.dial_colourWithIndent_continuous.res_dial.set(0.5);
-        object.elements.dial_colourWithIndent_continuous.in_dial.set(0.5);
-        object.elements.dial_colourWithIndent_continuous.out_dial.set(1);
+        object.elements.dial_colourWithIndent_continuous.resolution.set(0.5);
+        object.elements.dial_colourWithIndent_continuous.inGain.set(0.5);
+        object.elements.dial_colourWithIndent_continuous.outGain.set(1);
     
+    //import/export
+        object.importData = function(data){
+            object.elements.dial_colourWithIndent_continuous.outGain.set(data.outGain);
+            object.elements.dial_colourWithIndent_continuous.distortion.set(data.distortionAmount);
+            object.elements.dial_colourWithIndent_continuous.resolution.set(data.resolution);
+            object.elements.slide_discrete_image.oversample.set(data.overSample);
+            object.elements.dial_colourWithIndent_continuous.inGain.set(data.inGain);
+        };
+        object.exportData = function(){
+            return {
+                outGain:          object.elements.dial_colourWithIndent_continuous.outGain.get(), 
+                distortionAmount: object.elements.dial_colourWithIndent_continuous.distortion.get(), 
+                resolution:       object.elements.dial_colourWithIndent_continuous.resolution.get(), 
+                overSample:       object.elements.slide_discrete_image.oversample.get(), 
+                inGain:           object.elements.dial_colourWithIndent_continuous.inGain.get()
+            };
+        };
+    
+    //interface
+        object.i = {
+            outGain:function(value){
+                if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.outGain.get(); }
+                object.elements.dial_colourWithIndent_continuous.outGain.set(value);
+            },
+            distortionAmount:function(value){
+                if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.distortion.get(); }
+                object.elements.dial_colourWithIndent_continuous.distortion.set(value);
+            },
+            resolution:function(value){
+                if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.resolution.get(); }
+                object.elements.dial_colourWithIndent_continuous.resolution.set(value);
+            },
+            overSample:function(value){
+                if(value==undefined){ return object.elements.slide_discrete_image.oversample.get(); }
+                object.elements.slide_discrete_image.oversample.set(value);
+            },
+            inGain:function(value){
+                if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.inGain.get(); }
+                object.elements.dial_colourWithIndent_continuous.inGain.set(value);
+            },
+
+        };
+
     return object;
 };
+
+
 
 this.distortion.metadata = {
     name:'Distortion',
     category:'effects',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/distortion/'
+    helpURL:'/help/units/beta/distortion/'
 };

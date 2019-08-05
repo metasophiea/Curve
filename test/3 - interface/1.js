@@ -45,6 +45,7 @@ _canvas_.core.render.active(true);
     var displayGroup = _canvas_.interface.part.builder( 'basic', 'group', 'display', { x:10, y:150, angle:0 } );
     _canvas_.system.pane.mm.append( displayGroup );
     displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_rectangle', 'test_glowbox_rect', {x:0,y:0} ) );
+    displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_circle', 'test_glowbox_circle', {x:10,y:45} ) );
     displayGroup.append( _canvas_.interface.part.builder( 'display', 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
     displayGroup.append( _canvas_.interface.part.builder( 'display', 'sevenSegmentDisplay_static', 'test_sevenSegmentDisplay_static', {x:35,y:70} ) );
     displayGroup.append( _canvas_.interface.part.builder( 'display', 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );

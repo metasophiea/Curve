@@ -150,29 +150,49 @@ this.render = new function(){
                 //adjust canvas dimension based on the size requirement set out in the canvasElement attribute
                     var size = {css:0, element:0};
                     if(attribute == undefined){
-                        size.element = pageData.defaultSize[direction] * window.devicePixelRatio;
                         size.css = pageData.defaultSize[direction];
                     }else if( attribute.indexOf('%') == (attribute.length-1) ){
                         var parentSize = canvasElement.parentElement['offset'+Direction];
-                        var percent = parseFloat(attribute.slice(0,(attribute.length-1))) / 100;
-                        size.element = parentSize * percent * window.devicePixelRatio;
+                        var percent = parseFloat(attribute.slice(0,-1)) / 100;
+                        if( isNaN(percent) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
                         size.css = parentSize * percent;
+                    }else if( attribute.indexOf('px') != -1 ){
+                        var val = parseFloat(attribute.slice(0,-2));
+                        if( isNaN(val) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
+                        size.css = val;
                     }else{
-                        size.element = attribute * window.devicePixelRatio;
-                        size.css = attribute;
+                        var val = parseFloat(attribute);
+                        if( isNaN(val) ){console.warn(__canvasPrefix+'Element'+Direction,'is of an unparseable format:',attribute);return;}
+                        size.css = val;
                     }
 
-                    pageData[direction] = size.css;
-                    canvasElement[direction] = size.element;
-                    canvasElement.style[direction] = size.css + "px";
+                //adjust value to account for min/max attributes
+                    var attribute_min = canvasElement.getAttribute(__canvasPrefix+'ElementMin'+Direction);
+                    if(attribute_min != undefined){
+                        if( attribute_min.indexOf('px') != -1 ){ attribute_min = attribute_min.slice(0,-2); }
+                        if( attribute_min.indexOf('%') != -1 ){ console.warn(__canvasPrefix+'ElementMin'+Direction,'is of an unparseable format:',attribute_min,'(cannot use percentage in a max/min value)'); }
+                        attribute_min = parseFloat(attribute_min);
+                        if( isNaN(attribute_min) ){console.warn(__canvasPrefix+'ElementMin'+Direction,'is of an unparseable format:',attribute_min);return;}
+                        if( attribute_min > size.css ){ size.css = attribute_min; }
+                    }
+                    var attribute_max = canvasElement.getAttribute(__canvasPrefix+'ElementMax'+Direction);
+                    if(attribute_max != undefined){
+                        if( attribute_max.indexOf('px') != -1 ){attribute_max = attribute_max.slice(0,-2); }
+                        if( attribute_max.indexOf('%') != -1 ){console.warn(__canvasPrefix+'ElementMax'+Direction,'is of an unparseable format:',attribute_max,'(cannot use percentage in a max/min value)'); }
+                        attribute_max = parseFloat(attribute_max);
+                        if( isNaN(attribute_max) ){console.warn(__canvasPrefix+'ElementMax'+Direction,'is of an unparseable format:',attribute_max);return;}
+                        if( attribute_max < size.css ){ size.css = attribute_max; }
+                    }
+
+                size.element = size.css * window.devicePixelRatio;
+
+                pageData[direction] = size.css;
+                canvasElement[direction] = size.element;
+                canvasElement.style[direction] = size.css + "px";
 
                 changesMade = true;
             }
     
-            //run everything twice, to cover the event of one of the
-            //first two creating a scrollbar in the browser window
-            dimensionAdjust('height');
-            dimensionAdjust('width');
             dimensionAdjust('height');
             dimensionAdjust('width');
 
@@ -202,7 +222,7 @@ this.render = new function(){
             this.clearColour(clearColour);
             this.adjustCanvasSize();
             this.refreshCoordinates();
-        };this.refresh();
+        };
 
     //frame rate control
         var frameRateControl = { active:false, previousRenderTime:Date.now(), limit:30, interval:0 };
@@ -608,12 +628,14 @@ this.callback = new function(){
                         var data = gatherDetails(event,'onmouseup',core.callback.functions.onmouseup.length);
                         core.callback.functions.onmouseup( data.point.x, data.point.y, event, data.shapes );
                     }
-
             };
+            var recentlyClickedDoubleClickableShapeList = [];
             _canvas_.onclick = function(){
                 if(core.callback.functions.onclick){
                     event.X = event.offsetX; event.Y = event.offsetY;
+                    recentlyClickedDoubleClickableShapeList = gatherDetails(event,'ondblclick',core.callback.functions.onclick.length).shapes;
                     var data = gatherDetails(event,'onclick',core.callback.functions.onclick.length);
+                    data.shapes = data.shapes.filter( shape => shapeMouseclickList.includes(shape) );
                     core.callback.functions.onclick( data.point.x, data.point.y, event, data.shapes );
                 }
             };
@@ -621,6 +643,7 @@ this.callback = new function(){
                 if(core.callback.functions.ondblclick){
                     event.X = event.offsetX; event.Y = event.offsetY;
                     var data = gatherDetails(event,'ondblclick',core.callback.functions.ondblclick.length);
+                    data.shapes = data.shapes.filter( shape => recentlyClickedDoubleClickableShapeList.includes(shape) );
                     core.callback.functions.ondblclick( data.point.x, data.point.y, event, data.shapes );
                 }
             };

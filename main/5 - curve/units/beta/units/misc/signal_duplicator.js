@@ -7,6 +7,7 @@ this.signal_duplicator = function(x,y,a){
         {x:width/div,y:height/div - height/(div*4)},
         {x:0,y:height/div},
     ];
+    var imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
     var design = {
         name:'signal_duplicator',
         x:x, y:y, angle:a,
@@ -41,7 +42,7 @@ this.signal_duplicator = function(x,y,a){
                 }
             }},
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:'prototypeUnits/beta/2/signal_duplicator/signal_duplicator_backing.png' }
+                data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
             },
         ]
     };
@@ -57,5 +58,5 @@ this.signal_duplicator = function(x,y,a){
 this.signal_duplicator.metadata = {
     name:'Signal Duplicator',
     category:'misc',
-    helpURL:'https://curve.metasophiea.com/help/units/beta/signal_duplicator/'
+    helpURL:'/help/units/beta/signal_duplicator/'
 };

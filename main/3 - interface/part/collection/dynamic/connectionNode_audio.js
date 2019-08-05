@@ -25,14 +25,18 @@ this.connectionNode_audio = function(
             object.out = function(){return object.audioNode;};
             object.in = function(){return object.audioNode;};
 
-        object.onconnect = function(instigator){
+        object._onconnect = function(instigator){
             if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-            if(onconnect){onconnect(instigator);}
+            if(onconnect){object.onconnect(instigator);}
         };
-        object.ondisconnect = function(instigator){
+        object._ondisconnect = function(instigator){
             if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-            if(ondisconnect){ondisconnect(instigator);}
+            if(ondisconnect){object.ondisconnect(instigator);}
         };
+
+    //callbacks
+        object.onconnect = onconnect;
+        object.ondisconnect = ondisconnect;
     
     return object;
 };

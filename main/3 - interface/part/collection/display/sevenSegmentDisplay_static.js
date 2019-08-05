@@ -150,7 +150,7 @@ this.sevenSegmentDisplay_static = function(
             stamp[segment].state = state;
             drawChar();
         };
-        object.get = function(segment){ return stamp[segment].state; };
+        object.get = function(segment){ if(segment==undefined){console.error('sevenSegmentDisplay_static::get: must provide segment value'); return;} return stamp[segment].state; };
         object.clear = function(){
             for(var a = 0; a < stamp.length; a++){
                 this.set(a,false);
