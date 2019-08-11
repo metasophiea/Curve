@@ -48,7 +48,7 @@ alpha units
 
 
 beta units
-    the essentials (13/25 : 52%)
+    the essentials (15/27)
     _/  - ruler
 
         - pulse generator (signal)
@@ -56,6 +56,9 @@ beta units
 
     _/  - launchpad (1 signal in, 8 signals out)
     _/  - analogue sequencer (8 step)
+
+        - signal switch
+        - dial voltage
         
     _/  - signal duplicator
     _/  - voltage duplicator
@@ -65,8 +68,8 @@ beta units
         - voltage combiner
         - data combiner
 
-        - LED board readout (signal readout)
-        - voltmeter readout (voltage readout)
+    _/  - LED board readout (signal readout)
+    _/  - voltmeter readout (voltage readout)
     _/  - data logger readout (data readout)
         - audio scope readout (audio readout)
 
@@ -122,6 +125,9 @@ beta units
         equalizer
 
         signal NOT / AND / OR / XOR / NAND / NOR / XNOR
+        signal memory
+
+        Neon Sign (that just says CURVE or something)
 
         signal delay / echo
         voltage delay / echo
@@ -132,6 +138,8 @@ beta units
         voltage switch track
         data switch track
         audio switch track
+
+        wireless transmission device (all connection types)
 
         voltage quantizer
 
@@ -159,7 +167,7 @@ beta units
         fuzz audio effect unit
         flange audio effect unit
         chorus audio effect unit
-        compressor audio effect unit
+        compressor audio effect unit (and/or/as-in the s-wave audio value corrector)
         multi-band distortion box
         bit crusher
         amplitude modulator

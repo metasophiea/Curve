@@ -1,4 +1,30 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-08-11
+  - added signal_readout
+  - added voltage_readout (doesn't look all that great, honestly)
+  - upgraded the gauge display part to use stenciling, and changed the
+    'needleCover' shape into a 'fronting' shape
+  - redid the voltage_readout unit.. gauge backing might still need a little
+    work artistically, but it's got all the accurate markings you could need now
+    (though they need to be a little more accurate still)
+
+
+2019-08-10
+  - added the glowbox_image part
+  - added gauge part
+  - added meter_gauge part
+  - added gauge_image part
+  - added meter_gauge_image part
+  
+
+2019-08-07
+  - rearranged the docs/notes folder a little, so consolidate smaller files and 
+    add 'ideas', 'bugs' and 'roadmap' files. 'ideas' is just a place to put nice
+    ideas 'bugs' is to keep track of issues found and their solutions when they
+    are found; 'roadmap' is basically a to-do list with an inflated sense of
+    self-worth
+
+
 2019-08-05
   - added the distortion unit
   - made some structural changes to the connection nodes, to allow for callbacks

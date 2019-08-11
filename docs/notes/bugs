@@ -1,0 +1,3 @@
+[2019-08-03] buttons atop buttons don't hover right, nor click right
+[2019-07-31] control.interaction.mouseGripPanningEnabled when disabled doesn't allow for "click anywhere else" unit deselection
+[XXXX-XX-XX] moving groups of units around, doesn't work how you think it should when one of them collides with something

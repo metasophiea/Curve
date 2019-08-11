@@ -27401,6 +27401,261 @@
                                     name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
                                 ); 
                             };
+                            this.gauge = function(
+                                name='gauge',
+                                x, y, angle=0,
+                                width=50, height=30,
+                                needleAngleBounds=[{start:-Math.PI/6,end:Math.PI/6}],
+                                needleArticulationPoints=[{x:1/2, y:1.2}],
+                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+                                needleColours=[{r:0.98,g:0.98,b:0.98,a:1}],
+                            ){
+                                var values = [];
+                                var defaultBoundingAngles = {
+                                    start:-Math.PI/6,
+                                    end:Math.PI/6,
+                                };
+                                var defaultNeedleArticulationPoint = {
+                                    x:1/2, y:1.2
+                                };
+                            
+                                //elements 
+                                    //main
+                                    var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('basic','rectangle','backing',{ width:width, height:height, colour:backingStyle });
+                                        object.append(backing);
+                                    //needle
+                                        var needles = interfacePart.builder('basic','group','needles');
+                                        object.append(needles);
+                                        var needle = [];
+                                        for(var a = 0; a < needleColours.length; a++){
+                                            values.push(0);
+                            
+                                            var NAP = needleArticulationPoints[a] == undefined ? defaultNeedleArticulationPoint : needleArticulationPoints[a];
+                                            var needleSize = { width: width/100, height: height*NAP.y };
+                            
+                                            var needleBody = interfacePart.builder('basic','rectangle','needleBody_'+a,{
+                                                x:width*NAP.x - needleSize.width/2, 
+                                                y:height*1.1 + (needleSize.height-height), 
+                                                width:needleSize.width, height:-needleSize.height, 
+                                                colour:needleColours[a]
+                                            });
+                                            
+                                            needle.push(needleBody);
+                                            needles.prepend(needle[a]);
+                                        }
+                                    //stencil
+                                        var stencil = interfacePart.builder('basic','rectangle','stencil',{width:width, height:height});
+                                        needles.stencil(stencil);
+                                        needles.clipActive(true);
+                                    
+                                //methods
+                                    object.needle = function(value,layer=0){
+                                        if(value==undefined){return values[layer];}
+                            
+                                        value = (value>1 ? 1 : value);
+                                        value = (value<0 ? 0 : value);
+                            
+                                        values[layer] = value;
+                            
+                                        var boundingAngles = needleAngleBounds[layer] == undefined ? defaultBoundingAngles : needleAngleBounds[layer];
+                                        needle[layer].angle( boundingAngles.start + (boundingAngles.end-boundingAngles.start)*value );
+                                    }
+                            
+                                //setup
+                                    for(var a = 0; a < needleColours.length; a++){ object.needle(0,a); }
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.gauge = function(name,data){ 
+                                return interfacePart.collection.display.gauge(
+                                    name, data.x, data.y, data.angle, data.width, data.height, 
+                                    data.needleAngleBounds, data.needleArticulationPoint,
+                                    data.style.backing, data.style.needles
+                                ); 
+                            };
+                            this.meter_gauge = function(
+                                name='meter_gauge',
+                                x, y, angle=0,
+                                width=50, height=30,
+                            
+                                needleAngleBounds=[{start:-Math.PI/6,end:Math.PI/6}],
+                                backingStyle={r:0.04,g:0.04,b:0.04,a:1},
+                                needleColours=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.65,g:0.65,b:0.65,a:1}],
+                            
+                                markings={
+                                    upper:'ABCDEF'.split(''),
+                                    middle:[0,1,2,3,4,5,6,7,8,9,10],
+                                    lower:[0,0.25,0.5,0.75,1],
+                                },
+                                markingStyle_fill={r:0.86,g:0.86,b:0.86,a:1},
+                                markingStyle_font='Roboto-Regular',
+                                markingStyle_printingMode={widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                markingStyle_size=2,
+                            ){
+                                var defaultBoundingAngles = {
+                                    start:-Math.PI/6,
+                                    end:Math.PI/6,
+                                };
+                            
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //level
+                                        var gauge = interfacePart.builder('display','gauge','gauge',{
+                                            width:width, height:height, needleAngleBounds:needleAngleBounds,
+                                            style:{
+                                                backing:backingStyle,
+                                                needles:needleColours,
+                                            },
+                                        });
+                                        object.append(gauge);
+                            
+                                    //markings
+                                        var marks = interfacePart.builder('basic','group','markings');
+                                            object.append(marks);
+                            
+                                        function insertText(angle,distance,text,name=''){
+                                            var boundingAngles = needleAngleBounds[0] == undefined ? defaultBoundingAngles : needleAngleBounds[0];
+                            
+                                            var object = interfacePart.builder('basic','group','markingsGroup_'+name,{
+                                                x:width/2, y:height - height/10 + height/2.5, 
+                                                angle:boundingAngles.start + (boundingAngles.end-boundingAngles.start)*angle
+                                            });
+                                            var text = interfacePart.builder('basic','text', 'text_'+name+'_'+text, {
+                                                    x:0, y:-distance, 
+                                                    height:markingStyle_size, 
+                                                    width:markingStyle_size, 
+                                                    text:text, 
+                                                    colour:markingStyle_fill, 
+                                                    font:markingStyle_font,
+                                                    printingMode:markingStyle_printingMode,
+                                                }
+                                            );
+                            
+                                            object.append(text);
+                            
+                                            return object;
+                                        }
+                            
+                                        Object.keys(markings).forEach(key => {
+                                            for(var a = 0; a < markings[key].length; a++){
+                                                var pos = a/(markings[key].length-1);
+                                                var heightMux = 1.2;
+                                                switch(key){
+                                                    case 'upper': heightMux = 1.2; break;
+                                                    case 'middle': heightMux = 1.0; break;
+                                                    case 'lower': heightMux = 0.8; break;
+                                                }
+                                                marks.append( insertText(pos, height*heightMux, markings[key][a], key+'_'+a) );
+                                            }
+                                        });
+                                        
+                                //update intervals
+                                    if(needleColours.length > 1){
+                                        var framesPerSecond = 25;
+                                        var coolDownSpeed = ( 3/4 )/10;
+                            
+                                        var coolDownSub = coolDownSpeed/framesPerSecond;
+                            
+                                        var coolDown = 0;
+                                        var mostRecentSetting = 0;
+                                        setInterval(function(){        
+                                            gauge.needle(mostRecentSetting,0);
+                            
+                                            if(coolDown>0){coolDown-=coolDownSub;}
+                                            gauge.needle(coolDown,1);
+                            
+                                            if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                                        },1000/framesPerSecond);
+                                    }
+                            
+                                //method
+                                    object.set = function(a){
+                                        if(needleColours.length > 1){ mostRecentSetting = a; }
+                                        else{ gauge.needle(a,0); }
+                                    };
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.meter_gauge = function(name,data){ 
+                                return interfacePart.collection.display.meter_gauge(
+                                    name, data.x, data.y, data.angle, data.width, data.height,
+                            
+                                    data.needleAngleBounds,
+                                    data.style.backingStyle,
+                                    data.style.needleColours,
+                                
+                                    data.markings,
+                                    data.style.markingStyle_fill,
+                                    data.style.markingStyle_font,
+                                    data.style.markingStyle_printingMode,
+                                    data.style.markingStyle_size,
+                                ); 
+                            };
+                            this.meter_gauge_image = function(
+                                name='meter_gauge_image',
+                                x, y, angle=0,
+                                width=50, height=30,
+                            
+                                needleAngleBounds=[{start:-Math.PI/6,end:Math.PI/6}],
+                                backingURL='',
+                                needleColours=[{r:0.98,g:0.98,b:0.98,a:1},{r:0.65,g:0.65,b:0.65,a:1}],
+                                frontingURL,
+                            ){
+                                //elements
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //level
+                                        var gauge = interfacePart.builder('display','gauge_image','gauge',{
+                                            width:width, height:height, needleAngleBounds:needleAngleBounds,
+                                            backingURL:backingURL,
+                                            style:{ needles:needleColours },
+                                            frontingURL:frontingURL,
+                                        });
+                                        object.append(gauge);
+                            
+                                //update intervals
+                                    if(needleColours.length > 1){
+                                        var framesPerSecond = 25;
+                                        var coolDownSpeed = ( 3/4 )/10;
+                            
+                                        var coolDownSub = coolDownSpeed/framesPerSecond;
+                            
+                                        var coolDown = 0;
+                                        var mostRecentSetting = 0;
+                                        setInterval(function(){        
+                                            gauge.needle(mostRecentSetting,0);
+                            
+                                            if(coolDown>0){coolDown-=coolDownSub;}
+                                            gauge.needle(coolDown,1);
+                            
+                                            if(mostRecentSetting > coolDown){coolDown = mostRecentSetting;}
+                                        },1000/framesPerSecond);
+                                    }
+                            
+                                //method
+                                    object.set = function(a){
+                                        if(needleColours.length > 1){ mostRecentSetting = a; }
+                                        else{ gauge.needle(a,0); }
+                                    };
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.meter_gauge_image = function(name,data){ 
+                                return interfacePart.collection.display.meter_gauge_image(
+                                    name, data.x, data.y, data.angle, data.width, data.height,
+                            
+                                    data.needleAngleBounds,
+                                    data.backingURL,
+                                    data.style.needleColours,
+                                    data.frontingURL,
+                                ); 
+                            };
                             this.audio_meter_level = function(
                                 name='audio_meter_level',
                                 x, y, angle=0,
@@ -29156,6 +29411,112 @@
                                     name, data.x, data.y, data.width, data.height, data.angle, data.resolution,
                                     data.style.background, data.style.glow, data.style.dim
                                 );
+                            };
+                            this.gauge_image = function(
+                                name='gauge_image',
+                                x, y, angle=0,
+                                width=50, height=30,
+                                needleAngleBounds=[{start:-Math.PI/6,end:Math.PI/6}],
+                                needleArticulationPoints=[{x:1/2, y:1.2}],
+                                backingURL='',
+                                needleColours=[{r:0.98,g:0.98,b:0.98,a:1}],
+                                frontingURL,
+                            ){
+                                var values = [];
+                                var defaultBoundingAngles = {
+                                    start:-Math.PI/6,
+                                    end:Math.PI/6,
+                                };
+                                var defaultNeedleArticulationPoint = {
+                                    x:1/2, y:1.2
+                                };
+                            
+                                //elements 
+                                    //main
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                    //backing
+                                        var backing = interfacePart.builder('basic','image','backing',{ width:width, height:height, url:backingURL });
+                                        object.append(backing);
+                                    //needle
+                                        var needles = interfacePart.builder('basic','group','needles');
+                                        object.append(needles);
+                                        var needle = [];
+                                        for(var a = 0; a < needleColours.length; a++){
+                                            values.push(0);
+                            
+                                            var NAP = needleArticulationPoints[a] == undefined ? defaultNeedleArticulationPoint : needleArticulationPoints[a];
+                                            var needleSize = { width: width/100, height: height*NAP.y };
+                            
+                                            var needleBody = interfacePart.builder('basic','rectangle','needleBody_'+a,{
+                                                x:width*NAP.x - needleSize.width/2, 
+                                                y:height*1.1 + (needleSize.height-height), 
+                                                width:needleSize.width, height:-needleSize.height, 
+                                                colour:needleColours[a]
+                                            });
+                                            
+                                            needle.push(needleBody);
+                                            needles.prepend(needle[a]);
+                                        }
+                                    //stencil
+                                        var stencil = interfacePart.builder('basic','rectangle','stencil',{width:width, height:height});
+                                        needles.stencil(stencil);
+                                        needles.clipActive(true);
+                                    //fronting
+                                        if(frontingURL != this.undefined){
+                                            var fronting = interfacePart.builder('basic','image','fronting',{ width:width, height:height, url:frontingURL });
+                                            object.append(fronting);
+                                        }
+                                    
+                                //methods
+                                    object.needle = function(value,layer=0){
+                                        if(value==undefined || isNaN(value)){return values[layer];}
+                            
+                                        value = (value>1 ? 1 : value);
+                                        value = (value<0 ? 0 : value);
+                            
+                                        values[layer] = value;
+                            
+                                        var boundingAngles = needleAngleBounds[layer] == undefined ? defaultBoundingAngles : needleAngleBounds[layer];
+                                        needle[layer].angle( boundingAngles.start + (boundingAngles.end-boundingAngles.start)*value );
+                                    }
+                            
+                                //setup
+                                    for(var a = 0; a < needleColours.length; a++){ object.needle(0,a); }
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.gauge_image = function(name,data){ 
+                                return interfacePart.collection.display.gauge_image(
+                                    name, data.x, data.y, data.angle, data.width, data.height,
+                                    data.needleAngleBounds, data.needleArticulationPoint,
+                                    data.backingURL, data.style.needles, data.frontingURL
+                                ); 
+                            };
+                            this.glowbox_image = function(
+                                name='glowbox_image',
+                                x, y, width=30, height=30, angle=0,
+                                glowURL='',
+                                dimURL='',
+                            ){
+                                //elements 
+                                    var object = interfacePart.builder('basic','group',name,{x:x, y:y});
+                                    var backing = interfacePart.builder('basic','image','backing',{width:width, height:height, angle:angle, url:dimURL});
+                                    object.append(backing);
+                            
+                                //methods
+                                    object.on = function(){
+                                        backing.imageURL(glowURL);
+                                    };
+                                    object.off = function(){
+                                        backing.imageURL(dimURL);
+                                    };
+                            
+                                return object;
+                            };
+                            
+                            interfacePart.partLibrary.display.glowbox_image = function(name,data){ 
+                                return interfacePart.collection.display.glowbox_image( name, data.x, data.y, data.width, data.height, data.angle, data.glowURL, data.dimURL );
                             };
                             this.readout_sixteenSegmentDisplay_static = function(
                                 name='readout_sixteenSegmentDisplay_static',
@@ -44081,6 +44442,62 @@
                         category:'misc',
                         helpURL:'/help/units/beta/eightTrackMixer/'
                     };
+                    this.signal_readout = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'signal_readout/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:320, height:290 },
+                            design:{ width:5, height:4.5 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'signal_readout',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.signal,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                },
+                                {collection:'display', type:'glowbox_image', name:'lamp', 
+                                    data:{ 
+                                        x:5, y:5, width:35, height:35,
+                                        dimURL:imageStoreURL_localPrefix+'light_off.png',
+                                        glowURL:imageStoreURL_localPrefix+'light_on.png',
+                                    },
+                                }
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //wiring
+                            object.elements.connectionNode_signal.in.onchange = function(value){
+                                if(value){ object.elements.glowbox_image.lamp.on(); }
+                                else{ object.elements.glowbox_image.lamp.off(); }
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_readout.metadata = {
+                        name:'Signal Readout',
+                        category:'monitors',
+                        helpURL:'/help/units/beta/signal_readout/'
+                    };
                     this.amplifier = function(x,y,a){
                         var width = 935; var height = 860;
                         var shape = [
@@ -44153,6 +44570,59 @@
                         name:'Amplifier',
                         category:'monitors',
                         helpURL:'/help/units/beta/amplifier/'
+                    };
+                    this.voltage_readout = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'voltage_readout/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:440, height:290 },
+                            design:{ width:7, height:4.5 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'voltage_readout',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                                {collection:'display', type:'gauge_image', name:'gauge', data:{ 
+                                    x:5, y:5, width:55, height:35,
+                                    backingURL:imageStoreURL_localPrefix+'gauge_backing.png',
+                                    style:{needles:[{r:0,g:0,b:0,a:1}]},
+                                }, }
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //wiring
+                            object.elements.connectionNode_voltage.in.onchange = function(value){
+                                object.elements.gauge_image.gauge.needle(value);
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_readout.metadata = {
+                        name:'Voltage Readout',
+                        category:'monitors',
+                        helpURL:'/help/units/beta/voltage_readout/'
                     };
                     this.data_readout = function(x,y,a){
                         var imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
@@ -45252,6 +45722,62 @@
                         category:'misc',
                         helpURL:'/help/units/beta/eightTrackMixer/'
                     };
+                    this.signal_readout = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'signal_readout/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:320, height:290 },
+                            design:{ width:5, height:4.5 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'signal_readout',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.signal,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                },
+                                {collection:'display', type:'glowbox_image', name:'lamp', 
+                                    data:{ 
+                                        x:5, y:5, width:35, height:35,
+                                        dimURL:imageStoreURL_localPrefix+'light_off.png',
+                                        glowURL:imageStoreURL_localPrefix+'light_on.png',
+                                    },
+                                }
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //wiring
+                            object.elements.connectionNode_signal.in.onchange = function(value){
+                                if(value){ object.elements.glowbox_image.lamp.on(); }
+                                else{ object.elements.glowbox_image.lamp.off(); }
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_readout.metadata = {
+                        name:'Signal Readout',
+                        category:'monitors',
+                        helpURL:'/help/units/beta/signal_readout/'
+                    };
                     this.amplifier = function(x,y,a){
                         var width = 935; var height = 860;
                         var shape = [
@@ -45324,6 +45850,59 @@
                         name:'Amplifier',
                         category:'monitors',
                         helpURL:'/help/units/beta/amplifier/'
+                    };
+                    this.voltage_readout = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'voltage_readout/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:440, height:290 },
+                            design:{ width:7, height:4.5 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'voltage_readout',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                                {collection:'display', type:'gauge_image', name:'gauge', data:{ 
+                                    x:5, y:5, width:55, height:35,
+                                    backingURL:imageStoreURL_localPrefix+'gauge_backing.png',
+                                    style:{needles:[{r:0,g:0,b:0,a:1}]},
+                                }, }
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //wiring
+                            object.elements.connectionNode_voltage.in.onchange = function(value){
+                                object.elements.gauge_image.gauge.needle(value);
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_readout.metadata = {
+                        name:'Voltage Readout',
+                        category:'monitors',
+                        helpURL:'/help/units/beta/voltage_readout/'
                     };
                     this.data_readout = function(x,y,a){
                         var imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
@@ -48049,7 +48628,9 @@
             // _canvas_.control.scene.addUnit(70,10,0,'eightTrackMixer','beta');
             
             // _canvas_.control.scene.addUnit(70,10,0,'amplifier','beta');
-            _canvas_.control.scene.addUnit(70,10,0,'data_readout','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'data_readout','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'signal_readout','beta');
+            _canvas_.control.scene.addUnit(70,10,0,'voltage_readout','beta');
             
             // _canvas_.control.scene.addUnit(70,30,0,'signal_duplicator','beta');
             // _canvas_.control.scene.addUnit(70,80,0,'voltage_duplicator','beta');
