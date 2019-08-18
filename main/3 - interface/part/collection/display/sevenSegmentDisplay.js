@@ -137,7 +137,7 @@ this.sevenSegmentDisplay = function(
 
     //methods
         object.set = function(segment,state){
-            segments[segment].state = state;
+            segments[segment] = state;
             if(state){ segments[segment].segment.colour = glowStyle; }
             else{ segments[segment].segment.colour = dimStyle; }
         };

@@ -193,8 +193,11 @@ this.render = new function(){
                 changesMade = true;
             }
     
-            dimensionAdjust('height');
-            dimensionAdjust('width');
+            //do it twice to account for any scrollbar that may have briefly appeared during adjustment
+                dimensionAdjust('height');
+                dimensionAdjust('width');
+                dimensionAdjust('height');
+                dimensionAdjust('width');
 
             return changesMade;
         };

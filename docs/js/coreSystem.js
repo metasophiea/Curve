@@ -1129,9 +1129,6 @@
                         //master context
                             this.context = new (window.AudioContext || window.webkitAudioContext)();
                         
-                        
-                        
-                        
                             
                         
                         
@@ -1616,13 +1613,16 @@
                             a.download = filename;
                             a.click();
                         };
-                        this.loadFileFromURL = function(URL,callback,responseType='blob'){
+                        this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
                             //responseType: text / arraybuffer / blob / document / json 
                         
                             var xhttp = new XMLHttpRequest();
-                            if(callback != null){ xhttp.onloadend = a => { 
+                            if(callback != undefined){ xhttp.onloadend = a => {
                                 if(a.target.status == 200){ callback(a.target.response); }
-                                else{ console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL); }
+                                else{ 
+                                    if(errorCallback != undefined){ errorCallback(); }
+                                    else{console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL);}
+                                }
                             }; }
                             xhttp.open('get',URL,true);
                             xhttp.responseType = responseType;
@@ -23916,8 +23916,11 @@
                                     changesMade = true;
                                 }
                         
-                                dimensionAdjust('height');
-                                dimensionAdjust('width');
+                                //do it twice to account for any scrollbar that may have briefly appeared during adjustment
+                                    dimensionAdjust('height');
+                                    dimensionAdjust('width');
+                                    dimensionAdjust('height');
+                                    dimensionAdjust('width');
                     
                                 return changesMade;
                             };

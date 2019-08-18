@@ -16,6 +16,7 @@ this.connectionNode_voltage = function(
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
             cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+            onconnect, ondisconnect
         });
 
     //circuitry
@@ -29,27 +30,28 @@ this.connectionNode_voltage = function(
         }
 
         object.set = function(a){
+            if(typeof a != 'number'){return;}
+
             localValue = a;
 
             var val = object.read();
             object._update(val);
             if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
         };
-        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : 0); };
 
         object._onconnect = function(instigator){
-            if(onconnect){object.onconnect(instigator);}
-            object._update(object.read());
+            var forignValue = object.getForeignNode()._getLocalValue();
+            if(forignValue>0){ object.activate(); }
+            object.onchange(forignValue);
         };
         object._ondisconnect = function(instigator){
-            if(ondisconnect){object.ondisconnect(instigator);}
-            object._update(localValue);
+            if(localValue==0){ object.deactivate(); }
+            object.onchange(localValue);
         };
 
     //callbacks
         object.onchange = onchange;
-        object.onconnect = onconnect;
-        object.ondisconnect = ondisconnect;
 
     return object;
 };

@@ -68,6 +68,7 @@ this.meter_level = function(
 
     //method
         object.set = function(a){
+            if(a > 1){a = 1;}else if(a < 0){a = 0;}
             mostRecentSetting = a;
         };
 

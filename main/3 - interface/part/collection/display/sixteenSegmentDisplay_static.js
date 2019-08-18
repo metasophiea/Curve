@@ -260,14 +260,17 @@ this.sixteenSegmentDisplay_static = function(
 
     //methods
         object.set = function(segment,state){
-            stamp[segment].state = state;
+            clear();
+            stamp[segment] = state;
             drawChar();
         };
         object.get = function(segment){ return segments[segment].state; };
         object.clear = function(){
+            clear();
             for(var a = 0; a < segments.length; a++){
                 this.set(a,false);
             }
+            drawChar();
         };
 
         object.enterCharacter = function(char){

@@ -7,14 +7,15 @@ this.connectionNode_audio = function(
     glowStyle={r:255/255, g:244/255, b:244/255, a:1},
     cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
     cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
-    onconnect=function(){},
-    ondisconnect=function(){},
+    onconnect=function(instigator){},
+    ondisconnect=function(instigator){},
 ){
     //elements
         var object = interfacePart.builder('dynamic','connectionNode',name,{
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
             cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+            onconnect, ondisconnect
         });
         object._direction = isAudioOutput ? 'out' : 'in';
 
@@ -27,17 +28,11 @@ this.connectionNode_audio = function(
 
         object._onconnect = function(instigator){
             if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-            if(onconnect){object.onconnect(instigator);}
         };
         object._ondisconnect = function(instigator){
             if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-            if(ondisconnect){object.ondisconnect(instigator);}
         };
 
-    //callbacks
-        object.onconnect = onconnect;
-        object.ondisconnect = ondisconnect;
-    
     return object;
 };
 

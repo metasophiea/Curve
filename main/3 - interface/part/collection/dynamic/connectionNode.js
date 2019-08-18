@@ -23,6 +23,9 @@ this.connectionNode = function(
     //network functions
         var foreignNode = undefined;
 
+        object._onconnect = function(instigator){};
+        object._ondisconnect = function(instigator){};
+
         object.isConnected = function(){ return cable != undefined; };
         object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
         object.allowConnections = function(bool){
@@ -44,7 +47,8 @@ this.connectionNode = function(
             this.disconnect();
 
             foreignNode = new_foreignNode;
-            if(this.onconnect!=undefined){this.onconnect(true);}
+            this._onconnect(true);
+            if(object.onconnect!=undefined){object.onconnect(true);}
             foreignNode._receiveConnection(this);
 
             this._addCable(this);
@@ -52,18 +56,21 @@ this.connectionNode = function(
         object._receiveConnection = function(new_foreignNode){
             this.disconnect();
             foreignNode = new_foreignNode;
-            if(this.onconnect!=undefined){this.onconnect(false);}
+            this._onconnect(false);
+            if(object.onconnect!=undefined){object.onconnect(false);}
         };
         object.disconnect = function(){
             if( foreignNode == undefined ){return;}
 
             this._removeCable();
-            if(this.ondisconnect!=undefined){this.ondisconnect(true);}
+            this._ondisconnect(true);
+            if(object.ondisconnect!=undefined){object.ondisconnect(true);}
             foreignNode._receiveDisconnection();
             foreignNode = null;
         };
         object._receiveDisconnection = function(){
-            if(this.ondisconnect!=undefined){this.ondisconnect(false);}
+            this._ondisconnect(false);
+            if(object.ondisconnect!=undefined){object.ondisconnect(false);}
             foreignNode = null;
         };
         object.getForeignNode = function(){ return foreignNode; };

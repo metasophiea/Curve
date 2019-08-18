@@ -4,9 +4,9 @@ _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
 // view positioning
-_canvas_.core.viewport.scale(6);
+_canvas_.core.viewport.scale(12);
 var x = 190;
-var y = 200;
+var y = 240;
 _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
 // _canvas_.core.viewport.angle(-0.1);
 
@@ -87,7 +87,15 @@ _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.co
     displayGroup.append( _canvas_.interface.part.builder( 'display', 'audio_meter_level', 'test_audioMeterLevel', {x:240, y:0} ) );
     var g = _canvas_.interface.part.builder( 'display', 'gauge', 'test_gauge', {x:190, y:65} ); displayGroup.append(g);
     var g_i = _canvas_.interface.part.builder( 'display', 'gauge_image', 'test_gauge_image', { x:245, y:65, backingURL:'/images/testImages/Dore-munchausen-illustration.jpg' } ); displayGroup.append(g_i);
-    var mg = _canvas_.interface.part.builder( 'display', 'meter_gauge', 'test_meterGauge', { x:190, y:100, } ); displayGroup.append(mg);
+    var mg = _canvas_.interface.part.builder( 'display', 'meter_gauge', 'test_meterGauge', { 
+        x:190, y:100,
+        markings:{
+            upper:'...........'.split(''),
+            middle:'.........'.split(''),
+            lower:'.......'.split(''),
+        },
+        style:{markingStyle_font:'defaultThin'}
+    } ); displayGroup.append(mg);
     var mg_i = _canvas_.interface.part.builder( 'display', 'meter_gauge_image', 'test_meterGauge_image', { x:245, y:100, backingURL:'/images/testImages/mikeandbrian.jpg' } ); displayGroup.append(mg_i);
     var rastorDisplay = _canvas_.interface.part.builder( 'display', 'rastorDisplay', 'test_rastorDisplay1', {x:265, y:0} ); displayGroup.append( rastorDisplay ); rastorDisplay.test();
     var grapher = _canvas_.interface.part.builder( 'display', 'grapher', 'test_grapher1', {x:330, y:0} );

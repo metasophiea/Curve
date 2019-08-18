@@ -87,9 +87,69 @@ this.reverb = function(x,y,a){
             object.reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
             object.elements.connectionNode_audio.input.out().connect( object.reverbCircuit.in() );
             object.reverbCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
-            object.reverbCircuit.getTypes( function(a){state.availableTypes = a;} );
+            object.reverbCircuit.getTypes( a => {
+                state.availableTypes = a;
+                setReverbType(state.reverbTypeSelected);
+            } );
             
         //internal functions
+            var loadingScreenIntervalID;
+            var journeyHistory = [];
+            var journey = [
+            //big loop
+                // ['LCD_1',0],
+                // ['LCD_1',2],
+                // ['LCD_1',5],
+                // ['LCD_1',6],
+                // ['LCD_10',6],
+                // ['LCD_10',4],
+                // ['LCD_10',1],
+                // ['LCD_10',0],
+
+            //four loops
+                ['LCD_10',3],
+                ['LCD_10',1],
+                ['LCD_10',0],
+                ['LCD_10',2],
+                ['LCD_10',5],
+                ['LCD_10',6],
+                ['LCD_10',4],
+                ['LCD_10',3],
+                ['LCD_1',3],
+                ['LCD_1',5],
+                ['LCD_1',6],
+                ['LCD_1',4],
+                ['LCD_1',1],
+                ['LCD_1',0],
+                ['LCD_1',2],
+                ['LCD_1',3],
+            ];
+            var step = 0;
+            function startReadoutLoadingScreen(){
+                object.elements.sevenSegmentDisplay_static.LCD_10.enterCharacter();
+                object.elements.sevenSegmentDisplay_static.LCD_1.enterCharacter();
+                
+                if(loadingScreenIntervalID != undefined){return;}
+                loadingScreenIntervalID = setInterval(function(){
+                    var data = journey[step++]
+                    if(step >= journey.length){step = 0;}
+
+                    if(journeyHistory.length == 3){
+                        var last = journeyHistory.shift();
+                        if(last != undefined){ object.elements.sevenSegmentDisplay_static[last[0]].set(last[1],false); }
+                    }
+
+                    object.elements.sevenSegmentDisplay_static[data[0]].set(data[1],true);
+
+                    journeyHistory.push(data);
+                },1000/20);
+            }
+            function stopReadoutLoadingScreen(){
+                clearInterval(loadingScreenIntervalID);
+                loadingScreenIntervalID = undefined;
+                object.elements.sevenSegmentDisplay_static.LCD_10.enterCharacter();
+                object.elements.sevenSegmentDisplay_static.LCD_1.enterCharacter();
+            };
             function setReadout(num){
                 num = ("0" + num).slice(-2);
 
@@ -103,7 +163,8 @@ this.reverb = function(x,y,a){
                 else if( a < 0 ){a = 0;}
     
                 state.reverbTypeSelected = a;
-                object.reverbCircuit.type( state.availableTypes[a], function(){setReadout(state.reverbTypeSelected);});    
+                startReadoutLoadingScreen();
+                object.reverbCircuit.type( state.availableTypes[a], function(){stopReadoutLoadingScreen(); setReadout(state.reverbTypeSelected);} );    
             }
             function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
             function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
@@ -165,7 +226,7 @@ this.reverb = function(x,y,a){
             };
 
         //setup
-            setTimeout(function(){setReverbType(state.reverbTypeSelected);},1000);
+            startReadoutLoadingScreen();
         
     return object;
 };

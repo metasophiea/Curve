@@ -1,5 +1,6 @@
 {{include:units/main.js}}
 {{include:menubarItems.js}}
+{{include:queryStringManager.js}}
 
 _canvas_.control.interaction.enableUnloadWarning(true,"Unsaved work will be lost");
 _canvas_.control.gui.showMenubar();

@@ -9,8 +9,8 @@ this.connectionNode_data = function(
     cableVersion=0,
     onreceive=function(address, data){},
     ongive=function(address){},
-    onconnect=function(){},
-    ondisconnect=function(){},
+    onconnect=function(instigator){},
+    ondisconnect=function(instigator){},
 ){
     //elements
         var object = interfacePart.builder('dynamic','connectionNode',name,{
@@ -21,22 +21,20 @@ this.connectionNode_data = function(
         });
 
     //circuitry
-        function flash(obj){
-            obj.activate();
-            setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
-            if(obj.getForeignNode()!=undefined){
-                obj.getForeignNode().activate();
-                setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
-            }
-        }
+        object._flash = function(){
+            this.activate();
+            setTimeout(function(){ object.deactivate(); },100);
+        };
 
         object.send = function(address,data){
-            flash(object);
+            object._flash();
+            if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
 
             if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceive(address,data); }
         };
         object.request = function(address){
-            flash(object);
+            object._flash();
+            if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
 
             if(object.getForeignNode()!=undefined){ object.getForeignNode().ongive(address); }
         };

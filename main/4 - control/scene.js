@@ -294,12 +294,8 @@ this.load = function(url,callback,askForConfirmation=false){
     //depending on whether a url has been provided or not, perform the appropiate load
         if(url == undefined){ //load from file
             _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
-        }else{  //load from url
-            var request = new XMLHttpRequest();
-            request.open('GET', url, true);
-            request.responseType = 'text';
-            request.onload = function(){ procedure(this.response,callback); };
-            request.send();
+        }else{ //load from url
+            _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text,callback); },'text');
         }
 };
 

@@ -96,6 +96,7 @@ this.meter_gauge = function(
 
     //method
         object.set = function(a){
+            if(a > 1){a = 1;}else if(a < 0){a = 0;}
             if(needleColours.length > 1){ mostRecentSetting = a; }
             else{ gauge.needle(a,0); }
         };
@@ -108,7 +109,7 @@ interfacePart.partLibrary.display.meter_gauge = function(name,data){
         name, data.x, data.y, data.angle, data.width, data.height,
 
         data.needleAngleBounds,
-        data.style.backingStyle,
+        data.style.backing,
         data.style.needleColours,
     
         data.markings,

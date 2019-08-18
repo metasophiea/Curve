@@ -29,7 +29,7 @@ this.voltage_readout = function(x,y,a){
                 x:5, y:5, width:55, height:35,
                 backingURL:imageStoreURL_localPrefix+'gauge_backing.png',
                 style:{needles:[{r:0,g:0,b:0,a:1}]},
-            }, }
+            }, },
         ]
     };
     

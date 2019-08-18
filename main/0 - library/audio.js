@@ -1,9 +1,6 @@
 //master context
     this.context = new (window.AudioContext || window.webkitAudioContext)();
 
-
-
-
     
 
 

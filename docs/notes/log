@@ -1,4 +1,54 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-08-18
+  - redid the voltage_readout gauge backing
+
+
+2019-08-16
+  - started on advanced URL parameters ("demo" and "mod" URLs)
+    http://0.0.0.0:8000/test.html?mod1=http://0.0.0.0:8000/mods/test_1.js
+    http://0.0.0.0:8000/test.html?mod1=http://0.0.0.0:8000/mods/modListTest_1.cml
+    http://0.0.0.0:8000/test.html?demo=http://0.0.0.0:8000/demos/1.crv
+    'mod' loads code from a specified url and places it in its own <script>
+    element
+    'demo' is much the same as the system used elsewhere, but uses URLs to
+    define the desired demo, instead of numbers. It does not run until all mods
+    have been loaded
+
+    all code in "5 - core/queryStringManager.js" and is cordoned off (might need
+    a better name) Shouldn't matter too much anyway. Its more like a start-up
+    script than an element of the program
+  - control.scene.load now uses the library's way of loading things from a URL,
+    instead of its own code for that job
+
+
+2019-08-14
+  - fixed a tiny issue in connectionNode_data (where the flash wasn't working
+    properly after a disconnect)
+  - turns out, none of the segment display parts could do .set properly. Tis
+    fixed now, sire
+  - improved the segment display parts (static versions) further, so that when
+    you do a segment set or clear, it now actually clears and redraws properly
+  - faffed with the reverb unit a bit, so that is has a little loading animation
+    when it's loading the response file of choice. It also requests the initial
+    response file more neatly, and isn't just hoping for the best from a silly
+    timeout (nothing wrong with timeouts, some of my best friends are timeouts)
+  - added some number safe-guarding to the meter_gauge and meter_level parts
+  - messed with the voltage_readout a little (it needs to have its gauge's
+    backing repainted anyway)
+
+
+2019-08-13
+  - did up the connection nodes and made a new test file for them (that actually
+    tests things automatically too (except audio))
+
+
+2019-08-12
+  - readded double adjustment to core.render.adjustCanvasSize, as the canvas
+    wasn't adjusting properly
+  - faffed with the connectionNode more because the connectionNode_audio wasn't
+    working (I really need to look at the connectionNode)
+
+
 2019-08-11
   - added signal_readout
   - added voltage_readout (doesn't look all that great, honestly)

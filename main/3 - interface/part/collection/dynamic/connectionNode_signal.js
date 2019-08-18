@@ -16,6 +16,7 @@ this.connectionNode_signal = function(
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'signal',
             cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+            onconnect, ondisconnect
         });
 
     //circuitry
@@ -30,6 +31,8 @@ this.connectionNode_signal = function(
         }
 
         object.set = function(a){
+            if(typeof a != 'boolean'){return;}
+
             localValue = a;
 
             object._update();
@@ -38,18 +41,16 @@ this.connectionNode_signal = function(
         object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
 
         object._onconnect = function(instigator){
-            if(onconnect){object.onconnect(instigator);}
-            object._update();
+            if(object.getForeignNode()._getLocalValue()){object.activate();}
+            object.onchange(object.getForeignNode()._getLocalValue());
         };
         object._ondisconnect = function(instigator){
-            if(ondisconnect){object.ondisconnect(instigator);}
-            object._update();
+            if(!localValue){object.deactivate();}
+            object.onchange(localValue);
         };
 
     //callbacks
         object.onchange = onchange;
-        object.onconnect = onconnect;
-        object.ondisconnect = ondisconnect;
 
     return object;
 };

@@ -1129,9 +1129,6 @@
                         //master context
                             this.context = new (window.AudioContext || window.webkitAudioContext)();
                         
-                        
-                        
-                        
                             
                         
                         
@@ -1616,13 +1613,16 @@
                             a.download = filename;
                             a.click();
                         };
-                        this.loadFileFromURL = function(URL,callback,responseType='blob'){
+                        this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
                             //responseType: text / arraybuffer / blob / document / json 
                         
                             var xhttp = new XMLHttpRequest();
-                            if(callback != null){ xhttp.onloadend = a => { 
+                            if(callback != undefined){ xhttp.onloadend = a => {
                                 if(a.target.status == 200){ callback(a.target.response); }
-                                else{ console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL); }
+                                else{ 
+                                    if(errorCallback != undefined){ errorCallback(); }
+                                    else{console.warn('library.misc.loadFileFromURL error: could not find the file',a.target.responseURL);}
+                                }
                             }; }
                             xhttp.open('get',URL,true);
                             xhttp.responseType = responseType;
@@ -23916,8 +23916,11 @@
                                     changesMade = true;
                                 }
                         
-                                dimensionAdjust('height');
-                                dimensionAdjust('width');
+                                //do it twice to account for any scrollbar that may have briefly appeared during adjustment
+                                    dimensionAdjust('height');
+                                    dimensionAdjust('width');
+                                    dimensionAdjust('height');
+                                    dimensionAdjust('width');
                     
                                 return changesMade;
                             };
@@ -26414,7 +26417,7 @@
                                 
                                     //methods
                                         object.set = function(segment,state){
-                                            segments[segment].state = state;
+                                            segments[segment] = state;
                                             if(state){ segments[segment].segment.colour = glowStyle; }
                                             else{ segments[segment].segment.colour = dimStyle; }
                                         };
@@ -26709,7 +26712,7 @@
                                 
                                     //methods
                                         object.set = function(segment,state){
-                                            segments[segment].state = state;
+                                            stamp[segment] = state;
                                             if(state){ segments[segment].segment.colour = glowStyle; }
                                             else{ segments[segment].segment.colour = dimStyle; }
                                         };
@@ -27523,6 +27526,7 @@
                                 
                                     //method
                                         object.set = function(a){
+                                            if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                             if(needleColours.length > 1){ mostRecentSetting = a; }
                                             else{ gauge.needle(a,0); }
                                         };
@@ -27535,7 +27539,7 @@
                                         name, data.x, data.y, data.angle, data.width, data.height,
                                 
                                         data.needleAngleBounds,
-                                        data.style.backingStyle,
+                                        data.style.backing,
                                         data.style.needleColours,
                                     
                                         data.markings,
@@ -28232,6 +28236,7 @@
                                 
                                     //method
                                         object.set = function(a){
+                                            if(a > 1){a = 1;}else if(a < 0){a = 0;}
                                             mostRecentSetting = a;
                                         };
                                 
@@ -28393,14 +28398,17 @@
                                 
                                     //methods
                                         object.set = function(segment,state){
-                                            stamp[segment].state = state;
+                                            clear();
+                                            stamp[segment] = state;
                                             drawChar();
                                         };
                                         object.get = function(segment){ if(segment==undefined){console.error('sevenSegmentDisplay_static::get: must provide segment value'); return;} return stamp[segment].state; };
                                         object.clear = function(){
+                                            clear();
                                             for(var a = 0; a < stamp.length; a++){
                                                 this.set(a,false);
                                             }
+                                            drawChar();
                                         };
                                 
                                         object.enterCharacter = function(char){
@@ -28803,14 +28811,17 @@
                                 
                                     //methods
                                         object.set = function(segment,state){
-                                            stamp[segment].state = state;
+                                            clear();
+                                            stamp[segment] = state;
                                             drawChar();
                                         };
                                         object.get = function(segment){ return segments[segment].state; };
                                         object.clear = function(){
+                                            clear();
                                             for(var a = 0; a < segments.length; a++){
                                                 this.set(a,false);
                                             }
+                                            drawChar();
                                         };
                                 
                                         object.enterCharacter = function(char){
@@ -35895,6 +35906,7 @@
                                             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
                                             cableVersion:cableVersion,
                                             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                            onconnect, ondisconnect
                                         });
                                 
                                     //circuitry
@@ -35908,27 +35920,28 @@
                                         }
                                 
                                         object.set = function(a){
+                                            if(typeof a != 'number'){return;}
+                                
                                             localValue = a;
                                 
                                             var val = object.read();
                                             object._update(val);
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode()._update(val); }
                                         };
-                                        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
+                                        object.read = function(){ return localValue + (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : 0); };
                                 
                                         object._onconnect = function(instigator){
-                                            if(onconnect){object.onconnect(instigator);}
-                                            object._update(object.read());
+                                            var forignValue = object.getForeignNode()._getLocalValue();
+                                            if(forignValue>0){ object.activate(); }
+                                            object.onchange(forignValue);
                                         };
                                         object._ondisconnect = function(instigator){
-                                            if(ondisconnect){object.ondisconnect(instigator);}
-                                            object._update(localValue);
+                                            if(localValue==0){ object.deactivate(); }
+                                            object.onchange(localValue);
                                         };
                                 
                                     //callbacks
                                         object.onchange = onchange;
-                                        object.onconnect = onconnect;
-                                        object.ondisconnect = ondisconnect;
                                 
                                     return object;
                                 };
@@ -36088,14 +36101,15 @@
                                     glowStyle={r:255/255, g:244/255, b:244/255, a:1},
                                     cable_dimStyle={r:247/255, g:146/255, b:84/255, a:1},
                                     cable_glowStyle={r:242/255, g:168/255, b:123/255, a:1},
-                                    onconnect=function(){},
-                                    ondisconnect=function(){},
+                                    onconnect=function(instigator){},
+                                    ondisconnect=function(instigator){},
                                 ){
                                     //elements
                                         var object = interfacePart.builder('dynamic','connectionNode',name,{
                                             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
                                             cableVersion:cableVersion,
                                             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                            onconnect, ondisconnect
                                         });
                                         object._direction = isAudioOutput ? 'out' : 'in';
                                 
@@ -36108,17 +36122,11 @@
                                 
                                         object._onconnect = function(instigator){
                                             if(object._direction == 'out'){ object.audioNode.connect(object.getForeignNode().audioNode); }
-                                            if(onconnect){object.onconnect(instigator);}
                                         };
                                         object._ondisconnect = function(instigator){
                                             if(object._direction == 'out'){ object.audioNode.disconnect(object.getForeignNode().audioNode); }
-                                            if(ondisconnect){object.ondisconnect(instigator);}
                                         };
                                 
-                                    //callbacks
-                                        object.onconnect = onconnect;
-                                        object.ondisconnect = ondisconnect;
-                                    
                                     return object;
                                 };
                                 
@@ -36140,8 +36148,8 @@
                                     cableVersion=0,
                                     onreceive=function(address, data){},
                                     ongive=function(address){},
-                                    onconnect=function(){},
-                                    ondisconnect=function(){},
+                                    onconnect=function(instigator){},
+                                    ondisconnect=function(instigator){},
                                 ){
                                     //elements
                                         var object = interfacePart.builder('dynamic','connectionNode',name,{
@@ -36152,22 +36160,20 @@
                                         });
                                 
                                     //circuitry
-                                        function flash(obj){
-                                            obj.activate();
-                                            setTimeout(function(){ if(obj==undefined){return;} obj.deactivate(); },100);
-                                            if(obj.getForeignNode()!=undefined){
-                                                obj.getForeignNode().activate();
-                                                setTimeout(function(){ if(obj==undefined || obj.getForeignNode() == undefined){return;} obj.getForeignNode().deactivate(); },100);
-                                            }
-                                        }
+                                        object._flash = function(){
+                                            this.activate();
+                                            setTimeout(function(){ object.deactivate(); },100);
+                                        };
                                 
                                         object.send = function(address,data){
-                                            flash(object);
+                                            object._flash();
+                                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceive(address,data); }
                                         };
                                         object.request = function(address){
-                                            flash(object);
+                                            object._flash();
+                                            if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode().ongive(address); }
                                         };
@@ -36210,6 +36216,9 @@
                                     //network functions
                                         var foreignNode = undefined;
                                 
+                                        object._onconnect = function(instigator){};
+                                        object._ondisconnect = function(instigator){};
+                                
                                         object.isConnected = function(){ return cable != undefined; };
                                         object.canDisconnect = function(){ return this.allowDisconnections() && (foreignNode!=undefined && foreignNode.allowDisconnections()); };
                                         object.allowConnections = function(bool){
@@ -36231,7 +36240,8 @@
                                             this.disconnect();
                                 
                                             foreignNode = new_foreignNode;
-                                            if(this.onconnect!=undefined){this.onconnect(true);}
+                                            this._onconnect(true);
+                                            if(object.onconnect!=undefined){object.onconnect(true);}
                                             foreignNode._receiveConnection(this);
                                 
                                             this._addCable(this);
@@ -36239,18 +36249,21 @@
                                         object._receiveConnection = function(new_foreignNode){
                                             this.disconnect();
                                             foreignNode = new_foreignNode;
-                                            if(this.onconnect!=undefined){this.onconnect(false);}
+                                            this._onconnect(false);
+                                            if(object.onconnect!=undefined){object.onconnect(false);}
                                         };
                                         object.disconnect = function(){
                                             if( foreignNode == undefined ){return;}
                                 
                                             this._removeCable();
-                                            if(this.ondisconnect!=undefined){this.ondisconnect(true);}
+                                            this._ondisconnect(true);
+                                            if(object.ondisconnect!=undefined){object.ondisconnect(true);}
                                             foreignNode._receiveDisconnection();
                                             foreignNode = null;
                                         };
                                         object._receiveDisconnection = function(){
-                                            if(this.ondisconnect!=undefined){this.ondisconnect(false);}
+                                            this._ondisconnect(false);
+                                            if(object.ondisconnect!=undefined){object.ondisconnect(false);}
                                             foreignNode = null;
                                         };
                                         object.getForeignNode = function(){ return foreignNode; };
@@ -36378,6 +36391,7 @@
                                             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'signal',
                                             cableVersion:cableVersion,
                                             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
+                                            onconnect, ondisconnect
                                         });
                                 
                                     //circuitry
@@ -36392,6 +36406,8 @@
                                         }
                                 
                                         object.set = function(a){
+                                            if(typeof a != 'boolean'){return;}
+                                
                                             localValue = a;
                                 
                                             object._update();
@@ -36400,18 +36416,16 @@
                                         object.read = function(){ return localValue || (object.getForeignNode() != undefined ? object.getForeignNode()._getLocalValue() : false); };
                                 
                                         object._onconnect = function(instigator){
-                                            if(onconnect){object.onconnect(instigator);}
-                                            object._update();
+                                            if(object.getForeignNode()._getLocalValue()){object.activate();}
+                                            object.onchange(object.getForeignNode()._getLocalValue());
                                         };
                                         object._ondisconnect = function(instigator){
-                                            if(ondisconnect){object.ondisconnect(instigator);}
-                                            object._update();
+                                            if(!localValue){object.deactivate();}
+                                            object.onchange(localValue);
                                         };
                                 
                                     //callbacks
                                         object.onchange = onchange;
-                                        object.onconnect = onconnect;
-                                        object.ondisconnect = ondisconnect;
                                 
                                     return object;
                                 };
@@ -37687,12 +37701,8 @@
                             //depending on whether a url has been provided or not, perform the appropiate load
                                 if(url == undefined){ //load from file
                                     _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
-                                }else{  //load from url
-                                    var request = new XMLHttpRequest();
-                                    request.open('GET', url, true);
-                                    request.responseType = 'text';
-                                    request.onload = function(){ procedure(this.response,callback); };
-                                    request.send();
+                                }else{ //load from url
+                                    _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text,callback); },'text');
                                 }
                         };
                         
