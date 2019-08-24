@@ -46,7 +46,7 @@
         function loadDemo(){
             if(modLoadCount > 0){ setTimeout(loadDemo,1000); return; }
             var demoURL = (new URL(window.location.href)).searchParams.get('demo');
-            if(demoURL != undefined){ document.getElementById('workspaceCanvas').control.scene.load(demoURL); }
+            if(demoURL != undefined){ document.getElementById('workspaceCanvas').control.scene2.load(demoURL); }
         }
         loadDemo();
 

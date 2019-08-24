@@ -1,1 +1,1 @@
-console.log('mod time!');
+console.log('you\'ve just loaded test_1.js');

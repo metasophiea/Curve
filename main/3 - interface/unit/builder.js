@@ -159,6 +159,18 @@ this.builder = function(creatorMethod,design){
 
             generatePersonalSpace();
         };
+        unit.ioRedraw = function(){
+            if( unit.io ){
+                var connectionTypes = Object.keys( unit.io );
+                for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                    var connectionNodes = unit.io[connectionTypes[connectionType]];
+                    var nodeNames = Object.keys( connectionNodes );
+                    for(var b = 0; b < nodeNames.length; b++){
+                        connectionNodes[nodeNames[b]].draw();
+                    }
+                }
+            }
+        };
 
 
     //disable all control parts method

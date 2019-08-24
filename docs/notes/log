@@ -1,4 +1,41 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-08-22
+  - fixed up system.keyboard, and/or perhaps learned how it works better
+  - added "clearClipboard" to control.selection
+  - added rectify arguments to control.grapple:alt / control.selection.duplicate
+    / control.selection.paste to allow for a more natural duplication experience
+  - duplication improved further, so if you click without movement while holding
+    alt, the unit with rectify on mouse up
+  - added ".ioRedraw" to unit builder (which just runs through all available io
+    connections and runs their redraw functions)
+  - completely replaced control.scene with control.scene2 (action registry needs
+    to be redone)
+
+
+2019-08-21
+  - updated gravity to handle 'include' keywords without arguments
+  - moved queryStringManager code from the curve layer to the control layer
+    (renaming it 'queryString' along the way) Now, one has all the same control
+    as before (actually a little more, you can set the query keys for demo and
+    mod to whatever you like, you can sent the mod-list extension, set the
+    default demo url prefix, along with the ability to request the mods of demos
+    be loaded whenever you like (even by-passing the demoLoaders desire to wait
+    for mods to be loaded)) but its packed away where it belongs
+
+
+2019-08-19
+  - expanded queryStringManager::loadDemo to accommodate numerical demo 
+    requests (so, "?demo=1" is ok, and translates to 
+    "https://curve.metasophiea.com/demos/1.crv") also removed the code that did
+    this sort of thing from the index.html file in docs
+  - added a little bit of test code for the new queryStringManager section. It
+    automatically resets the URL to have the correct parameters
+
+  notes:
+  - I have questions in my mind about whether this mod loading code should be in
+    the control section.. maybe the demo loading code should be there too
+
+
 2019-08-18
   - redid the voltage_readout gauge backing
 

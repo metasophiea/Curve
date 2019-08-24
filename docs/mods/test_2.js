@@ -1,0 +1,1 @@
+console.log('you\'ve just loaded test_2.js');

@@ -172,5 +172,5 @@
 
 - ability to change background and menubar colour to 'nightmode' or other modes
 - LAZERS DOING LAZER THINGS (shooter/receiver/mirror/splitter/etc)
-- expansion of connectionNode clickable area, so that things stay the same graphically, 
-  but mouse interaction is easier
+- expansion of connectionNode clickable area, so that things stay the same graphically, but mouse interaction is easier
+- advanced (easier) unit placement

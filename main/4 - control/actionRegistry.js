@@ -18,11 +18,11 @@ this.registerAction = function(action){
             actionRegistry.splice(actionPointer+1);
         }
 
-    //add action and incriment pointer
+    //add action and increment pointer
         actionRegistry.push(action);
         actionPointer++;
 
-    //if appropiate, print out the actionRegistry, indicating where the pointer is
+    //if appropriate, print out the actionRegistry, indicating where the pointer is
         if(_devMode){
             this.printRegistry();
             console.log('');

@@ -73,9 +73,9 @@ this.copy = function(){
 
 
 
-    this.clipboard = _canvas_.control.scene.relative_documentUnits(this.selectedUnits);
+    this.clipboard = _canvas_.control.scene2.documentUnits(this.selectedUnits,true);
 };
-this.paste = function(position){
+this.paste = function(position,rectify=true){
     //control switch
         if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
@@ -115,10 +115,9 @@ this.paste = function(position){
         }
 
     //unit printing
-        _canvas_.control.scene.relative_printUnits( this.clipboard );
-
+        _canvas_.control.scene2.printUnits( this.clipboard, rectify );
 };
-this.duplicate = function(){
+this.duplicate = function(rectify=true){
     //control switch
         if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
@@ -132,7 +131,7 @@ this.duplicate = function(){
         );
         
     this.copy();
-    this.paste('duplicate');
+    this.paste('duplicate',rectify);
     this.clipboard = [];
 
     //register bookend action
@@ -162,7 +161,8 @@ this.delete = function(){
 
     var selectedUnitCount = this.selectedUnits.length;
     while(this.selectedUnits.length > 0){
-        control.scene.removeUnit(this.selectedUnits.shift());
+        control.scene2.removeUnit(this.selectedUnits[0]);
+        this.deselectUnit(this.selectedUnits[0]);
     }
     this.lastSelectedUnits = null;
 
@@ -175,3 +175,5 @@ this.delete = function(){
             }
         );
 };
+
+this.clearClipboard = function(){ this.clipboard = [] };

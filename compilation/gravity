@@ -41,21 +41,29 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
                 print('\terror:', sys.exc_info())
                 exit(1)
 
-            for line in inputFile:
-                start = line.find('{{')
-                end = line.find('}}')
+            for originalLine in inputFile:
+                start = originalLine.find('{{')
+                end = originalLine.find('}}')
                 if( start != -1 and end != -1 ):
-                    potentialSpacer = line[:len(line)-len(line.lstrip())]
-                    line = line.strip()
+                    potentialSpacer = originalLine[:len(originalLine)-len(originalLine.lstrip())]
+                    line = originalLine.strip()
                     if line[:2] == '//': continue
                     line = line.split('{{')[1].split('}}')[0].split(':')
 
-                    if 'include' in line[0]:
+                    if 'include' in line[0] and len(line) > 1:
                         newLocation = '/'.join((location+'/'+line[1]).split('/')[:-1])
                         newFile = line[1].split('/')[-1]
                         includer( newLocation, inputfileName, newFile, outputObject, spacer+potentialSpacer)
+                    elif len(line) == 1:
+                        print('Incorrect use of "include" keyword')
+                        print('\tlocation:', location)
+                        print('\tparentFile:', parentFile)
+                        print('\tinputfileName:', inputfileName)
+                        print('\toffending line:', originalLine)
+                        exit(1)
+
                 else:
-                    outputObject.write(spacer+line)
+                    outputObject.write(spacer+originalLine)
 
             outputObject.write('\n')
             inputFile.close()

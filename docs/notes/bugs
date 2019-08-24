@@ -1,5 +1,8 @@
-[XXXX-XX-XX] moving groups of units around, doesn't work how you think it should when one of them collides with something
-[2019-07-31] control.interaction.mouseGripPanningEnabled when disabled doesn't allow for "click anywhere else" unit deselection
-[2019-08-03] buttons atop buttons don't hover right, nor click right
-[2019-08-16] control.scene.load(1) there should be some protection for bad URLs
-[2019-08-16] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
+[XXXX-XX-XX:1] moving groups of units around, doesn't work how you think it should when one of them collides with something (sorta?)
+    it wasn't working great for duplication. Edits have been made to control.grapple:alt / control.selection.duplicate
+    / control.selection.paste to allow for a more natural duplication experience (log:2019-08-22)
+
+[2019-07-31:1] control.interaction.mouseGripPanningEnabled when disabled doesn't allow for "click anywhere else" unit deselection
+[2019-08-03:1] buttons atop buttons don't hover right, nor click right
+[2019-08-16:1] control.scene.load(1) there should be some protection for bad URLs
+[2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)

@@ -24464,7 +24464,7 @@
                         }
                     
                     //connect callbacks to keyboard function lists
-                        _canvas_.core.callback.functions.onkeydown = function(x,y,event,shapes){        
+                        _canvas_.core.callback.functions.onkeydown = function(x,y,event,shapes){
                             //if key is already pressed, don't press it again
                                 if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                                 _canvas_.system.keyboard.pressedKeys[event.code] = true;
@@ -24493,7 +24493,7 @@
                                         return;
                                     }
                                 }
-                                _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                                _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                         };
                 };
                 
@@ -26417,7 +26417,7 @@
                                 
                                     //methods
                                         object.set = function(segment,state){
-                                            segments[segment] = state;
+                                            segments[segment].state = state;
                                             if(state){ segments[segment].segment.colour = glowStyle; }
                                             else{ segments[segment].segment.colour = dimStyle; }
                                         };
@@ -36883,6 +36883,18 @@
                         
                                     generatePersonalSpace();
                                 };
+                                unit.ioRedraw = function(){
+                                    if( unit.io ){
+                                        var connectionTypes = Object.keys( unit.io );
+                                        for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
+                                            var connectionNodes = unit.io[connectionTypes[connectionType]];
+                                            var nodeNames = Object.keys( connectionNodes );
+                                            for(var b = 0; b < nodeNames.length; b++){
+                                                connectionNodes[nodeNames[b]].draw();
+                                            }
+                                        }
+                                    }
+                                };
                         
                         
                             //disable all control parts method
@@ -36948,7 +36960,7 @@
                                         var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                 
                                         _canvas_.control.selection.selectUnits(
-                                            _canvas_.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
+                                            _canvas_.control.scene2.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
                                         );
                                     },
                                 );
@@ -37031,13 +37043,13 @@
                 _canvas_.system.keyboard.functionList.onkeydown.push(
                     {
                         requiredKeys:[['control','F2'],['command','F2']],
-                        function:function(data){ _canvas_.control.scene.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
+                        function:function(data){ _canvas_.control.scene2.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
                     }
                 );
                 _canvas_.system.keyboard.functionList.onkeydown.push(
                     {
                         requiredKeys:[['control','F3'],['command','F3']],
-                        function:function(data){ _canvas_.control.scene.save(); _canvas_.system.keyboard.releaseAll(); return true; }
+                        function:function(data){ _canvas_.control.scene2.save(); _canvas_.system.keyboard.releaseAll(); return true; }
                     }
                 );
                 _canvas_.system.keyboard.functionList.onkeydown.push(
@@ -37176,7 +37188,7 @@
                                 if(bool==undefined){return enableUnitInteractable;}
                                 if(devMode){return;}
                                 enableUnitInteractable = bool;
-                                control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
+                                control.scene2.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
                             };
                             var enableUnitCollision = true;
                             this.enableUnitCollision = function(bool){
@@ -37189,7 +37201,7 @@
                                 if(bool==undefined){return enablCableDisconnectionConnection;}
                                 if(devMode){return;}
                                 enablCableDisconnectionConnection = bool;
-                                control.scene.getAllUnits().forEach(a => {
+                                control.scene2.getAllUnits().forEach(a => {
                                     a.allowIOConnections(enablCableDisconnectionConnection);
                                     a.allowIODisconnections(enablCableDisconnectionConnection);
                                 });
@@ -37401,430 +37413,393 @@
                         this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
                         this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
                     };
-                    this.scene = new function(){
-                        var pane = _canvas_.system.pane.mm;
-                        var IDcounter = 0;
+                    // this.scene = new function(){
+                    //     var pane = _canvas_.system.pane.mm;
+                    //     var IDcounter = 0;
                 
+                    // };
+                    this.scene2 = new function(){
+                        var IDcounter = 0;
+                        
+                        this.listLayers = function(){
+                            function print(unit){
+                                console.log( '\t', 'model:'+unit.model, 'name:'+unit.name, '-', '{x:'+unit.x()+',y:'+unit.y()+',a:'+unit.angle()+'}' );
+                            }
+                        
+                            console.log('foreground'); _canvas_.system.pane.mf.children().filter( a => !a._isCable ).forEach(print);
+                            console.log('middleground'); _canvas_.system.pane.mm.children().filter( a => !a._isCable ).forEach(print);
+                            console.log('background'); _canvas_.system.pane.mb.children().filter( a => !a._isCable ).forEach(print);
+                        };
                         this.backgroundColour = function(colour){ return _canvas_.core.render.clearColour(colour); };
-                        
-                        this.new = function(askForConfirmation=false){
-                            if(askForConfirmation){
-                                if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
-                            }
-                        
-                            control.selection.selectEverything();
-                            control.selection.delete();
-                        
-                            IDcounter = 0;
-                            control.viewport.position(0,0);
-                            control.viewport.scale(0);
-                        };
-                        
-                        
-                        this.absolute_documentUnit = function(unit){
-                            // position             -   the X, Y and angle of the original object
-                            // details              -   data on the unit's type
-                            //      collection
-                            //      model
-                            // data                 -   the exported data from the original object
-                            // connections          -   an array of where to connect what
-                            //      typeAndNameOfSourcePort
-                            //      nameOfDestinationUnit
-                            //      typeAndNameOfDestinationPort
-                        
-                            var entry = {};
-                        
-                            //get the units position
-                                entry.position = {
-                                    x: unit.x(),
-                                    y: unit.y(),
-                                    angle: unit.angle(),
-                                };
-                        
-                            //unitDetails
-                                entry.details = {
-                                    collection: unit.collection,
-                                    model: unit.model,
-                                };
-                        
-                            //export the unit's state
-                                entry.data = unit.exportData ? unit.exportData() : null;
-                        
-                            //log all connections
-                                entry.connections = [];
-                                    for(var connectionType in unit.io){
-                                        for(var connection in unit.io[connectionType]){
-                                            var foreignNode = unit.io[connectionType][connection].getForeignNode();
-                                            if(foreignNode == undefined){continue;} //this node isn't connected to anything, so just bail
-                                    
-                                            var newConnectionEntry = {};
-                        
-                                            //typeAndNameOfSourcePort
-                                                newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
-                        
-                                            //indexOfDestinationUnit
-                                                newConnectionEntry.nameOfDestinationUnit = foreignNode.parent.name;
-                        
-                                            //typeAndNameOfDestinationPort
-                                                newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignNode.name };
-                        
-                                            entry.connections.push(newConnectionEntry);
-                                        }
-                                    }
-                        
-                            return entry;
-                        };
-                        this.relative_documentUnits = function(units){
-                            // position             -   the X, Y and angle of the original object
-                            // details              -   data on the unit's type
-                            //      collection
-                            //      model
-                            // data                 -   the exported data from the original object
-                            // connections          -   an array of where to connect what
-                            //      typeAndNameOfSourcePort
-                            //      indexOfDestinationUnit
-                            //      typeAndNameOfDestinationPort
-                        
-                            var outputData = [];
-                        
-                            //cycle through this array, and create the scene data
-                                for(var a = 0; a < units.length; a++){
-                                    // outputData.push(this.absolute_documentUnit(units[a]));
-                                    var unit = units[a];
-                                    var entry = {};
-                        
-                                    //get the units position
-                                        entry.position = {
-                                            x: unit.x(),
-                                            y: unit.y(),
-                                            angle: unit.angle(),
-                                        };
-                        
-                                    //unitDetails
-                                        entry.details = {
-                                            collection: unit.collection,
-                                            model: unit.model,
-                                        };
-                        
-                                    //export the unit's state
-                                        entry.data = unit.exportData ? unit.exportData() : null;
-                        
-                                    //log all connections
-                                        entry.connections = [];
-                                            for(var connectionType in unit.io){
-                                                for(var connection in unit.io[connectionType]){
-                                                    var foreignNode = unit.io[connectionType][connection].getForeignNode();
-                                                    if(foreignNode == undefined){continue;} //this node isn't connected to anything, so just bail
-                                            
-                                                    var newConnectionEntry = {};
-                        
-                                                    //typeAndNameOfSourcePort
-                                                        newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
-                        
-                                                    //indexOfDestinationUnit
-                                                        newConnectionEntry.indexOfDestinationUnit = units.indexOf(foreignNode.parent);
-                        
-                                                    //typeAndNameOfDestinationPort
-                                                        newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignNode.name };
-                        
-                                                    entry.connections.push(newConnectionEntry);
-                                                }
-                                            }
-                        
-                                    //add this entry to the save data list
-                                        outputData.push(entry);
-                                }
-                        
-                            return outputData;  
-                        };
-                        this.absolute_printUnit = function(unitData,forceName){
-                            //create the object with its new position adding it to the pane
-                                var unit = control.scene.addUnit(unitData.position.x, unitData.position.y,  unitData.position.angle, unitData.details.model, unitData.details.collection, forceName);
-                        
-                            //import data
-                                if(unit.importData){unit.importData(unitData.data);}
-                        
-                            //go through its connections, and attempt to connect them to everything they should be connected to
-                            // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
-                                for(var b = 0; b < unitData.connections.length; b++){
-                                    var connection = unitData.connections[b];
-                        
-                                    var destinationUnit = control.scene.getUnitByName(connection.nameOfDestinationUnit);
-                                    if(destinationUnit == undefined){continue;}
-                        
-                                    var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
-                                    var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
-                                    
-                                    sourceNode.connectTo(destinationNode);
-                                }
-                        
-                            return unit;
-                        };
-                        this.relative_printUnits = function(units){
-                            var printedUnits = [];
-                        
-                            for(var a = 0; a < units.length; a++){
-                                // printedUnits.push(this.absolute_printUnit(units[a]));
-                                var item = units[a];
-                        
-                                //create the object with its new position adding it to the pane
-                                    var unit = control.scene.addUnit(item.position.x, item.position.y,  item.position.angle, item.details.model, item.details.collection);
-                                    printedUnits.push(unit);
-                        
-                                //import data and select unit
-                                    if(unit.importData){unit.importData(item.data);}
-                                    control.selection.selectUnit(unit);
-                        
-                                //go through its connections, and attempt to connect them to everything they should be connected to
-                                // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
-                                    for(var b = 0; b < item.connections.length; b++){
-                                        var connection = item.connections[b];
-                        
-                                        var destinationUnit = control.selection.selectedUnits[connection.indexOfDestinationUnit];
-                                        if(destinationUnit == undefined){continue;}
-                        
-                                        var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
-                                        var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
-                                        
-                                        sourceNode.connectTo(destinationNode);
-                                    }
-                            }
-                        
-                            return printedUnits;
-                        };
-                        
-                        
-                        this.export = function(){
-                            //creating an array of all units to be saved (strip out all the cable units)
-                            //document all units in the main pane
-                            return this.relative_documentUnits( Array.from(pane.children()).filter(a => !a._isCable) );
-                        };
-                        this.import = function(data){ this.relative_printUnits( data ); };
-                        this.save = function(filename='project',compress=true){
-                            //control switch
-                                if(!_canvas_.control.interaction.enableSceneSave()){return;}
+                        this.packData = function(data,compress=true){
+                            return _canvas_.library.misc.serialize({ 
+                                compressed:compress, 
+                                data:_canvas_.library.misc.serialize(data,compress)
+                            },false);
                             
-                        
-                        
-                            //gather some initial data
-                                var outputData = {
-                                    filename: filename,
-                                    viewportLocation: {
-                                        xy: _canvas_.control.viewport.position(),
-                                        scale: _canvas_.control.viewport.scale(),
-                                    },
-                                };
-                        
-                            //stopping audio
-                                _canvas_.library.audio.destination.masterGain(0);
-                        
-                            //gather the scene data
-                                outputData.units = this.export();
-                        
                             //serialize data
-                                outputData = _canvas_.library.misc.serialize(outputData,compress);
+                                data = _canvas_.library.misc.serialize(data,compress);
                         
                             //wrap serialized scene
-                                outputData = {
-                                    compressed: compress,
-                                    data: outputData
-                                };
+                                data = { compressed:compress, data:data };
                         
                             //serialize again
-                                outputData = _canvas_.library.misc.serialize(outputData,false);
+                                data = _canvas_.library.misc.serialize(data,false);
                         
-                            //print to file
-                                _canvas_.library.misc.printFile(filename,outputData);
-                        
-                            //restarting audio
-                                _canvas_.library.audio.destination.masterGain(1);
+                            return data;
                         };
-                        this.load = function(url,callback,askForConfirmation=false){
-                            //control switch
-                                if(!_canvas_.control.interaction.enableSceneLoad()){return;}
+                        this.unpackData = function(data){
+                            //deserialize first layer
+                                try{
+                                    var data = _canvas_.library.misc.unserialize(data,false);
+                                }catch(e){
+                                    console.error( "Major error unserializing first layer of file" );
+                                    console.error(e);
+                                    return null;
+                                }
                         
+                            //determine if this data is compressed or not
+                                var compressed = data.compressed;
                         
+                            //deserialize second layer (knowing now whether it's compressed or not)
+                                try{
+                                    var data = _canvas_.library.misc.unserialize(data.data,compressed);
+                                }catch(e){
+                                    console.error( "Major error unserializing second layer of file" );
+                                    console.error(e);
+                                    return null;
+                                }
                         
-                            if(askForConfirmation){
-                                if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
-                            }
+                            return data;
+                        };
                         
-                            //procedure for loading in a .crv file
-                                function procedure(data,callback){
-                                    //stopping audio
-                                        _canvas_.library.audio.destination.masterGain(0);
-                        
-                                    //deserialize first layer
-                                        try{
-                                            var data = _canvas_.library.misc.unserialize(data,false);
-                                        }catch(e){
-                                            console.error( "Major error unserializing first layer of file" );
-                                            console.error(e);
-                                            return;
+                        //getting units
+                            this.getAllUnits = function(pane=_canvas_.system.pane.mm){ return pane.children().filter( a => !a._isCable ); };
+                            this.getUnitByName = function(name,pane=_canvas_.system.pane.mm){ return pane.getChildByName(name); };
+                            this.getUnitsByModel = function(model){
+                                return this.getAllUnits().filter( a => a.model == model);
+                            };
+                            this.getUnitUnderPoint = function(x,y,pane=_canvas_.system.pane.mm){
+                                for( var a = 0; a < pane.children().length; a++){
+                                    if( _canvas_.library.math.detectOverlap.boundingBoxes({bottomRight:{x:x,y:y},topLeft:{x:x,y:y}}, pane.children()[a].space.box) ){
+                                        if( _canvas_.library.math.detectOverlap.pointWithinPoly({x:x,y:y}, pane.children()[a].space.points) ){
+                                            return pane.children()[a];
                                         }
+                                    }
+                                }
+                            };
+                            this.getUnitsWithinPoly = function(points,pane=_canvas_.system.pane.mm){
+                                var box = _canvas_.library.math.boundingBoxFromPoints(points);
+                                return pane.children().filter(function(a){ return !a._isCable && _canvas_.library.math.detectOverlap.boundingBoxes(box, a.space.boundingBox) && _canvas_.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
+                            };
                         
-                                    //determine if this data is compressed or not
-                                        var compressed = data.compressed;
+                        //unit extra features
+                            var snapping = {active:false,x:10,y:10,angle:Math.PI/8};
+                            this.activeSnapping = function(bool,pane=_canvas_.system.pane.mm){
+                                // //control switch
+                                //     if(!_canvas_.control.interaction.enableSnapping()){return;}
                         
-                                    //deserialize second layer (knowing now whether it's compressed or not)
-                                        try{
-                                            var data = _canvas_.library.misc.unserialize(data.data,compressed);
-                                        }catch(e){
-                                            console.error( "Major error unserializing second layer of file" );
-                                            console.error(e);
-                                            return;
-                                        }
+                                if(bool == undefined){return snapping.active;}
                         
-                                    //clear scene
-                                        control.scene.new();
+                                snapping.active = bool;
+                                this.getAllUnits(pane).forEach(unit => unit.snappingActive(bool));
+                            };
+                            this.rectifyUnitPosition = function(unit,pane=_canvas_.system.pane.mm){
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableUnitCollision()){return;}
                         
-                                    //print to scene
-                                        control.scene.import(data.units);
+                                //if this unit is to ignore any collision, just bail
+                                    if(!unit.collisionActive){return false;}
+                        
+                                //discover if there's an overlap; if not skip all this
+                                    var allOtherUnits = control.scene2.getAllUnits(pane).filter(a => a != unit && a.collisionActive).map(a => { return a.space; });
+                                    if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
+                        
+                                //get the offset which will allow this unit to fit
+                                    var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits, snapping );
                                     
-                                    //reposition viewport
-                                        control.viewport.position( data.viewportLocation.xy.x, data.viewportLocation.xy.y );
-                                        control.viewport.scale( data.viewportLocation.scale );
-                        
-                                    //restarting audio
-                                        _canvas_.library.audio.destination.masterGain(1);
-                        
-                                    //deselect all units
-                                        control.selection.deselectEverything();
-                        
-                                    //clear the actionReigister
-                                        control.actionRegistry.clearRegistry();
-                        
-                                    //callback
-                                        if(callback){callback(metadata);}
-                                }
-                        
-                            //depending on whether a url has been provided or not, perform the appropiate load
-                                if(url == undefined){ //load from file
-                                    _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
-                                }else{ //load from url
-                                    _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text,callback); },'text');
-                                }
-                        };
-                        
-                        
-                        this.generateUnitName = function(){ return IDcounter++; };
-                        this.addUnit = function(x,y,a,model,collection='alpha',forceName){
-                            //control switch
-                                if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
-                        
-                        
-                        
-                            //generate new name for unit
-                                var name = forceName==undefined ? this.generateUnitName() : forceName;
-                        
-                            //produce unit, assign its name and add grapple code
-                                if( _canvas_.interface.unit.collection[collection] == undefined ){
-                                    console.warn('unknown unit collection "'+collection+'" (_canvas_.interface.unit.collection['+collection+'])'); 
-                                    return;
-                                }
-                                if( _canvas_.interface.unit.collection[collection][model] == undefined ){
-                                    console.warn('unknown unit model "'+model+'" (_canvas_.interface.unit.collection['+collection+']['+model+'])'); 
-                                    return;
-                                }
-                        
-                                var tmp = _canvas_.interface.unit.collection[collection][model](x,y,a);
-                                tmp.name = ''+name;
-                                tmp.collection = collection;
-                                tmp = _canvas_.control.grapple.declare(tmp);
-                        
-                            //if snapping is active in the scene, don't forget to activate it for this new unit too
-                            if(_canvas_.control.scene.activeSnapping()){ tmp.snappingActive(true); }
-                        
-                            //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                this.rectifyUnitPosition(tmp);
-                        
-                            //add it to the main pane
-                                pane.append( tmp );
-                        
-                        
-                        
-                            //register action
-                                control.actionRegistry.registerAction(
-                                    {
-                                        functionName:'control.scene.addUnit',
-                                        arguments:[x,y,a,model,collection],
-                                        name:tmp.name,
-                                    }
-                                );
-                        
-                            return tmp;
-                        };
-                        this.removeUnit = function(unit){
-                            //control switch
-                                if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
-                        
-                            //register action
-                                control.actionRegistry.registerAction(
-                                    {
-                                        functionName:'control.scene.removeUnit',
-                                        name:unit.name,
-                                        data:this.absolute_documentUnit(unit),
-                                    }
-                                );
+                                //apply offset
+                                    unit.x(unit.x() + offset.x);
+                                    unit.y(unit.y() + offset.y);
                                 
+                                return true; //false: no change was made - true: a change was made
+                            };
+                        
+                        //unit manipulation
+                            this.generateUnitName = function(){ return IDcounter++; };
+                            this.addUnit = function(x,y,a,model,collection='alpha',forceName,rectify=true,pane=_canvas_.system.pane.mm){
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                        
+                        
+                        
+                                //generate new name for unit
+                                    var name = forceName==undefined ? this.generateUnitName() : forceName;
+                        
+                                //produce unit, assign its name and add grapple code
+                                    if( _canvas_.interface.unit.collection[collection] == undefined ){
+                                        console.warn('unknown unit collection "'+collection+'" (_canvas_.interface.unit.collection['+collection+'])'); 
+                                        return;
+                                    }
+                                    if( _canvas_.interface.unit.collection[collection][model] == undefined ){
+                                        console.warn('unknown unit model "'+model+'" (_canvas_.interface.unit.collection['+collection+']['+model+'])'); 
+                                        return;
+                                    }
+                        
+                                    var tmp = _canvas_.interface.unit.collection[collection][model](x,y,a);
+                                    tmp.name = ''+name;
+                                    tmp.collection = collection;
+                                    tmp = _canvas_.control.grapple.declare(tmp);
+                        
+                                //if snapping is active in the scene, don't forget to activate it for this new unit too
+                                    if(_canvas_.control.scene2.activeSnapping()){ tmp.snappingActive(true); }
+                        
+                                //if requestsed to do so; check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
+                                    if(rectify){ this.rectifyUnitPosition(tmp); }
+                        
+                                //add it to the pane
+                                    pane.append( tmp );
+                        
+                        
+                        
+                                //register action
+                                    control.actionRegistry.registerAction(
+                                        {
+                                            functionName:'control.scene2.addUnit',
+                                            arguments:[x,y,a,model,collection,forceName,rectify,pane],
+                                            name:tmp.name,
+                                        }
+                                    );
+                        
+                                return tmp;    
+                            };
+                            this.removeUnit = function(unit){
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
+                        
+                                //register action
+                                    control.actionRegistry.registerAction(
+                                        {
+                                            functionName:'control.scene2.removeUnit',
+                                            name:unit.name,
+                                            pane:_canvas_.system.pane.getMiddlegroundPane(unit),
+                                            data:this.documentUnits([unit]),
+                                        }
+                                    );
+                                    
                                 //run the unit's onDelete method
                                     if(unit.ondelete){unit.ondelete();}
                                 //run disconnect on every connection node of this unit
                                     unit.disconnectEverything();
-                                //remove the object from the middleground pane
-                                    pane.remove(unit);
-                        };
-                        
-                        
-                        this.getAllUnits = function(){ return pane.children().filter( a => !a._isCable ); };
-                        this.getUnitByName = function(name){ return pane.getChildByName(name); };
-                        this.getUnitsByModel = function(model){
-                            return this.getAllUnits().filter( a => a.model == model);
-                        };
-                        // this.getUnitsByType = function(type){ return pane.children.filter( a => a.unitType == type ); };
-                        this.getUnitUnderPoint = function(x,y){
-                            for( var a = 0; a < pane.children().length; a++){
-                                if( _canvas_.library.math.detectOverlap.boundingBoxes({bottomRight:{x:x,y:y},topLeft:{x:x,y:y}}, pane.children()[a].space.box) ){
-                                    if( _canvas_.library.math.detectOverlap.pointWithinPoly({x:x,y:y}, pane.children()[a].space.points) ){
-                                        return pane.children()[a];
-                                    }
-                                }
-                            }
-                        };
-                        this.getUnitsWithinPoly = function(points){
-                            var box = _canvas_.library.math.boundingBoxFromPoints(points);
-                            return pane.children().filter(function(a){ return !a._isCable && _canvas_.library.math.detectOverlap.boundingBoxes(box, a.space.boundingBox) && _canvas_.library.math.detectOverlap.overlappingPolygons(points, a.space.points); });
-                        };
-                        
-                        var snapping = {active:false,x:10,y:10,angle:Math.PI/8};
-                        this.activeSnapping = function(bool){
-                            if(bool == undefined){return snapping.active;}
-                        
-                            snapping.active = bool;
-                            this.getAllUnits().forEach(unit => unit.snappingActive(bool));
-                        };
-                        this.rectifyUnitPosition = function(unit){
-                            //control switch
-                                if(!_canvas_.control.interaction.enableUnitCollision()){return;}
-                        
-                            //if this unit is to ignore any collision, just bail
-                                if(!unit.collisionActive){return false;}
-                        
-                            //discover if there's an overlap; if not skip all this
-                                var allOtherUnits = control.scene.getAllUnits().filter(a => a != unit && a.collisionActive).map(a => { return a.space; });
-                                if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
-                        
-                            //get the offset which will allow this unit to fit
-                                var offset = _canvas_.library.math.fitPolyIn( unit.space, allOtherUnits, snapping );
+                                //remove the object from the pane
+                                    _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
+                            };
+                            this.transferUnits = function(units,destinationPane){
+                                // //control switch
+                                //     if(!_canvas_.control.interaction.enableUnitTransfer()){return;}
                                 
-                            //apply offset
-                                unit.x(unit.x() + offset.x);
-                                unit.y(unit.y() + offset.y);
-                            
-                            return true; //false: no change was made - true: a change was made
-                        };
+                                //register action
+                                    control.actionRegistry.registerAction(
+                                        {
+                                            functionName:'control.scene2.transferUnit',
+                                            arguments:[units.map(unit=>unit.name),destinationPane],
+                                        }
+                                    );
                         
-
+                                //collect all the information for these units
+                                    var data = this.documentUnits(units);
+                                //remove the original units
+                                    units.forEach(unit => this.removeUnit(unit));
+                                //print the units to the destination pane
+                                    this.printUnits(data,true,destinationPane);
+                            };
+                        
+                        //unit <-> notationalUnit
+                            this.documentUnits = function(units,selfContained=false){
+                                // position             -   the X, Y and angle of the original object
+                                // details              -   data on the unit's type
+                                //      collection
+                                //      model
+                                // data                 -   the exported data from the original object
+                                // connections          -   an array of where to connect what
+                                //      typeAndNameOfSourcePort
+                                //      indexOfDestinationUnit
+                                //      typeAndNameOfDestinationPort
+                        
+                                var outputData = [];
+                        
+                                //cycle through this array, and create the scene data
+                                    for(var a = 0; a < units.length; a++){
+                                        // outputData.push(this.absolute_documentUnit(units[a]));
+                                        var unit = units[a];
+                                        var entry = {};
+                        
+                                        //get the units position
+                                            entry.position = { x:unit.x(), y:unit.y(), angle:unit.angle() };
+                        
+                                        //unitDetails
+                                            entry.details = { collection:unit.collection, model:unit.model };
+                        
+                                        //export the unit's state
+                                            entry.data = unit.exportData ? unit.exportData() : {};
+                        
+                                        //log all connections
+                                            entry.connections = [];
+                                                for(var connectionType in unit.io){
+                                                    for(var connection in unit.io[connectionType]){
+                                                        var foreignNode = unit.io[connectionType][connection].getForeignNode();
+                                                        if(foreignNode == undefined){continue;} //this node isn't connected to anything, so just bail
+                                                
+                                                        var newConnectionEntry = {};
+                        
+                                                        //typeAndNameOfSourcePort
+                                                            newConnectionEntry.typeAndNameOfSourcePort = { type:connectionType, name:connection };
+                        
+                                                        //nameOfDestinationUnit
+                                                            newConnectionEntry.nameOfDestinationUnit = selfContained ? undefined : foreignNode.parent.name;
+                                                        //indexOfDestinationUnit
+                                                            newConnectionEntry.indexOfDestinationUnit = units.indexOf(foreignNode.parent);
+                        
+                                                        //typeAndNameOfDestinationPort
+                                                            newConnectionEntry.typeAndNameOfDestinationPort = { type:connectionType, name:foreignNode.name };
+                        
+                                                        entry.connections.push(newConnectionEntry);
+                                                    }
+                                                }
+                        
+                                        //add this entry to the save data list
+                                            outputData.push(entry);
+                                    }
+                        
+                                return outputData;  
+                            };
+                            this.printUnits = function(units, rectify=true, pane=_canvas_.system.pane.mm){
+                                var printedUnits = [];
+                        
+                                for(var a = 0; a < units.length; a++){
+                                    var item = units[a];
+                        
+                                    //create the object with its new position adding it to the pane
+                                        var unit = control.scene2.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, undefined, rectify, pane);
+                                        printedUnits.push(unit);
+                        
+                                    //import data and select unit
+                                        if(unit.importData){unit.importData(item.data);}
+                                        control.selection.selectUnit(unit);
+                        
+                                    //go through its connections, and attempt to connect them to everything they should be connected to
+                                    // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
+                                        for(var b = 0; b < item.connections.length; b++){
+                                            var connection = item.connections[b];
+                        
+                                            var destinationUnit = connection.indexOfDestinationUnit != -1 ? control.selection.selectedUnits[connection.indexOfDestinationUnit] : control.scene2.getUnitByName(connection.nameOfDestinationUnit);
+                                            if(destinationUnit == undefined){continue;}
+                        
+                                            var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
+                                            var destinationNode = destinationUnit.io[connection.typeAndNameOfDestinationPort.type][connection.typeAndNameOfDestinationPort.name];
+                                            
+                                            sourceNode.connectTo(destinationNode);
+                                        }
+                                }
+                        
+                                return printedUnits;
+                            };
+                        
+                        //scene file
+                            this.new = function(askForConfirmation=false){
+                                // //control switch
+                                //     if(!_canvas_.control.interaction.enableNewScene()){return;}
+                        
+                        
+                                if(askForConfirmation){
+                                    if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
+                                }
+                        
+                                control.selection.selectEverything();
+                                control.selection.delete();
+                        
+                                IDcounter = 0;
+                                control.viewport.position(0,0);
+                                control.viewport.scale(0);
+                            };
+                            this.load = function(url,callback,askForConfirmation=false){
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableSceneLoad()){return;}
+                        
+                        
+                        
+                                if(askForConfirmation){
+                                    if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
+                                }
+                        
+                                //procedure for loading in a .crv file
+                                    function procedure(data,callback){
+                                        //stopping audio
+                                            _canvas_.library.audio.destination.masterGain(0);
+                        
+                                        //unpack data
+                                            data = this.unpackData(data);
+                        
+                                        //clear scene
+                                            control.scene2.new();
+                        
+                                        //print to scene
+                                            this.printUnits( data.units );
+                                        
+                                        //reposition viewport
+                                            control.viewport.position( data.viewportLocation.xy.x, data.viewportLocation.xy.y );
+                                            control.viewport.scale( data.viewportLocation.scale );
+                        
+                                        //restarting audio
+                                            _canvas_.library.audio.destination.masterGain(1);
+                        
+                                        //deselect all units
+                                            control.selection.deselectEverything();
+                        
+                                        //clear the actionReigister
+                                            control.actionRegistry.clearRegistry();
+                        
+                                        //callback
+                                            if(callback){callback(metadata);}
+                                    }
+                        
+                                //depending on whether a url has been provided or not, perform the appropiate load
+                                    if(url == undefined){ //load from file
+                                        _canvas_.library.misc.openFile(function(data){procedure(data,callback);});
+                                    }else{ //load from url
+                                        _canvas_.library.misc.loadFileFromURL(url,function(text){ procedure(text,callback); },'text');
+                                    }
+                            };
+                            this.save = function(filename='project.crv',compress=false){
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableSceneSave()){return;}
+                                
+                        
+                        
+                                //stopping audio
+                                    _canvas_.library.audio.destination.masterGain(0);
+                        
+                                //gather some initial data
+                                    var outputData = {
+                                        filename: filename,
+                                        viewportLocation: {
+                                            xy: _canvas_.control.viewport.position(),
+                                            scale: _canvas_.control.viewport.scale(),
+                                        },
+                                    };
+                        
+                                //gather the scene data
+                                    outputData.units = this.documentUnits( this.getAllUnits().filter(a => !a._isCable) );
+                        
+                                //pack up data
+                                    outputData = this.packData(outputData,compress);
+                        
+                                //print to file
+                                    _canvas_.library.misc.printFile(filename,outputData);
+                        
+                                //restarting audio
+                                    _canvas_.library.audio.destination.masterGain(1);
+                            };
                     };
                     this.selection = new function(){
                         this.selectedUnits = [];
@@ -37902,9 +37877,9 @@
                         
                         
                         
-                            this.clipboard = _canvas_.control.scene.relative_documentUnits(this.selectedUnits);
+                            this.clipboard = _canvas_.control.scene2.documentUnits(this.selectedUnits,true);
                         };
-                        this.paste = function(position){
+                        this.paste = function(position,rectify=true){
                             //control switch
                                 if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
                         
@@ -37944,10 +37919,9 @@
                                 }
                         
                             //unit printing
-                                _canvas_.control.scene.relative_printUnits( this.clipboard );
-                        
+                                _canvas_.control.scene2.printUnits( this.clipboard, rectify );
                         };
-                        this.duplicate = function(){
+                        this.duplicate = function(rectify=true){
                             //control switch
                                 if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
                         
@@ -37961,7 +37935,7 @@
                                 );
                                 
                             this.copy();
-                            this.paste('duplicate');
+                            this.paste('duplicate',rectify);
                             this.clipboard = [];
                         
                             //register bookend action
@@ -37991,7 +37965,8 @@
                         
                             var selectedUnitCount = this.selectedUnits.length;
                             while(this.selectedUnits.length > 0){
-                                control.scene.removeUnit(this.selectedUnits.shift());
+                                control.scene2.removeUnit(this.selectedUnits[0]);
+                                this.deselectUnit(this.selectedUnits[0]);
                             }
                             this.lastSelectedUnits = null;
                         
@@ -38004,6 +37979,8 @@
                                     }
                                 );
                         };
+                        
+                        this.clearClipboard = function(){ this.clipboard = [] };
                     };
                 
                     this.actionRegistry = new function(){
@@ -38027,11 +38004,11 @@
                                     actionRegistry.splice(actionPointer+1);
                                 }
                         
-                            //add action and incriment pointer
+                            //add action and increment pointer
                                 actionRegistry.push(action);
                                 actionPointer++;
                         
-                            //if appropiate, print out the actionRegistry, indicating where the pointer is
+                            //if appropriate, print out the actionRegistry, indicating where the pointer is
                                 if(_devMode){
                                     this.printRegistry();
                                     console.log('');
@@ -38137,6 +38114,69 @@
                                 actionPointer+=1;
                             };
                     };
+                    this.queryString = new function(){
+                        control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
+                        
+                        
+                        
+                        
+                        var modsBeingLoaded = 0;
+                        
+                        this.modParameterKey = 'mod';
+                        this.controlModListPostfix = 'cml';
+                        this.demoParameterKey = 'demo';
+                        this.defaultDemoUrlPrefix =  'https://curve.metasophiea.com/demos/';
+                        
+                        this.modsBeingLoaded = function(){return modsBeingLoaded;};
+                        this.modLoader = function(loadingCompleteCallback){
+                            function loadMod(modURL){
+                                modsBeingLoaded++;
+                        
+                                _canvas_.library.misc.loadFileFromURL(modURL,function(responseText){
+                                    var modListFileExtension = '.'+_canvas_.control.queryString.controlModListPostfix;
+                                    if( modURL.slice(-modListFileExtension.length) == modListFileExtension ){
+                                        responseText.split('\n').forEach(url => loadMod(url));
+                                    }else{
+                                        var newScript = document.createElement('script');
+                                        newScript.innerHTML = responseText;
+                                        newScript.id = modURL;
+                                        document.body.append(newScript);
+                                    }
+                                    modsBeingLoaded--;
+                        
+                                    if(modsBeingLoaded == 0 && loadingCompleteCallback){loadingCompleteCallback();}
+                                },'text');
+                            }
+                            
+                            var tmp = (new URL(window.location.href)).searchParams.get(_canvas_.control.queryString.modParameterKey);
+                            if(tmp != undefined){ loadMod(tmp); }
+                        
+                            var counter = 1;
+                            do{
+                                tmp = (new URL(window.location.href)).searchParams.get(_canvas_.control.queryString.modParameterKey+counter++);
+                                if(tmp != undefined){ loadMod(tmp); }
+                            }while(tmp != undefined)
+                        };
+                        this.demoLoader = function(loadingCompleteCallback,beDumbAboutIt=false){
+                            function loadDemo(){
+                                var demoURL = (new URL(window.location.href)).searchParams.get(_canvas_.control.queryString.demoParameterKey);
+                            
+                                if(demoURL == undefined){
+                                    return;
+                                }else if( !isNaN(parseInt(demoURL)) ){
+                                    document.getElementById('workspaceCanvas').control.scene2.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
+                                }else{ 
+                                    document.getElementById('workspaceCanvas').control.scene2.load(demoURL,loadingCompleteCallback);
+                                }
+                            }
+                            function waiter(){
+                                if(modsBeingLoaded > 0){ setTimeout(waiter,1000); return; }
+                                loadDemo();
+                            }
+                        
+                            beDumbAboutIt ? loadDemo() : waiter();
+                        };
+                    };
                 };
                 
                 _canvas_.control.grapple = {
@@ -38217,20 +38257,11 @@
                                                 unit.angle(newUnitAngle);
                 
                                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                                _canvas_.control.scene.rectifyUnitPosition(unit);
+                                                _canvas_.control.scene2.rectifyUnitPosition(unit);
                 
                                             //perform all redraws and updates for unit
                                                 if( unit.onrotate ){unit.onrotate();}
-                                                if( unit.io ){
-                                                    var connectionTypes = Object.keys( unit.io );
-                                                    for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
-                                                        var connectionNodes = unit.io[connectionTypes[connectionType]];
-                                                        var nodeNames = Object.keys( connectionNodes );
-                                                        for(var b = 0; b < nodeNames.length; b++){
-                                                            connectionNodes[nodeNames[b]].draw();
-                                                        }
-                                                    }
-                                                }
+                                                unit.ioRedraw();
                                         }
                 
                                     },
@@ -38244,7 +38275,19 @@
                 _canvas_.control.grapple.functionList.onmousedown.push(
                     {
                         requiredKeys:[['alt']],
-                        function:function(){ _canvas_.control.selection.duplicate(); },
+                        function:function(){ _canvas_.control.selection.duplicate(false); },
+                    }
+                );
+                _canvas_.control.grapple.functionList.onmouseup.push(
+                    {
+                        requiredKeys:[],
+                        function:function(){
+                            _canvas_.control.selection.selectedUnits.forEach(unit => {
+                                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                unit.ioRedraw();
+                            });
+                            return true;
+                        },
                     }
                 );
                 //unit movement
@@ -38283,24 +38326,14 @@
                                                 unit.y(newUnitPosition.y);
                 
                                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                                _canvas_.control.scene.rectifyUnitPosition(unit);
+                                                _canvas_.control.scene2.rectifyUnitPosition(unit);
                 
                                             //perform all redraws and updates for unit
                                                 if( unit.onmove ){unit.onmove();}
-                                                if( unit.io ){
-                                                    var connectionTypes = Object.keys( unit.io );
-                                                    for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
-                                                        var connectionNodes = unit.io[connectionTypes[connectionType]];
-                                                        var nodeNames = Object.keys( connectionNodes );
-                                                        for(var b = 0; b < nodeNames.length; b++){
-                                                            connectionNodes[nodeNames[b]].draw();
-                                                        }
-                                                    }
-                                                }
-                                                
+                                                unit.ioRedraw();
                                         }
                                     },
-                                    function(event){}
+                                    function(event){ _canvas_.system.mouse.tmp.onmouseup_old(event); }
                                 );
                 
                             return true;
@@ -38311,8 +38344,8 @@
                 //unselection of unit (with shift pressed)
                 _canvas_.control.grapple.functionList.onmouseup.push(
                     {
-                        requiredKeys:[],
-                        function:function(event){
+                        requiredKeys:[['shift']],
+                        function:function(event){ console.log('shift deselect');
                             var control = _canvas_.control;
                 
                             //if mouse-up occurs over an unit that is selected

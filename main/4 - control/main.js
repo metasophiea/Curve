@@ -86,7 +86,7 @@ _canvas_.control = new function(){
                 if(bool==undefined){return enableUnitInteractable;}
                 if(devMode){return;}
                 enableUnitInteractable = bool;
-                control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
+                control.scene2.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
             };
             var enableUnitCollision = true;
             this.enableUnitCollision = function(bool){
@@ -99,7 +99,7 @@ _canvas_.control = new function(){
                 if(bool==undefined){return enablCableDisconnectionConnection;}
                 if(devMode){return;}
                 enablCableDisconnectionConnection = bool;
-                control.scene.getAllUnits().forEach(a => {
+                control.scene2.getAllUnits().forEach(a => {
                     a.allowIOConnections(enablCableDisconnectionConnection);
                     a.allowIODisconnections(enablCableDisconnectionConnection);
                 });
@@ -173,11 +173,14 @@ _canvas_.control = new function(){
         this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
         this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
     };
-    this.scene = new function(){
-        var pane = _canvas_.system.pane.mm;
-        var IDcounter = 0;
+    // this.scene = new function(){
+    //     var pane = _canvas_.system.pane.mm;
+    //     var IDcounter = 0;
 
-        {{include:scene.js}}
+    //     {{include:scene.js}}
+    // };
+    this.scene2 = new function(){
+        {{include:scene2.js}}
     };
     this.selection = new function(){
         {{include:selection.js}}
@@ -185,6 +188,9 @@ _canvas_.control = new function(){
 
     this.actionRegistry = new function(){
         {{include:actionRegistry.js}}
+    };
+    this.queryString = new function(){
+        {{include:queryString.js}}
     };
 };
 

@@ -76,20 +76,11 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                                 unit.angle(newUnitAngle);
 
                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                _canvas_.control.scene.rectifyUnitPosition(unit);
+                                _canvas_.control.scene2.rectifyUnitPosition(unit);
 
                             //perform all redraws and updates for unit
                                 if( unit.onrotate ){unit.onrotate();}
-                                if( unit.io ){
-                                    var connectionTypes = Object.keys( unit.io );
-                                    for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
-                                        var connectionNodes = unit.io[connectionTypes[connectionType]];
-                                        var nodeNames = Object.keys( connectionNodes );
-                                        for(var b = 0; b < nodeNames.length; b++){
-                                            connectionNodes[nodeNames[b]].draw();
-                                        }
-                                    }
-                                }
+                                unit.ioRedraw();
                         }
 
                     },
@@ -103,7 +94,19 @@ _canvas_.control.grapple.functionList.onmousedown.push(
 _canvas_.control.grapple.functionList.onmousedown.push(
     {
         requiredKeys:[['alt']],
-        function:function(){ _canvas_.control.selection.duplicate(); },
+        function:function(){ _canvas_.control.selection.duplicate(false); },
+    }
+);
+_canvas_.control.grapple.functionList.onmouseup.push(
+    {
+        requiredKeys:[],
+        function:function(){
+            _canvas_.control.selection.selectedUnits.forEach(unit => {
+                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                unit.ioRedraw();
+            });
+            return true;
+        },
     }
 );
 //unit movement
@@ -142,24 +145,14 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                                 unit.y(newUnitPosition.y);
 
                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                _canvas_.control.scene.rectifyUnitPosition(unit);
+                                _canvas_.control.scene2.rectifyUnitPosition(unit);
 
                             //perform all redraws and updates for unit
                                 if( unit.onmove ){unit.onmove();}
-                                if( unit.io ){
-                                    var connectionTypes = Object.keys( unit.io );
-                                    for(var connectionType = 0; connectionType < connectionTypes.length; connectionType++){
-                                        var connectionNodes = unit.io[connectionTypes[connectionType]];
-                                        var nodeNames = Object.keys( connectionNodes );
-                                        for(var b = 0; b < nodeNames.length; b++){
-                                            connectionNodes[nodeNames[b]].draw();
-                                        }
-                                    }
-                                }
-                                
+                                unit.ioRedraw();
                         }
                     },
-                    function(event){}
+                    function(event){ _canvas_.system.mouse.tmp.onmouseup_old(event); }
                 );
 
             return true;
@@ -170,8 +163,8 @@ _canvas_.control.grapple.functionList.onmousedown.push(
 //unselection of unit (with shift pressed)
 _canvas_.control.grapple.functionList.onmouseup.push(
     {
-        requiredKeys:[],
-        function:function(event){
+        requiredKeys:[['shift']],
+        function:function(event){ console.log('shift deselect');
             var control = _canvas_.control;
 
             //if mouse-up occurs over an unit that is selected
