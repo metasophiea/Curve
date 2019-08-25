@@ -119,6 +119,17 @@ this.eightTrackMixer = function(x,y,a){
                     object['splitter_'+a].outGain(1,1-value);
                 }
             }(a);
+
+            object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
+                return function(value){
+                    object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
+                }
+            }(a);
+            object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
+                return function(value){
+                    object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
+                }
+            }(a);
         }
 
     //interface

@@ -1,13 +1,13 @@
 _canvas_.system.keyboard.functionList.onkeydown.push(
     {
         requiredKeys:[['control','F2'],['command','F2']],
-        function:function(data){ _canvas_.control.scene2.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
+        function:function(data){ _canvas_.control.scene.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
     }
 );
 _canvas_.system.keyboard.functionList.onkeydown.push(
     {
         requiredKeys:[['control','F3'],['command','F3']],
-        function:function(data){ _canvas_.control.scene2.save(); _canvas_.system.keyboard.releaseAll(); return true; }
+        function:function(data){ _canvas_.control.scene.save(); _canvas_.system.keyboard.releaseAll(); return true; }
     }
 );
 _canvas_.system.keyboard.functionList.onkeydown.push(

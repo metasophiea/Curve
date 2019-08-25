@@ -36960,7 +36960,7 @@
                                         var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                 
                                         _canvas_.control.selection.selectUnits(
-                                            _canvas_.control.scene2.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
+                                            _canvas_.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
                                         );
                                     },
                                 );
@@ -37043,13 +37043,13 @@
                 _canvas_.system.keyboard.functionList.onkeydown.push(
                     {
                         requiredKeys:[['control','F2'],['command','F2']],
-                        function:function(data){ _canvas_.control.scene2.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
+                        function:function(data){ _canvas_.control.scene.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
                     }
                 );
                 _canvas_.system.keyboard.functionList.onkeydown.push(
                     {
                         requiredKeys:[['control','F3'],['command','F3']],
-                        function:function(data){ _canvas_.control.scene2.save(); _canvas_.system.keyboard.releaseAll(); return true; }
+                        function:function(data){ _canvas_.control.scene.save(); _canvas_.system.keyboard.releaseAll(); return true; }
                     }
                 );
                 _canvas_.system.keyboard.functionList.onkeydown.push(
@@ -37136,6 +37136,12 @@
                                 enableMenubar = bool;
                                 if(!enableMenubar){ control.gui.hideMenubar(); }else{ control.gui.showMenubar(); }
                             };
+                            var enableNewScene = true;
+                            this.enableNewScene = function(bool){
+                                if(bool==undefined){return enableNewScene;}
+                                if(devMode){return;}
+                                enableNewScene = bool;
+                            };
                             var enableSceneSave = true;
                             this.enableSceneSave = function(bool){
                                 if(bool==undefined){return enableSceneSave;}
@@ -37148,9 +37154,9 @@
                                 if(devMode){return;}
                                 enableSceneLoad = bool;
                             };
-                            var enableUnloadWarning = false;
                 
                         //window
+                            var enableUnloadWarning = false;
                             var enableUnloadWarning_message = "Unsaved work will be lost";
                             this.enableUnloadWarning = function(bool,message){
                                 if(bool==undefined){return enableUnloadWarning;}
@@ -37177,6 +37183,12 @@
                                 if(devMode){return;}
                                 enableUnitAdditionRemoval = bool;
                             };
+                            var enableUnitTransfer = true;
+                            this.enableUnitTransfer = function(bool){
+                                if(bool==undefined){return enableUnitTransfer;}
+                                if(devMode){return;}
+                                enableUnitTransfer = bool;
+                            };
                             var enableUnitSelection = true;
                             this.enableUnitSelection = function(bool){
                                 if(bool==undefined){return enableUnitSelection;}
@@ -37188,7 +37200,7 @@
                                 if(bool==undefined){return enableUnitInteractable;}
                                 if(devMode){return;}
                                 enableUnitInteractable = bool;
-                                control.scene2.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
+                                control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
                             };
                             var enableUnitCollision = true;
                             this.enableUnitCollision = function(bool){
@@ -37196,12 +37208,18 @@
                                 if(devMode){return;}
                                 enableUnitCollision = bool;
                             };
+                            var enableSnapping = true;
+                            this.enableSnapping = function(bool){
+                                if(bool==undefined){return enableSnapping;}
+                                if(devMode){return;}
+                                enableSnapping = bool;
+                            };
                             var enablCableDisconnectionConnection = true;
                             this.enableCableDisconnectionConnection = function(bool){
                                 if(bool==undefined){return enablCableDisconnectionConnection;}
                                 if(devMode){return;}
                                 enablCableDisconnectionConnection = bool;
-                                control.scene2.getAllUnits().forEach(a => {
+                                control.scene.getAllUnits().forEach(a => {
                                     a.allowIOConnections(enablCableDisconnectionConnection);
                                     a.allowIODisconnections(enablCableDisconnectionConnection);
                                 });
@@ -37413,15 +37431,21 @@
                         this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
                         this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
                     };
-                    // this.scene = new function(){
-                    //     var pane = _canvas_.system.pane.mm;
-                    //     var IDcounter = 0;
-                
-                    // };
-                    this.scene2 = new function(){
+                    this.scene = new function(){
                         var IDcounter = 0;
                         
-                        this.listLayers = function(){
+                        this.listLayers = function(printToConsole=false){
+                            if(!printToConsole){
+                                function print(unit){
+                                    return { model:unit.model, name:unit.name, x:unit.x(), y:unit.y(), a:unit.angle() };
+                                }
+                                return {
+                                    foreground:_canvas_.system.pane.mf.children().filter( a => !a._isCable ).map(print),
+                                    middleground:_canvas_.system.pane.mm.children().filter( a => !a._isCable ).map(print),
+                                    background:_canvas_.system.pane.mb.children().filter( a => !a._isCable ).map(print),
+                                };
+                            }
+                        
                             function print(unit){
                                 console.log( '\t', 'model:'+unit.model, 'name:'+unit.name, '-', '{x:'+unit.x()+',y:'+unit.y()+',a:'+unit.angle()+'}' );
                             }
@@ -37437,16 +37461,16 @@
                                 data:_canvas_.library.misc.serialize(data,compress)
                             },false);
                             
-                            //serialize data
-                                data = _canvas_.library.misc.serialize(data,compress);
+                            // //serialize data
+                            //     data = _canvas_.library.misc.serialize(data,compress);
                         
-                            //wrap serialized scene
-                                data = { compressed:compress, data:data };
+                            // //wrap serialized scene
+                            //     data = { compressed:compress, data:data };
                         
-                            //serialize again
-                                data = _canvas_.library.misc.serialize(data,false);
+                            // //serialize again
+                            //     data = _canvas_.library.misc.serialize(data,false);
                         
-                            return data;
+                            // return data;
                         };
                         this.unpackData = function(data){
                             //deserialize first layer
@@ -37496,8 +37520,8 @@
                         //unit extra features
                             var snapping = {active:false,x:10,y:10,angle:Math.PI/8};
                             this.activeSnapping = function(bool,pane=_canvas_.system.pane.mm){
-                                // //control switch
-                                //     if(!_canvas_.control.interaction.enableSnapping()){return;}
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableSnapping()){return;}
                         
                                 if(bool == undefined){return snapping.active;}
                         
@@ -37512,7 +37536,7 @@
                                     if(!unit.collisionActive){return false;}
                         
                                 //discover if there's an overlap; if not skip all this
-                                    var allOtherUnits = control.scene2.getAllUnits(pane).filter(a => a != unit && a.collisionActive).map(a => { return a.space; });
+                                    var allOtherUnits = control.scene.getAllUnits(pane).filter(a => a != unit && a.collisionActive).map(a => { return a.space; });
                                     if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
                         
                                 //get the offset which will allow this unit to fit
@@ -37552,7 +37576,7 @@
                                     tmp = _canvas_.control.grapple.declare(tmp);
                         
                                 //if snapping is active in the scene, don't forget to activate it for this new unit too
-                                    if(_canvas_.control.scene2.activeSnapping()){ tmp.snappingActive(true); }
+                                    if(_canvas_.control.scene.activeSnapping()){ tmp.snappingActive(true); }
                         
                                 //if requestsed to do so; check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
                                     if(rectify){ this.rectifyUnitPosition(tmp); }
@@ -37565,7 +37589,7 @@
                                 //register action
                                     control.actionRegistry.registerAction(
                                         {
-                                            functionName:'control.scene2.addUnit',
+                                            functionName:'control.scene.addUnit',
                                             arguments:[x,y,a,model,collection,forceName,rectify,pane],
                                             name:tmp.name,
                                         }
@@ -37580,7 +37604,7 @@
                                 //register action
                                     control.actionRegistry.registerAction(
                                         {
-                                            functionName:'control.scene2.removeUnit',
+                                            functionName:'control.scene.removeUnit',
                                             name:unit.name,
                                             pane:_canvas_.system.pane.getMiddlegroundPane(unit),
                                             data:this.documentUnits([unit]),
@@ -37595,13 +37619,13 @@
                                     _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
                             };
                             this.transferUnits = function(units,destinationPane){
-                                // //control switch
-                                //     if(!_canvas_.control.interaction.enableUnitTransfer()){return;}
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableUnitTransfer()){return;}
                                 
                                 //register action
                                     control.actionRegistry.registerAction(
                                         {
-                                            functionName:'control.scene2.transferUnit',
+                                            functionName:'control.scene.transferUnit',
                                             arguments:[units.map(unit=>unit.name),destinationPane],
                                         }
                                     );
@@ -37680,7 +37704,7 @@
                                     var item = units[a];
                         
                                     //create the object with its new position adding it to the pane
-                                        var unit = control.scene2.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, undefined, rectify, pane);
+                                        var unit = control.scene.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, undefined, rectify, pane);
                                         printedUnits.push(unit);
                         
                                     //import data and select unit
@@ -37692,7 +37716,7 @@
                                         for(var b = 0; b < item.connections.length; b++){
                                             var connection = item.connections[b];
                         
-                                            var destinationUnit = connection.indexOfDestinationUnit != -1 ? control.selection.selectedUnits[connection.indexOfDestinationUnit] : control.scene2.getUnitByName(connection.nameOfDestinationUnit);
+                                            var destinationUnit = connection.indexOfDestinationUnit != -1 ? control.selection.selectedUnits[connection.indexOfDestinationUnit] : control.scene.getUnitByName(connection.nameOfDestinationUnit);
                                             if(destinationUnit == undefined){continue;}
                         
                                             var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
@@ -37707,8 +37731,8 @@
                         
                         //scene file
                             this.new = function(askForConfirmation=false){
-                                // //control switch
-                                //     if(!_canvas_.control.interaction.enableNewScene()){return;}
+                                //control switch
+                                    if(!_canvas_.control.interaction.enableNewScene()){return;}
                         
                         
                                 if(askForConfirmation){
@@ -37741,7 +37765,7 @@
                                             data = this.unpackData(data);
                         
                                         //clear scene
-                                            control.scene2.new();
+                                            control.scene.new();
                         
                                         //print to scene
                                             this.printUnits( data.units );
@@ -37877,7 +37901,7 @@
                         
                         
                         
-                            this.clipboard = _canvas_.control.scene2.documentUnits(this.selectedUnits,true);
+                            this.clipboard = _canvas_.control.scene.documentUnits(this.selectedUnits,true);
                         };
                         this.paste = function(position,rectify=true){
                             //control switch
@@ -37919,7 +37943,7 @@
                                 }
                         
                             //unit printing
-                                _canvas_.control.scene2.printUnits( this.clipboard, rectify );
+                                _canvas_.control.scene.printUnits( this.clipboard, rectify );
                         };
                         this.duplicate = function(rectify=true){
                             //control switch
@@ -37965,7 +37989,7 @@
                         
                             var selectedUnitCount = this.selectedUnits.length;
                             while(this.selectedUnits.length > 0){
-                                control.scene2.removeUnit(this.selectedUnits[0]);
+                                control.scene.removeUnit(this.selectedUnits[0]);
                                 this.deselectUnit(this.selectedUnits[0]);
                             }
                             this.lastSelectedUnits = null;
@@ -38164,9 +38188,9 @@
                                 if(demoURL == undefined){
                                     return;
                                 }else if( !isNaN(parseInt(demoURL)) ){
-                                    document.getElementById('workspaceCanvas').control.scene2.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
+                                    document.getElementById('workspaceCanvas').control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
                                 }else{ 
-                                    document.getElementById('workspaceCanvas').control.scene2.load(demoURL,loadingCompleteCallback);
+                                    document.getElementById('workspaceCanvas').control.scene.load(demoURL,loadingCompleteCallback);
                                 }
                             }
                             function waiter(){
@@ -38257,7 +38281,7 @@
                                                 unit.angle(newUnitAngle);
                 
                                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                                _canvas_.control.scene.rectifyUnitPosition(unit);
                 
                                             //perform all redraws and updates for unit
                                                 if( unit.onrotate ){unit.onrotate();}
@@ -38283,7 +38307,7 @@
                         requiredKeys:[],
                         function:function(){
                             _canvas_.control.selection.selectedUnits.forEach(unit => {
-                                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                _canvas_.control.scene.rectifyUnitPosition(unit);
                                 unit.ioRedraw();
                             });
                             return true;
@@ -38326,7 +38350,7 @@
                                                 unit.y(newUnitPosition.y);
                 
                                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                                _canvas_.control.scene.rectifyUnitPosition(unit);
                 
                                             //perform all redraws and updates for unit
                                                 if( unit.onmove ){unit.onmove();}

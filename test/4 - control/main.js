@@ -8,4 +8,5 @@
 // {{include:2.js}} //menubar test
 // {{include:3.js}}
 // {{include:4.js}} //query string
-{{include:5.js}} //selection
+
+{{include:control.selection.js}} //selection

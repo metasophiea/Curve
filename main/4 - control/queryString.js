@@ -47,9 +47,9 @@ this.demoLoader = function(loadingCompleteCallback,beDumbAboutIt=false){
         if(demoURL == undefined){
             return;
         }else if( !isNaN(parseInt(demoURL)) ){
-            document.getElementById('workspaceCanvas').control.scene2.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
+            document.getElementById('workspaceCanvas').control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
         }else{ 
-            document.getElementById('workspaceCanvas').control.scene2.load(demoURL,loadingCompleteCallback);
+            document.getElementById('workspaceCanvas').control.scene.load(demoURL,loadingCompleteCallback);
         }
     }
     function waiter(){

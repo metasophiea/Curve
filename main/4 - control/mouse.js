@@ -44,7 +44,7 @@ _canvas_.system.mouse.functionList.onmousedown.push(
                         var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
 
                         _canvas_.control.selection.selectUnits(
-                            _canvas_.control.scene2.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
+                            _canvas_.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
                         );
                     },
                 );

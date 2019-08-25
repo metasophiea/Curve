@@ -34,6 +34,12 @@ _canvas_.control = new function(){
                 enableMenubar = bool;
                 if(!enableMenubar){ control.gui.hideMenubar(); }else{ control.gui.showMenubar(); }
             };
+            var enableNewScene = true;
+            this.enableNewScene = function(bool){
+                if(bool==undefined){return enableNewScene;}
+                if(devMode){return;}
+                enableNewScene = bool;
+            };
             var enableSceneSave = true;
             this.enableSceneSave = function(bool){
                 if(bool==undefined){return enableSceneSave;}
@@ -46,9 +52,9 @@ _canvas_.control = new function(){
                 if(devMode){return;}
                 enableSceneLoad = bool;
             };
-            var enableUnloadWarning = false;
 
         //window
+            var enableUnloadWarning = false;
             var enableUnloadWarning_message = "Unsaved work will be lost";
             this.enableUnloadWarning = function(bool,message){
                 if(bool==undefined){return enableUnloadWarning;}
@@ -75,6 +81,12 @@ _canvas_.control = new function(){
                 if(devMode){return;}
                 enableUnitAdditionRemoval = bool;
             };
+            var enableUnitTransfer = true;
+            this.enableUnitTransfer = function(bool){
+                if(bool==undefined){return enableUnitTransfer;}
+                if(devMode){return;}
+                enableUnitTransfer = bool;
+            };
             var enableUnitSelection = true;
             this.enableUnitSelection = function(bool){
                 if(bool==undefined){return enableUnitSelection;}
@@ -86,7 +98,7 @@ _canvas_.control = new function(){
                 if(bool==undefined){return enableUnitInteractable;}
                 if(devMode){return;}
                 enableUnitInteractable = bool;
-                control.scene2.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
+                control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
             };
             var enableUnitCollision = true;
             this.enableUnitCollision = function(bool){
@@ -94,12 +106,18 @@ _canvas_.control = new function(){
                 if(devMode){return;}
                 enableUnitCollision = bool;
             };
+            var enableSnapping = true;
+            this.enableSnapping = function(bool){
+                if(bool==undefined){return enableSnapping;}
+                if(devMode){return;}
+                enableSnapping = bool;
+            };
             var enablCableDisconnectionConnection = true;
             this.enableCableDisconnectionConnection = function(bool){
                 if(bool==undefined){return enablCableDisconnectionConnection;}
                 if(devMode){return;}
                 enablCableDisconnectionConnection = bool;
-                control.scene2.getAllUnits().forEach(a => {
+                control.scene.getAllUnits().forEach(a => {
                     a.allowIOConnections(enablCableDisconnectionConnection);
                     a.allowIODisconnections(enablCableDisconnectionConnection);
                 });
@@ -173,14 +191,8 @@ _canvas_.control = new function(){
         this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
         this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
     };
-    // this.scene = new function(){
-    //     var pane = _canvas_.system.pane.mm;
-    //     var IDcounter = 0;
-
-    //     {{include:scene.js}}
-    // };
-    this.scene2 = new function(){
-        {{include:scene2.js}}
+    this.scene = new function(){
+        {{include:scene.js}}
     };
     this.selection = new function(){
         {{include:selection.js}}

@@ -20,7 +20,7 @@ this.voltage_readout = function(x,y,a){
         ],
         elements:[
             {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.voltage,
+                x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.voltage,
             }},
             {collection:'basic', type:'image', name:'backing', data:{ 
                 x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'

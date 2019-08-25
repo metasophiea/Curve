@@ -1,4 +1,10 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-08-23
+  - added the voltage_dial unit
+  - added the basic_synthesizer (some issues with the wobble features though.
+    Seems you can set them too high and collisions can occur)
+
+
 2019-08-22
   - fixed up system.keyboard, and/or perhaps learned how it works better
   - added "clearClipboard" to control.selection
@@ -9,7 +15,10 @@
   - added ".ioRedraw" to unit builder (which just runs through all available io
     connections and runs their redraw functions)
   - completely replaced control.scene with control.scene2 (action registry needs
-    to be redone)
+    to be redone, and more control.interaction switches)
+  - trashed control.scene, renamed control.scene2 to control.scene
+  - added some more switches to control.interaction
+  - created the signal switch unit
 
 
 2019-08-21

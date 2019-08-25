@@ -25,6 +25,6 @@
 <script>
     //detect demo request
     if(Number.isInteger(parseInt((new URL(window.location.href)).searchParams.get("demo")))){
-        document.getElementById('workspaceCanvas').control.scene2.load('https://curve.metasophiea.com/demos/'+parseInt((new URL(window.location.href)).searchParams.get("demo"))+'.crv');
+        document.getElementById('workspaceCanvas').control.scene.load('https://curve.metasophiea.com/demos/'+parseInt((new URL(window.location.href)).searchParams.get("demo"))+'.crv');
     }
 </script>

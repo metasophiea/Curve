@@ -37011,7 +37011,7 @@
                                     var end = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
             
                                     _canvas_.control.selection.selectUnits(
-                                        _canvas_.control.scene2.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
+                                        _canvas_.control.scene.getUnitsWithinPoly([ {x:start.x,y:start.y}, {x:end.x,y:start.y}, {x:end.x,y:end.y}, {x:start.x,y:end.y} ]) 
                                     );
                                 },
                             );
@@ -37094,13 +37094,13 @@
             _canvas_.system.keyboard.functionList.onkeydown.push(
                 {
                     requiredKeys:[['control','F2'],['command','F2']],
-                    function:function(data){ _canvas_.control.scene2.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
+                    function:function(data){ _canvas_.control.scene.load(undefined,undefined,true); _canvas_.system.keyboard.releaseAll(); return true; }
                 }
             );
             _canvas_.system.keyboard.functionList.onkeydown.push(
                 {
                     requiredKeys:[['control','F3'],['command','F3']],
-                    function:function(data){ _canvas_.control.scene2.save(); _canvas_.system.keyboard.releaseAll(); return true; }
+                    function:function(data){ _canvas_.control.scene.save(); _canvas_.system.keyboard.releaseAll(); return true; }
                 }
             );
             _canvas_.system.keyboard.functionList.onkeydown.push(
@@ -37187,6 +37187,12 @@
                             enableMenubar = bool;
                             if(!enableMenubar){ control.gui.hideMenubar(); }else{ control.gui.showMenubar(); }
                         };
+                        var enableNewScene = true;
+                        this.enableNewScene = function(bool){
+                            if(bool==undefined){return enableNewScene;}
+                            if(devMode){return;}
+                            enableNewScene = bool;
+                        };
                         var enableSceneSave = true;
                         this.enableSceneSave = function(bool){
                             if(bool==undefined){return enableSceneSave;}
@@ -37199,9 +37205,9 @@
                             if(devMode){return;}
                             enableSceneLoad = bool;
                         };
-                        var enableUnloadWarning = false;
             
                     //window
+                        var enableUnloadWarning = false;
                         var enableUnloadWarning_message = "Unsaved work will be lost";
                         this.enableUnloadWarning = function(bool,message){
                             if(bool==undefined){return enableUnloadWarning;}
@@ -37228,6 +37234,12 @@
                             if(devMode){return;}
                             enableUnitAdditionRemoval = bool;
                         };
+                        var enableUnitTransfer = true;
+                        this.enableUnitTransfer = function(bool){
+                            if(bool==undefined){return enableUnitTransfer;}
+                            if(devMode){return;}
+                            enableUnitTransfer = bool;
+                        };
                         var enableUnitSelection = true;
                         this.enableUnitSelection = function(bool){
                             if(bool==undefined){return enableUnitSelection;}
@@ -37239,7 +37251,7 @@
                             if(bool==undefined){return enableUnitInteractable;}
                             if(devMode){return;}
                             enableUnitInteractable = bool;
-                            control.scene2.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
+                            control.scene.getAllUnits().forEach(a => a.interactable(enableUnitInteractable));
                         };
                         var enableUnitCollision = true;
                         this.enableUnitCollision = function(bool){
@@ -37247,12 +37259,18 @@
                             if(devMode){return;}
                             enableUnitCollision = bool;
                         };
+                        var enableSnapping = true;
+                        this.enableSnapping = function(bool){
+                            if(bool==undefined){return enableSnapping;}
+                            if(devMode){return;}
+                            enableSnapping = bool;
+                        };
                         var enablCableDisconnectionConnection = true;
                         this.enableCableDisconnectionConnection = function(bool){
                             if(bool==undefined){return enablCableDisconnectionConnection;}
                             if(devMode){return;}
                             enablCableDisconnectionConnection = bool;
-                            control.scene2.getAllUnits().forEach(a => {
+                            control.scene.getAllUnits().forEach(a => {
                                 a.allowIOConnections(enablCableDisconnectionConnection);
                                 a.allowIODisconnections(enablCableDisconnectionConnection);
                             });
@@ -37464,15 +37482,21 @@
                     this.stopMouseScroll = function(bool){ return _canvas_.core.viewport.stopMouseScroll(bool); }
                     this.activeRender = function(bool){ return _canvas_.core.render.active(bool); };
                 };
-                // this.scene = new function(){
-                //     var pane = _canvas_.system.pane.mm;
-                //     var IDcounter = 0;
-            
-                // };
-                this.scene2 = new function(){
+                this.scene = new function(){
                     var IDcounter = 0;
                     
-                    this.listLayers = function(){
+                    this.listLayers = function(printToConsole=false){
+                        if(!printToConsole){
+                            function print(unit){
+                                return { model:unit.model, name:unit.name, x:unit.x(), y:unit.y(), a:unit.angle() };
+                            }
+                            return {
+                                foreground:_canvas_.system.pane.mf.children().filter( a => !a._isCable ).map(print),
+                                middleground:_canvas_.system.pane.mm.children().filter( a => !a._isCable ).map(print),
+                                background:_canvas_.system.pane.mb.children().filter( a => !a._isCable ).map(print),
+                            };
+                        }
+                    
                         function print(unit){
                             console.log( '\t', 'model:'+unit.model, 'name:'+unit.name, '-', '{x:'+unit.x()+',y:'+unit.y()+',a:'+unit.angle()+'}' );
                         }
@@ -37488,16 +37512,16 @@
                             data:_canvas_.library.misc.serialize(data,compress)
                         },false);
                         
-                        //serialize data
-                            data = _canvas_.library.misc.serialize(data,compress);
+                        // //serialize data
+                        //     data = _canvas_.library.misc.serialize(data,compress);
                     
-                        //wrap serialized scene
-                            data = { compressed:compress, data:data };
+                        // //wrap serialized scene
+                        //     data = { compressed:compress, data:data };
                     
-                        //serialize again
-                            data = _canvas_.library.misc.serialize(data,false);
+                        // //serialize again
+                        //     data = _canvas_.library.misc.serialize(data,false);
                     
-                        return data;
+                        // return data;
                     };
                     this.unpackData = function(data){
                         //deserialize first layer
@@ -37547,8 +37571,8 @@
                     //unit extra features
                         var snapping = {active:false,x:10,y:10,angle:Math.PI/8};
                         this.activeSnapping = function(bool,pane=_canvas_.system.pane.mm){
-                            // //control switch
-                            //     if(!_canvas_.control.interaction.enableSnapping()){return;}
+                            //control switch
+                                if(!_canvas_.control.interaction.enableSnapping()){return;}
                     
                             if(bool == undefined){return snapping.active;}
                     
@@ -37563,7 +37587,7 @@
                                 if(!unit.collisionActive){return false;}
                     
                             //discover if there's an overlap; if not skip all this
-                                var allOtherUnits = control.scene2.getAllUnits(pane).filter(a => a != unit && a.collisionActive).map(a => { return a.space; });
+                                var allOtherUnits = control.scene.getAllUnits(pane).filter(a => a != unit && a.collisionActive).map(a => { return a.space; });
                                 if( !_canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons( unit.space, allOtherUnits ) ){return false;}
                     
                             //get the offset which will allow this unit to fit
@@ -37603,7 +37627,7 @@
                                 tmp = _canvas_.control.grapple.declare(tmp);
                     
                             //if snapping is active in the scene, don't forget to activate it for this new unit too
-                                if(_canvas_.control.scene2.activeSnapping()){ tmp.snappingActive(true); }
+                                if(_canvas_.control.scene.activeSnapping()){ tmp.snappingActive(true); }
                     
                             //if requestsed to do so; check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
                                 if(rectify){ this.rectifyUnitPosition(tmp); }
@@ -37616,7 +37640,7 @@
                             //register action
                                 control.actionRegistry.registerAction(
                                     {
-                                        functionName:'control.scene2.addUnit',
+                                        functionName:'control.scene.addUnit',
                                         arguments:[x,y,a,model,collection,forceName,rectify,pane],
                                         name:tmp.name,
                                     }
@@ -37631,7 +37655,7 @@
                             //register action
                                 control.actionRegistry.registerAction(
                                     {
-                                        functionName:'control.scene2.removeUnit',
+                                        functionName:'control.scene.removeUnit',
                                         name:unit.name,
                                         pane:_canvas_.system.pane.getMiddlegroundPane(unit),
                                         data:this.documentUnits([unit]),
@@ -37646,13 +37670,13 @@
                                 _canvas_.system.pane.getMiddlegroundPane(unit).remove(unit);
                         };
                         this.transferUnits = function(units,destinationPane){
-                            // //control switch
-                            //     if(!_canvas_.control.interaction.enableUnitTransfer()){return;}
+                            //control switch
+                                if(!_canvas_.control.interaction.enableUnitTransfer()){return;}
                             
                             //register action
                                 control.actionRegistry.registerAction(
                                     {
-                                        functionName:'control.scene2.transferUnit',
+                                        functionName:'control.scene.transferUnit',
                                         arguments:[units.map(unit=>unit.name),destinationPane],
                                     }
                                 );
@@ -37731,7 +37755,7 @@
                                 var item = units[a];
                     
                                 //create the object with its new position adding it to the pane
-                                    var unit = control.scene2.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, undefined, rectify, pane);
+                                    var unit = control.scene.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, undefined, rectify, pane);
                                     printedUnits.push(unit);
                     
                                 //import data and select unit
@@ -37743,7 +37767,7 @@
                                     for(var b = 0; b < item.connections.length; b++){
                                         var connection = item.connections[b];
                     
-                                        var destinationUnit = connection.indexOfDestinationUnit != -1 ? control.selection.selectedUnits[connection.indexOfDestinationUnit] : control.scene2.getUnitByName(connection.nameOfDestinationUnit);
+                                        var destinationUnit = connection.indexOfDestinationUnit != -1 ? control.selection.selectedUnits[connection.indexOfDestinationUnit] : control.scene.getUnitByName(connection.nameOfDestinationUnit);
                                         if(destinationUnit == undefined){continue;}
                     
                                         var sourceNode = unit.io[connection.typeAndNameOfSourcePort.type][connection.typeAndNameOfSourcePort.name];
@@ -37758,8 +37782,8 @@
                     
                     //scene file
                         this.new = function(askForConfirmation=false){
-                            // //control switch
-                            //     if(!_canvas_.control.interaction.enableNewScene()){return;}
+                            //control switch
+                                if(!_canvas_.control.interaction.enableNewScene()){return;}
                     
                     
                             if(askForConfirmation){
@@ -37792,7 +37816,7 @@
                                         data = this.unpackData(data);
                     
                                     //clear scene
-                                        control.scene2.new();
+                                        control.scene.new();
                     
                                     //print to scene
                                         this.printUnits( data.units );
@@ -37928,7 +37952,7 @@
                     
                     
                     
-                        this.clipboard = _canvas_.control.scene2.documentUnits(this.selectedUnits,true);
+                        this.clipboard = _canvas_.control.scene.documentUnits(this.selectedUnits,true);
                     };
                     this.paste = function(position,rectify=true){
                         //control switch
@@ -37970,7 +37994,7 @@
                             }
                     
                         //unit printing
-                            _canvas_.control.scene2.printUnits( this.clipboard, rectify );
+                            _canvas_.control.scene.printUnits( this.clipboard, rectify );
                     };
                     this.duplicate = function(rectify=true){
                         //control switch
@@ -38016,7 +38040,7 @@
                     
                         var selectedUnitCount = this.selectedUnits.length;
                         while(this.selectedUnits.length > 0){
-                            control.scene2.removeUnit(this.selectedUnits[0]);
+                            control.scene.removeUnit(this.selectedUnits[0]);
                             this.deselectUnit(this.selectedUnits[0]);
                         }
                         this.lastSelectedUnits = null;
@@ -38215,9 +38239,9 @@
                             if(demoURL == undefined){
                                 return;
                             }else if( !isNaN(parseInt(demoURL)) ){
-                                document.getElementById('workspaceCanvas').control.scene2.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
+                                document.getElementById('workspaceCanvas').control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
                             }else{ 
-                                document.getElementById('workspaceCanvas').control.scene2.load(demoURL,loadingCompleteCallback);
+                                document.getElementById('workspaceCanvas').control.scene.load(demoURL,loadingCompleteCallback);
                             }
                         }
                         function waiter(){
@@ -38308,7 +38332,7 @@
                                             unit.angle(newUnitAngle);
             
                                         //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                            _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                            _canvas_.control.scene.rectifyUnitPosition(unit);
             
                                         //perform all redraws and updates for unit
                                             if( unit.onrotate ){unit.onrotate();}
@@ -38334,7 +38358,7 @@
                     requiredKeys:[],
                     function:function(){
                         _canvas_.control.selection.selectedUnits.forEach(unit => {
-                            _canvas_.control.scene2.rectifyUnitPosition(unit);
+                            _canvas_.control.scene.rectifyUnitPosition(unit);
                             unit.ioRedraw();
                         });
                         return true;
@@ -38377,7 +38401,7 @@
                                             unit.y(newUnitPosition.y);
             
                                         //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                            _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                            _canvas_.control.scene.rectifyUnitPosition(unit);
             
                                         //perform all redraws and updates for unit
                                             if( unit.onmove ){unit.onmove();}
@@ -44463,6 +44487,17 @@
                                         object['splitter_'+a].outGain(1,1-value);
                                     }
                                 }(a);
+                    
+                                object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
+                                    return function(value){
+                                        object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
+                                    }
+                                }(a);
+                                object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
+                                    return function(value){
+                                        object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
+                                    }
+                                }(a);
                             }
                     
                         //interface
@@ -44636,7 +44671,7 @@
                             ],
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.voltage,
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.voltage,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', data:{ 
                                     x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
@@ -44873,6 +44908,58 @@
                         category:'tools',
                         helpURL:'/help/units/beta/ruler/'
                     };
+                    this.voltage_dial = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'voltage_dial/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:275, height:260 },
+                            design:{ width:4.25, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'voltage_dial',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'out', data:{ 
+                                    x:measurements.drawing.width/2.2 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                },
+                    
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'theDial',data:{
+                                    x:20, y:20, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                            ]
+                        };
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //circuitry
+                            object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){
+                                object.elements.connectionNode_voltage.out.set( value );
+                            };
+                            
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_dial.metadata = {
+                        name:'Voltage Dial',
+                        category:'humanInterfaceDevices',
+                        helpURL:'/help/units/beta/voltage_dial/'
+                    };
                     this.musicalKeyboard = function(x,y,a){
                         var imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
                         var keyCount = 49;
@@ -45043,6 +45130,57 @@
                         category:'humanInterfaceDevices',
                         helpURL:'/help/units/beta/musicalKeyboard/'
                     };
+                    this.signal_switch = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'signal_switch/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:149, height:260 },
+                            design:{ width:2.125, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'signal_switch',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                    x:measurements.drawing.width/2.3 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                },
+                                {collection:'control', type:'slide_discrete_image',name:'theSwitch',data:{
+                                    x:5.25, y:5.25, width:9.5, height:29.5, handleHeight:1/2, resetValue:0, optionCount:2, value:1,
+                                    handleURL:imageStoreURL_localPrefix+'handle.png',
+                                }},
+                            ]
+                        };
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //circuitry
+                            object.elements.slide_discrete_image.theSwitch.onchange = function(value){
+                                object.elements.connectionNode_signal.out.set( 1-value == 0 ? false : true );
+                            };
+                            
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_switch.metadata = {
+                        name:'Signal Switch',
+                        category:'humanInterfaceDevices',
+                        helpURL:'/help/units/beta/signal_switch/'
+                    };
                     var imageStoreURL = 'images/units/beta/';
                     var style = {
                         background:{r:70/255,g:70/255,b:70/255,a:1},
@@ -45126,238 +45264,300 @@
                     //         thickness:15/4,
                     //     },
                     // };
-                    // this.basicSynthesizer = function(x,y,a){
-                    //     var shape = [
-                    //         {x:0,y:0},
-                    //         {x:185,y:0},
-                    //         {x:185,y:45},
-                    //         {x:120,y:110},
-                    //         {x:0,y:110},
-                    //     ];
+                    this.basic_synthesizer = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:1115, height:680 },
+                            design:{ width:18.25, height:11 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        measurements.drawingUnit = {
+                            width: measurements.drawing.width/measurements.design.width,
+                            height: measurements.drawing.height/measurements.design.height,
+                        };
+                        var dialColours = {
+                            outputGain:{r:0.93,g:0.45,b:0.31,a:1},
+                            attack:{r:0.99,g:0.93,b:0.31,a:1},
+                            release:{r:0.44,g:0.95,b:0.79,a:1},
+                            detune_note:{r:0.61,g:0.16,b:0.96,a:1},
+                            detune_octave:{r:0.92,g:0.2,b:0.47,a:1},
+                            periodicWaveType:{r:0.75,g:0.75,b:0.75,a:1},
+                            gainWobblePeriod:{r:0.57,g:0.97,b:0.3,a:1},
+                            gainWobbleDepth:{r:0.46,g:0.98,b:0.65,a:1},
+                            detuneWobblePeriod:{r:0.94,g:0.55,b:0.2,a:1},
+                            detuneWobbleDepth:{r:0.96,g:0.75,b:0.26,a:1},
+                        };
+                        
+                        var design = {
+                            name:'basic_synthesizer',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:measurements.drawingUnit.width, y:0 },
+                                { x:measurements.drawing.width -offset -measurements.drawingUnit.width, y:0 },
+                                { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height },
+                                { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height*4.5+offset/2.5 },
+                                { x:measurements.drawingUnit.width*12 -offset/1.5, y:measurements.drawing.height -offset },
+                                { x:measurements.drawingUnit.width, y:measurements.drawing.height -offset },
+                                { x:0, y:measurements.drawing.height -offset -measurements.drawingUnit.height },
+                                { x:0, y:measurements.drawingUnit.height },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
+                                    x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
+                                    x:20 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_attack', data:{ 
+                                    x:55 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_release', data:{ 
+                                    x:87.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_detune_note', data:{ 
+                                    x:122.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_down', data:{ 
+                                    x:155 - 10/2 - 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_up', data:{ 
+                                    x:155 - 10/2 + 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'io_midiNoteInput', data:{ 
+                                    x:measurements.drawing.width - 5/1.5, y:27.5 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobblePeriod', data:{ 
+                                    x:40 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobbleDepth', data:{ 
+                                    x:40 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobblePeriod', data:{ 
+                                    x:72.5 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobbleDepth', data:{ 
+                                    x:72.5 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 - 1/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 -1.25 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 +1.25 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 +0.9 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -0.9 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 +2.4 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -2.4 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                }},
                     
                     
-                    //     var design = {
-                    //         name:'basicSynthesizer',
-                    //         x:x, y:y, angle:a,
-                    //         space:shape,
-                    //         elements:[
-                    //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                },
                     
-                    //             {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                    //                 x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.audio.dim, 
-                    //                     glow:style.connectionNode.audio.glow,
-                    //                     cable_dim:style.connectionCable.audio.dim, 
-                    //                     cable_glow:style.connectionCable.audio.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_data', name:'noteInput', data:{ 
-                    //                 x:185, y:15, width:5, height:15, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.data.dim, 
-                    //                     glow:style.connectionNode.data.glow,
-                    //                     cable_dim:style.connectionCable.data.dim, 
-                    //                     cable_glow:style.connectionCable.data.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_data', name:'waveTypeInput', data:{ 
-                    //                 x:152.5, y:77.5, width:5, height:15, cableVersion:2, angle:Math.PI/4, 
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.data.dim, 
-                    //                     glow:style.connectionNode.data.glow,
-                    //                     cable_dim:style.connectionCable.data.dim, 
-                    //                     cable_glow:style.connectionCable.data.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_gain', data:{ 
-                    //                 x:12.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_attack', data:{ 
-                    //                 x:52.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_release', data:{ 
-                    //                 x:82.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_detune', data:{ 
-                    //                 x:122.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_octave', data:{ 
-                    //                 x:152.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_rate', data:{ 
-                    //                 x:35, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_depth', data:{ 
-                    //                 x:52.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_rate', data:{ 
-                    //                 x:85, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_depth', data:{ 
-                    //                 x:102.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
+                                    x:20, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0.5, value:0.5,
+                                    style:{ handle:dialColours.outputGain, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'attack',data:{
+                                    x:55, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.attack, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'release',data:{
+                                    x:87.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.release, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'detune_note',data:{
+                                    x:122.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:dialColours.detune_note, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
+                                    x:155, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:3, arcDistance:1.2, resetValue:3, optionCount:7,
+                                    style:{ handle:dialColours.detune_octave, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'periodicWaveType',data:{
+                                    x:130, y:72.5, radius:32.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.periodicWaveType, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobblePeriod',data:{
+                                    x:40, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.gainWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobbleDepth',data:{
+                                    x:40, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.gainWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobblePeriod',data:{
+                                    x:72.5, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.detuneWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobbleDepth',data:{
+                                    x:72.5, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.detuneWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
                     
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_gain',data:{
-                    //                 x:30-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:235/255,g:113/255,b:81/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_attack',data:{
-                    //                 x:70-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:251/255,g:235/255,b:79/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_release',data:{
-                    //                 x:100-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:117/255,g:249/255,b:209/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_detune',data:{
-                    //                 x:140-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:159/255,g:43/255,b:245/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_octave',data:{
-                    //                 x:170-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, optionCount:7,
-                    //                 style:{
-                    //                     handle:{r:233/255,g:52/255,b:119/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_rate',data:{
-                    //                 x:50-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:155/255,g:250/255,b:78/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_depth',data:{
-                    //                 x:50-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:117/255,g:249/255,b:159/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_rate',data:{
-                    //                 x:100-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:239/255,g:145/255,b:53/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_depth',data:{
-                    //                 x:100-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:244/255,g:193/255,b:66/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_waveType',data:{
-                    //                 x:150-15, y:85-15, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:175/255,g:175/255,b:175/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
+                                {collection:'control', type:'button_circle', name:'panicButton', data:{ 
+                                    x:162.5, y:52.5, r:15/2, style:{
+                                        background__up__colour:{r:0.75,g:0.75,b:0.75,a:1},
+                                        background__hover__colour:{r:0.85,g:0.85,b:0.85,a:1},
+                                        background__press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                        background__hover_press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                    },
+                                }},
+                            ]
+                        };
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
                     
-                    //         ],
-                    //     };
-                    //     //add bumpers
-                    //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                    //         if(c == shape.length){c = 0;}
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    gain: object.elements.dial_colourWithIndent_continuous.outputGain.get(),
+                                    attack: object.elements.dial_colourWithIndent_continuous.attack.get()*10,
+                                    release: object.elements.dial_colourWithIndent_continuous.release.get()*10,
+                                    detune: 100*((object.elements.dial_colourWithIndent_continuous.detune_note.get()*2)-1),
+                                    octave: object.elements.dial_colourWithIndent_discrete.detune_octave.get()-3,
+                                    waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_colourWithIndent_discrete.periodicWaveType.get()],
+                                    gainWobble:{
+                                        rate: object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.get()*100,
+                                        depth: object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.get()
+                                    },
+                                    detuneWobble:{
+                                        rate: object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.get()*100,
+                                        depth: object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.get()
+                                    },
+                                };
+                            };
+                            object.importData = function(data){
+                                if(data == undefined){return;}
                     
-                    //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                    //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                                object.elements.dial_colourWithIndent_continuous.outputGain.set(data.gain);
+                                object.elements.dial_colourWithIndent_continuous.attack.set(data.attack/10);
+                                object.elements.dial_colourWithIndent_continuous.release.set(data.release/10);
+                                object.elements.dial_colourWithIndent_continuous.detune_note.set( (1+(data.detune/100))/2 );
+                                object.elements.dial_colourWithIndent_discrete.detune_octave.set(data.octave+3);
+                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+                                object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(data.gainWobble.rate/100);
+                                object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(data.gainWobble.depth);
+                                object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(data.detuneWobble.rate/100);
+                                object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(data.detuneWobble.depth);
+                            };
                     
-                    //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                    //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                    //         ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                    //     }
+                        //circuitry
+                            var attributes = {
+                                detuneLimits: {min:-100, max:100}
+                            };
+                            object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+                            object.__synthesizer.out().connect( object.elements.connectionNode_audio.io_output.in() );
                     
-                    //     //main object
-                    //         var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        //wiring
+                            object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){ object.__synthesizer.gain( value ); };
+                            object.elements.dial_colourWithIndent_continuous.attack.onchange = function(value){ object.__synthesizer.attack( value ); };
+                            object.elements.dial_colourWithIndent_continuous.release.onchange = function(value){ object.__synthesizer.release( value ); };
+                            object.elements.dial_colourWithIndent_continuous.detune_note.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); };
+                            object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){ object.__synthesizer.octave(value-3); };
+                            object.elements.dial_colourWithIndent_discrete.periodicWaveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); };
+                            object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                            object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value);};
+                            object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                            object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); };
+                            object.elements.button_circle.panicButton.onpress = function(){object.__synthesizer.panic(); };
                     
-                    //     return object;
-                    // };
+                            object.elements.connectionNode_data.io_midiNoteInput.onreceive = function(address,data){
+                                if(address != 'midinumber'){return;}
+                                object.__synthesizer.perform(data);
+                            };
+                            object.elements.connectionNode_data.io_periodicWaveType_dataIn.onreceive = function(address,data){
+                                if(address != 'periodicWave'){return;}
+                                object.__synthesizer.periodicWave(data);
+                            };
+                            object.elements.connectionNode_voltage.io_outputGain.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_attack.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.attack.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_release.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.release.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_detune_note.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.detune_note.set(value);
+                            };
+                            object.elements.connectionNode_signal.io_detune_octave_down.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.detune_octave.set(
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.get() - 1
+                                );
+                            };
+                            object.elements.connectionNode_signal.io_detune_octave_up.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.detune_octave.set(
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.get() + 1
+                                );
+                            };
+                            object.elements.connectionNode_voltage.io_gainWobblePeriod.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_gainWobbleDepth.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_detuneWobblePeriod.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_detuneWobbleDepth.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);
+                            };
+                            object.elements.connectionNode_signal.io_periodicWaveType_down.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() - 1
+                                );
+                            };
+                            object.elements.connectionNode_signal.io_periodicWaveType_up.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() + 1
+                                );
+                            };
+                            object.elements.connectionNode_signal.io_panic.onchange = function(value){
+                                if(value){
+                                    object.elements.button_circle.panicButton.press();
+                                }else{
+                                    object.elements.button_circle.panicButton.release();
+                                }
+                            };
                     
-                    // this.basicSynthesizer.metadata = {
-                    //     name:'Basic Synthesizer',
-                    //     category:'synthesizer',
-                    //     helpURL:'https://curve.metasophiea.com/help/units/beta/basicSynthesizer/'
-                    // };
+                        //interface
+                            object.i = {
+                                periodicWave:function(data){object.__synthesizer.periodicWave(data);},
+                                midiNote:function(data){object.__synthesizer.perform(data);},
+                    
+                                gain:function(value){object.elements.dial_colourWithIndent_continuous.outputGain.set(value);},
+                                attack:function(value){object.elements.dial_colourWithIndent_continuous.attack.set(value);},
+                                release:function(value){object.elements.dial_colourWithIndent_continuous.release.set(value);},
+                                detune:function(value){object.elements.dial_colourWithIndent_continuous.detune_note.set(value);},
+                                octave:function(value){object.elements.dial_colourWithIndent_discrete.detune_octave.set(value);},
+                                waveType:function(value){object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(value);},
+                                gainWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);},
+                                gainWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);},
+                                detuneWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);},
+                                detuneWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);},
+                            };
+                            
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.basic_synthesizer.metadata = {
+                        name:'Basic Synthesizer',
+                        category:'synthesizers',
+                        helpURL:'/help/units/beta/basic_synthesizer/'
+                    };
                     this.audio_duplicator = function(x,y,a){
                         var width = 320; var height = 320;
                         var div = 6.4;
@@ -45743,6 +45943,17 @@
                                         object['splitter_'+a].outGain(1,1-value);
                                     }
                                 }(a);
+                    
+                                object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
+                                    return function(value){
+                                        object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
+                                    }
+                                }(a);
+                                object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
+                                    return function(value){
+                                        object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
+                                    }
+                                }(a);
                             }
                     
                         //interface
@@ -45916,7 +46127,7 @@
                             ],
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.voltage,
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.voltage,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', data:{ 
                                     x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
@@ -46153,6 +46364,58 @@
                         category:'tools',
                         helpURL:'/help/units/beta/ruler/'
                     };
+                    this.voltage_dial = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'voltage_dial/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:275, height:260 },
+                            design:{ width:4.25, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'voltage_dial',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'out', data:{ 
+                                    x:measurements.drawing.width/2.2 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                },
+                    
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'theDial',data:{
+                                    x:20, y:20, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                            ]
+                        };
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //circuitry
+                            object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){
+                                object.elements.connectionNode_voltage.out.set( value );
+                            };
+                            
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_dial.metadata = {
+                        name:'Voltage Dial',
+                        category:'humanInterfaceDevices',
+                        helpURL:'/help/units/beta/voltage_dial/'
+                    };
                     this.musicalKeyboard = function(x,y,a){
                         var imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
                         var keyCount = 49;
@@ -46323,6 +46586,57 @@
                         category:'humanInterfaceDevices',
                         helpURL:'/help/units/beta/musicalKeyboard/'
                     };
+                    this.signal_switch = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'signal_switch/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:149, height:260 },
+                            design:{ width:2.125, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        
+                        var design = {
+                            name:'signal_switch',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:0                                     },
+                                { x:measurements.drawing.width -offset, y:0                                     },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
+                                { x:0,                                  y:measurements.drawing.height -offset   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                    x:measurements.drawing.width/2.3 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
+                                },
+                                {collection:'control', type:'slide_discrete_image',name:'theSwitch',data:{
+                                    x:5.25, y:5.25, width:9.5, height:29.5, handleHeight:1/2, resetValue:0, optionCount:2, value:1,
+                                    handleURL:imageStoreURL_localPrefix+'handle.png',
+                                }},
+                            ]
+                        };
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                    
+                        //circuitry
+                            object.elements.slide_discrete_image.theSwitch.onchange = function(value){
+                                object.elements.connectionNode_signal.out.set( 1-value == 0 ? false : true );
+                            };
+                            
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_switch.metadata = {
+                        name:'Signal Switch',
+                        category:'humanInterfaceDevices',
+                        helpURL:'/help/units/beta/signal_switch/'
+                    };
                     var imageStoreURL = 'images/units/beta/';
                     var style = {
                         background:{r:70/255,g:70/255,b:70/255,a:1},
@@ -46406,238 +46720,300 @@
                     //         thickness:15/4,
                     //     },
                     // };
-                    // this.basicSynthesizer = function(x,y,a){
-                    //     var shape = [
-                    //         {x:0,y:0},
-                    //         {x:185,y:0},
-                    //         {x:185,y:45},
-                    //         {x:120,y:110},
-                    //         {x:0,y:110},
-                    //     ];
+                    this.basic_synthesizer = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:1115, height:680 },
+                            design:{ width:18.25, height:11 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                        measurements.drawingUnit = {
+                            width: measurements.drawing.width/measurements.design.width,
+                            height: measurements.drawing.height/measurements.design.height,
+                        };
+                        var dialColours = {
+                            outputGain:{r:0.93,g:0.45,b:0.31,a:1},
+                            attack:{r:0.99,g:0.93,b:0.31,a:1},
+                            release:{r:0.44,g:0.95,b:0.79,a:1},
+                            detune_note:{r:0.61,g:0.16,b:0.96,a:1},
+                            detune_octave:{r:0.92,g:0.2,b:0.47,a:1},
+                            periodicWaveType:{r:0.75,g:0.75,b:0.75,a:1},
+                            gainWobblePeriod:{r:0.57,g:0.97,b:0.3,a:1},
+                            gainWobbleDepth:{r:0.46,g:0.98,b:0.65,a:1},
+                            detuneWobblePeriod:{r:0.94,g:0.55,b:0.2,a:1},
+                            detuneWobbleDepth:{r:0.96,g:0.75,b:0.26,a:1},
+                        };
+                        
+                        var design = {
+                            name:'basic_synthesizer',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:measurements.drawingUnit.width, y:0 },
+                                { x:measurements.drawing.width -offset -measurements.drawingUnit.width, y:0 },
+                                { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height },
+                                { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height*4.5+offset/2.5 },
+                                { x:measurements.drawingUnit.width*12 -offset/1.5, y:measurements.drawing.height -offset },
+                                { x:measurements.drawingUnit.width, y:measurements.drawing.height -offset },
+                                { x:0, y:measurements.drawing.height -offset -measurements.drawingUnit.height },
+                                { x:0, y:measurements.drawingUnit.height },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
+                                    x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
+                                    x:20 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_attack', data:{ 
+                                    x:55 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_release', data:{ 
+                                    x:87.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_detune_note', data:{ 
+                                    x:122.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_down', data:{ 
+                                    x:155 - 10/2 - 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_up', data:{ 
+                                    x:155 - 10/2 + 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'io_midiNoteInput', data:{ 
+                                    x:measurements.drawing.width - 5/1.5, y:27.5 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobblePeriod', data:{ 
+                                    x:40 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobbleDepth', data:{ 
+                                    x:40 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobblePeriod', data:{ 
+                                    x:72.5 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobbleDepth', data:{ 
+                                    x:72.5 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 - 1/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 -1.25 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 +1.25 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 +0.9 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -0.9 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
+                                    x:measurements.drawingUnit.width*(14+3/4-1/8 +2.4 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -2.4 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                }},
                     
                     
-                    //     var design = {
-                    //         name:'basicSynthesizer',
-                    //         x:x, y:y, angle:a,
-                    //         space:shape,
-                    //         elements:[
-                    //             {collection:'basic', type:'polygon', name:'backing', data:{pointsAsXYArray:shape, colour:style.background}},
+                                {collection:'basic', type:'image', name:'backing', 
+                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                },
                     
-                    //             {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                    //                 x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, isAudioOutput:true, 
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.audio.dim, 
-                    //                     glow:style.connectionNode.audio.glow,
-                    //                     cable_dim:style.connectionCable.audio.dim, 
-                    //                     cable_glow:style.connectionCable.audio.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_data', name:'noteInput', data:{ 
-                    //                 x:185, y:15, width:5, height:15, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.data.dim, 
-                    //                     glow:style.connectionNode.data.glow,
-                    //                     cable_dim:style.connectionCable.data.dim, 
-                    //                     cable_glow:style.connectionCable.data.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_data', name:'waveTypeInput', data:{ 
-                    //                 x:152.5, y:77.5, width:5, height:15, cableVersion:2, angle:Math.PI/4, 
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.data.dim, 
-                    //                     glow:style.connectionNode.data.glow,
-                    //                     cable_dim:style.connectionCable.data.dim, 
-                    //                     cable_glow:style.connectionCable.data.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_gain', data:{ 
-                    //                 x:12.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_attack', data:{ 
-                    //                 x:52.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_release', data:{ 
-                    //                 x:82.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_detune', data:{ 
-                    //                 x:122.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_octave', data:{ 
-                    //                 x:152.5, y:0, width:5, height:12.5, angle:Math.PI*1.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_rate', data:{ 
-                    //                 x:35, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_tremolo_depth', data:{ 
-                    //                 x:52.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_rate', data:{ 
-                    //                 x:85, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
-                    //             {collection:'dynamic', type:'connectionNode_voltage', name:'connection_vibrato_depth', data:{ 
-                    //                 x:102.5, y:110, width:5, height:12.5, angle:Math.PI*0.5, cableVersion:2,
-                    //                 style:{ 
-                    //                     dim:style.connectionNode.voltage.dim, 
-                    //                     glow:style.connectionNode.voltage.glow, 
-                    //                     cable_dim:style.connectionCable.voltage.dim, 
-                    //                     cable_glow:style.connectionCable.voltage.glow,
-                    //                 },
-                    //             }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
+                                    x:20, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0.5, value:0.5,
+                                    style:{ handle:dialColours.outputGain, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'attack',data:{
+                                    x:55, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.attack, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'release',data:{
+                                    x:87.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.release, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'detune_note',data:{
+                                    x:122.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
+                                    style:{ handle:dialColours.detune_note, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
+                                    x:155, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:3, arcDistance:1.2, resetValue:3, optionCount:7,
+                                    style:{ handle:dialColours.detune_octave, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'periodicWaveType',data:{
+                                    x:130, y:72.5, radius:32.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.periodicWaveType, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobblePeriod',data:{
+                                    x:40, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.gainWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobbleDepth',data:{
+                                    x:40, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.gainWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobblePeriod',data:{
+                                    x:72.5, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.detuneWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
+                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobbleDepth',data:{
+                                    x:72.5, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
+                                    style:{ handle:dialColours.detuneWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
+                                }},
                     
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_gain',data:{
-                    //                 x:30-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:235/255,g:113/255,b:81/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_attack',data:{
-                    //                 x:70-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:251/255,g:235/255,b:79/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_release',data:{
-                    //                 x:100-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:117/255,g:249/255,b:209/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_detune',data:{
-                    //                 x:140-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:159/255,g:43/255,b:245/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_octave',data:{
-                    //                 x:170-12.5, y:40-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, optionCount:7,
-                    //                 style:{
-                    //                     handle:{r:233/255,g:52/255,b:119/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_rate',data:{
-                    //                 x:50-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:155/255,g:250/255,b:78/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_tremolo_depth',data:{
-                    //                 x:50-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:117/255,g:249/255,b:159/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_rate',data:{
-                    //                 x:100-12.5, y:75-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:239/255,g:145/255,b:53/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_vibrato_depth',data:{
-                    //                 x:100-12.5, y:105-12.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:244/255,g:193/255,b:66/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
-                    //             {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_waveType',data:{
-                    //                 x:150-15, y:85-15, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, 
-                    //                 style:{
-                    //                     handle:{r:175/255,g:175/255,b:175/255,a:1},
-                    //                     slot:{r:0,g:0,b:0,a:0},
-                    //                     needle:{r:1,g:1,b:1,a:1},
-                    //                 }
-                    //             }},
+                                {collection:'control', type:'button_circle', name:'panicButton', data:{ 
+                                    x:162.5, y:52.5, r:15/2, style:{
+                                        background__up__colour:{r:0.75,g:0.75,b:0.75,a:1},
+                                        background__hover__colour:{r:0.85,g:0.85,b:0.85,a:1},
+                                        background__press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                        background__hover_press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                    },
+                                }},
+                            ]
+                        };
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.ruler,design);
                     
-                    //         ],
-                    //     };
-                    //     //add bumpers
-                    //     for(var a = shape.length-1, b=0, c=1; b < shape.length; a=b, b++, c++){
-                    //         if(c == shape.length){c = 0;}
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    gain: object.elements.dial_colourWithIndent_continuous.outputGain.get(),
+                                    attack: object.elements.dial_colourWithIndent_continuous.attack.get()*10,
+                                    release: object.elements.dial_colourWithIndent_continuous.release.get()*10,
+                                    detune: 100*((object.elements.dial_colourWithIndent_continuous.detune_note.get()*2)-1),
+                                    octave: object.elements.dial_colourWithIndent_discrete.detune_octave.get()-3,
+                                    waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_colourWithIndent_discrete.periodicWaveType.get()],
+                                    gainWobble:{
+                                        rate: object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.get()*100,
+                                        depth: object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.get()
+                                    },
+                                    detuneWobble:{
+                                        rate: object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.get()*100,
+                                        depth: object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.get()
+                                    },
+                                };
+                            };
+                            object.importData = function(data){
+                                if(data == undefined){return;}
                     
-                    //         var arm1 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[a]));
-                    //         var arm2 = _canvas_.library.math.cartesianAngleAdjust(bumperCoverage.medium.length,0,_canvas_.library.math.getAngleOfTwoPoints(shape[b],shape[c]));
+                                object.elements.dial_colourWithIndent_continuous.outputGain.set(data.gain);
+                                object.elements.dial_colourWithIndent_continuous.attack.set(data.attack/10);
+                                object.elements.dial_colourWithIndent_continuous.release.set(data.release/10);
+                                object.elements.dial_colourWithIndent_continuous.detune_note.set( (1+(data.detune/100))/2 );
+                                object.elements.dial_colourWithIndent_discrete.detune_octave.set(data.octave+3);
+                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+                                object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(data.gainWobble.rate/100);
+                                object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(data.gainWobble.depth);
+                                object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(data.detuneWobble.rate/100);
+                                object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(data.detuneWobble.depth);
+                            };
                     
-                    //         design.elements.push( {collection:'basic', type:'path', name:'bumper_'+b, data:{ pointsAsXYArray:[
-                    //             { x:shape[b].x+arm1.x, y:shape[b].y+arm1.y }, shape[b], { x:shape[b].x+arm2.x, y:shape[b].y+arm2.y },
-                    //         ], thickness:bumperCoverage.medium.thickness, jointType:'round', capType:'round', colour:style.bumper }} );
-                    //     }
+                        //circuitry
+                            var attributes = {
+                                detuneLimits: {min:-100, max:100}
+                            };
+                            object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+                            object.__synthesizer.out().connect( object.elements.connectionNode_audio.io_output.in() );
                     
-                    //     //main object
-                    //         var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        //wiring
+                            object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){ object.__synthesizer.gain( value ); };
+                            object.elements.dial_colourWithIndent_continuous.attack.onchange = function(value){ object.__synthesizer.attack( value ); };
+                            object.elements.dial_colourWithIndent_continuous.release.onchange = function(value){ object.__synthesizer.release( value ); };
+                            object.elements.dial_colourWithIndent_continuous.detune_note.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); };
+                            object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){ object.__synthesizer.octave(value-3); };
+                            object.elements.dial_colourWithIndent_discrete.periodicWaveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); };
+                            object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                            object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value);};
+                            object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                            object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); };
+                            object.elements.button_circle.panicButton.onpress = function(){object.__synthesizer.panic(); };
                     
-                    //     return object;
-                    // };
+                            object.elements.connectionNode_data.io_midiNoteInput.onreceive = function(address,data){
+                                if(address != 'midinumber'){return;}
+                                object.__synthesizer.perform(data);
+                            };
+                            object.elements.connectionNode_data.io_periodicWaveType_dataIn.onreceive = function(address,data){
+                                if(address != 'periodicWave'){return;}
+                                object.__synthesizer.periodicWave(data);
+                            };
+                            object.elements.connectionNode_voltage.io_outputGain.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_attack.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.attack.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_release.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.release.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_detune_note.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.detune_note.set(value);
+                            };
+                            object.elements.connectionNode_signal.io_detune_octave_down.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.detune_octave.set(
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.get() - 1
+                                );
+                            };
+                            object.elements.connectionNode_signal.io_detune_octave_up.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.detune_octave.set(
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.get() + 1
+                                );
+                            };
+                            object.elements.connectionNode_voltage.io_gainWobblePeriod.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_gainWobbleDepth.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_detuneWobblePeriod.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);
+                            };
+                            object.elements.connectionNode_voltage.io_detuneWobbleDepth.onchange = function(value){
+                                object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);
+                            };
+                            object.elements.connectionNode_signal.io_periodicWaveType_down.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() - 1
+                                );
+                            };
+                            object.elements.connectionNode_signal.io_periodicWaveType_up.onchange = function(value){
+                                if(!value){return;}
+                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() + 1
+                                );
+                            };
+                            object.elements.connectionNode_signal.io_panic.onchange = function(value){
+                                if(value){
+                                    object.elements.button_circle.panicButton.press();
+                                }else{
+                                    object.elements.button_circle.panicButton.release();
+                                }
+                            };
                     
-                    // this.basicSynthesizer.metadata = {
-                    //     name:'Basic Synthesizer',
-                    //     category:'synthesizer',
-                    //     helpURL:'https://curve.metasophiea.com/help/units/beta/basicSynthesizer/'
-                    // };
+                        //interface
+                            object.i = {
+                                periodicWave:function(data){object.__synthesizer.periodicWave(data);},
+                                midiNote:function(data){object.__synthesizer.perform(data);},
+                    
+                                gain:function(value){object.elements.dial_colourWithIndent_continuous.outputGain.set(value);},
+                                attack:function(value){object.elements.dial_colourWithIndent_continuous.attack.set(value);},
+                                release:function(value){object.elements.dial_colourWithIndent_continuous.release.set(value);},
+                                detune:function(value){object.elements.dial_colourWithIndent_continuous.detune_note.set(value);},
+                                octave:function(value){object.elements.dial_colourWithIndent_discrete.detune_octave.set(value);},
+                                waveType:function(value){object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(value);},
+                                gainWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);},
+                                gainWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);},
+                                detuneWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);},
+                                detuneWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);},
+                            };
+                            
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.basic_synthesizer.metadata = {
+                        name:'Basic Synthesizer',
+                        category:'synthesizers',
+                        helpURL:'/help/units/beta/basic_synthesizer/'
+                    };
                     this.distortion = function(x,y,a){
                         var imageStoreURL_localPrefix = imageStoreURL+'distortion/';
                     
@@ -47486,6 +47862,7 @@
                         monitors:{ printingName:'Monitors' },
                         effects:{ printingName:'Effect Units'},
                         sequencers:{ printingName:'Sequencers'},
+                        synthesizers:{ printingName:'Synthesizers'},
                         humanInterfaceDevices:{ printingName:'Human Interface Devices'},
                     };
                     this.distortion = function(x,y,a){
@@ -48599,9 +48976,9 @@
                         breakHeight: 0.5,
                         spaceHeight: 1,
                         itemList:[
-                            {type:'item', text_left:'New Scene', function:function(){ _canvas_.control.scene2.new(true); } },
-                            {type:'item', text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ _canvas_.control.scene2.load(undefined,undefined,true); } },
-                            {type:'item', text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene2.save('project.crv'); } },
+                            {type:'item', text_left:'New Scene', function:function(){ _canvas_.control.scene.new(true); } },
+                            {type:'item', text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ _canvas_.control.scene.load(undefined,undefined,true); } },
+                            {type:'item', text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene.save('project.crv'); } },
                         ]
                     }
                 );
@@ -48674,7 +49051,7 @@
                                                     type:'item', text_left:collections[collectionKey][model].metadata.name,
                                                     function:function(design){return function(){
                                                         var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                                        _canvas_.control.scene2.addUnit(p.x,p.y,0,design,collectionKey);
+                                                        _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
                                                     }}(model),
                                                 }
                                             );
@@ -48718,7 +49095,7 @@
                                                 type:'item', text_left: metadata.name,
                                                 function:function(design,categoryName){return function(){
                                                     var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                                    _canvas_.control.scene2.addUnit(p.x,p.y,0,design,categoryName);
+                                                    _canvas_.control.scene.addUnit(p.x,p.y,0,design,categoryName);
                                                 }}(design,categoryName),
                                             }
                                         );
@@ -48744,7 +49121,7 @@
                         breakHeight: 0.5,
                         spaceHeight: 1,
                         itemList:[
-                            { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene2.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene2.activeSnapping(val);} },
+                            { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
                         ]
                     }
                 );
@@ -48828,7 +49205,7 @@
                     function loadDemo(){
                         if(modLoadCount > 0){ setTimeout(loadDemo,1000); return; }
                         var demoURL = (new URL(window.location.href)).searchParams.get('demo');
-                        if(demoURL != undefined){ document.getElementById('workspaceCanvas').control.scene2.load(demoURL); }
+                        if(demoURL != undefined){ document.getElementById('workspaceCanvas').control.scene.load(demoURL); }
                     }
                     loadDemo();
             
@@ -48843,28 +49220,33 @@
             _canvas_.control.viewport.activeRender(true);
             _canvas_.core.render.activeLimitToFrameRate(true);
             
-            _canvas_.control.scene2.addUnit(10,10,0,'ruler','beta');
+            _canvas_.control.scene.addUnit(10,10,0,'ruler','beta');
             
             
-            // _canvas_.control.scene2.addUnit(70,10,0,'eightTrackMixer','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'eightTrackMixer','beta');
             
-            // _canvas_.control.scene2.addUnit(70,10,0,'amplifier','beta');
-            // _canvas_.control.scene2.addUnit(70,10,0,'data_readout','beta');
-            // _canvas_.control.scene2.addUnit(70,10,0,'signal_readout','beta');
-            _canvas_.control.scene2.addUnit(70,10,0,'voltage_readout','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'amplifier','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'data_readout','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'signal_readout','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'voltage_readout','beta');
             
-            // _canvas_.control.scene2.addUnit(70,30,0,'signal_duplicator','beta');
-            // _canvas_.control.scene2.addUnit(70,80,0,'voltage_duplicator','beta');
-            // _canvas_.control.scene2.addUnit(125,30,0,'data_duplicator','beta');
-            // _canvas_.control.scene2.addUnit(125,85,0,'audio_duplicator','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'signal_switch','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'voltage_dial','beta');
             
-            // _canvas_.control.scene2.addUnit(70,10,0,'eightStepSequencer','beta');
-            // _canvas_.control.scene2.addUnit(70,10,0,'launchpad','beta');
+            // _canvas_.control.scene.addUnit(70,30,0,'signal_duplicator','beta');
+            // _canvas_.control.scene.addUnit(70,80,0,'voltage_duplicator','beta');
+            // _canvas_.control.scene.addUnit(125,30,0,'data_duplicator','beta');
+            // _canvas_.control.scene.addUnit(125,85,0,'audio_duplicator','beta');
             
-            // _canvas_.control.scene2.addUnit(70,10,0,'musicalKeyboard','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'eightStepSequencer','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'launchpad','beta');
             
-            // _canvas_.control.scene2.addUnit(70,10,0,'distortion','beta');
-            // _canvas_.control.scene2.addUnit(70,10,0,'reverb','beta');
+            _canvas_.control.scene.addUnit(70,10,0,'basic_synthesizer','beta');
+            
+            // _canvas_.control.scene.addUnit(70,10,0,'musicalKeyboard','beta');
+            
+            // _canvas_.control.scene.addUnit(70,10,0,'distortion','beta');
+            // _canvas_.control.scene.addUnit(70,10,0,'reverb','beta');
             
             
             

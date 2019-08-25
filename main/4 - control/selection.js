@@ -73,7 +73,7 @@ this.copy = function(){
 
 
 
-    this.clipboard = _canvas_.control.scene2.documentUnits(this.selectedUnits,true);
+    this.clipboard = _canvas_.control.scene.documentUnits(this.selectedUnits,true);
 };
 this.paste = function(position,rectify=true){
     //control switch
@@ -115,7 +115,7 @@ this.paste = function(position,rectify=true){
         }
 
     //unit printing
-        _canvas_.control.scene2.printUnits( this.clipboard, rectify );
+        _canvas_.control.scene.printUnits( this.clipboard, rectify );
 };
 this.duplicate = function(rectify=true){
     //control switch
@@ -161,7 +161,7 @@ this.delete = function(){
 
     var selectedUnitCount = this.selectedUnits.length;
     while(this.selectedUnits.length > 0){
-        control.scene2.removeUnit(this.selectedUnits[0]);
+        control.scene.removeUnit(this.selectedUnits[0]);
         this.deselectUnit(this.selectedUnits[0]);
     }
     this.lastSelectedUnits = null;

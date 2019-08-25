@@ -48,7 +48,7 @@ alpha units
 
 
 beta units
-    the essentials (15/27)
+    the essentials (18/27)
     _/  - ruler
 
         - pulse generator (signal)
@@ -57,8 +57,8 @@ beta units
     _/  - launchpad (1 signal in, 8 signals out)
     _/  - analogue sequencer (8 step)
 
-        - signal switch
-        - dial voltage
+    _/  - signal switch
+    _/  - voltage dial
         
     _/  - signal duplicator
     _/  - voltage duplicator
@@ -76,7 +76,7 @@ beta units
         - audio in (microphone)
     _/  - audio sink (stereo audio connections)(looks like a speaker or amp)
 
-        - basic synthesizer
+    _/  - basic synthesizer
 
     _/  - distortion unit (mono)
         - filter unit (mono)(high-med-low)

@@ -11,9 +11,9 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
             breakHeight: 0.5,
             spaceHeight: 1,
             itemList:[
-                {type:'item', text_left:'New Scene', function:function(){ _canvas_.control.scene2.new(true); } },
-                {type:'item', text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ _canvas_.control.scene2.load(undefined,undefined,true); } },
-                {type:'item', text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene2.save('project.crv'); } },
+                {type:'item', text_left:'New Scene', function:function(){ _canvas_.control.scene.new(true); } },
+                {type:'item', text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ _canvas_.control.scene.load(undefined,undefined,true); } },
+                {type:'item', text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene.save('project.crv'); } },
             ]
         }
     );
@@ -86,7 +86,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                                         type:'item', text_left:collections[collectionKey][model].metadata.name,
                                         function:function(design){return function(){
                                             var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                            _canvas_.control.scene2.addUnit(p.x,p.y,0,design,collectionKey);
+                                            _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
                                         }}(model),
                                     }
                                 );
@@ -130,7 +130,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                                     type:'item', text_left: metadata.name,
                                     function:function(design,categoryName){return function(){
                                         var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                        _canvas_.control.scene2.addUnit(p.x,p.y,0,design,categoryName);
+                                        _canvas_.control.scene.addUnit(p.x,p.y,0,design,categoryName);
                                     }}(design,categoryName),
                                 }
                             );
@@ -156,7 +156,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
             breakHeight: 0.5,
             spaceHeight: 1,
             itemList:[
-                { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene2.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene2.activeSnapping(val);} },
+                { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
             ]
         }
     );

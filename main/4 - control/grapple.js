@@ -76,7 +76,7 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                                 unit.angle(newUnitAngle);
 
                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                _canvas_.control.scene.rectifyUnitPosition(unit);
 
                             //perform all redraws and updates for unit
                                 if( unit.onrotate ){unit.onrotate();}
@@ -102,7 +102,7 @@ _canvas_.control.grapple.functionList.onmouseup.push(
         requiredKeys:[],
         function:function(){
             _canvas_.control.selection.selectedUnits.forEach(unit => {
-                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                _canvas_.control.scene.rectifyUnitPosition(unit);
                 unit.ioRedraw();
             });
             return true;
@@ -145,7 +145,7 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                                 unit.y(newUnitPosition.y);
 
                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
-                                _canvas_.control.scene2.rectifyUnitPosition(unit);
+                                _canvas_.control.scene.rectifyUnitPosition(unit);
 
                             //perform all redraws and updates for unit
                                 if( unit.onmove ){unit.onmove();}
