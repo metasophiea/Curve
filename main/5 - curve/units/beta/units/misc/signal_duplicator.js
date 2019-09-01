@@ -48,7 +48,7 @@ this.signal_duplicator = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.ruler,design);
+        var object = _canvas_.interface.unit.builder(this.signal_duplicator,design);
 
     return object;
 };

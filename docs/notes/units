@@ -48,7 +48,7 @@ alpha units
 
 
 beta units
-    the essentials (19/27)
+    the essentials (22/27)
     _/  - ruler
 
     _/  - pulse generator (signal)
@@ -64,9 +64,9 @@ beta units
     _/  - voltage duplicator
     _/  - data duplicator
     _/  - audio duplicator
-        - signal combiner
-        - voltage combiner
-        - data combiner
+    _/  - signal combiner
+    _/  - voltage combiner
+    _/  - data combiner
 
     _/  - LED board readout (signal readout)
     _/  - voltmeter readout (voltage readout)

@@ -36,7 +36,7 @@ this.signal_readout = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.ruler,design);
+        var object = _canvas_.interface.unit.builder(this.signal_readout,design);
 
     //wiring
         object.elements.connectionNode_signal.in.onchange = function(value){

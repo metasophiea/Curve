@@ -73,7 +73,7 @@ this.reverb = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.ruler,design);
+        var object = _canvas_.interface.unit.builder(this.reverb,design);
 
     //circuitry
         var state = {

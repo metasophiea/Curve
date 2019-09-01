@@ -44502,6 +44502,79 @@
                     _canvas_.interface.part.partLibrary.basic.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
                         name, data.x, data.y, data.angle, data.width, data.height, data.detail, data.ignored, data.colour
                     ); }
+                    this.voltage_combiner = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:260, height:260 },
+                            design:{ width:4, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                    
+                        var design = {
+                            name:'voltage_combiner',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:(measurements.drawing.height -offset)/2 },
+                                { x:measurements.drawing.width -offset, y:0                                       },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
+                                { x:0,                                  y:measurements.drawing.height -offset     },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'output', data:{ x:0, y:measurements.drawing.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-19.5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ x:measurements.drawing.width*0.78, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage }},
+                    
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                    
+                                {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
+                                    x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
+                                    handleURL:imageStoreURL_localPrefix+'handle.png'
+                                }},
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.voltage_combiner,design);
+                    
+                        //wiring
+                            var mix = 0.5;
+                            var inputValue = [0,0];
+                            function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
+                    
+                            object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
+                            object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
+                            object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
+                            object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
+                    
+                        //import/export
+                            object.exportData = function(){ return mix; };
+                            object.importData = function(data){
+                                if(data == undefined){return;}
+                    
+                                object.elements.slide_continuous_image.slide_mix.set(data); 
+                            };
+                    
+                        //interface
+                            object.i = {
+                                mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_combiner.metadata = {
+                        name:'Voltage Combiner',
+                        category:'misc',
+                        helpURL:'/help/units/beta/voltage_combiner/'
+                    };
                     this.audio_duplicator = function(x,y,a){
                         var width = 320; var height = 320;
                         var div = 6.4;
@@ -44558,7 +44631,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
                     
                         //circuitry
                             object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
@@ -44662,7 +44735,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.pulse_generator,design);
                     
                         //wiring
                             var storedValue = [1,2,0,0,0,0];
@@ -44760,6 +44833,104 @@
                         category:'misc',
                         helpURL:'/help/units/beta/pulse_generator/'
                     };
+                    this.data_combiner = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:320, height:320 },
+                            design:{ width:5, height:5 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                    
+                        var design = {
+                            name:'data_combiner',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0, y:(measurements.drawing.height -offset)*(1/5) },
+                                { x:(measurements.drawing.width -offset)*(2/5), y:0 },
+                                { x:measurements.drawing.width -offset, y:0                                       },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
+                                { x:(measurements.drawing.width -offset)*(2/5),                                   y:measurements.drawing.height -offset     },
+                                { x:0, y:(measurements.drawing.height -offset)*(4/5) },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ x:measurements.drawing.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ x:measurements.drawing.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
+                    
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.data_combiner,design);
+                    
+                        //wiring
+                            object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                            object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.data_combiner.metadata = {
+                        name:'Data Combiner',
+                        category:'misc',
+                        helpURL:'/help/units/beta/data_combiner/'
+                    };
+                    this.signal_combiner = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:260, height:260 },
+                            design:{ width:4, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                    
+                        var design = {
+                            name:'signal_combiner',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                        y:(measurements.drawing.height -offset)/4      },
+                                { x:measurements.drawing.width -offset,       y:0                                            },
+                                { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
+                                { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-20.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                    
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.signal_combiner,design);
+                    
+                        //wiring
+                            object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
+                            object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_combiner.metadata = {
+                        name:'Signal Combiner',
+                        category:'misc',
+                        helpURL:'/help/units/beta/signal_combiner/'
+                    };
                     this.signal_duplicator = function(x,y,a){
                         var width = 260; var height = 260;
                         var div = 6.5;
@@ -44810,7 +44981,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.signal_duplicator,design);
                     
                         return object;
                     };
@@ -44872,7 +45043,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.voltage_duplicator,design);
                     
                         return object;
                     };
@@ -44940,7 +45111,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
                     
                         return object;
                     };
@@ -45053,7 +45224,7 @@
                         }
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.eightTrackMixer,design);
                     
                         //internal circuitry
                             for(var a = 0; a < 8; a++){
@@ -45144,7 +45315,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.signal_readout,design);
                     
                         //wiring
                             object.elements.connectionNode_signal.in.onchange = function(value){
@@ -45203,7 +45374,7 @@
                     
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.amplifier,design);
                     
                         //circuitry
                             var flow = {
@@ -45271,7 +45442,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.voltage_readout,design);
                     
                         //wiring
                             object.elements.connectionNode_voltage.in.onchange = function(value){
@@ -45320,7 +45491,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.data_readout,design);
                     
                         //circuitry
                             var lineCount = 0;
@@ -45529,7 +45700,7 @@
                             ]
                         };
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.voltage_dial,design);
                     
                         //circuitry
                             object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){
@@ -45663,7 +45834,7 @@
                                 }
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
                     
                         //keycapture
                             object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
@@ -45750,7 +45921,7 @@
                             ]
                         };
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.signal_switch,design);
                     
                         //circuitry
                             object.elements.slide_discrete_image.theSwitch.onchange = function(value){
@@ -45997,7 +46168,7 @@
                             ]
                         };
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.basic_synthesizer,design);
                     
                         //import/export
                             object.exportData = function(){
@@ -46144,6 +46315,79 @@
                         category:'synthesizers',
                         helpURL:'/help/units/beta/basic_synthesizer/'
                     };
+                    this.voltage_combiner = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:260, height:260 },
+                            design:{ width:4, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                    
+                        var design = {
+                            name:'voltage_combiner',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                  y:(measurements.drawing.height -offset)/2 },
+                                { x:measurements.drawing.width -offset, y:0                                       },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
+                                { x:0,                                  y:measurements.drawing.height -offset     },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'output', data:{ x:0, y:measurements.drawing.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-19.5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
+                                {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ x:measurements.drawing.width*0.78, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage }},
+                    
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                    
+                                {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
+                                    x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
+                                    handleURL:imageStoreURL_localPrefix+'handle.png'
+                                }},
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.voltage_combiner,design);
+                    
+                        //wiring
+                            var mix = 0.5;
+                            var inputValue = [0,0];
+                            function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
+                    
+                            object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
+                            object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
+                            object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
+                            object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
+                    
+                        //import/export
+                            object.exportData = function(){ return mix; };
+                            object.importData = function(data){
+                                if(data == undefined){return;}
+                    
+                                object.elements.slide_continuous_image.slide_mix.set(data); 
+                            };
+                    
+                        //interface
+                            object.i = {
+                                mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
+                            };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.voltage_combiner.metadata = {
+                        name:'Voltage Combiner',
+                        category:'misc',
+                        helpURL:'/help/units/beta/voltage_combiner/'
+                    };
                     this.audio_duplicator = function(x,y,a){
                         var width = 320; var height = 320;
                         var div = 6.4;
@@ -46200,7 +46444,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
                     
                         //circuitry
                             object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
@@ -46304,7 +46548,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.pulse_generator,design);
                     
                         //wiring
                             var storedValue = [1,2,0,0,0,0];
@@ -46402,6 +46646,104 @@
                         category:'misc',
                         helpURL:'/help/units/beta/pulse_generator/'
                     };
+                    this.data_combiner = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:320, height:320 },
+                            design:{ width:5, height:5 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                    
+                        var design = {
+                            name:'data_combiner',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0, y:(measurements.drawing.height -offset)*(1/5) },
+                                { x:(measurements.drawing.width -offset)*(2/5), y:0 },
+                                { x:measurements.drawing.width -offset, y:0                                       },
+                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
+                                { x:(measurements.drawing.width -offset)*(2/5),                                   y:measurements.drawing.height -offset     },
+                                { x:0, y:(measurements.drawing.height -offset)*(4/5) },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ x:measurements.drawing.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
+                                {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ x:measurements.drawing.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
+                    
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.data_combiner,design);
+                    
+                        //wiring
+                            object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                            object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.data_combiner.metadata = {
+                        name:'Data Combiner',
+                        category:'misc',
+                        helpURL:'/help/units/beta/data_combiner/'
+                    };
+                    this.signal_combiner = function(x,y,a){
+                        var imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
+                    
+                        var div = 6;
+                        var offset = 20/div;
+                        var measurements = { 
+                            file:{ width:260, height:260 },
+                            design:{ width:4, height:4 },
+                        };
+                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                    
+                        var design = {
+                            name:'signal_combiner',
+                            x:x, y:y, angle:a,
+                            space:[
+                                { x:0,                                        y:(measurements.drawing.height -offset)/4      },
+                                { x:measurements.drawing.width -offset,       y:0                                            },
+                                { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
+                                { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
+                            ],
+                            elements:[
+                                {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-20.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                    
+                                {collection:'basic', type:'image', name:'backing', data:{ 
+                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                } },
+                            ]
+                        };
+                        
+                        //main object
+                            var object = _canvas_.interface.unit.builder(this.signal_combiner,design);
+                    
+                        //wiring
+                            object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
+                            object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
+                    
+                        return object;
+                    };
+                    
+                    
+                    
+                    this.signal_combiner.metadata = {
+                        name:'Signal Combiner',
+                        category:'misc',
+                        helpURL:'/help/units/beta/signal_combiner/'
+                    };
                     this.signal_duplicator = function(x,y,a){
                         var width = 260; var height = 260;
                         var div = 6.5;
@@ -46452,7 +46794,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.signal_duplicator,design);
                     
                         return object;
                     };
@@ -46514,7 +46856,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.voltage_duplicator,design);
                     
                         return object;
                     };
@@ -46582,7 +46924,7 @@
                         };
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
                     
                         return object;
                     };
@@ -46695,7 +47037,7 @@
                         }
                     
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.eightTrackMixer,design);
                     
                         //internal circuitry
                             for(var a = 0; a < 8; a++){
@@ -46786,7 +47128,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.signal_readout,design);
                     
                         //wiring
                             object.elements.connectionNode_signal.in.onchange = function(value){
@@ -46845,7 +47187,7 @@
                     
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.amplifier,design);
                     
                         //circuitry
                             var flow = {
@@ -46913,7 +47255,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.voltage_readout,design);
                     
                         //wiring
                             object.elements.connectionNode_voltage.in.onchange = function(value){
@@ -46962,7 +47304,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.data_readout,design);
                     
                         //circuitry
                             var lineCount = 0;
@@ -47171,7 +47513,7 @@
                             ]
                         };
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.voltage_dial,design);
                     
                         //circuitry
                             object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){
@@ -47305,7 +47647,7 @@
                                 }
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
                     
                         //keycapture
                             object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
@@ -47392,7 +47734,7 @@
                             ]
                         };
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.signal_switch,design);
                     
                         //circuitry
                             object.elements.slide_discrete_image.theSwitch.onchange = function(value){
@@ -47639,7 +47981,7 @@
                             ]
                         };
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.basic_synthesizer,design);
                     
                         //import/export
                             object.exportData = function(){
@@ -47861,7 +48203,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.distortion,design);
                             
                         //circuitry
                             object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
@@ -48014,7 +48356,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.reverb,design);
                     
                         //circuitry
                             var state = {
@@ -48316,7 +48658,7 @@
                     
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.eightStepSequencer,design);
                     
                         //import/export
                             object.exportData = function(){
@@ -48515,7 +48857,7 @@
                             }
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.launchpad,design);
                     
                         //circuitry
                             var state = {
@@ -48712,7 +49054,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.distortion,design);
                             
                         //circuitry
                             object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
@@ -48865,7 +49207,7 @@
                         };
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.reverb,design);
                     
                         //circuitry
                             var state = {
@@ -49167,7 +49509,7 @@
                     
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.eightStepSequencer,design);
                     
                         //import/export
                             object.exportData = function(){
@@ -49366,7 +49708,7 @@
                             }
                         
                         //main object
-                            var object = _canvas_.interface.unit.builder(this.ruler,design);
+                            var object = _canvas_.interface.unit.builder(this.launchpad,design);
                     
                         //circuitry
                             var state = {
@@ -49790,98 +50132,50 @@
                         breakHeight: 0.5,
                         spaceHeight: 1,
                         itemList:(function(){
-                            var requestedCollection = (new URL(window.location.href)).searchParams.get("collection");
-                            if( requestedCollection == undefined ){ requestedCollection = 'alpha'; }
+                            var collections = _canvas_.interface.unit.collection;
+                            var outputItemList = [];
             
-                            if(_canvas_.control.interaction.devMode()){
-                                ////populate create dropdown with all units from all categories
-            
-                                var collections = _canvas_.interface.unit.collection;
-                                var outputItemList = [];
-            
-                                Object.keys(collections).sort().forEach(collectionKey => {
-                                    //for this collection, sort models into their categories
-                                    var categorySortingList = {};
-                                    Object.keys(collections[collectionKey]).sort().filter(a => a[0]!='_').forEach(modelKey => {
-                                        var model = collections[collectionKey][modelKey];
-                                        if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
-                                        if(!categorySortingList.hasOwnProperty(model.metadata.category)){
-                                            categorySortingList[model.metadata.category] = [];
-                                        }
-                                        categorySortingList[model.metadata.category].push(modelKey);
-                                    });
-            
-                                    //run though categories and generate item list for this collection
-                                    var collectionItemList = {type:'list', text:collectionKey, list:[]};
-                                    Object.keys(categorySortingList).sort().forEach(categoryKey => {
-                                        var categoryPrintingName = categoryKey;
-                                        if(collections[collectionKey]._categoryData != undefined && collections[collectionKey]._categoryData[categoryKey] != undefined){
-                                            categoryPrintingName = collections[collectionKey]._categoryData[categoryKey].printingName;
-                                        }
-            
-                                        var categoryList = { type:'list', text:categoryPrintingName, list:[] };
-                                        categorySortingList[categoryKey].forEach(model => {
-                                            categoryList.list.push(
-                                                {
-                                                    type:'item', text_left:collections[collectionKey][model].metadata.name,
-                                                    function:function(design){return function(){
-                                                        var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                                        _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
-                                                    }}(model),
-                                                }
-                                            );
-                                        });
-            
-                                        collectionItemList.list.push(categoryList);
-                                    });
-            
-                                    //add this item list to the output array
-                                    outputItemList.push(collectionItemList);
+                            Object.keys(collections).sort().forEach(collectionKey => {
+                                //for this collection, sort models into their categories
+                                var categorySortingList = {};
+                                Object.keys(collections[collectionKey]).sort().filter(a => a[0]!='_').forEach(modelKey => {
+                                    var model = collections[collectionKey][modelKey];
+                                    if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
+                                    if(!categorySortingList.hasOwnProperty(model.metadata.category)){
+                                        categorySortingList[model.metadata.category] = [];
+                                    }
+                                    categorySortingList[model.metadata.category].push(modelKey);
                                 });
             
-                                return outputItemList;
-                            }else{
-                                ////populate create dropdown with units from only the alpha category
-                                var categoryName = requestedCollection;
-            
-                                var collection = {};
-                                var outputItemList = [];
-            
-                                for(design in _canvas_.interface.unit.collection[categoryName]){
-                                    if(design[0] == '_'){continue;}
-            
-                                    var metadata = _canvas_.interface.unit.collection[categoryName][design].metadata;
-                                    if(metadata.dev){continue;}
-                                    
-                                    if(!collection.hasOwnProperty(metadata.category)){
-                                        collection[metadata.category] = [];
+                                //run though categories and generate item list for this collection
+                                var collectionItemList = {type:'list', text:collectionKey, list:[]};
+                                Object.keys(categorySortingList).sort().forEach(categoryKey => {
+                                    var categoryPrintingName = categoryKey;
+                                    if(collections[collectionKey]._categoryData != undefined && collections[collectionKey]._categoryData[categoryKey] != undefined){
+                                        categoryPrintingName = collections[collectionKey]._categoryData[categoryKey].printingName;
                                     }
-                                    collection[metadata.category].push(design);
-                                }
             
-                                Object.keys(collection).sort().forEach(category => {
-                                    var printingName = _canvas_.interface.unit.collection[categoryName]._categoryData[category] ? _canvas_.interface.unit.collection[categoryName]._categoryData[category].printingName : category;
-                                    var sublist = { type:'list', text:printingName, list:[] };
-            
-                                    collection[category].forEach(design => {
-                                        var metadata = _canvas_.interface.unit.collection[categoryName][design].metadata;
-                                        sublist.list.push(
+                                    var categoryList = { type:'list', text:categoryPrintingName, list:[] };
+                                    categorySortingList[categoryKey].forEach(model => {
+                                        categoryList.list.push(
                                             {
-                                                type:'item', text_left: metadata.name,
-                                                function:function(design,categoryName){return function(){
+                                                type:'item', text_left:collections[collectionKey][model].metadata.name,
+                                                function:function(design){return function(){
                                                     var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                                    _canvas_.control.scene.addUnit(p.x,p.y,0,design,categoryName);
-                                                }}(design,categoryName),
+                                                    _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
+                                                }}(model),
                                             }
                                         );
                                     });
             
-                                    outputItemList.push(sublist);
+                                    collectionItemList.list.push(categoryList);
                                 });
             
-                                return outputItemList;
-                            }
+                                //add this item list to the output array
+                                outputItemList.push(collectionItemList);
+                            });
             
+                            return outputItemList;
                         })(),
                     }
                 );
@@ -50024,6 +50318,9 @@
             // _canvas_.control.scene.addUnit(70,80,0,'voltage_duplicator','beta');
             // _canvas_.control.scene.addUnit(125,30,0,'data_duplicator','beta');
             // _canvas_.control.scene.addUnit(125,85,0,'audio_duplicator','beta');
+            // _canvas_.control.scene.addUnit(70,30,0,'signal_combiner','beta');
+            // _canvas_.control.scene.addUnit(70,30,0,'voltage_combiner','beta');
+            _canvas_.control.scene.addUnit(70,30,0,'data_combiner','beta');
             
             // _canvas_.control.scene.addUnit(70,10,0,'pulse_generator','beta');
             // _canvas_.control.scene.addUnit(70,10,0,'eightStepSequencer','beta');
@@ -50043,8 +50340,8 @@
             
             
             
-            _canvas_.control.viewport.scale(10);
-            _canvas_.control.viewport.position(-630,-15);
+            _canvas_.control.viewport.scale(6);
+            // _canvas_.control.viewport.position(-630,-15);
 
 
         }

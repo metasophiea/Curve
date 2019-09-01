@@ -30,7 +30,7 @@ this.data_readout = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.ruler,design);
+        var object = _canvas_.interface.unit.builder(this.data_readout,design);
 
     //circuitry
         var lineCount = 0;

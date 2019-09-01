@@ -33,7 +33,7 @@ this.voltage_dial = function(x,y,a){
         ]
     };
     //main object
-        var object = _canvas_.interface.unit.builder(this.ruler,design);
+        var object = _canvas_.interface.unit.builder(this.voltage_dial,design);
 
     //circuitry
         object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){

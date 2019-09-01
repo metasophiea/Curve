@@ -1,6 +1,11 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
 2019-09-01
   - added the pulse_generator
+  - added the signal_combiner
+  - pushed curve menubar to always display all the unit collections
+  - added the voltage_combiner
+  - added the data_combiner
+  
 
 2019-08-31
   - added darkmode™ option to the menubar (under tools)

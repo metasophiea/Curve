@@ -86,7 +86,7 @@ this.pulse_generator = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.ruler,design);
+        var object = _canvas_.interface.unit.builder(this.pulse_generator,design);
 
     //wiring
         var storedValue = [1,2,0,0,0,0];
