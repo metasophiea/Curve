@@ -3,10 +3,22 @@ var actionRegistrationActive = true;
 var actionRegistry = [];
 var actionPointer = -1;
 
+this.actionRegistrationActive = function(a){
+    if(a==undefined){return actionRegistrationActive;}
+    actionRegistrationActive = a;
+};
+
 this.undoFunctionLibrary = {};
 this.redoFunctionLibrary = {};
 
-this.printRegistry = function(){ actionRegistry.forEach((item,index) => console.log(actionPointer==index?'->':'  ',item)); };
+this.printRegistry = function(printToConsole=false){ 
+    if(printToConsole){ actionRegistry.forEach((item,index) => console.log(actionPointer==index?'->':'  ',item)); }
+    else{ return {
+        actionPointer:actionPointer,
+        actionRegistry:actionRegistry,
+        actionRegistrationActive:actionRegistrationActive
+    }; }
+};
 this.clearRegistry = function(){actionRegistry = [];actionPointer = -1;};
 this.registerAction = function(action){
     //only register actions if allowed to do so
@@ -92,14 +104,15 @@ this.redo = function(){
     this.redoFunctionLibrary['control.scene.addUnit'] = function(action){
         var args = action.arguments;
         actionRegistrationActive = false;
-        control.scene.addUnit(args[0],args[1],args[2],args[3],args[4],action.name);
+        control.scene.addUnit(args[0],args[1],args[2],args[3],args[4],action.name,args[6],_canvas_.core.arrangement.getElementByAddress(args[7]));
         actionRegistrationActive = true;
     };
 
 //control.scene.removeUnit
     this.undoFunctionLibrary['control.scene.removeUnit'] = function(action){
         actionRegistrationActive = false;
-        control.scene.absolute_printUnit( action.data, action.name );
+        action.data.details.name = action.name;
+        control.scene.printUnits( [action.data], true, action.pane, false );
         actionRegistrationActive = true;
     };
     this.redoFunctionLibrary['control.scene.removeUnit'] = function(action){
@@ -120,10 +133,22 @@ this.redo = function(){
 
 //control.selection.duplicate
     this.undoFunctionLibrary['control.selection.duplicate'] = function(action){
-        for(var a = 0; a < action.count; a++){ control.actionRegistry.undo(); }
-        actionPointer--;
+        actionRegistrationActive = false;
+        action.producedUnitNames.forEach(name => { control.scene.removeUnit( control.scene.getUnitByName(name) ); });
+        actionRegistrationActive = true;
     };
-    this.redoFunctionLibrary['control.selection.delete'] = function(action){
-        for(var a = 0; a < action.count; a++){ control.actionRegistry.redo(); }
-        actionPointer+=1;
+    this.redoFunctionLibrary['control.selection.duplicate'] = function(action){
+        _canvas_.control.selection.deselectEverything();
+
+        action.unitsToDuplicate.forEach( name => _canvas_.control.selection.selectUnit(_canvas_.control.scene.getUnitByName(name)) );
+
+        actionRegistrationActive = false;
+        control.selection.duplicate();
+        control.selection.selectedUnits.forEach((unit,index) => {
+            unit.x(action.finalPositions[index].x);
+            unit.y(action.finalPositions[index].y);
+            unit.angle(action.finalPositions[index].a);
+            unit.name = action.producedUnitNames[index];
+        });
+        actionRegistrationActive = true;
     };

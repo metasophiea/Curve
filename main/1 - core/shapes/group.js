@@ -47,7 +47,7 @@ this.group = function(){
         }
 
         this.children = function(){return children;};
-        this.getChildByName = getChildByName;
+        this.getChildByName = getChildByName; this._childRegistry = function(){return childRegistry;};
         this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
         this.contains = checkForShape;
         this.append = function(shape){
@@ -75,6 +75,7 @@ this.group = function(){
             children.splice(children.indexOf(shape), 1);
             augmentExtremities_remove(shape);
 
+            shape.parent = undefined;
             delete childRegistry[shape.name];
         };
         this.clear = function(){ children = []; childRegistry = {} };

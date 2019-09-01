@@ -6,6 +6,7 @@ this.connectionNode_voltage = function(
     glowStyle={r:0.94,g:0.98,b:0.93,a:1},
     cable_dimStyle={r:0.32,g:0.96,b:0.43,a:1},
     cable_glowStyle={r:0.62,g:0.98,b:0.68,a:1},
+    cableConnectionPosition={x:1/2,y:1/2},
     cableVersion=0,
     onchange=function(value){},
     onconnect=function(instigator){},
@@ -14,7 +15,7 @@ this.connectionNode_voltage = function(
     //elements
         var object = interfacePart.builder('dynamic','connectionNode',name,{
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
-            cableVersion:cableVersion,
+            cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
             onconnect, ondisconnect
         });
@@ -59,7 +60,7 @@ this.connectionNode_voltage = function(
 interfacePart.partLibrary.dynamic.connectionNode_voltage = function(name,data){ 
     return interfacePart.collection.dynamic.connectionNode_voltage(
         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
         data.onchange, data.onconnect, data.ondisconnect,
     ); 
 };

@@ -47,7 +47,7 @@ this.arrangement = new function(){
     this.clear = function(){ design.clear(); };
 
     this.getElementByAddress = function(address){
-        var route = address.split('/'); route.shift();
+        var route = address.split('/'); route.shift(); route.shift(); 
 
         var currentObject = design;
         route.forEach(function(a){

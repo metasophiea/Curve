@@ -50,4 +50,5 @@ _canvas_.system.pane = {};
             else if(tmp == _canvas_.system.pane.mm){return _canvas_.system.pane.mm;}
             else if(tmp == _canvas_.system.pane.mf){return _canvas_.system.pane.mf;}
         }while((tmp=tmp.parent) != undefined);
+        return null;
     };

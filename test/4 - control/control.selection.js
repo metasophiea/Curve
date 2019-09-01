@@ -75,7 +75,6 @@ resetScene();
 console.log('%c--- cut 1 unit', 'font-weight: bold;');
 _canvas_.control.selection.selectUnit(unit_1);
 _canvas_.control.selection.cut();
-tester(_canvas_.control.scene.getAllUnits().length,3);
 tester(
     _canvas_.control.scene.documentUnits( _canvas_.control.scene.getAllUnits().filter(a => !a._isCable) ),
     [
@@ -102,7 +101,6 @@ tester(
 console.log('%c--- cut 2 units', 'font-weight: bold;');
 _canvas_.control.selection.selectUnits([unit_3,unit_4]);
 _canvas_.control.selection.cut();
-tester(_canvas_.control.scene.getAllUnits().length,1);
 tester(
     _canvas_.control.selection.clipboard,
     [
@@ -132,7 +130,6 @@ _canvas_.control.selection.selectUnit(unit_1);
 _canvas_.control.selection.cut();
 
 _canvas_.control.selection.paste({x:0,y:0});
-tester(_canvas_.control.scene.getAllUnits().length,4);
 tester(
     _canvas_.control.scene.documentUnits( _canvas_.control.scene.getAllUnits().filter(a => !a._isCable) ),
     [
@@ -146,7 +143,6 @@ console.log('%c-- copy', 'font-weight: bold;');
 resetScene();
 _canvas_.control.selection.selectUnit(unit_1);
 _canvas_.control.selection.copy();
-tester(_canvas_.control.scene.getAllUnits().length,4);
 tester(
     _canvas_.control.scene.documentUnits( _canvas_.control.scene.getAllUnits().filter(a => !a._isCable) ),
     [
@@ -164,7 +160,6 @@ console.log('%c-- duplicate', 'font-weight: bold;');
 resetScene();
 _canvas_.control.selection.selectUnit(unit_1);
 _canvas_.control.selection.duplicate();
-tester(_canvas_.control.scene.getAllUnits().length,5);
 tester(
     _canvas_.control.scene.documentUnits( _canvas_.control.scene.getAllUnits().filter(a => !a._isCable) ),
     [        
@@ -179,7 +174,6 @@ console.log('%c-- delete', 'font-weight: bold;');
 resetScene();
 _canvas_.control.selection.selectUnit(unit_1);
 _canvas_.control.selection.delete();
-tester(_canvas_.control.scene.getAllUnits().length,3);
 tester(
     _canvas_.control.scene.documentUnits( _canvas_.control.scene.getAllUnits().filter(a => !a._isCable) ),
     [
@@ -216,3 +210,22 @@ tester(
         },
     ]
 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+console.log('');

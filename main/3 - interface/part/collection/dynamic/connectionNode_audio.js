@@ -2,6 +2,7 @@ this.connectionNode_audio = function(
     name='connectionNode_audio',
     x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
     isAudioOutput=false, audioContext,
+    cableConnectionPosition={x:1/2,y:1/2},
     cableVersion=0,
     dimStyle={r:255/255, g:244/255, b:220/255, a:1},
     glowStyle={r:255/255, g:244/255, b:244/255, a:1},
@@ -13,7 +14,7 @@ this.connectionNode_audio = function(
     //elements
         var object = interfacePart.builder('dynamic','connectionNode',name,{
             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
-            cableVersion:cableVersion,
+            cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
             onconnect, ondisconnect
         });
@@ -38,7 +39,7 @@ this.connectionNode_audio = function(
 
 interfacePart.partLibrary.dynamic.connectionNode_audio = function(name,data){
     return interfacePart.collection.dynamic.connectionNode_audio(
-        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableVersion,
+        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableConnectionPosition, data.cableVersion,
         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
         data.onconnect, data.ondisconnect,
     ); 

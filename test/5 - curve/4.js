@@ -16,10 +16,11 @@ _canvas_.control.scene.addUnit(10,10,0,'ruler','beta');
 // _canvas_.control.scene.addUnit(125,30,0,'data_duplicator','beta');
 // _canvas_.control.scene.addUnit(125,85,0,'audio_duplicator','beta');
 
+// _canvas_.control.scene.addUnit(70,10,0,'pulse_generator','beta');
 // _canvas_.control.scene.addUnit(70,10,0,'eightStepSequencer','beta');
 // _canvas_.control.scene.addUnit(70,10,0,'launchpad','beta');
 
-_canvas_.control.scene.addUnit(70,10,0,'basic_synthesizer','beta');
+// _canvas_.control.scene.addUnit(70,10,0,'basic_synthesizer','beta');
 
 // _canvas_.control.scene.addUnit(70,10,0,'musicalKeyboard','beta');
 
@@ -33,5 +34,5 @@ _canvas_.control.scene.addUnit(70,10,0,'basic_synthesizer','beta');
 
 
 
-_canvas_.control.viewport.scale(4);
-// _canvas_.control.viewport.position(-1250, -10);
+_canvas_.control.viewport.scale(10);
+_canvas_.control.viewport.position(-630,-15);

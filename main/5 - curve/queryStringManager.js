@@ -46,7 +46,12 @@
         function loadDemo(){
             if(modLoadCount > 0){ setTimeout(loadDemo,1000); return; }
             var demoURL = (new URL(window.location.href)).searchParams.get('demo');
-            if(demoURL != undefined){ document.getElementById('workspaceCanvas').control.scene.load(demoURL); }
+            if(demoURL != undefined){
+                if( typeof parseInt(demoURL) == 'number' ){
+                    demoURL = 'https://curve.metasophiea.com/demos/'+demoURL+'.crv';
+                }
+                document.getElementById('workspaceCanvas').control.scene.load(demoURL);
+            }
         }
         loadDemo();
 

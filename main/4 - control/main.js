@@ -148,6 +148,10 @@ _canvas_.control = new function(){
         var pane = _canvas_.system.pane.f;
         var menubar = undefined;
 
+        this.style = function(newStyle){
+            if(menubar == undefined){return;}
+            return menubar.style(newStyle);
+        };
         this.refresh = function(){
             if(menubar != undefined){menubar.refresh();}
         };
@@ -210,3 +214,84 @@ _canvas_.control = new function(){
 
 window.onresize = _canvas_.control.viewport.refresh; 
 _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
+
+_canvas_.control.misc = {
+    currentStyleMode:'light',
+    lightMode:function(){
+        this.currentStyleMode = 'light';
+
+        _canvas_.control.scene.backgroundColour({r:1,g:1,b:1,a:1});
+
+        _canvas_.control.gui.style(
+            {
+                bar:{r:240/255,g:240/255,b:240/255,a:1}, 
+                button:{
+                    text_colour:{r:0,g:0,b:0,a:1},
+                    text_font:'Helvetica',
+                    text_size:14,
+                    text_spacing:0.3,
+                    text_interCharacterSpacing:0.04,
+                    background__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                    background__press__colour:{r:240/255,g:240/255,b:240/255,a:1},
+                    background__select_press__colour:{r:229/255,g:167/255,b:255/255,a:1},
+                    background__press__lineColour:{r:0/255,g:0/255,b:0/255,a:0},
+                    background__select__colour:{r:229/255,g:167/255,b:255/255,a:1}, background__select__lineColour:{r:0/255,g:0/255,b:0/255,a:0},
+                    background__select_press__lineColour:{r:0,g:0,b:0,a:0},
+                },
+                list:{
+                    text_size:14,
+                    text_font:'Helvetica',
+                    text_spacing:0.3,
+                    text_interCharacterSpacing:0.04,
+                    sublist_arrowColour:{r:0.5,g:0.5,b:0.5,a:1},
+                    item__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                    item__hover__colour:{r:229/255,g:167/255,b:255/255,a:1}, 
+                    item__hover_glow__colour:{r:239/255,g:209/255,b:255/255,a:1}, 
+                    item__glow__colour:{r:220/255,g:220/255,b:220/255,a:1},
+                    item__hover_press__colour:{r:240/255,g:240/255,b:240/255,a:1},
+                    item__hover_glow_press__colour:{r:250/255,g:250/255,b:250/255,a:1},
+                },
+            }
+        );
+    },
+    darkMode:function(){
+        this.currentStyleMode = 'dark';
+
+        _canvas_.control.scene.backgroundColour({r:0,g:0,b:0,a:1});
+
+        var mux = 0.2;
+        _canvas_.control.gui.style(
+            {
+                bar:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                button:{
+                    text_colour:{r:1,g:1,b:1,a:1},
+                    text_font:'Helvetica',
+                    text_size:14,
+                    text_spacing:0.3,
+                    text_interCharacterSpacing:0.04,
+                    background__up__colour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                    background__press__colour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                    background__select_press__colour:{r:100/255*mux,g:100/255*mux,b:100/255*mux,a:1},
+                    background__press__lineColour:{r:0,g:0,b:0,a:0},
+                    background__select__colour:{r:100/255*mux,g:100/255*mux,b:100/255*mux,a:1},
+                    background__select__lineColour:{r:0,g:0,b:0,a:0},
+                    background__select_press__lineColour:{r:0,g:0,b:0,a:0},
+                },
+                list:{
+                    text_size:14,
+                    text_colour:{r:1,g:1,b:1,a:1},
+                    text_font:'Helvetica',
+                    text_spacing:0.3,
+                    text_interCharacterSpacing:0.04,
+                    sublist_arrowColour:{r:1,g:1,b:1,a:1},
+                    item__up__colour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                    item__hover__colour:{r:100/255*mux,g:100/255*mux,b:100/255*mux,a:1},
+                    item__hover_glow__colour:{r:150/255*mux,g:150/255*mux,b:150/255*mux,a:1}, 
+                    item__glow__colour:{r:220/255*mux,g:220/255*mux,b:220/255*mux,a:1},
+                    item__hover_press__colour:{r:240/255*mux*2,g:240/255*mux*2,b:240/255*mux*2,a:1},
+                    item__hover_glow_press__colour:{r:250/255*mux*2,g:250/255*mux*2,b:250/255*mux*2,a:1},
+                },
+            }
+        );
+    },
+};

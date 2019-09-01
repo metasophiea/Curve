@@ -1,11 +1,71 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
-2019-08-23
+2019-09-01
+  - added the pulse_generator
+
+2019-08-31
+  - added darkmode™ option to the menubar (under tools)
+  - created display part "glowbox_polygon"
+  - created display part "glowbox_path"
+  - added decimal points to "readout_sevenSegmentDisplay" and
+    "readout_sevenSegmentDisplay_static"
+  - began work on the pulse_generator
+
+
+2019-08-30
+  - added "Select Everything" and "Deselect Everything" hotkeys (ctrl-a and
+    ctrl-shift-a respectivly) along with menubar items (under edit)
+  - played with the colours of darkmode™ some more
+
+
+2019-08-29
+  - added 'cableConnectionPosition' argument to connectionNode element (all of 
+    them), which allows one to set the cable point of the node as a percentage
+    of the square
+  - experimented with making a darkmode™
+
+
+2019-08-28
+  - fixed shift-to-select-multiple's shift-click to unselect feature (again?)
+    Fixed by removing the "true" response from the other onmouseup function
+
+
+2019-08-27
+  - finished the control.actionRegistry test file
+  - chaned how control.selection adds the selection glow (well, the name it
+    gives the shape. It used to be 'selectionGlow-' followed by the address of
+    the unit, but now its just 'control.selection::shape::selectionGlow' Which
+    is good, because tying a shape to an address like that wasn't a great design
+    choice to begin with)
+  - control.actionRegistry.actionRegistrationActive is now a thing
+  - the undo/redo for control.selection.duplicate is now done differently, and
+    without bookends
+  - updated unit grapple rotation code so that it maintains the xy position
+    better
+  - updated unit grapple rotation, to add unison rotation for groups of units
+
+
+2019-08-26
+  - updated core's shape 'group', so that when it removes a child, that child's
+    parent value is set to undefined
+  - updated control.scene.transfer to return the newly transfered units
+  - created control.scene test file
+  - started control.actionRegistry test file
+  - apparently core.arrangement.getElementByAddress wasn't working properly (it
+    was looking for 'root' in the root group)
+
+  notes
+  - I was thinking, the actionRegistry entries should be in/under the functions
+    they're meant to relate to. I mean, there's already 'register action' code
+    within those functions anyway
+
+
+2019-08-25
   - added the voltage_dial unit
   - added the basic_synthesizer (some issues with the wobble features though.
     Seems you can set them too high and collisions can occur)
 
 
-2019-08-22
+2019-08-24
   - fixed up system.keyboard, and/or perhaps learned how it works better
   - added "clearClipboard" to control.selection
   - added rectify arguments to control.grapple:alt / control.selection.duplicate

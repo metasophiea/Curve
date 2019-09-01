@@ -6,6 +6,7 @@ this.connectionNode = function(
     glowStyle={r:0.95,g:0.95,b:0.95,a:1},
     cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
     cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
+    cableConnectionPosition={x:1/2,y:1/2},
     cableVersion=0,
     onconnect=function(instigator){},
     ondisconnect=function(instigator){},
@@ -138,12 +139,15 @@ this.connectionNode = function(
             cable = undefined;
         };
         object.getCablePoint = function(){
-            var offset = object.getOffset(); 
+            var offset = object.getOffset();
 
             var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
             var collectedAngle = offset.angle + Math.atan( height/width );
 
-            var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x+(diagonalLength*Math.cos(collectedAngle)), offset.y+(diagonalLength*Math.sin(collectedAngle)) );
+            var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( 
+                offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
+                offset.y + (diagonalLength*Math.sin(collectedAngle))*cableConnectionPosition.y*2
+            );
             tmp.angle = offset.angle;
             return tmp;
         };
@@ -176,7 +180,7 @@ this.connectionNode = function(
 interfacePart.partLibrary.dynamic.connectionNode = function(name,data){ 
     return interfacePart.collection.dynamic.connectionNode(
         name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
         data.onconnect, data.ondisconnect,
     ); 
 };

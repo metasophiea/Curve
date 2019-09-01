@@ -23,7 +23,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
         {
             text:'edit',
             width:45,
-            listWidth:150,
+            listWidth:250,//150,
             listItemHeight:22.5,
             breakHeight: 0.5,
             spaceHeight: 1,
@@ -36,6 +36,9 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                 {type:'item', text_left:'Paste',     text_right:'ctrl-v', function:function(){_canvas_.control.selection.paste();}     },
                 {type:'item', text_left:'Duplicate', text_right:'ctrl-b', function:function(){_canvas_.control.selection.duplicate();} },
                 {type:'item', text_left:'Delete',    text_right:'del',    function:function(){_canvas_.control.selection.delete();}    },
+                {type:'break'},
+                {type:'item', text_left:'Select Everything', text_right:'ctrl-a', function:function(){_canvas_.control.selection.selectEverything();} },
+                {type:'item', text_left:'Deselect Everything', text_right:'ctrl-shift-a', function:function(){_canvas_.control.selection.deselectEverything();} },
             ]
         }
     );
@@ -157,6 +160,13 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
             spaceHeight: 1,
             itemList:[
                 { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
+                { type:'checkbox', text:'dark mode', 
+                    updateFunction:function(){return _canvas_.control.misc.currentStyleMode == 'dark';}, 
+                    onclickFunction:function(val){
+                        if(val){ _canvas_.control.misc.darkMode(); }
+                        else{ _canvas_.control.misc.lightMode(); }
+                    }
+                },
             ]
         }
     );

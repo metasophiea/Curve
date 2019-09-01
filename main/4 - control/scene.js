@@ -156,7 +156,7 @@ this.unpackData = function(data){
             control.actionRegistry.registerAction(
                 {
                     functionName:'control.scene.addUnit',
-                    arguments:[x,y,a,model,collection,forceName,rectify,pane],
+                    arguments:[x,y,a,model,collection,forceName,rectify,pane.getAddress()],
                     name:tmp.name,
                 }
             );
@@ -167,13 +167,19 @@ this.unpackData = function(data){
         //control switch
             if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
+        //safty
+            if(unit == undefined){return;}
+
+        //only proceed if unit is actually in the scene
+            if(_canvas_.system.pane.getMiddlegroundPane(unit) == undefined){ return; }
+
         //register action
             control.actionRegistry.registerAction(
                 {
                     functionName:'control.scene.removeUnit',
                     name:unit.name,
                     pane:_canvas_.system.pane.getMiddlegroundPane(unit),
-                    data:this.documentUnits([unit]),
+                    data:this.documentUnits([unit])[0],
                 }
             );
             
@@ -193,6 +199,7 @@ this.unpackData = function(data){
                 {
                     functionName:'control.scene.transferUnit',
                     arguments:[units.map(unit=>unit.name),destinationPane],
+                    originalPanes:units.map(unit=>_canvas_.system.pane.getMiddlegroundPane(unit)),
                 }
             );
 
@@ -201,7 +208,7 @@ this.unpackData = function(data){
         //remove the original units
             units.forEach(unit => this.removeUnit(unit));
         //print the units to the destination pane
-            this.printUnits(data,true,destinationPane);
+            return this.printUnits(data,true,destinationPane);
     };
 
 //unit <-> notationalUnit
@@ -263,19 +270,19 @@ this.unpackData = function(data){
 
         return outputData;  
     };
-    this.printUnits = function(units, rectify=true, pane=_canvas_.system.pane.mm){
+    this.printUnits = function(units, rectify=true, pane=_canvas_.system.pane.mm, autoselect=true){
         var printedUnits = [];
 
         for(var a = 0; a < units.length; a++){
             var item = units[a];
 
             //create the object with its new position adding it to the pane
-                var unit = control.scene.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, undefined, rectify, pane);
+                var unit = control.scene.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, item.details.name, rectify, pane);
                 printedUnits.push(unit);
 
             //import data and select unit
                 if(unit.importData){unit.importData(item.data);}
-                control.selection.selectUnit(unit);
+                if(autoselect){control.selection.selectUnit(unit);}
 
             //go through its connections, and attempt to connect them to everything they should be connected to
             // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
@@ -305,12 +312,13 @@ this.unpackData = function(data){
             if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
         }
 
-        control.selection.selectEverything();
-        control.selection.delete();
+        this.getAllUnits().forEach(unit => this.removeUnit(unit));
 
         IDcounter = 0;
         control.viewport.position(0,0);
         control.viewport.scale(0);
+
+        control.actionRegistry.clearRegistry();
     };
     this.load = function(url,callback,askForConfirmation=false){
         //control switch
@@ -328,13 +336,13 @@ this.unpackData = function(data){
                     _canvas_.library.audio.destination.masterGain(0);
 
                 //unpack data
-                    data = this.unpackData(data);
+                    data = control.scene.unpackData(data);
 
                 //clear scene
                     control.scene.new();
 
                 //print to scene
-                    this.printUnits( data.units );
+                    control.scene.printUnits( data.units );
                 
                 //reposition viewport
                     control.viewport.position( data.viewportLocation.xy.x, data.viewportLocation.xy.y );

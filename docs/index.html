@@ -21,10 +21,3 @@
 
 <!-- <script type='text/javascript' src='js/curve.js'></script> -->
 <script type='text/javascript' src='js/curve.min.js'></script>
-
-<script>
-    //detect demo request
-    if(Number.isInteger(parseInt((new URL(window.location.href)).searchParams.get("demo")))){
-        document.getElementById('workspaceCanvas').control.scene.load('https://curve.metasophiea.com/demos/'+parseInt((new URL(window.location.href)).searchParams.get("demo"))+'.crv');
-    }
-</script>

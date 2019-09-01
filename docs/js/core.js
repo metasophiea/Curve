@@ -19972,7 +19972,7 @@
                                     }
                             
                                     this.children = function(){return children;};
-                                    this.getChildByName = getChildByName;
+                                    this.getChildByName = getChildByName; this._childRegistry = function(){return childRegistry;};
                                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                                     this.contains = checkForShape;
                                     this.append = function(shape){
@@ -20000,6 +20000,7 @@
                                         children.splice(children.indexOf(shape), 1);
                                         augmentExtremities_remove(shape);
                             
+                                        shape.parent = undefined;
                                         delete childRegistry[shape.name];
                                     };
                                     this.clear = function(){ children = []; childRegistry = {} };
@@ -23770,7 +23771,7 @@
                         this.clear = function(){ design.clear(); };
                     
                         this.getElementByAddress = function(address){
-                            var route = address.split('/'); route.shift();
+                            var route = address.split('/'); route.shift(); route.shift(); 
                     
                             var currentObject = design;
                             route.forEach(function(a){

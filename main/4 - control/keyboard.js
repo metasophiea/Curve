@@ -60,3 +60,15 @@ _canvas_.system.keyboard.functionList.onkeydown.push(
         function:function(data){ _canvas_.control.selection.delete(); return true; }
     }
 );
+_canvas_.system.keyboard.functionList.onkeydown.push(
+    {
+        requiredKeys:[['control','shift','KeyA'],['command','shift','KeyA']],
+        function:function(data){ _canvas_.control.selection.deselectEverything(); return true; }
+    }
+);
+_canvas_.system.keyboard.functionList.onkeydown.push(
+    {
+        requiredKeys:[['control','KeyA'],['command','KeyA']],
+        function:function(data){ _canvas_.control.selection.selectEverything(); return true; }
+    }
+);

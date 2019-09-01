@@ -53,27 +53,41 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                 control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                 control.grapple.tmpdata.oldUnitsPositions = [];
                 control.grapple.tmpdata.oldUnitsSelectionArea = [];
+                control.grapple.tmpdata.focalPoint = {x:-1,y:-1};
                 for(var a = 0; a < control.selection.selectedUnits.length; a++){
                     control.grapple.tmpdata.oldUnitsPositions.push( {x:control.selection.selectedUnits[a].x(), y:control.selection.selectedUnits[a].y(), angle:control.selection.selectedUnits[a].angle()} );
                     control.grapple.tmpdata.oldUnitsSelectionArea.push( Object.assign({},control.selection.selectedUnits[a].selectionArea) );
+                    if(control.grapple.tmpdata.focalPoint.x == -1 || control.grapple.tmpdata.focalPoint.x > control.selection.selectedUnits[a].x()){ control.grapple.tmpdata.focalPoint.x = control.selection.selectedUnits[a].x(); }
+                    if(control.grapple.tmpdata.focalPoint.y == -1 || control.grapple.tmpdata.focalPoint.y > control.selection.selectedUnits[a].y()){ control.grapple.tmpdata.focalPoint.y = control.selection.selectedUnits[a].y(); }
                 }
 
             //perform the rotation for all selected units
                 _canvas_.system.mouse.mouseInteractionHandler(
                     function(event){
-
                         for(var a = 0; a < control.selection.selectedUnits.length; a++){
                             var unit = control.selection.selectedUnits[a];
 
                             //calculate new angle
-                                var rotationalMux = 1;
+                                var rotationalMux = 1/100;
                                 var oldClickPosition = control.grapple.tmpdata.oldClickPosition;
                                 var newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
-                                var oldUnitAngle = control.grapple.tmpdata.oldUnitsPositions[a].angle;
-                                var newUnitAngle = oldUnitAngle + ((newClickPosition.y - oldClickPosition.y) / 100 ) * rotationalMux;
+                                var oldUnitPosition = control.grapple.tmpdata.oldUnitsPositions[a];
+
+                                var producedAngle = (newClickPosition.y - oldClickPosition.y) * rotationalMux;
 
                             //rotate unit
-                                unit.angle(newUnitAngle);
+                                unit.angle(oldUnitPosition.angle + producedAngle);
+
+                            //calculate xy offset around the focal point of the angle adjust
+                                var offset = _canvas_.library.math.cartesianAngleAdjust(
+                                    oldUnitPosition.x - control.grapple.tmpdata.focalPoint.x,
+                                    oldUnitPosition.y - control.grapple.tmpdata.focalPoint.y,
+                                    producedAngle
+                                );
+
+                            //maintain position
+                                unit.x(offset.x + control.grapple.tmpdata.focalPoint.x);
+                                unit.y(offset.y + control.grapple.tmpdata.focalPoint.y);
 
                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
                                 _canvas_.control.scene.rectifyUnitPosition(unit);
@@ -82,7 +96,6 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                                 if( unit.onrotate ){unit.onrotate();}
                                 unit.ioRedraw();
                         }
-
                     },
                     function(event){},
                 );
@@ -105,7 +118,6 @@ _canvas_.control.grapple.functionList.onmouseup.push(
                 _canvas_.control.scene.rectifyUnitPosition(unit);
                 unit.ioRedraw();
             });
-            return true;
         },
     }
 );
@@ -164,7 +176,7 @@ _canvas_.control.grapple.functionList.onmousedown.push(
 _canvas_.control.grapple.functionList.onmouseup.push(
     {
         requiredKeys:[['shift']],
-        function:function(event){ console.log('shift deselect');
+        function:function(event){
             var control = _canvas_.control;
 
             //if mouse-up occurs over an unit that is selected

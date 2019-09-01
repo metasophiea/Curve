@@ -6,4 +6,5 @@
 [2019-08-03:1] buttons atop buttons don't hover right, nor click right
 [2019-08-16:1] control.scene.load(1) there should be some protection for bad URLs
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
-[2019-08-25:2] synthesizer circuit: Seems you can set them too high and collisions can occur
+[2019-08-25:1] synthesizer circuit: Regarding the wobble features, seems you can set them too high and collisions can occur
+[2019-08-26:1] (?) connection nodes can work accross panes (is it really an issue though?) 

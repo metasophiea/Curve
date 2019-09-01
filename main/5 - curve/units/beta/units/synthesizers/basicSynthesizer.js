@@ -90,7 +90,7 @@ this.basic_synthesizer = function(x,y,a){
 
 
             {collection:'basic', type:'image', name:'backing', 
-                data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
             },
 
             {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{

@@ -48,10 +48,10 @@ alpha units
 
 
 beta units
-    the essentials (18/27)
+    the essentials (19/27)
     _/  - ruler
 
-        - pulse generator (signal)
+    _/  - pulse generator (signal)
     _/  - musical keyboard (velocity dial, sustain button/connection)(signal inputs for each note?)(data out:midi)
 
     _/  - launchpad (1 signal in, 8 signals out)

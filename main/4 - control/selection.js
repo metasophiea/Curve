@@ -18,7 +18,7 @@ this.selectUnit = function(unit,shiftToFront=true){
 
     //colourize space
         var tmp = _canvas_.interface.part.builder( 
-            'basic', 'polygonWithOutline', 'selectionGlow-'+unit.getAddress(), 
+            'basic', 'polygonWithOutline', 'control.selection::shape::selectionGlow', 
             {
                 pointsAsXYArray:unit.space.originalPoints, 
                 colour:{r:244/255,g:226/255,b:66/255,a:0.25}, lineColour:{r:244/255,g:226/255,b:66/255,a:1}
@@ -38,7 +38,7 @@ this.selectUnits = function(unitList){
 };
 this.deselectUnit = function(unit){
     //decolourize space
-        unit.remove( unit.getChildByName('selectionGlow-'+unit.getAddress()) );
+        unit.remove( unit.getChildByName('control.selection::shape::selectionGlow') );
     
     //remove unit from selectedUnits list, and activate it's "ondeselect" function
         this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
@@ -121,27 +121,22 @@ this.duplicate = function(rectify=true){
     //control switch
         if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
-    //register bookend action
-        control.actionRegistry.registerAction(
-            {
-                functionName:'control.selection.duplicate',
-                count:this.selectedUnits.length,
-                bookendPosition:'start',
-            }
-        );
+    //form register action
+        var action = {
+            functionName:'control.selection.duplicate',
+            unitsToDuplicate:control.selection.selectedUnits.map(unit => unit.name),
+        };
         
+    control.actionRegistry.actionRegistrationActive(false);
     this.copy();
     this.paste('duplicate',rectify);
     this.clipboard = [];
+    control.actionRegistry.actionRegistrationActive(true);
 
-    //register bookend action
-        control.actionRegistry.registerAction(
-            {
-                functionName:'control.selection.duplicate',
-                count:this.selectedUnits.length,
-                bookendPosition:'end',
-            }
-        );
+    //push action
+        action.finalPositions = control.selection.selectedUnits.map(unit => ({x:unit.x(),y:unit.y(),a:unit.angle()}));
+        action.producedUnitNames = control.selection.selectedUnits.map(unit => unit.name);
+        control.actionRegistry.registerAction(action);
 };
 this.delete = function(){
     //control switch

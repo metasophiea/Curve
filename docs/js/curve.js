@@ -19972,7 +19972,7 @@
                                     }
                             
                                     this.children = function(){return children;};
-                                    this.getChildByName = getChildByName;
+                                    this.getChildByName = getChildByName; this._childRegistry = function(){return childRegistry;};
                                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                                     this.contains = checkForShape;
                                     this.append = function(shape){
@@ -20000,6 +20000,7 @@
                                         children.splice(children.indexOf(shape), 1);
                                         augmentExtremities_remove(shape);
                             
+                                        shape.parent = undefined;
                                         delete childRegistry[shape.name];
                                     };
                                     this.clear = function(){ children = []; childRegistry = {} };
@@ -23770,7 +23771,7 @@
                         this.clear = function(){ design.clear(); };
                     
                         this.getElementByAddress = function(address){
-                            var route = address.split('/'); route.shift();
+                            var route = address.split('/'); route.shift(); route.shift(); 
                     
                             var currentObject = design;
                             route.forEach(function(a){
@@ -24549,6 +24550,7 @@
                             else if(tmp == _canvas_.system.pane.mm){return _canvas_.system.pane.mm;}
                             else if(tmp == _canvas_.system.pane.mf){return _canvas_.system.pane.mf;}
                         }while((tmp=tmp.parent) != undefined);
+                        return null;
                     };
 
                 _canvas_.interface = new function(){
@@ -26143,6 +26145,94 @@
                             };
                             this.display = new function(){
                                 interfacePart.partLibrary.display = {};
+                                this.readout_sevenSegmentDisplay = function(
+                                    name='readout_sevenSegmentDisplay',
+                                    x, y, width=100, height=30, count=5, angle=0, decimalPlaces=false,
+                                    backgroundStyle={r:0,g:0,b:0,a:1},
+                                    glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                    dimStyle={r:0.1,g:0.1,b:0.1,a:1},
+                                ){
+                                    //values
+                                        var text = '';
+                                        var displayInterval = null;
+                                        var displayIntervalTime = 150;
+                                
+                                    //elements 
+                                        //main
+                                            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                
+                                        //display units
+                                            var units = [];
+                                            for(var a = 0; a < count; a++){
+                                                var temp = interfacePart.builder('display','sevenSegmentDisplay', ''+a, {
+                                                    x:(width/count)*a, width:width/count, height:height, 
+                                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                                });
+                                                object.append( temp );
+                                                units.push(temp);
+                                            }
+                                
+                                        //decimal point
+                                            if(decimalPlaces){
+                                                var decimalPoints = [];
+                                                for(var a = 1; a < count; a++){
+                                                    var temp = interfacePart.builder('display','glowbox_circle','decimalPoint_'+a,{ 
+                                                        x:(width/count)*a, y:height*0.9, radius:((width/count)/8)/2,
+                                                        style:{ glow:glowStyle, dim:dimStyle },
+                                                    });
+                                                    object.append(temp);
+                                                    decimalPoints.push(temp);
+                                                }
+                                            }
+                                
+                                    //methods
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                
+                                        function print(style,offset=0,dontClear=false){
+                                            decimalPoints.forEach(point => point.off());
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                                
+                                            switch(style){
+                                                case 'smart':
+                                                    if(text.replace('.','').length > units.length){print('r2lSweep');}
+                                                    else{print('regular');}
+                                                break;
+                                                case 'r2lSweep':
+                                                    var displayStage = -units.length;
+                                
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    var textIndex = 0;
+                                                    for(var a = offset; a < units.length; a++){
+                                                        if(units[a] == undefined){ textIndex++; continue; }
+                                
+                                                        if(text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
+                                                            a--;
+                                                        }else{ units[a].enterCharacter(text[textIndex]); }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                                        object.print = function(style){ print(style); };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.readout_sevenSegmentDisplay = function(name,data){ 
+                                    return interfacePart.collection.display.readout_sevenSegmentDisplay(
+                                        name, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
+                                        data.style.background, data.style.glow, data.style.dim,
+                                    ); 
+                                };
                                 this.glowbox_rect = function(
                                     name='glowbox_rect',
                                     x, y, width=30, height=30, angle=0,
@@ -27353,6 +27443,31 @@
                                         name, data.x, data.y, data.angle, data.width, data.height, data.xCount, data.yCount, data.xGappage, data.yGappage
                                     ); 
                                 };
+                                this.glowbox_polygon = function(
+                                    name='glowbox_polygon',
+                                    x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, 
+                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                                ){
+                                    //elements 
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        var polygon = interfacePart.builder('basic','polygon','light',{ pointsAsXYArray:points, colour:dimStyle });
+                                            object.append(polygon);
+                                
+                                    //methods
+                                        object.on = function(){
+                                            polygon.colour = glowStyle;
+                                        };
+                                        object.off = function(){
+                                            polygon.colour = dimStyle;
+                                        };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.glowbox_polygon = function(name,data){ 
+                                    return interfacePart.collection.display.glowbox_polygon( name, data.x, data.y, data.points, data.angle, data.style.glow, data.style.dim );
+                                };
                                 this.gauge = function(
                                     name='gauge',
                                     x, y, angle=0,
@@ -27854,6 +27969,95 @@
                                         data.style.background_colour, data.style.background_lineThickness,
                                         data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
                                         data.style.backing,
+                                    ); 
+                                };
+                                this.readout_sevenSegmentDisplay_static = function(
+                                    name='readout_sevenSegmentDisplay_static',
+                                    x, y, width=100, height=30, count=5, angle=0, decimalPlaces=false, resolution=5, 
+                                    backgroundStyle={r:0,g:0,b:0,a:1},
+                                    glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                    dimStyle={r:0.1,g:0.1,b:0.1,a:1},
+                                ){
+                                    //values
+                                        var text = '';
+                                        var displayInterval = null;
+                                        var displayIntervalTime = 150;
+                                
+                                    //elements 
+                                        //main
+                                            var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                
+                                        //display units
+                                            var units = [];
+                                            for(var a = 0; a < count; a++){
+                                                var temp = interfacePart.builder('display','sevenSegmentDisplay_static', ''+a, {
+                                                    x:(width/count)*a, width:width/count, height:height, resolution:resolution,
+                                                    style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                                });
+                                                object.append( temp );
+                                                units.push(temp);
+                                            }
+                                
+                                        //decimal point
+                                            if(decimalPlaces){
+                                                var decimalPoints = [];
+                                                for(var a = 1; a < count; a++){
+                                                    var temp = interfacePart.builder('display','glowbox_rectangle','decimalPoint_'+a,{ 
+                                                        x:(width/count)*a  - ((width/count)/8)/2, y:height*0.9 - ((width/count)/8)/2, 
+                                                        width:((width/count)/8), height:((width/count)/8),
+                                                        style:{ glow:glowStyle, dim:dimStyle },
+                                                    });
+                                                    object.append(temp);
+                                                    decimalPoints.push(temp);
+                                                }
+                                            }
+                                
+                                    //methods
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                
+                                        function print(style,offset=0,dontClear=false){
+                                            decimalPoints.forEach(point => point.off());
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                                
+                                            switch(style){
+                                                case 'smart':
+                                                    if(text.replace('.','').length > units.length){print('r2lSweep');}
+                                                    else{print('regular');}
+                                                break;
+                                                case 'r2lSweep':
+                                                    var displayStage = -units.length;
+                                
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    var textIndex = 0;
+                                                    for(var a = offset; a < units.length; a++){
+                                                        if(units[a] == undefined){ textIndex++; continue; }
+                                
+                                                        if(text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
+                                                            a--;
+                                                        }else{ units[a].enterCharacter(text[textIndex]); }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                                        object.print = function(style){ print(style); };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.readout_sevenSegmentDisplay_static = function(name,data){ 
+                                    return interfacePart.collection.display.readout_sevenSegmentDisplay_static(
+                                        name, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces, data.resolution,
+                                        data.style.background, data.style.glow, data.style.dim,
                                     ); 
                                 };
                                 this.grapher_periodicWave_static = function(
@@ -29805,6 +30009,38 @@
                                         name, data.x, data.y, data.angle, data.width, data.height, 
                                         data.style.backing, data.style.levels
                                     ); 
+                                };
+                                this.glowbox_path = function(
+                                    name='glowbox_path',
+                                    x, y, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, 
+                                    looping=false, jointType='sharp', capType='none', 
+                                    glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                    dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                                ){
+                                    //elements 
+                                        var object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+                                        var path = interfacePart.builder('basic','path','light',{ 
+                                            pointsAsXYArray:points, 
+                                            looping:looping, 
+                                            colour:dimStyle,
+                                            jointType:jointType,
+                                            capType:capType,
+                                        });
+                                            object.append(path);
+                                
+                                    //methods
+                                        object.on = function(){
+                                            path.colour = glowStyle;
+                                        };
+                                        object.off = function(){
+                                            path.colour = dimStyle;
+                                        };
+                                
+                                    return object;
+                                };
+                                
+                                interfacePart.partLibrary.display.glowbox_path = function(name,data){ 
+                                    return interfacePart.collection.display.glowbox_path( name, data.x, data.y, data.points, data.angle, data.looping, data.jointType, data.capType, data.style.glow, data.style.dim );
                                 };
                             };
                             this.control = new function(){
@@ -35896,6 +36132,7 @@
                                     glowStyle={r:0.94,g:0.98,b:0.93,a:1},
                                     cable_dimStyle={r:0.32,g:0.96,b:0.43,a:1},
                                     cable_glowStyle={r:0.62,g:0.98,b:0.68,a:1},
+                                    cableConnectionPosition={x:1/2,y:1/2},
                                     cableVersion=0,
                                     onchange=function(value){},
                                     onconnect=function(instigator){},
@@ -35904,7 +36141,7 @@
                                     //elements
                                         var object = interfacePart.builder('dynamic','connectionNode',name,{
                                             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'voltage',
-                                            cableVersion:cableVersion,
+                                            cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
                                             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
                                             onconnect, ondisconnect
                                         });
@@ -35949,7 +36186,7 @@
                                 interfacePart.partLibrary.dynamic.connectionNode_voltage = function(name,data){ 
                                     return interfacePart.collection.dynamic.connectionNode_voltage(
                                         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
                                         data.onchange, data.onconnect, data.ondisconnect,
                                     ); 
                                 };
@@ -36096,6 +36333,7 @@
                                     name='connectionNode_audio',
                                     x, y, angle=0, width=20, height=20, allowConnections=true, allowDisconnections=true,
                                     isAudioOutput=false, audioContext,
+                                    cableConnectionPosition={x:1/2,y:1/2},
                                     cableVersion=0,
                                     dimStyle={r:255/255, g:244/255, b:220/255, a:1},
                                     glowStyle={r:255/255, g:244/255, b:244/255, a:1},
@@ -36107,7 +36345,7 @@
                                     //elements
                                         var object = interfacePart.builder('dynamic','connectionNode',name,{
                                             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'audio', direction:(isAudioOutput ? 'out' : 'in'),
-                                            cableVersion:cableVersion,
+                                            cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
                                             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
                                             onconnect, ondisconnect
                                         });
@@ -36132,7 +36370,7 @@
                                 
                                 interfacePart.partLibrary.dynamic.connectionNode_audio = function(name,data){
                                     return interfacePart.collection.dynamic.connectionNode_audio(
-                                        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableVersion,
+                                        name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections, data.isAudioOutput, _canvas_.library.audio.context, data.cableConnectionPosition, data.cableVersion,
                                         data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, 
                                         data.onconnect, data.ondisconnect,
                                     ); 
@@ -36145,6 +36383,7 @@
                                     glowStyle={r:244/255, g:244/255, b:255/255, a:1},
                                     cable_dimStyle={r:84/255, g:146/255, b:247/255, a:1},
                                     cable_glowStyle={r:123/255, g:168/255, b:242/255, a:1},
+                                    cableConnectionPosition={x:1/2,y:1/2},
                                     cableVersion=0,
                                     onreceive=function(address, data){},
                                     ongive=function(address){},
@@ -36154,7 +36393,7 @@
                                     //elements
                                         var object = interfacePart.builder('dynamic','connectionNode',name,{
                                             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'data',
-                                            cableVersion:cableVersion,
+                                            cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
                                             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
                                             onconnect, ondisconnect
                                         });
@@ -36187,7 +36426,7 @@
                                 interfacePart.partLibrary.dynamic.connectionNode_data = function(name,data){ 
                                     return interfacePart.collection.dynamic.connectionNode_data(
                                         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
                                         data.onreceive, data.ongive, data.onconnect, data.ondisconnect,
                                     ); 
                                 };
@@ -36199,6 +36438,7 @@
                                     glowStyle={r:0.95,g:0.95,b:0.95,a:1},
                                     cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
                                     cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
+                                    cableConnectionPosition={x:1/2,y:1/2},
                                     cableVersion=0,
                                     onconnect=function(instigator){},
                                     ondisconnect=function(instigator){},
@@ -36331,12 +36571,15 @@
                                             cable = undefined;
                                         };
                                         object.getCablePoint = function(){
-                                            var offset = object.getOffset(); 
+                                            var offset = object.getOffset();
                                 
                                             var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
                                             var collectedAngle = offset.angle + Math.atan( height/width );
                                 
-                                            var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( offset.x+(diagonalLength*Math.cos(collectedAngle)), offset.y+(diagonalLength*Math.sin(collectedAngle)) );
+                                            var tmp = _canvas_.core.viewport.adapter.windowPoint2workspacePoint( 
+                                                offset.x + (diagonalLength*Math.cos(collectedAngle))*cableConnectionPosition.x*2, 
+                                                offset.y + (diagonalLength*Math.sin(collectedAngle))*cableConnectionPosition.y*2
+                                            );
                                             tmp.angle = offset.angle;
                                             return tmp;
                                         };
@@ -36369,7 +36612,7 @@
                                 interfacePart.partLibrary.dynamic.connectionNode = function(name,data){ 
                                     return interfacePart.collection.dynamic.connectionNode(
                                         name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
                                         data.onconnect, data.ondisconnect,
                                     ); 
                                 };
@@ -36381,6 +36624,7 @@
                                     glowStyle={r:1,g:0.95,b:0.95,a:1},
                                     cable_dimStyle={r:0.96,g:0.32,b:0.57,a:1},
                                     cable_glowStyle={r:0.96,g:0.76,b:0.84,a:1},
+                                    cableConnectionPosition={x:1/2,y:1/2},
                                     cableVersion=0,
                                     onchange=function(value){},
                                     onconnect=function(instigator){},
@@ -36389,7 +36633,7 @@
                                     //elements
                                         var object = interfacePart.builder('dynamic','connectionNode',name,{
                                             x:x, y:y, angle:angle, width:width, height:height, allowConnections:allowConnections, allowDisconnections:allowDisconnections, type:'signal',
-                                            cableVersion:cableVersion,
+                                            cableConnectionPosition:cableConnectionPosition, cableVersion:cableVersion,
                                             style:{ dim:dimStyle, glow:glowStyle, cable_dim:cable_dimStyle, cable_glow:cable_glowStyle },
                                             onconnect, ondisconnect
                                         });
@@ -36433,7 +36677,7 @@
                                 interfacePart.partLibrary.dynamic.connectionNode_signal = function(name,data){ 
                                     return interfacePart.collection.dynamic.connectionNode_signal(
                                         name, data.x, data.y, data.angle, data.width, data.height, data.allowConnections, data.allowDisconnections,
-                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableVersion,
+                                        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
                                         data.onchange, data.onconnect, data.ondisconnect,
                                     ); 
                                 };
@@ -37102,6 +37346,18 @@
                         function:function(data){ _canvas_.control.selection.delete(); return true; }
                     }
                 );
+                _canvas_.system.keyboard.functionList.onkeydown.push(
+                    {
+                        requiredKeys:[['control','shift','KeyA'],['command','shift','KeyA']],
+                        function:function(data){ _canvas_.control.selection.deselectEverything(); return true; }
+                    }
+                );
+                _canvas_.system.keyboard.functionList.onkeydown.push(
+                    {
+                        requiredKeys:[['control','KeyA'],['command','KeyA']],
+                        function:function(data){ _canvas_.control.selection.selectEverything(); return true; }
+                    }
+                );
                 
                 _canvas_.control = new function(){
                     var control = this;
@@ -37250,6 +37506,10 @@
                         var pane = _canvas_.system.pane.f;
                         var menubar = undefined;
                 
+                        this.style = function(newStyle){
+                            if(menubar == undefined){return;}
+                            return menubar.style(newStyle);
+                        };
                         this.refresh = function(){
                             if(menubar != undefined){menubar.refresh();}
                         };
@@ -37309,14 +37569,16 @@
                                         item__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
                                         item__hover__colour:{r:229/255,g:167/255,b:255/255,a:1}, 
                                         item__hover_glow__colour:{r:239/255,g:209/255,b:255/255,a:1}, 
+                                        item__glow__colour:{r:220/255,g:220/255,b:220/255,a:1},
+                                        item__hover_press__colour:{r:240/255,g:240/255,b:240/255,a:1},
+                                        item__hover_glow_press__colour:{r:250/255,g:250/255,b:250/255,a:1},
                                     },
                                 };
                             
                                 //elements
                                     //main
                                         var object = _canvas_.interface.part.builder( 'basic', 'group', 'menubar', {});
-                                        var bar = _canvas_.interface.part.builder( 'basic', 'rectangle', 'rectangle', {x:0, y:0, width:vars.height, height:vars.height, colour:style.bar} );
-                                            object.append(bar);
+                                        var bar;
                             
                                     //items
                                         function createDropdown(a,x){
@@ -37332,8 +37594,12 @@
                             
                                                     item_textSize:style.list.text_size,
                                                     item_textFont:style.list.text_font, 
+                                                    item_textColour:style.list.text_colour,
                                                     item_textSpacing:style.list.text_spacing,
                                                     item_textInterCharacterSpacing:style.list.text_interCharacterSpacing,
+                                                    item__glow__colour:style.list.item__glow__colour,
+                                                    item__hover_press__colour:style.list.item__hover_press__colour,
+                                                    item__hover_glow_press__colour:style.list.item__hover_glow_press__colour,
                                                     sublist_arrowSize:style.list.text_size/2,
                                                     sublist_arrowColour:style.list.sublist_arrowColour,
                             
@@ -37357,48 +37623,55 @@
                             
                                             return dropdown;
                                         }
+                                        function produceBar(){
+                                            object.clear();
                             
-                                        var accWidth = 0;
-                                        for(var a = 0; a < this.menubar.dropdowns.length; a++){
-                                            var item = _canvas_.interface.part.builder( 'control', 'button_rectangle', 'dropdownButton_'+a, {
-                                                x:accWidth, y:0, 
-                                                width:this.menubar.dropdowns[a].width,
-                                                height:vars.height, 
-                                                hoverable:false, selectable:true,
-                                                text_centre:this.menubar.dropdowns[a].text,
-                                                style:style.button,
-                                            } );
-                                            object.append(item);
+                                            bar = _canvas_.interface.part.builder( 'basic', 'rectangle', 'barBacking', {x:0, y:0, width:_canvas_.control.viewport.width(), height:vars.height, colour:style.bar} );
+                                            object.append(bar);
                             
-                                            item.onpress = function(a){ return function(){
-                                                // if this item has already been selected (and will be deselected after this callback)
-                                                // sent the menubar's 'vars.selected' value to undefined. Otherwise, set it to
-                                                // this item's number
-                            
-                                                vars.selected = object.getChildByName('dropdownButton_'+a).select() ? undefined : a;
-                                            }; }(a);
-                                            item.onenter = function(a){ return function(event){
-                                                //assuming an item has been selected, and it isn't the item that's currently being 
-                                                //entered; deselect that one and tell the menubar that this item is selected now.
-                                                //if no mouse button is pressed (no button rolling is happening) select it manually
-                                                if( vars.selected != undefined && vars.selected != a){
-                                                    object.getChildByName('dropdownButton_'+vars.selected).select(false);
-                                                    vars.selected = a;
-                                                    if(event.buttons == 0){ object.getChildByName('dropdownButton_'+vars.selected).select(true); }
-                                                }
-                                            }; }(a);
-                                            item.onselect = function(a,x){ return function(){
-                                                vars.activedropdown = createDropdown(a,x)
-                                                object.append(vars.activedropdown);
-                                            } }(a,accWidth);
-                                            item.ondeselect = function(){ 
-                                                object.remove(vars.activedropdown); 
-                                                vars.activedropdown = undefined;
-                                            };
-                            
-                                            this.menubar.dropdowns[a].x = accWidth;
-                                            accWidth += this.menubar.dropdowns[a].width;
+                                            var accWidth = 0;
+                                            for(var a = 0; a < self.menubar.dropdowns.length; a++){
+                                                var item = _canvas_.interface.part.builder( 'control', 'button_rectangle', 'dropdownButton_'+a, {
+                                                    x:accWidth, y:0, 
+                                                    width:self.menubar.dropdowns[a].width,
+                                                    height:vars.height, 
+                                                    hoverable:false, selectable:true,
+                                                    text_centre:self.menubar.dropdowns[a].text,
+                                                    style:style.button,
+                                                } );
+                                                object.append(item);
+                                
+                                                item.onpress = function(a){ return function(){
+                                                    // if this item has already been selected (and will be deselected after this callback)
+                                                    // sent the menubar's 'vars.selected' value to undefined. Otherwise, set it to
+                                                    // this item's number
+                                
+                                                    vars.selected = object.getChildByName('dropdownButton_'+a).select() ? undefined : a;
+                                                }; }(a);
+                                                item.onenter = function(a){ return function(event){
+                                                    //assuming an item has been selected, and it isn't the item that's currently being 
+                                                    //entered; deselect that one and tell the menubar that this item is selected now.
+                                                    //if no mouse button is pressed (no button rolling is happening) select it manually
+                                                    if( vars.selected != undefined && vars.selected != a){
+                                                        object.getChildByName('dropdownButton_'+vars.selected).select(false);
+                                                        vars.selected = a;
+                                                        if(event.buttons == 0){ object.getChildByName('dropdownButton_'+vars.selected).select(true); }
+                                                    }
+                                                }; }(a);
+                                                item.onselect = function(a,x){ return function(){
+                                                    vars.activedropdown = createDropdown(a,x)
+                                                    object.append(vars.activedropdown);
+                                                } }(a,accWidth);
+                                                item.ondeselect = function(){ 
+                                                    object.remove(vars.activedropdown); 
+                                                    vars.activedropdown = undefined;
+                                                };
+                                
+                                                self.menubar.dropdowns[a].x = accWidth;
+                                                accWidth += self.menubar.dropdowns[a].width;
+                                            }
                                         }
+                                        produceBar();
                             
                                 //control
                                     object.closeAllDropdowns = function(){
@@ -37406,13 +37679,19 @@
                                             vars.activedropdown.onrelease();
                                         }
                                     };
+                                    object.style = function(newStyle){
+                                        if(newStyle==undefined){return style;}
+                                        style = newStyle;
+                                        produceBar();
+                                    };
                             
-                                //refresh callback
+                                //refresh
                                     object.refresh = function(){
                                         bar.width( _canvas_.control.viewport.width() );
                                         if(vars.activedropdown != undefined){ object.closeAllDropdowns(); }
                                     };
                                     object.refresh();
+                                    object.heavyRefresh = function(){ produceBar(); };
                             
                                 return object;
                             };
@@ -37590,7 +37869,7 @@
                                     control.actionRegistry.registerAction(
                                         {
                                             functionName:'control.scene.addUnit',
-                                            arguments:[x,y,a,model,collection,forceName,rectify,pane],
+                                            arguments:[x,y,a,model,collection,forceName,rectify,pane.getAddress()],
                                             name:tmp.name,
                                         }
                                     );
@@ -37601,13 +37880,19 @@
                                 //control switch
                                     if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
                         
+                                //safty
+                                    if(unit == undefined){return;}
+                        
+                                //only proceed if unit is actually in the scene
+                                    if(_canvas_.system.pane.getMiddlegroundPane(unit) == undefined){ return; }
+                        
                                 //register action
                                     control.actionRegistry.registerAction(
                                         {
                                             functionName:'control.scene.removeUnit',
                                             name:unit.name,
                                             pane:_canvas_.system.pane.getMiddlegroundPane(unit),
-                                            data:this.documentUnits([unit]),
+                                            data:this.documentUnits([unit])[0],
                                         }
                                     );
                                     
@@ -37627,6 +37912,7 @@
                                         {
                                             functionName:'control.scene.transferUnit',
                                             arguments:[units.map(unit=>unit.name),destinationPane],
+                                            originalPanes:units.map(unit=>_canvas_.system.pane.getMiddlegroundPane(unit)),
                                         }
                                     );
                         
@@ -37635,7 +37921,7 @@
                                 //remove the original units
                                     units.forEach(unit => this.removeUnit(unit));
                                 //print the units to the destination pane
-                                    this.printUnits(data,true,destinationPane);
+                                    return this.printUnits(data,true,destinationPane);
                             };
                         
                         //unit <-> notationalUnit
@@ -37697,19 +37983,19 @@
                         
                                 return outputData;  
                             };
-                            this.printUnits = function(units, rectify=true, pane=_canvas_.system.pane.mm){
+                            this.printUnits = function(units, rectify=true, pane=_canvas_.system.pane.mm, autoselect=true){
                                 var printedUnits = [];
                         
                                 for(var a = 0; a < units.length; a++){
                                     var item = units[a];
                         
                                     //create the object with its new position adding it to the pane
-                                        var unit = control.scene.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, undefined, rectify, pane);
+                                        var unit = control.scene.addUnit(item.position.x, item.position.y, item.position.angle, item.details.model, item.details.collection, item.details.name, rectify, pane);
                                         printedUnits.push(unit);
                         
                                     //import data and select unit
                                         if(unit.importData){unit.importData(item.data);}
-                                        control.selection.selectUnit(unit);
+                                        if(autoselect){control.selection.selectUnit(unit);}
                         
                                     //go through its connections, and attempt to connect them to everything they should be connected to
                                     // (don't worry if a object isn't available yet, just skip that one. Things will work out in the end)
@@ -37739,12 +38025,13 @@
                                     if( !confirm("This will clear the current scene! Are you sure?") ){ return; }
                                 }
                         
-                                control.selection.selectEverything();
-                                control.selection.delete();
+                                this.getAllUnits().forEach(unit => this.removeUnit(unit));
                         
                                 IDcounter = 0;
                                 control.viewport.position(0,0);
                                 control.viewport.scale(0);
+                        
+                                control.actionRegistry.clearRegistry();
                             };
                             this.load = function(url,callback,askForConfirmation=false){
                                 //control switch
@@ -37762,13 +38049,13 @@
                                             _canvas_.library.audio.destination.masterGain(0);
                         
                                         //unpack data
-                                            data = this.unpackData(data);
+                                            data = control.scene.unpackData(data);
                         
                                         //clear scene
                                             control.scene.new();
                         
                                         //print to scene
-                                            this.printUnits( data.units );
+                                            control.scene.printUnits( data.units );
                                         
                                         //reposition viewport
                                             control.viewport.position( data.viewportLocation.xy.x, data.viewportLocation.xy.y );
@@ -37846,7 +38133,7 @@
                         
                             //colourize space
                                 var tmp = _canvas_.interface.part.builder( 
-                                    'basic', 'polygonWithOutline', 'selectionGlow-'+unit.getAddress(), 
+                                    'basic', 'polygonWithOutline', 'control.selection::shape::selectionGlow', 
                                     {
                                         pointsAsXYArray:unit.space.originalPoints, 
                                         colour:{r:244/255,g:226/255,b:66/255,a:0.25}, lineColour:{r:244/255,g:226/255,b:66/255,a:1}
@@ -37866,7 +38153,7 @@
                         };
                         this.deselectUnit = function(unit){
                             //decolourize space
-                                unit.remove( unit.getChildByName('selectionGlow-'+unit.getAddress()) );
+                                unit.remove( unit.getChildByName('control.selection::shape::selectionGlow') );
                             
                             //remove unit from selectedUnits list, and activate it's "ondeselect" function
                                 this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
@@ -37949,27 +38236,22 @@
                             //control switch
                                 if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
                         
-                            //register bookend action
-                                control.actionRegistry.registerAction(
-                                    {
-                                        functionName:'control.selection.duplicate',
-                                        count:this.selectedUnits.length,
-                                        bookendPosition:'start',
-                                    }
-                                );
+                            //form register action
+                                var action = {
+                                    functionName:'control.selection.duplicate',
+                                    unitsToDuplicate:control.selection.selectedUnits.map(unit => unit.name),
+                                };
                                 
+                            control.actionRegistry.actionRegistrationActive(false);
                             this.copy();
                             this.paste('duplicate',rectify);
                             this.clipboard = [];
+                            control.actionRegistry.actionRegistrationActive(true);
                         
-                            //register bookend action
-                                control.actionRegistry.registerAction(
-                                    {
-                                        functionName:'control.selection.duplicate',
-                                        count:this.selectedUnits.length,
-                                        bookendPosition:'end',
-                                    }
-                                );
+                            //push action
+                                action.finalPositions = control.selection.selectedUnits.map(unit => ({x:unit.x(),y:unit.y(),a:unit.angle()}));
+                                action.producedUnitNames = control.selection.selectedUnits.map(unit => unit.name);
+                                control.actionRegistry.registerAction(action);
                         };
                         this.delete = function(){
                             //control switch
@@ -38013,10 +38295,22 @@
                         var actionRegistry = [];
                         var actionPointer = -1;
                         
+                        this.actionRegistrationActive = function(a){
+                            if(a==undefined){return actionRegistrationActive;}
+                            actionRegistrationActive = a;
+                        };
+                        
                         this.undoFunctionLibrary = {};
                         this.redoFunctionLibrary = {};
                         
-                        this.printRegistry = function(){ actionRegistry.forEach((item,index) => console.log(actionPointer==index?'->':'  ',item)); };
+                        this.printRegistry = function(printToConsole=false){ 
+                            if(printToConsole){ actionRegistry.forEach((item,index) => console.log(actionPointer==index?'->':'  ',item)); }
+                            else{ return {
+                                actionPointer:actionPointer,
+                                actionRegistry:actionRegistry,
+                                actionRegistrationActive:actionRegistrationActive
+                            }; }
+                        };
                         this.clearRegistry = function(){actionRegistry = [];actionPointer = -1;};
                         this.registerAction = function(action){
                             //only register actions if allowed to do so
@@ -38102,14 +38396,15 @@
                             this.redoFunctionLibrary['control.scene.addUnit'] = function(action){
                                 var args = action.arguments;
                                 actionRegistrationActive = false;
-                                control.scene.addUnit(args[0],args[1],args[2],args[3],args[4],action.name);
+                                control.scene.addUnit(args[0],args[1],args[2],args[3],args[4],action.name,args[6],_canvas_.core.arrangement.getElementByAddress(args[7]));
                                 actionRegistrationActive = true;
                             };
                         
                         //control.scene.removeUnit
                             this.undoFunctionLibrary['control.scene.removeUnit'] = function(action){
                                 actionRegistrationActive = false;
-                                control.scene.absolute_printUnit( action.data, action.name );
+                                action.data.details.name = action.name;
+                                control.scene.printUnits( [action.data], true, action.pane, false );
                                 actionRegistrationActive = true;
                             };
                             this.redoFunctionLibrary['control.scene.removeUnit'] = function(action){
@@ -38130,12 +38425,24 @@
                         
                         //control.selection.duplicate
                             this.undoFunctionLibrary['control.selection.duplicate'] = function(action){
-                                for(var a = 0; a < action.count; a++){ control.actionRegistry.undo(); }
-                                actionPointer--;
+                                actionRegistrationActive = false;
+                                action.producedUnitNames.forEach(name => { control.scene.removeUnit( control.scene.getUnitByName(name) ); });
+                                actionRegistrationActive = true;
                             };
-                            this.redoFunctionLibrary['control.selection.delete'] = function(action){
-                                for(var a = 0; a < action.count; a++){ control.actionRegistry.redo(); }
-                                actionPointer+=1;
+                            this.redoFunctionLibrary['control.selection.duplicate'] = function(action){
+                                _canvas_.control.selection.deselectEverything();
+                        
+                                action.unitsToDuplicate.forEach( name => _canvas_.control.selection.selectUnit(_canvas_.control.scene.getUnitByName(name)) );
+                        
+                                actionRegistrationActive = false;
+                                control.selection.duplicate();
+                                control.selection.selectedUnits.forEach((unit,index) => {
+                                    unit.x(action.finalPositions[index].x);
+                                    unit.y(action.finalPositions[index].y);
+                                    unit.angle(action.finalPositions[index].a);
+                                    unit.name = action.producedUnitNames[index];
+                                });
+                                actionRegistrationActive = true;
                             };
                     };
                     this.queryString = new function(){
@@ -38258,27 +38565,41 @@
                                 control.grapple.tmpdata.oldClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                                 control.grapple.tmpdata.oldUnitsPositions = [];
                                 control.grapple.tmpdata.oldUnitsSelectionArea = [];
+                                control.grapple.tmpdata.focalPoint = {x:-1,y:-1};
                                 for(var a = 0; a < control.selection.selectedUnits.length; a++){
                                     control.grapple.tmpdata.oldUnitsPositions.push( {x:control.selection.selectedUnits[a].x(), y:control.selection.selectedUnits[a].y(), angle:control.selection.selectedUnits[a].angle()} );
                                     control.grapple.tmpdata.oldUnitsSelectionArea.push( Object.assign({},control.selection.selectedUnits[a].selectionArea) );
+                                    if(control.grapple.tmpdata.focalPoint.x == -1 || control.grapple.tmpdata.focalPoint.x > control.selection.selectedUnits[a].x()){ control.grapple.tmpdata.focalPoint.x = control.selection.selectedUnits[a].x(); }
+                                    if(control.grapple.tmpdata.focalPoint.y == -1 || control.grapple.tmpdata.focalPoint.y > control.selection.selectedUnits[a].y()){ control.grapple.tmpdata.focalPoint.y = control.selection.selectedUnits[a].y(); }
                                 }
                 
                             //perform the rotation for all selected units
                                 _canvas_.system.mouse.mouseInteractionHandler(
                                     function(event){
-                
                                         for(var a = 0; a < control.selection.selectedUnits.length; a++){
                                             var unit = control.selection.selectedUnits[a];
                 
                                             //calculate new angle
-                                                var rotationalMux = 1;
+                                                var rotationalMux = 1/100;
                                                 var oldClickPosition = control.grapple.tmpdata.oldClickPosition;
                                                 var newClickPosition = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
-                                                var oldUnitAngle = control.grapple.tmpdata.oldUnitsPositions[a].angle;
-                                                var newUnitAngle = oldUnitAngle + ((newClickPosition.y - oldClickPosition.y) / 100 ) * rotationalMux;
+                                                var oldUnitPosition = control.grapple.tmpdata.oldUnitsPositions[a];
+                
+                                                var producedAngle = (newClickPosition.y - oldClickPosition.y) * rotationalMux;
                 
                                             //rotate unit
-                                                unit.angle(newUnitAngle);
+                                                unit.angle(oldUnitPosition.angle + producedAngle);
+                
+                                            //calculate xy offset around the focal point of the angle adjust
+                                                var offset = _canvas_.library.math.cartesianAngleAdjust(
+                                                    oldUnitPosition.x - control.grapple.tmpdata.focalPoint.x,
+                                                    oldUnitPosition.y - control.grapple.tmpdata.focalPoint.y,
+                                                    producedAngle
+                                                );
+                
+                                            //maintain position
+                                                unit.x(offset.x + control.grapple.tmpdata.focalPoint.x);
+                                                unit.y(offset.y + control.grapple.tmpdata.focalPoint.y);
                 
                                             //check if this new position is possible, and if not find the closest one that is and adjust the unit's position accordingly
                                                 _canvas_.control.scene.rectifyUnitPosition(unit);
@@ -38287,7 +38608,6 @@
                                                 if( unit.onrotate ){unit.onrotate();}
                                                 unit.ioRedraw();
                                         }
-                
                                     },
                                     function(event){},
                                 );
@@ -38310,7 +38630,6 @@
                                 _canvas_.control.scene.rectifyUnitPosition(unit);
                                 unit.ioRedraw();
                             });
-                            return true;
                         },
                     }
                 );
@@ -38369,7 +38688,7 @@
                 _canvas_.control.grapple.functionList.onmouseup.push(
                     {
                         requiredKeys:[['shift']],
-                        function:function(event){ console.log('shift deselect');
+                        function:function(event){
                             var control = _canvas_.control;
                 
                             //if mouse-up occurs over an unit that is selected
@@ -38391,6 +38710,87 @@
                 
                 window.onresize = _canvas_.control.viewport.refresh; 
                 _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
+                
+                _canvas_.control.misc = {
+                    currentStyleMode:'light',
+                    lightMode:function(){
+                        this.currentStyleMode = 'light';
+                
+                        _canvas_.control.scene.backgroundColour({r:1,g:1,b:1,a:1});
+                
+                        _canvas_.control.gui.style(
+                            {
+                                bar:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                button:{
+                                    text_colour:{r:0,g:0,b:0,a:1},
+                                    text_font:'Helvetica',
+                                    text_size:14,
+                                    text_spacing:0.3,
+                                    text_interCharacterSpacing:0.04,
+                                    background__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                    background__press__colour:{r:240/255,g:240/255,b:240/255,a:1},
+                                    background__select_press__colour:{r:229/255,g:167/255,b:255/255,a:1},
+                                    background__press__lineColour:{r:0/255,g:0/255,b:0/255,a:0},
+                                    background__select__colour:{r:229/255,g:167/255,b:255/255,a:1}, background__select__lineColour:{r:0/255,g:0/255,b:0/255,a:0},
+                                    background__select_press__lineColour:{r:0,g:0,b:0,a:0},
+                                },
+                                list:{
+                                    text_size:14,
+                                    text_font:'Helvetica',
+                                    text_spacing:0.3,
+                                    text_interCharacterSpacing:0.04,
+                                    sublist_arrowColour:{r:0.5,g:0.5,b:0.5,a:1},
+                                    item__up__colour:{r:240/255,g:240/255,b:240/255,a:1}, 
+                                    item__hover__colour:{r:229/255,g:167/255,b:255/255,a:1}, 
+                                    item__hover_glow__colour:{r:239/255,g:209/255,b:255/255,a:1}, 
+                                    item__glow__colour:{r:220/255,g:220/255,b:220/255,a:1},
+                                    item__hover_press__colour:{r:240/255,g:240/255,b:240/255,a:1},
+                                    item__hover_glow_press__colour:{r:250/255,g:250/255,b:250/255,a:1},
+                                },
+                            }
+                        );
+                    },
+                    darkMode:function(){
+                        this.currentStyleMode = 'dark';
+                
+                        _canvas_.control.scene.backgroundColour({r:0,g:0,b:0,a:1});
+                
+                        var mux = 0.2;
+                        _canvas_.control.gui.style(
+                            {
+                                bar:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                                button:{
+                                    text_colour:{r:1,g:1,b:1,a:1},
+                                    text_font:'Helvetica',
+                                    text_size:14,
+                                    text_spacing:0.3,
+                                    text_interCharacterSpacing:0.04,
+                                    background__up__colour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                                    background__press__colour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                                    background__select_press__colour:{r:100/255*mux,g:100/255*mux,b:100/255*mux,a:1},
+                                    background__press__lineColour:{r:0,g:0,b:0,a:0},
+                                    background__select__colour:{r:100/255*mux,g:100/255*mux,b:100/255*mux,a:1},
+                                    background__select__lineColour:{r:0,g:0,b:0,a:0},
+                                    background__select_press__lineColour:{r:0,g:0,b:0,a:0},
+                                },
+                                list:{
+                                    text_size:14,
+                                    text_colour:{r:1,g:1,b:1,a:1},
+                                    text_font:'Helvetica',
+                                    text_spacing:0.3,
+                                    text_interCharacterSpacing:0.04,
+                                    sublist_arrowColour:{r:1,g:1,b:1,a:1},
+                                    item__up__colour:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1}, 
+                                    item__hover__colour:{r:100/255*mux,g:100/255*mux,b:100/255*mux,a:1},
+                                    item__hover_glow__colour:{r:150/255*mux,g:150/255*mux,b:150/255*mux,a:1}, 
+                                    item__glow__colour:{r:220/255*mux,g:220/255*mux,b:220/255*mux,a:1},
+                                    item__hover_press__colour:{r:240/255*mux*2,g:240/255*mux*2,b:240/255*mux*2,a:1},
+                                    item__hover_glow_press__colour:{r:250/255*mux*2,g:250/255*mux*2,b:250/255*mux*2,a:1},
+                                },
+                            }
+                        );
+                    },
+                };
                 _canvas_.interface.unit.collection = new function(){
                     this.alpha = new function(){
                         // this.audio_duplicator = function(x,y,a){
@@ -44123,6 +44523,192 @@
                             category:'misc',
                             helpURL:'/help/units/beta/audio_duplicator/'
                         };
+                        this.pulse_generator = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'pulse_generator/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:590, height:260 },
+                                design:{ width:9.5, height:4 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            var colour = {
+                                LCD:{
+                                    background:{r:0.1,g:0.1,b:0.1,a:1},
+                                    glow:{r:0.3,g:0.64,b:0.22,a:1},
+                                    dim:{r:0.1,g:0.24,b:0.12,a:1}
+                                }
+                            };
+                        
+                            var design = {
+                                name:'pulse_generator',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                        y:0                                            },
+                                    { x:measurements.drawing.width -offset,       y:0                                            },
+                                    { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
+                                    { x:(measurements.drawing.width -offset)/9.5, y:measurements.drawing.height -offset          },
+                                    { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{
+                                        x:0, y:21.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_sync', data:{
+                                        x:7.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*0, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_down',    data:{ x:10 + 21.65 + (0.85 + 60/div)*1, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_down',     data:{ x:10 + 21.65 + (0.85 + 60/div)*2, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*3, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_down',  data:{ x:10 + 21.65 + (0.85 + 60/div)*4, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_down', data:{ x:10 + 21.65 + (0.85 + 60/div)*5, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                    } },
+                        
+                                    {collection:'display', type:'glowbox_path', name:'ledSyncFlash', data:{ 
+                                        x:0, y:0, points:[ {x:5-3/4,y:5-3/4}, {x:20+3/4,y:5-3/4}, {x:20+3/4,y:35+3/4}, {x:12.5-2/5,y:35+3/4}, {x:5-3/4,y:27.5+2/5} ],
+                                        looping:true, jointType:'round',
+                                        style:{ dim:{r:0.64,g:0.31,b:0.24,a:1}, glow:{r:0.94,g:0.31,b:0.34,a:1} },
+                                    } },
+                                    {collection:'control', type:'button_polygon', name:'sync', data:{
+                                        x:5, y:5, hoverable:false, points:[ {x:0,y:0}, {x:15,y:0}, {x:15,y:30}, {x:7.5,y:30}, {x:0,y:22.5} ],
+                                        style:{
+                                            background__up__colour:{r:0.69,g:0.69,b:0.69,a:1},
+                                            background__press__colour:{r:0.8,g:0.8,b:0.8,a:1},
+                                        }
+                                    }},
+                                    {collection:'basic', type:'image', name:'time_symbol', data:{ 
+                                        x:6.25, y:12.5, width:74/div, height:74/div, url:imageStoreURL_localPrefix+'time_symbol.png'
+                                    } },
+                        
+                                    {collection:'display', type:'readout_sevenSegmentDisplay_static', name:'LCD', data:{ 
+                                        x:21.75, y:10.75, width:64, height:18.5, count:6, decimalPlaces:true, style:colour.LCD
+                                    }},
+                        
+                                    {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'100_down',   data:{ x:21.65 + (0.85 + 60/div)*0, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_down',    data:{ x:21.65 + (0.85 + 60/div)*1, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_down',     data:{ x:21.65 + (0.85 + 60/div)*2, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_down',   data:{ x:21.65 + (0.85 + 60/div)*3, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_down',  data:{ x:21.65 + (0.85 + 60/div)*4, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_down', data:{ x:21.65 + (0.85 + 60/div)*5, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                ]
+                            };
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //wiring
+                                var storedValue = [1,2,0,0,0,0];
+                                var interval = null;
+                                var tempo = 120;
+                        
+                                function updateTempo(newTempo){
+                                    //safety
+                                        if(newTempo > 999){newTempo = 999;}
+                                        if(newTempo < 0.001){newTempo = 0.001;}
+                        
+                                    //update readout
+                                        var tmp = (''+newTempo).split('.');
+                                        var string = tmp[0];
+                                        if(newTempo < 100){string = '0' + string;}
+                                        if(newTempo < 10){string = '0' + string;}
+                                        if(tmp[1] == undefined){ string += '.000';}
+                                        else if(tmp[1].length == 1){ string += '.' + tmp[1] + '00';}
+                                        else if(tmp[1].length == 2){ string += '.' + tmp[1] + '0';}
+                                        else if(tmp[1].length >= 3){ string += '.' + tmp[1];}
+                                        if(string.length > 7){ string = string.slice(0,7); }
+                                        tempoString = string;
+                                        newTempo = parseFloat(string);
+                        
+                                        object.elements.readout_sevenSegmentDisplay_static.LCD.text(string);
+                                        object.elements.readout_sevenSegmentDisplay_static.LCD.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.signal.output.set(true);
+                                                object.elements.glowbox_path.ledSyncFlash.on();
+                                                setTimeout(function(){
+                                                    object.io.signal.output.set(false);
+                                                    object.elements.glowbox_path.ledSyncFlash.off();
+                                                },50)
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.signal.output.set(true);
+                                    object.elements.glowbox_path.ledSyncFlash.on();
+                                    setTimeout(function(){
+                                        object.io.signal.output.set(false);
+                                        object.elements.glowbox_path.ledSyncFlash.off();
+                                    },50)
+                                    tempo = newTempo;
+                                }
+                                function updateUsingStoredValue(){
+                                    updateTempo( parseFloat(storedValue.slice(0,3).join('') +'.'+ storedValue.slice(3,6).join('')) );
+                                }
+                        
+                                object.elements.button_polygon.sync.onpress = function(){ updateTempo(tempo); };
+                                object.elements.button_image['100_up'].onpress = function(){ storedValue[0] = storedValue[0] == 9 ? 0 : storedValue[0]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['10_up'].onpress = function(){ storedValue[1] = storedValue[1] == 9 ? 0 : storedValue[1]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['1_up'].onpress = function(){ storedValue[2] = storedValue[2] == 9 ? 0 : storedValue[2]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.1_up'].onpress = function(){ storedValue[3] = storedValue[3] == 9 ? 0 : storedValue[3]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.01_up'].onpress = function(){ storedValue[4] = storedValue[4] == 9 ? 0 : storedValue[4]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.001_up'].onpress = function(){ storedValue[5] = storedValue[5] == 9 ? 0 : storedValue[5]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['100_down'].onpress = function(){ storedValue[0] = storedValue[0] == 0 ? 9 : storedValue[0]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['10_down'].onpress = function(){ storedValue[1] = storedValue[1] == 0 ? 9 : storedValue[1]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['1_down'].onpress = function(){ storedValue[2] = storedValue[2] == 0 ? 9 : storedValue[2]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.1_down'].onpress = function(){ storedValue[3] = storedValue[3] == 0 ? 9 : storedValue[3]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.01_down'].onpress = function(){ storedValue[4] = storedValue[4] == 0 ? 9 : storedValue[4]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.001_down'].onpress = function(){ storedValue[5] = storedValue[5] == 0 ? 9 : storedValue[5]-1; updateUsingStoredValue(); };
+                        
+                                [
+                                    'sync',
+                                    '100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up',
+                                    '100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'
+                                ].forEach(portName => {
+                                    object.io.signal['port_'+portName].onchange = function(value){
+                                        if(value){ object.elements.button_image[portName].press();   }
+                                        else{      object.elements.button_image[portName].release(); }
+                                    };
+                                });
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        updateTempo(value);
+                                    },
+                                };
+                        
+                            //setup
+                                updateTempo(tempo);
+                        
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.pulse_generator.metadata = {
+                            name:'Pulse Generator',
+                            category:'misc',
+                            helpURL:'/help/units/beta/pulse_generator/'
+                        };
                         this.signal_duplicator = function(x,y,a){
                             var width = 260; var height = 260;
                             var div = 6.5;
@@ -44491,7 +45077,7 @@
                                 ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.signal,
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
                                         data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
@@ -45305,7 +45891,7 @@
                         
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                         
                                     {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
@@ -45579,6 +46165,192 @@
                             category:'misc',
                             helpURL:'/help/units/beta/audio_duplicator/'
                         };
+                        this.pulse_generator = function(x,y,a){
+                            var imageStoreURL_localPrefix = imageStoreURL+'pulse_generator/';
+                        
+                            var div = 6;
+                            var offset = 20/div;
+                            var measurements = { 
+                                file:{ width:590, height:260 },
+                                design:{ width:9.5, height:4 },
+                            };
+                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                            var colour = {
+                                LCD:{
+                                    background:{r:0.1,g:0.1,b:0.1,a:1},
+                                    glow:{r:0.3,g:0.64,b:0.22,a:1},
+                                    dim:{r:0.1,g:0.24,b:0.12,a:1}
+                                }
+                            };
+                        
+                            var design = {
+                                name:'pulse_generator',
+                                x:x, y:y, angle:a,
+                                space:[
+                                    { x:0,                                        y:0                                            },
+                                    { x:measurements.drawing.width -offset,       y:0                                            },
+                                    { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
+                                    { x:(measurements.drawing.width -offset)/9.5, y:measurements.drawing.height -offset          },
+                                    { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{
+                                        x:0, y:21.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_sync', data:{
+                                        x:7.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*0, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_down',    data:{ x:10 + 21.65 + (0.85 + 60/div)*1, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_down',     data:{ x:10 + 21.65 + (0.85 + 60/div)*2, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*3, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_down',  data:{ x:10 + 21.65 + (0.85 + 60/div)*4, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_down', data:{ x:10 + 21.65 + (0.85 + 60/div)*5, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                        
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
+                                    } },
+                        
+                                    {collection:'display', type:'glowbox_path', name:'ledSyncFlash', data:{ 
+                                        x:0, y:0, points:[ {x:5-3/4,y:5-3/4}, {x:20+3/4,y:5-3/4}, {x:20+3/4,y:35+3/4}, {x:12.5-2/5,y:35+3/4}, {x:5-3/4,y:27.5+2/5} ],
+                                        looping:true, jointType:'round',
+                                        style:{ dim:{r:0.64,g:0.31,b:0.24,a:1}, glow:{r:0.94,g:0.31,b:0.34,a:1} },
+                                    } },
+                                    {collection:'control', type:'button_polygon', name:'sync', data:{
+                                        x:5, y:5, hoverable:false, points:[ {x:0,y:0}, {x:15,y:0}, {x:15,y:30}, {x:7.5,y:30}, {x:0,y:22.5} ],
+                                        style:{
+                                            background__up__colour:{r:0.69,g:0.69,b:0.69,a:1},
+                                            background__press__colour:{r:0.8,g:0.8,b:0.8,a:1},
+                                        }
+                                    }},
+                                    {collection:'basic', type:'image', name:'time_symbol', data:{ 
+                                        x:6.25, y:12.5, width:74/div, height:74/div, url:imageStoreURL_localPrefix+'time_symbol.png'
+                                    } },
+                        
+                                    {collection:'display', type:'readout_sevenSegmentDisplay_static', name:'LCD', data:{ 
+                                        x:21.75, y:10.75, width:64, height:18.5, count:6, decimalPlaces:true, style:colour.LCD
+                                    }},
+                        
+                                    {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'100_down',   data:{ x:21.65 + (0.85 + 60/div)*0, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_down',    data:{ x:21.65 + (0.85 + 60/div)*1, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_down',     data:{ x:21.65 + (0.85 + 60/div)*2, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_down',   data:{ x:21.65 + (0.85 + 60/div)*3, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_down',  data:{ x:21.65 + (0.85 + 60/div)*4, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_down', data:{ x:21.65 + (0.85 + 60/div)*5, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
+                                ]
+                            };
+                            
+                            //main object
+                                var object = _canvas_.interface.unit.builder(this.ruler,design);
+                        
+                            //wiring
+                                var storedValue = [1,2,0,0,0,0];
+                                var interval = null;
+                                var tempo = 120;
+                        
+                                function updateTempo(newTempo){
+                                    //safety
+                                        if(newTempo > 999){newTempo = 999;}
+                                        if(newTempo < 0.001){newTempo = 0.001;}
+                        
+                                    //update readout
+                                        var tmp = (''+newTempo).split('.');
+                                        var string = tmp[0];
+                                        if(newTempo < 100){string = '0' + string;}
+                                        if(newTempo < 10){string = '0' + string;}
+                                        if(tmp[1] == undefined){ string += '.000';}
+                                        else if(tmp[1].length == 1){ string += '.' + tmp[1] + '00';}
+                                        else if(tmp[1].length == 2){ string += '.' + tmp[1] + '0';}
+                                        else if(tmp[1].length >= 3){ string += '.' + tmp[1];}
+                                        if(string.length > 7){ string = string.slice(0,7); }
+                                        tempoString = string;
+                                        newTempo = parseFloat(string);
+                        
+                                        object.elements.readout_sevenSegmentDisplay_static.LCD.text(string);
+                                        object.elements.readout_sevenSegmentDisplay_static.LCD.print();
+                        
+                                    //update interval
+                                        if(interval){ clearInterval(interval); }
+                                        if(newTempo > 0){
+                                            interval = setInterval(function(){
+                                                object.io.signal.output.set(true);
+                                                object.elements.glowbox_path.ledSyncFlash.on();
+                                                setTimeout(function(){
+                                                    object.io.signal.output.set(false);
+                                                    object.elements.glowbox_path.ledSyncFlash.off();
+                                                },50)
+                                            },1000*(60/newTempo));
+                                        }
+                        
+                                    object.io.signal.output.set(true);
+                                    object.elements.glowbox_path.ledSyncFlash.on();
+                                    setTimeout(function(){
+                                        object.io.signal.output.set(false);
+                                        object.elements.glowbox_path.ledSyncFlash.off();
+                                    },50)
+                                    tempo = newTempo;
+                                }
+                                function updateUsingStoredValue(){
+                                    updateTempo( parseFloat(storedValue.slice(0,3).join('') +'.'+ storedValue.slice(3,6).join('')) );
+                                }
+                        
+                                object.elements.button_polygon.sync.onpress = function(){ updateTempo(tempo); };
+                                object.elements.button_image['100_up'].onpress = function(){ storedValue[0] = storedValue[0] == 9 ? 0 : storedValue[0]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['10_up'].onpress = function(){ storedValue[1] = storedValue[1] == 9 ? 0 : storedValue[1]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['1_up'].onpress = function(){ storedValue[2] = storedValue[2] == 9 ? 0 : storedValue[2]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.1_up'].onpress = function(){ storedValue[3] = storedValue[3] == 9 ? 0 : storedValue[3]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.01_up'].onpress = function(){ storedValue[4] = storedValue[4] == 9 ? 0 : storedValue[4]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.001_up'].onpress = function(){ storedValue[5] = storedValue[5] == 9 ? 0 : storedValue[5]+1; updateUsingStoredValue(); };
+                                object.elements.button_image['100_down'].onpress = function(){ storedValue[0] = storedValue[0] == 0 ? 9 : storedValue[0]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['10_down'].onpress = function(){ storedValue[1] = storedValue[1] == 0 ? 9 : storedValue[1]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['1_down'].onpress = function(){ storedValue[2] = storedValue[2] == 0 ? 9 : storedValue[2]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.1_down'].onpress = function(){ storedValue[3] = storedValue[3] == 0 ? 9 : storedValue[3]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.01_down'].onpress = function(){ storedValue[4] = storedValue[4] == 0 ? 9 : storedValue[4]-1; updateUsingStoredValue(); };
+                                object.elements.button_image['0.001_down'].onpress = function(){ storedValue[5] = storedValue[5] == 0 ? 9 : storedValue[5]-1; updateUsingStoredValue(); };
+                        
+                                [
+                                    'sync',
+                                    '100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up',
+                                    '100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'
+                                ].forEach(portName => {
+                                    object.io.signal['port_'+portName].onchange = function(value){
+                                        if(value){ object.elements.button_image[portName].press();   }
+                                        else{      object.elements.button_image[portName].release(); }
+                                    };
+                                });
+                        
+                            //interface
+                                object.i = {
+                                    setTempo:function(value){
+                                        updateTempo(value);
+                                    },
+                                };
+                        
+                            //setup
+                                updateTempo(tempo);
+                        
+                            return object;
+                        };
+                        
+                        
+                        
+                        this.pulse_generator.metadata = {
+                            name:'Pulse Generator',
+                            category:'misc',
+                            helpURL:'/help/units/beta/pulse_generator/'
+                        };
                         this.signal_duplicator = function(x,y,a){
                             var width = 260; var height = 260;
                             var div = 6.5;
@@ -45947,7 +46719,7 @@
                                 ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, style:style.connectionNode.signal,
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
                                         data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
@@ -46761,7 +47533,7 @@
                         
                         
                                     {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
+                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
                                     },
                         
                                     {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
@@ -48937,7 +49709,7 @@
                         {
                             text:'edit',
                             width:45,
-                            listWidth:150,
+                            listWidth:250,//150,
                             listItemHeight:22.5,
                             breakHeight: 0.5,
                             spaceHeight: 1,
@@ -48950,6 +49722,9 @@
                                 {type:'item', text_left:'Paste',     text_right:'ctrl-v', function:function(){_canvas_.control.selection.paste();}     },
                                 {type:'item', text_left:'Duplicate', text_right:'ctrl-b', function:function(){_canvas_.control.selection.duplicate();} },
                                 {type:'item', text_left:'Delete',    text_right:'del',    function:function(){_canvas_.control.selection.delete();}    },
+                                {type:'break'},
+                                {type:'item', text_left:'Select Everything', text_right:'ctrl-a', function:function(){_canvas_.control.selection.selectEverything();} },
+                                {type:'item', text_left:'Deselect Everything', text_right:'ctrl-shift-a', function:function(){_canvas_.control.selection.deselectEverything();} },
                             ]
                         }
                     );
@@ -49071,6 +49846,13 @@
                             spaceHeight: 1,
                             itemList:[
                                 { type:'checkbox', text:'snapping', updateFunction:function(){return _canvas_.control.scene.activeSnapping();}, onclickFunction:function(val){_canvas_.control.scene.activeSnapping(val);} },
+                                { type:'checkbox', text:'dark mode', 
+                                    updateFunction:function(){return _canvas_.control.misc.currentStyleMode == 'dark';}, 
+                                    onclickFunction:function(val){
+                                        if(val){ _canvas_.control.misc.darkMode(); }
+                                        else{ _canvas_.control.misc.lightMode(); }
+                                    }
+                                },
                             ]
                         }
                     );
@@ -49154,7 +49936,12 @@
                         function loadDemo(){
                             if(modLoadCount > 0){ setTimeout(loadDemo,1000); return; }
                             var demoURL = (new URL(window.location.href)).searchParams.get('demo');
-                            if(demoURL != undefined){ document.getElementById('workspaceCanvas').control.scene.load(demoURL); }
+                            if(demoURL != undefined){
+                                if( typeof parseInt(demoURL) == 'number' ){
+                                    demoURL = 'https://curve.metasophiea.com/demos/'+demoURL+'.crv';
+                                }
+                                document.getElementById('workspaceCanvas').control.scene.load(demoURL);
+                            }
                         }
                         loadDemo();
                 
