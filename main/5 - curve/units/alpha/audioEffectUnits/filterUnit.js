@@ -86,7 +86,7 @@ this.filterUnit = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.filterUnit,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.importData = function(data){
@@ -251,7 +251,7 @@ this.filterUnit_stereo = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.filterUnit,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.importData = function(data){

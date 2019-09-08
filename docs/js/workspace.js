@@ -25249,6 +25249,7 @@
                                     _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
                                 };
                                 this.gain = function(band,value){
+                                    if(band == undefined){ return flow.gainNodes.map(a => a.gain);}
                                     if(value == undefined){return flow.gainNodes[band].gain;}
                                     flow.gainNodes[band].gain = value;
                                     _canvas_.library.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
@@ -25257,6 +25258,7 @@
                                     saved.settings[band].fresh = true;
                                 };
                                 this.frequency = function(band,value){
+                                    if(band == undefined){ return flow.filterNodes.map(a => a.frequency);}
                                     if(value == undefined){return flow.filterNodes[band].frequency;}
                                     flow.filterNodes[band].frequency = value;
                                     _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
@@ -25265,6 +25267,7 @@
                                     saved.settings[band].fresh = true;
                                 };
                                 this.Q = function(band,value){
+                                    if(band == undefined){ return flow.filterNodes.map(a => a.Q);}
                                     if(value == undefined){return flow.filterNodes[band].Q;}
                                     flow.filterNodes[band].Q = value;
                                     _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
@@ -25525,7 +25528,7 @@
                                     }else{jumpToTime(value);}
                                     playheadCompute();
                                 };
-                                this.loop = function(data={active:false,start:0,end:1},percent=true){
+                                this.loop = function(data/*={active:false,start:0,end:1}*/,percent=true){
                                     if(data == undefined){return state.loop;}
                         
                                     if(data.active != undefined){
@@ -27794,12 +27797,14 @@
                                     backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
                                     backgroundTextStyle_size=7.5,
                                     backgroundTextStyle_font='Helvetica',
+                                    backgroundTextStyle_horizontalMarkings={ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true },
+                                    backgroundTextStyle_verticalMarkings={ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true },
                                 
                                     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
                                 ){
                                     var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-                                    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-                                    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+                                    var horizontalMarkings = backgroundTextStyle_horizontalMarkings;
+                                    var verticalMarkings = backgroundTextStyle_verticalMarkings;
                                     var foregroundElementsGroup = [];
                                 
                                     //elements 
@@ -27968,6 +27973,8 @@
                                         data.style.foregrounds, data.style.foregroundText,
                                         data.style.background_colour, data.style.background_lineThickness,
                                         data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+                                        data.backgroundText_horizontalMarkings,
+                                        data.backgroundText_verticalMarkings,
                                         data.style.backing,
                                     ); 
                                 };
@@ -29853,7 +29860,7 @@
                                     backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
                                     backgroundStyle_lineThickness=0.5,
                                     backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
-                                    backgroundTextStyle_size=0.1,
+                                    backgroundTextStyle_size=7.5,
                                     backgroundTextStyle_font='Helvetica',
                                 
                                     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
@@ -29907,7 +29914,7 @@
                                         }
                                         function setBackground(){
                                             grapher.viewbox( {'l':-1.1,'h':1.1} );
-                                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+                                            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printText:true});
                                             grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
                                             grapher.drawBackground();
                                         };
@@ -29926,6 +29933,9 @@
                                         object.resolution = function(res=null){
                                             if(res==null){return attributes.graph.resolution;}
                                             attributes.graph.resolution = res;
+                                            attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+                                            attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+                                            attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
                                             this.stop();
                                             this.start();
                                         };
@@ -30309,11 +30319,15 @@
                                             if(!selectionArea){return;}
                                 
                                             //if there's no input, return the values
-                                            //if input is out of bounds, remove the needles
+                                            //if input is out of bounds; remove the needles
+                                            //if both bounds are set to 0; remove the needles
                                             //otherwise, set the position
                                                 if(positionA == undefined || positionB == undefined){
                                                     return {A:needleData.selection_A, B:needleData.selection_B};
                                                 }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
+                                                    needleJumpTo('selection_A');
+                                                    needleJumpTo('selection_B');
+                                                }else if(positionA == 0 && positionB == 0 ){
                                                     needleJumpTo('selection_A');
                                                     needleJumpTo('selection_B');
                                                 }else{
@@ -34868,11 +34882,12 @@
                                         //main graph
                                             var graph = interfacePart.builder('display','grapher_static', 'graph', {
                                                 width:width, height:height,
+                                                backgroundText_verticalMarkings:{ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:false },
                                                 style:{
                                                     foregrounds:foregroundStyles,   
                                                     foregroundText:foregroundTextStyles,
-                                                    backgroundStyle_colour:backgroundStyle_colour,
-                                                    backgroundStyle_lineThickness:backgroundStyle_lineThickness,
+                                                    background_colour:backgroundStyle_colour,
+                                                    background_lineThickness:backgroundStyle_lineThickness,
                                                     backgroundText_colour:backgroundTextStyle_colour,
                                                     backgroundText_size:backgroundTextStyle_size,
                                                     backgroundText_font:backgroundTextStyle_font,
@@ -35085,48 +35100,54 @@
                                                                 return function(){
                                                                     list_group.getChildByName('button').glow(true);
                                                                     var sublist = _canvas_.interface.part.builder('control', 'list_image', sublistName, {
-                                                                        x:limitWidthTo<0?itemWidth:limitWidthTo, y:y,
-                                                                        list:listItem.list,
-                                                                        active:active, multiSelect:multiSelect, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                                                        x: limitWidthTo<0?itemWidth:limitWidthTo, y:y,
+                                                                        list: listItem.list,
                                 
-                                                                        limitHeightTo:-1, limitWidthTo:limitWidthTo,
+                                                                        active:         listItem.active ? listItem.active : active, 
+                                                                        multiSelect:    listItem.multiSelect ? listItem.multiSelect : multiSelect, 
+                                                                        hoverable:      listItem.hoverable ? listItem.hoverable : hoverable, 
+                                                                        selectable:     listItem.selectable ? listItem.selectable : selectable, 
+                                                                        pressable:      listItem.pressable ? listItem.pressable : pressable,
                                 
-                                                                        itemHeight:                         itemHeight, 
-                                                                        itemWidth:                          itemWidth,
-                                                                        itemSpacingHeight:                  itemSpacingHeight,
-                                                                        spacingHeight:                      spacingHeight,
-                                                                        breakHeight:                        breakHeight,
-                                                                        backingURL:                         backingURL, 
-                                                                        breakURL:                           breakURL,
-                                                                        textbreakURL:                       textbreakURL,
-                                                                        sublist__up:                        sublist__up,
-                                                                        sublist__hover:                     sublist__hover,
-                                                                        sublist__glow:                      sublist__glow,
-                                                                        sublist__hover_glow:                sublist__hover_glow,
-                                                                        sublist__hover_glow_press:          sublist__hover_glow_press,
+                                                                        limitHeightTo:  listItem.limitHeightTo ? listItem.limitHeightTo : -1, 
+                                                                        limitWidthTo:   listItem.limitWidthTo ? listItem.limitWidthTo : limitWidthTo,
                                 
-                                                                        checkbox_uncheckURL:                checkbox_uncheckURL,
-                                                                        checkbox_checkURL:                  checkbox_checkURL,
-                                                                        checkbox_uncheckGlowURL:            checkbox_uncheckGlowURL,
-                                                                        checkbox_checkGlowURL:              checkbox_checkGlowURL,
+                                                                        itemHeight:                listItem.itemHeight ? listItem.itemHeight : itemHeight, 
+                                                                        itemWidth:                 listItem.itemWidth ? listItem.itemWidth : itemWidth, 
+                                                                        itemSpacingHeight:         listItem.itemSpacingHeight ? listItem.itemSpacingHeight : itemSpacingHeight, 
+                                                                        spacingHeight:             listItem.spacingHeight ? listItem.spacingHeight : spacingHeight, 
+                                                                        breakHeight:               listItem.breakHeight ? listItem.breakHeight : breakHeight,
+                                                                        backingURL:                listItem.backingURL? listItem.backingURL : backingURL, 
+                                                                        breakURL:                  listItem.breakURL? listItem.breakURL : breakURL,
+                                                                        textbreakURL:              listItem.textbreakURL? listItem.textbreakURL : textbreakURL,
+                                                                        sublist__up:               listItem.sublist__up? listItem.sublist__up : sublist__up,
+                                                                        sublist__hover:            listItem.sublist__hover? listItem.sublist__hover : sublist__hover,
+                                                                        sublist__glow:             listItem.sublist__glow? listItem.sublist__glow : sublist__glow,
+                                                                        sublist__hover_glow:       listItem.sublist__hover_glow? listItem.sublist__hover_glow : sublist__hover_glow,
+                                                                        sublist__hover_glow_press: listItem.sublist__hover_glow_press? listItem.sublist__hover_glow_press : sublist__hover_glow_press,
                                 
-                                                                        itemURL__off:                       itemURL__off,
-                                                                        itemURL__up:                        itemURL__up,
-                                                                        itemURL__press:                     itemURL__press,
-                                                                        itemURL__select:                    itemURL__select,
-                                                                        itemURL__select_press:              itemURL__select_press,
-                                                                        itemURL__glow:                      itemURL__glow,
-                                                                        itemURL__glow_press:                itemURL__glow_press,
-                                                                        itemURL__glow_select:               itemURL__glow_select,
-                                                                        itemURL__glow_select_press:         itemURL__glow_select_press,
-                                                                        itemURL__hover:                     itemURL__hover,
-                                                                        itemURL__hover_press:               itemURL__hover_press,
-                                                                        itemURL__hover_select:              itemURL__hover_select,
-                                                                        itemURL__hover_select_press:        itemURL__hover_select_press,
-                                                                        itemURL__hover_glow:                itemURL__hover_glow,
-                                                                        itemURL__hover_glow_press:          itemURL__hover_glow_press,
-                                                                        itemURL__hover_glow_select:         itemURL__hover_glow_select,
-                                                                        itemURL__hover_glow_select_press:   itemURL__hover_glow_select_press,
+                                                                        checkbox_uncheckURL:       listItem.checkbox_uncheckURL ? listItem.checkbox_uncheckURL : checkbox_uncheckURL,
+                                                                        checkbox_checkURL:         listItem.checkbox_checkURL ? listItem.checkbox_checkURL : checkbox_checkURL,
+                                                                        checkbox_uncheckGlowURL:   listItem.checkbox_uncheckGlowURL ? listItem.checkbox_uncheckGlowURL : checkbox_uncheckGlowURL,
+                                                                        checkbox_checkGlowURL:     listItem.checkbox_checkGlowURL ? listItem.checkbox_checkGlowURL : checkbox_checkGlowURL,
+                                
+                                                                        itemURL__off:                       listItem.itemURL__off ? listItem.itemURL__off : itemURL__off,
+                                                                        itemURL__up:                        listItem.itemURL__up ? listItem.itemURL__up : itemURL__up,
+                                                                        itemURL__press:                     listItem.itemURL__press ? listItem.itemURL__press : itemURL__press,
+                                                                        itemURL__select:                    listItem.itemURL__select ? listItem.itemURL__select : itemURL__select,
+                                                                        itemURL__select_press:              listItem.itemURL__select_press ? listItem.itemURL__select_press : itemURL__select_press,
+                                                                        itemURL__glow:                      listItem.itemURL__glow ? listItem.itemURL__glow : itemURL__glow,
+                                                                        itemURL__glow_press:                listItem.itemURL__glow_press ? listItem.itemURL__glow_press : itemURL__glow_press,
+                                                                        itemURL__glow_select:               listItem.itemURL__glow_select ? listItem.itemURL__glow_select : itemURL__glow_select,
+                                                                        itemURL__glow_select_press:         listItem.itemURL__glow_select_press ? listItem.itemURL__glow_select_press : itemURL__glow_select_press,
+                                                                        itemURL__hover:                     listItem.itemURL__hover ? listItem.itemURL__hover : itemURL__hover,
+                                                                        itemURL__hover_press:               listItem.itemURL__hover_press ? listItem.itemURL__hover_press : itemURL__hover_press,
+                                                                        itemURL__hover_select:              listItem.itemURL__hover_select ? listItem.itemURL__hover_select : itemURL__hover_select,
+                                                                        itemURL__hover_select_press:        listItem.itemURL__hover_select_press ? listItem.itemURL__hover_select_press : itemURL__hover_select_press,
+                                                                        itemURL__hover_glow:                listItem.itemURL__hover_glow ? listItem.itemURL__hover_glow : itemURL__hover_glow,
+                                                                        itemURL__hover_glow_press:          listItem.itemURL__hover_glow_press ? listItem.itemURL__hover_glow_press : itemURL__hover_glow_press,
+                                                                        itemURL__hover_glow_select:         listItem.itemURL__hover_glow_select ? listItem.itemURL__hover_glow_select : itemURL__hover_glow_select,
+                                                                        itemURL__hover_glow_select_press:   listItem.itemURL__hover_glow_select_press ? listItem.itemURL__hover_glow_select_press : itemURL__hover_glow_select_press,
                                                                     });
                                                                     sublist.onenter = function(a){object.onenter([index].concat(a));};
                                                                     sublist.onleave = function(a){object.onleave([index].concat(a));};
@@ -35714,75 +35735,93 @@
                                                             list_group.open = (function(sublistName,listItem,y){
                                                                 return function(){
                                                                     list_group.getChildByName('button').glow(true);
+                                                                    //prefer a value given in the more imediate listItem entry; otherwise use the parent's data
                                                                     var sublist = _canvas_.interface.part.builder('control', 'list', sublistName, {
-                                                                        x:limitWidthTo<0?itemWidth:limitWidthTo, y:y,
-                                                                        list:listItem.list,
+                                                                        x: limitWidthTo<0?itemWidth:limitWidthTo, 
+                                                                        y:  y,
+                                                                        list: listItem.list,
                                 
-                                                                        limitHeightTo:-1, limitWidthTo:limitWidthTo,
+                                                                        limitHeightTo:  listItem.limitHeightTo ? listItem.limitHeightTo : -1, 
+                                                                        limitWidthTo:   listItem.limitWidthTo ? listItem.limitWidthTo : limitWidthTo,
                                 
-                                                                        itemHeight:itemHeight, itemWidth:itemWidth, itemSpacingHeight:itemSpacingHeight, spacingHeight:spacingHeight, breakHeight:breakHeight,
-                                                                        textbreak_fontSize:textbreak_fontSize, textbreak_colour:textbreak_colour,
-                                                                        item_textSize:item_textSize, item_textColour:item_textColour, item_textFont:item_textFont, item_textSpacing:item_textSpacing, item_textInterCharacterSpacing:item_textInterCharacterSpacing,
-                                                                        sublist_arrowSize:sublist_arrowSize, sublist_arrowColour:sublist_arrowColour,
-                                                                        item_textVerticalOffsetMux:item_textVerticalOffsetMux, item_textHorizontalOffsetMux:item_textHorizontalOffsetMux,
+                                                                        itemHeight:                     listItem.itemHeight ? listItem.itemHeight : itemHeight, 
+                                                                        itemWidth:                      listItem.itemWidth ? listItem.itemWidth : itemWidth, 
+                                                                        itemSpacingHeight:              listItem.itemSpacingHeight ? listItem.itemSpacingHeight : itemSpacingHeight, 
+                                                                        spacingHeight:                  listItem.spacingHeight ? listItem.spacingHeight : spacingHeight, 
+                                                                        breakHeight:                    listItem.breakHeight ? listItem.breakHeight : breakHeight,
+                                                                        textbreak_fontSize:             listItem.textbreak_fontSize ? listItem.textbreak_fontSize : textbreak_fontSize, 
+                                                                        textbreak_colour:               listItem.textbreak_colour ? listItem.textbreak_colour : textbreak_colour,
+                                                                        item_textSize:                  listItem.item_textSize ? listItem.item_textSize : item_textSize, 
+                                                                        item_textColour:                listItem.item_textColour ? listItem.item_textColour : item_textColour, 
+                                                                        item_textFont:                  listItem.item_textFont ? listItem.item_textFont : item_textFont, 
+                                                                        item_textSpacing:               listItem.item_textSpacing ? listItem.item_textSpacing : item_textSpacing, 
+                                                                        item_textInterCharacterSpacing: listItem.item_textInterCharacterSpacing ? listItem.item_textInterCharacterSpacing : item_textInterCharacterSpacing,
+                                                                        sublist_arrowSize:              listItem.sublist_arrowSize ? listItem.sublist_arrowSize : sublist_arrowSize, 
+                                                                        sublist_arrowColour:            listItem.sublist_arrowColour ? listItem.sublist_arrowColour : sublist_arrowColour,
+                                                                        item_textVerticalOffsetMux:     listItem.item_textVerticalOffsetMux ? listItem.item_textVerticalOffsetMux : item_textVerticalOffsetMux, 
+                                                                        item_textHorizontalOffsetMux:   listItem.item_textHorizontalOffsetMux ? listItem.item_textHorizontalOffsetMux : item_textHorizontalOffsetMux,
                                                     
-                                                                        active:active, multiSelect:multiSelect, hoverable:hoverable, selectable:selectable, pressable:pressable,
+                                                                        active:         listItem.active ? listItem.active : active, 
+                                                                        multiSelect:    listItem.multiSelect ? listItem.multiSelect : multiSelect, 
+                                                                        hoverable:      listItem.hoverable ? listItem.hoverable : hoverable, 
+                                                                        selectable:     listItem.selectable ? listItem.selectable : selectable, 
+                                                                        pressable:      listItem.pressable ? listItem.pressable : pressable,
                                                                     
-                                                                        backing_style:backing_style,
-                                                                        break_style:break_style,
+                                                                        backing_style:  listItem.backing_style ? listItem.backing_style : backing_style,
+                                                                        break_style:    listItem.break_style ? listItem.break_style : break_style,
                                                                         
                                                                         style:{
-                                                                            item__off__colour:item__off__colour,                     
-                                                                            item__off__lineColour:item__off__lineColour,                     
-                                                                            item__off__lineThickness:item__off__lineThickness,
-                                                                            item__up__colour:item__up__colour,                      
-                                                                            item__up__lineColour:item__up__lineColour,                      
-                                                                            item__up__lineThickness:item__up__lineThickness,
-                                                                            item__press__colour:item__press__colour,                   
-                                                                            item__press__lineColour:item__press__lineColour,                   
-                                                                            item__press__lineThickness:item__press__lineThickness,
-                                                                            item__select__colour:item__select__colour,                  
-                                                                            item__select__lineColour:item__select__lineColour,                  
-                                                                            item__select__lineThickness:item__select__lineThickness,
-                                                                            item__select_press__colour:item__select_press__colour,            
-                                                                            item__select_press__lineColour:item__select_press__lineColour,            
-                                                                            item__select_press__lineThickness:item__select_press__lineThickness,
-                                                                            item__glow__colour:item__glow__colour,                    
-                                                                            item__glow__lineColour:item__glow__lineColour,                    
-                                                                            item__glow__lineThickness:item__glow__lineThickness,
-                                                                            item__glow_press__colour:item__glow_press__colour,              
-                                                                            item__glow_press__lineColour:item__glow_press__lineColour,              
-                                                                            item__glow_press__lineThickness:item__glow_press__lineThickness,
-                                                                            item__glow_select__colour:item__glow_select__colour,             
-                                                                            item__glow_select__lineColour:item__glow_select__lineColour,             
-                                                                            item__glow_select__lineThickness:item__glow_select__lineThickness,
-                                                                            item__glow_select_press__colour:item__glow_select_press__colour,       
-                                                                            item__glow_select_press__lineColour:item__glow_select_press__lineColour,       
-                                                                            item__glow_select_press__lineThickness:item__glow_select_press__lineThickness,
-                                                                            item__hover__colour:item__hover__colour,                   
-                                                                            item__hover__lineColour:item__hover__lineColour,                   
-                                                                            item__hover__lineThickness:item__hover__lineThickness,
-                                                                            item__hover_press__colour:item__hover_press__colour,             
-                                                                            item__hover_press__lineColour:item__hover_press__lineColour,             
-                                                                            item__hover_press__lineThickness:item__hover_press__lineThickness,
-                                                                            item__hover_select__colour:item__hover_select__colour,            
-                                                                            item__hover_select__lineColour:item__hover_select__lineColour,            
-                                                                            item__hover_select__lineThickness:item__hover_select__lineThickness,
-                                                                            item__hover_select_press__colour:item__hover_select_press__colour,      
-                                                                            item__hover_select_press__lineColour:item__hover_select_press__lineColour,      
-                                                                            item__hover_select_press__lineThickness:item__hover_select_press__lineThickness,
-                                                                            item__hover_glow__colour:item__hover_glow__colour,              
-                                                                            item__hover_glow__lineColour:item__hover_glow__lineColour,              
-                                                                            item__hover_glow__lineThickness:item__hover_glow__lineThickness,
-                                                                            item__hover_glow_press__colour:item__hover_glow_press__colour,        
-                                                                            item__hover_glow_press__lineColour:item__hover_glow_press__lineColour,        
-                                                                            item__hover_glow_press__lineThickness:item__hover_glow_press__lineThickness,
-                                                                            item__hover_glow_select__colour:item__hover_glow_select__colour,       
-                                                                            item__hover_glow_select__lineColour:item__hover_glow_select__lineColour,       
-                                                                            item__hover_glow_select__lineThickness:item__hover_glow_select__lineThickness,
-                                                                            item__hover_glow_select_press__colour:item__hover_glow_select_press__colour, 
-                                                                            item__hover_glow_select_press__lineColour:item__hover_glow_select_press__lineColour, 
-                                                                            item__hover_glow_select_press__lineThickness:item__hover_glow_select_press__lineThickness,
+                                                                            item__off__colour:                            listItem.item__off__colour ? listItem.item__off__colour : item__off__colour,                     
+                                                                            item__off__lineColour:                        listItem.item__off__lineColour ? listItem.item__off__lineColour : item__off__lineColour,                     
+                                                                            item__off__lineThickness:                     listItem.item__off__lineThickness ? listItem.item__off__lineThickness : item__off__lineThickness,
+                                                                            item__up__colour:                             listItem.item__up__colour ? listItem.item__up__colour : item__up__colour,                      
+                                                                            item__up__lineColour:                         listItem.item__up__lineColour ? listItem.item__up__lineColour : item__up__lineColour,                      
+                                                                            item__up__lineThickness:                      listItem.item__up__lineThickness ? listItem.item__up__lineThickness : item__up__lineThickness,
+                                                                            item__press__colour:                          listItem.item__press__colour ? listItem.item__press__colour : item__press__colour,                   
+                                                                            item__press__lineColour:                      listItem.item__press__lineColour ? listItem.item__press__lineColour : item__press__lineColour,                   
+                                                                            item__press__lineThickness:                   listItem.item__press__lineThickness ? listItem.item__press__lineThickness : item__press__lineThickness,
+                                                                            item__select__colour:                         listItem.item__select__colour ? listItem.item__select__colour : item__select__colour,                  
+                                                                            item__select__lineColour:                     listItem.item__select__lineColour ? listItem.item__select__lineColour : item__select__lineColour,                  
+                                                                            item__select__lineThickness:                  listItem.item__select__lineThickness ? listItem.item__select__lineThickness : item__select__lineThickness,
+                                                                            item__select_press__colour:                   listItem.item__select_press__colour ? listItem.item__select_press__colour : item__select_press__colour,            
+                                                                            item__select_press__lineColour:               listItem.item__select_press__lineColour ? listItem.item__select_press__lineColour : item__select_press__lineColour,            
+                                                                            item__select_press__lineThickness:            listItem.item__select_press__lineThickness ? listItem.item__select_press__lineThickness : item__select_press__lineThickness,
+                                                                            item__glow__colour:                           listItem.item__glow__colour ? listItem.item__glow__colour : item__glow__colour,                    
+                                                                            item__glow__lineColour:                       listItem.item__glow__lineColour ? listItem.item__glow__lineColour : item__glow__lineColour,                    
+                                                                            item__glow__lineThickness:                    listItem.item__glow__lineThickness ? listItem.item__glow__lineThickness : item__glow__lineThickness,
+                                                                            item__glow_press__colour:                     listItem.item__glow_press__colour ? listItem.item__glow_press__colour : item__glow_press__colour,              
+                                                                            item__glow_press__lineColour:                 listItem.item__glow_press__lineColour ? listItem.item__glow_press__lineColour : item__glow_press__lineColour,              
+                                                                            item__glow_press__lineThickness:              listItem.item__glow_press__lineThickness ? listItem.item__glow_press__lineThickness : item__glow_press__lineThickness,
+                                                                            item__glow_select__colour:                    listItem.item__glow_select__colour ? listItem.item__glow_select__colour : item__glow_select__colour,             
+                                                                            item__glow_select__lineColour:                listItem.item__glow_select__lineColour ? listItem.item__glow_select__lineColour : item__glow_select__lineColour,             
+                                                                            item__glow_select__lineThickness:             listItem.item__glow_select__lineThickness ? listItem.item__glow_select__lineThickness : item__glow_select__lineThickness,
+                                                                            item__glow_select_press__colour:              listItem.item__glow_select_press__colour ? listItem.item__glow_select_press__colour : item__glow_select_press__colour,       
+                                                                            item__glow_select_press__lineColour:          listItem.item__glow_select_press__lineColour ? listItem.item__glow_select_press__lineColour : item__glow_select_press__lineColour,       
+                                                                            item__glow_select_press__lineThickness:       listItem.item__glow_select_press__lineThickness ? listItem.item__glow_select_press__lineThickness : item__glow_select_press__lineThickness,
+                                                                            item__hover__colour:                          listItem.item__hover__colour ? listItem.item__hover__colour : item__hover__colour,                   
+                                                                            item__hover__lineColour:                      listItem.item__hover__lineColour ? listItem.item__hover__lineColour : item__hover__lineColour,                   
+                                                                            item__hover__lineThickness:                   listItem.item__hover__lineThickness ? listItem.item__hover__lineThickness : item__hover__lineThickness,
+                                                                            item__hover_press__colour:                    listItem.item__hover_press__colour ? listItem.item__hover_press__colour : item__hover_press__colour,             
+                                                                            item__hover_press__lineColour:                listItem.item__hover_press__lineColour ? listItem.item__hover_press__lineColour : item__hover_press__lineColour,             
+                                                                            item__hover_press__lineThickness:             listItem.item__hover_press__lineThickness ? listItem.item__hover_press__lineThickness : item__hover_press__lineThickness,
+                                                                            item__hover_select__colour:                   listItem.item__hover_select__colour ? listItem.item__hover_select__colour : item__hover_select__colour,            
+                                                                            item__hover_select__lineColour:               listItem.item__hover_select__lineColour ? listItem.item__hover_select__lineColour : item__hover_select__lineColour,            
+                                                                            item__hover_select__lineThickness:            listItem.item__hover_select__lineThickness ? listItem.item__hover_select__lineThickness : item__hover_select__lineThickness,
+                                                                            item__hover_select_press__colour:             listItem.item__hover_select_press__colour ? listItem.item__hover_select_press__colour : item__hover_select_press__colour,      
+                                                                            item__hover_select_press__lineColour:         listItem.item__hover_select_press__lineColour ? listItem.item__hover_select_press__lineColour : item__hover_select_press__lineColour,      
+                                                                            item__hover_select_press__lineThickness:      listItem.item__hover_select_press__lineThickness ? listItem.item__hover_select_press__lineThickness : item__hover_select_press__lineThickness,
+                                                                            item__hover_glow__colour:                     listItem.item__hover_glow__colour ? listItem.item__hover_glow__colour : item__hover_glow__colour,              
+                                                                            item__hover_glow__lineColour:                 listItem.item__hover_glow__lineColour ? listItem.item__hover_glow__lineColour : item__hover_glow__lineColour,              
+                                                                            item__hover_glow__lineThickness:              listItem.item__hover_glow__lineThickness ? listItem.item__hover_glow__lineThickness : item__hover_glow__lineThickness,
+                                                                            item__hover_glow_press__colour:               listItem.item__hover_glow_press__colour ? listItem.item__hover_glow_press__colour : item__hover_glow_press__colour,        
+                                                                            item__hover_glow_press__lineColour:           listItem.item__hover_glow_press__lineColour ? listItem.item__hover_glow_press__lineColour : item__hover_glow_press__lineColour,        
+                                                                            item__hover_glow_press__lineThickness:        listItem.item__hover_glow_press__lineThickness ? listItem.item__hover_glow_press__lineThickness : item__hover_glow_press__lineThickness,
+                                                                            item__hover_glow_select__colour:              listItem.item__hover_glow_select__colour ? listItem.item__hover_glow_select__colour : item__hover_glow_select__colour,       
+                                                                            item__hover_glow_select__lineColour:          listItem.item__hover_glow_select__lineColour ? listItem.item__hover_glow_select__lineColour : item__hover_glow_select__lineColour,       
+                                                                            item__hover_glow_select__lineThickness:       listItem.item__hover_glow_select__lineThickness ? listItem.item__hover_glow_select__lineThickness : item__hover_glow_select__lineThickness,
+                                                                            item__hover_glow_select_press__colour:        listItem.item__hover_glow_select_press__colour ? listItem.item__hover_glow_select_press__colour : item__hover_glow_select_press__colour, 
+                                                                            item__hover_glow_select_press__lineColour:    listItem.item__hover_glow_select_press__lineColour ? listItem.item__hover_glow_select_press__lineColour : item__hover_glow_select_press__lineColour, 
+                                                                            item__hover_glow_select_press__lineThickness: listItem.item__hover_glow_select_press__lineThickness ? listItem.item__hover_glow_select_press__lineThickness : item__hover_glow_select_press__lineThickness,
                                                                         }
                                                                     });
                                                                     sublist.onenter = function(a){object.onenter([index].concat(a));};
@@ -36153,7 +36192,7 @@
                                         object._update = function(a){
                                             if(a>0){ object.activate(); }
                                             else{ object.deactivate(); }
-                                            object.onchange(a);
+                                            try{object.onchange(a);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
                                         }
                                 
                                         object.set = function(a){
@@ -36170,11 +36209,11 @@
                                         object._onconnect = function(instigator){
                                             var forignValue = object.getForeignNode()._getLocalValue();
                                             if(forignValue>0){ object.activate(); }
-                                            object.onchange(forignValue);
+                                            try{object.onchange(forignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
                                         };
                                         object._ondisconnect = function(instigator){
                                             if(localValue==0){ object.deactivate(); }
-                                            object.onchange(localValue);
+                                            try{object.onchange(localValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
                                         };
                                 
                                     //callbacks
@@ -36408,13 +36447,13 @@
                                             object._flash();
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
-                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceive(address,data); }
+                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().onreceive(address,data);}catch(error){console.log('connectionNode_data::'+name+'onreceive error:',error);} }
                                         };
                                         object.request = function(address){
                                             object._flash();
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
-                                            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongive(address); }
+                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().ongive(address);}catch(error){console.log('connectionNode_data::'+name+'ongive error:',error);} }
                                         };
                                 
                                         object.onreceive = onreceive;
@@ -36481,7 +36520,7 @@
                                 
                                             foreignNode = new_foreignNode;
                                             this._onconnect(true);
-                                            if(object.onconnect!=undefined){object.onconnect(true);}
+                                            if(object.onconnect!=undefined){ try{object.onconnect(true);}catch(error){console.log('connectionNode::'+name+'::onconnect error',error);} }
                                             foreignNode._receiveConnection(this);
                                 
                                             this._addCable(this);
@@ -36490,20 +36529,20 @@
                                             this.disconnect();
                                             foreignNode = new_foreignNode;
                                             this._onconnect(false);
-                                            if(object.onconnect!=undefined){object.onconnect(false);}
+                                            if(object.onconnect!=undefined){ try{object.onconnect(false);}catch(error){console.log('connectionNode::'+name+'::onconnect error:',error);} }
                                         };
                                         object.disconnect = function(){
                                             if( foreignNode == undefined ){return;}
                                 
                                             this._removeCable();
                                             this._ondisconnect(true);
-                                            if(object.ondisconnect!=undefined){object.ondisconnect(true);}
+                                            if(object.ondisconnect!=undefined){try{object.ondisconnect(true);}catch(error){console.log('connectionNode::'+name+'::ondisconnect error:',error);}}
                                             foreignNode._receiveDisconnection();
                                             foreignNode = null;
                                         };
                                         object._receiveDisconnection = function(){
                                             this._ondisconnect(false);
-                                            if(object.ondisconnect!=undefined){object.ondisconnect(false);}
+                                            if(object.ondisconnect!=undefined){try{object.ondisconnect(false);}catch(error){console.log('connectionNode::'+name+'::ondisconnect error:',error);}}
                                             foreignNode = null;
                                         };
                                         object.getForeignNode = function(){ return foreignNode; };
@@ -36531,7 +36570,7 @@
                                                     tmpCable.parent.remove(tmpCable);
                                                     tmpCable = undefined;
                                 
-                                                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0]; 
+                                                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0];
                                                     if(element == undefined){return;}
                                                     
                                                     var node = element.parent;
@@ -36646,7 +36685,7 @@
                                             var val = object.read();
                                             if(val){ object.activate(); }
                                             else{ object.deactivate(); }
-                                            object.onchange(val);
+                                            try{object.onchange(val);}catch(error){console.log('connectionNode_signal::'+name+'::onchange error:',error);}
                                         }
                                 
                                         object.set = function(a){
@@ -36661,11 +36700,11 @@
                                 
                                         object._onconnect = function(instigator){
                                             if(object.getForeignNode()._getLocalValue()){object.activate();}
-                                            object.onchange(object.getForeignNode()._getLocalValue());
+                                            try{object.onchange(object.getForeignNode()._getLocalValue());}catch(error){console.log('connectionNode_signal::'+name+'::onchange error:',error);}
                                         };
                                         object._ondisconnect = function(instigator){
                                             if(!localValue){object.deactivate();}
-                                            object.onchange(localValue);
+                                            try{object.onchange(localValue);}catch(error){console.log('connectionNode_signal::'+name+'::onchange error:',error);}
                                         };
                                 
                                     //callbacks
@@ -36808,7 +36847,7 @@
                                     };
                                 
                                     //main object
-                                        var object = interface.unit.builder(this.testUnit_1,design);
+                                        var object = interface.unit.builder(design);
                                 
                                     //playing with the parts
                                         object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.text('hello');
@@ -36873,7 +36912,7 @@
                                     };
                                 
                                     //main object
-                                        var object = interface.unit.builder(this.testUnit_2,design);
+                                        var object = interface.unit.builder(design);
                                     
                                     return object;
                                 };
@@ -36910,7 +36949,7 @@
                                     };
                                 
                                     //main object
-                                        var object = interface.unit.builder(this.testUnit_2,design);
+                                        var object = interface.unit.builder(design);
                                     
                                     return object;
                                 };
@@ -36946,7 +36985,7 @@
                                     };
                                 
                                     //main object
-                                        var object = interface.unit.builder(this.testUnit_2,design);
+                                        var object = interface.unit.builder(design);
                                     
                                     return object;
                                 };
@@ -36983,8 +37022,7 @@
                                 ] 
                             }
                         */
-                        this.builder = function(creatorMethod,design){
-                            if(!creatorMethod){console.error("Interface Unit Builder :: creatorMethod missing");return;}
+                        this.builder = function(design){
                         
                             //input check
                                 if(design.x == undefined){ design.x = 0; }
@@ -36993,7 +37031,6 @@
                         
                             //main group
                                 var unit = _canvas_.interface.part.builder('basic','group',design.name,{x:design.x, y:design.y, angle:design.angle});
-                                unit.creatorMethod = creatorMethod;
                                 unit.model = design.name;
                                 unit.collisionActive = design.collisionActive == undefined ? true : design.collisionActive;
                         

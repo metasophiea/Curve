@@ -101,7 +101,7 @@ this.oneShot_single = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.oneShot_single,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         var needleExists = undefined;

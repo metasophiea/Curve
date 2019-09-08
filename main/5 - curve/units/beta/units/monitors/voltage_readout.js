@@ -34,7 +34,7 @@ this.voltage_readout = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.voltage_readout,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         object.elements.connectionNode_voltage.in.onchange = function(value){

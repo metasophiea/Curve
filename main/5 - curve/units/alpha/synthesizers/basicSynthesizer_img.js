@@ -185,7 +185,7 @@ this.basicSynthesizer_img = function(x,y,angle){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.basicSynthesizer_img,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.exportData = function(){

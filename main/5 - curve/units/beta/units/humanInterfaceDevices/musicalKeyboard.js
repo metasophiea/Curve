@@ -115,7 +115,7 @@ this.musicalKeyboard = function(x,y,a){
             }
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //keycapture
         object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 

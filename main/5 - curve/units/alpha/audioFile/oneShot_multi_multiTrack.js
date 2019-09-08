@@ -205,7 +205,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
         }
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.oneShot_multi_multiTrack,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.exportData = function(){

@@ -27,7 +27,7 @@ this.audioSink = function(x,y,a){
     };
  
     //main object
-        var object = _canvas_.interface.unit.builder(this.audioSink,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         var flow = {

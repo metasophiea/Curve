@@ -175,4 +175,4 @@
 - expansion of connectionNode clickable area, so that things stay the same graphically, but mouse interaction is easier
 - advanced (easier) unit placement (like stamping or/and click-n-plop)
 - rotate unit around point other than their origin
-- dev output text console thing. Maybe activate with F3 or something (maybe just the url)
+- dev output text console thing. Maybe activate with F3 or something (maybe just the url which adds an option in the menubar dropdown)

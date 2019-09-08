@@ -7,3 +7,4 @@ _canvas_.control.gui.showMenubar();
 _canvas_.control.viewport.stopMouseScroll(true);
 _canvas_.control.viewport.activeRender(true);
 _canvas_.core.render.activeLimitToFrameRate(true);
+

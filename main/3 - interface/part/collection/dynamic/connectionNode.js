@@ -49,7 +49,7 @@ this.connectionNode = function(
 
             foreignNode = new_foreignNode;
             this._onconnect(true);
-            if(object.onconnect!=undefined){object.onconnect(true);}
+            if(object.onconnect!=undefined){ try{object.onconnect(true);}catch(error){console.log('connectionNode::'+name+'::onconnect error',error);} }
             foreignNode._receiveConnection(this);
 
             this._addCable(this);
@@ -58,20 +58,20 @@ this.connectionNode = function(
             this.disconnect();
             foreignNode = new_foreignNode;
             this._onconnect(false);
-            if(object.onconnect!=undefined){object.onconnect(false);}
+            if(object.onconnect!=undefined){ try{object.onconnect(false);}catch(error){console.log('connectionNode::'+name+'::onconnect error:',error);} }
         };
         object.disconnect = function(){
             if( foreignNode == undefined ){return;}
 
             this._removeCable();
             this._ondisconnect(true);
-            if(object.ondisconnect!=undefined){object.ondisconnect(true);}
+            if(object.ondisconnect!=undefined){try{object.ondisconnect(true);}catch(error){console.log('connectionNode::'+name+'::ondisconnect error:',error);}}
             foreignNode._receiveDisconnection();
             foreignNode = null;
         };
         object._receiveDisconnection = function(){
             this._ondisconnect(false);
-            if(object.ondisconnect!=undefined){object.ondisconnect(false);}
+            if(object.ondisconnect!=undefined){try{object.ondisconnect(false);}catch(error){console.log('connectionNode::'+name+'::ondisconnect error:',error);}}
             foreignNode = null;
         };
         object.getForeignNode = function(){ return foreignNode; };
@@ -99,7 +99,7 @@ this.connectionNode = function(
                     tmpCable.parent.remove(tmpCable);
                     tmpCable = undefined;
 
-                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0]; 
+                    var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0];
                     if(element == undefined){return;}
                     
                     var node = element.parent;

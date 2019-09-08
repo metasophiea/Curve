@@ -1,4 +1,60 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-08
+  - added the audio_in unit
+  - did the artwork for the audio_file_player unit
+  - lots of work done on the audio_file_player unit (everything working, except
+    the multiShot-or-not checkbox)
+
+
+2019-09-07
+  - added the audio scope (there's something weird about connecting audio
+    towards it, but from it works fine..)
+    fixed it. Turned out the transparent portion of the backing was getting in
+    the way. Placing the node in front of the backing was the solution
+  - began work on the filter unit (I'm having real trouble figuring out what the
+    values for the bands should be.. I need to add a frequency response output
+    connection or something)
+
+
+2019-09-03
+  notes
+  - thinking about renaming the beta units, as they're to be a part of the
+    mainlist, they should have a better name than "beta" Besides, we should keep
+    that name clear for future in-development units that really are
+    to-be-beta-tested
+    I'd like something that reflect their originally, by that I mean how they
+    are the first collection and contain basic essential items. Originally I
+    thought to call them "the essentials" but maybe "foundation"? "main"?
+    "base"?
+    ...Maybe just "Alpha" and any units that are actually in development can
+    just be named that way (in the visible name) like "Alpha (under
+    development)"
+
+  - added '_collectionData' value to unit collections, which currently houses 
+    the collections display name. 'alpha' has been renamed to "Development 
+    Units" and 'beta' is now called "Alpha"
+  - updated list and list_image part to allow one to define the arguments for 
+    sublists differently from how their parent has them (though, if you don't 
+    define one, the parent's is used as a default) It's handy for getting 
+    sublists to be thinner or thicker than their parent
+  - updated curve's menubar further to allow for more customized dropdowns. Now
+    they all are a little bit tighter
+
+
+2019-09-02
+  - removed uses of the "constructor method" that had been used by units in the
+    past, but seemed to have fallen out of use in favour of just storing the
+    model name instead (I'm guessing that that was something I was trying to
+    avoid doing back when I implimented the "constructor method" argument, but
+    was only ever used by the cut/copy/paste code and the scene safe/load code.
+    Both of which now rely on control.scene.documentUnits, which prefers to
+    store the unit's collection and model names instead of links to the
+    constructor code. All pretty soild though, so nothing to worry about)
+  - fixed issue with connectionNodes when they're given bad callback code
+  - straightened up the connection nodes on the combiners from yesterday so that
+    they match those found on the duplicators
+
+
 2019-09-01
   - added the pulse_generator
   - added the signal_combiner

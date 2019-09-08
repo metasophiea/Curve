@@ -77,7 +77,7 @@ this.player = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.player,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal 
         function loadProcess(data){

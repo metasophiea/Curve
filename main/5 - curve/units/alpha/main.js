@@ -1,5 +1,8 @@
 {{include:*}}
 
+this._collectionData = {
+    name:'Development Units',
+};
 this._categoryData = {
     audioFile:{ printingName:'Audio File' },
     audioEffectUnits:{ printingName:'Audio Effect Units' },

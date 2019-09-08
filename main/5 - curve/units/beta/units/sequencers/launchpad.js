@@ -91,7 +91,7 @@ this.launchpad = function(x,y,a){
         }
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.launchpad,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         var state = {

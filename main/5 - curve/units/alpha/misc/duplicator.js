@@ -26,7 +26,7 @@ this.signal_duplicator = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
@@ -68,7 +68,7 @@ this.voltage_duplicator = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         // object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
@@ -110,7 +110,7 @@ this.audio_duplicator = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.audio_duplicator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
@@ -158,7 +158,7 @@ this.data_duplicator = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
+        var object = _canvas_.interface.unit.builder(design);
     
     return object;
 

@@ -21,7 +21,7 @@ this.signal_combiner = function(x,y,a){
         elements:[
             {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal }},
             {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
-            {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-20.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+            {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-20.5-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
 
             {collection:'basic', type:'image', name:'backing', data:{ 
                 x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
@@ -30,7 +30,7 @@ this.signal_combiner = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.signal_combiner,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };

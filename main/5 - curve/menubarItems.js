@@ -48,52 +48,65 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
         {
             text:'create',
             width:65,
-            listWidth:260,
+            listWidth:200,
             listItemHeight:22.5,
             breakHeight: 0.5,
             spaceHeight: 1,
             itemList:(function(){
                 var collections = _canvas_.interface.unit.collection;
                 var outputItemList = [];
+                var unitPlacementPosition = {x:30,y:30};
 
                 Object.keys(collections).sort().forEach(collectionKey => {
+                    var collection = collections[collectionKey];
+                    var collectionItemList = {
+                        type:'list', 
+                        text:collection._collectionData ? collection._collectionData.name : collectionKey, 
+                        list:[],
+                        itemWidth:collection._collectionData ? collection._collectionData.itemWidth : 260, 
+                    };
+
                     //for this collection, sort models into their categories
-                    var categorySortingList = {};
-                    Object.keys(collections[collectionKey]).sort().filter(a => a[0]!='_').forEach(modelKey => {
-                        var model = collections[collectionKey][modelKey];
-                        if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
-                        if(!categorySortingList.hasOwnProperty(model.metadata.category)){
-                            categorySortingList[model.metadata.category] = [];
-                        }
-                        categorySortingList[model.metadata.category].push(modelKey);
-                    });
-
-                    //run though categories and generate item list for this collection
-                    var collectionItemList = {type:'list', text:collectionKey, list:[]};
-                    Object.keys(categorySortingList).sort().forEach(categoryKey => {
-                        var categoryPrintingName = categoryKey;
-                        if(collections[collectionKey]._categoryData != undefined && collections[collectionKey]._categoryData[categoryKey] != undefined){
-                            categoryPrintingName = collections[collectionKey]._categoryData[categoryKey].printingName;
-                        }
-
-                        var categoryList = { type:'list', text:categoryPrintingName, list:[] };
-                        categorySortingList[categoryKey].forEach(model => {
-                            categoryList.list.push(
-                                {
-                                    type:'item', text_left:collections[collectionKey][model].metadata.name,
-                                    function:function(design){return function(){
-                                        var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(30,30);
-                                        _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
-                                    }}(model),
-                                }
-                            );
+                        var categorySortingList = {};
+                        Object.keys(collection).sort().filter(a => a[0]!='_').forEach(modelKey => {
+                            var model = collection[modelKey];
+                            if(model.metadata.category == undefined){ model.metadata.category = 'unknown'; }
+                            if(!categorySortingList.hasOwnProperty(model.metadata.category)){ categorySortingList[model.metadata.category] = []; }
+                            categorySortingList[model.metadata.category].push(modelKey);
                         });
 
-                        collectionItemList.list.push(categoryList);
-                    });
+                    //run though categories and generate item list for this collection
+                        Object.keys(categorySortingList).sort().forEach(categoryKey => {
+                            //get category printing name
+                                var categoryPrintingName = categoryKey;
+                                var itemWidth = undefined;
+                                if(collection._categoryData != undefined){
+                                    if(collection._categoryData[categoryKey] != undefined){
+                                        categoryPrintingName = collection._categoryData[categoryKey].printingName;
+                                        itemWidth = collection._categoryData[categoryKey].itemWidth;
+                                    }
+                                }
+
+                            //generate sub list for this category
+                                var categoryList = { type:'list', text:categoryPrintingName, list:[], itemWidth:itemWidth, };
+                                categorySortingList[categoryKey].forEach(model => {
+                                    categoryList.list.push(
+                                        {
+                                            type:'item', text_left:collection[model].metadata.name,
+                                            function:function(design){return function(){
+                                                var p = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(unitPlacementPosition.x,unitPlacementPosition.y);
+                                                _canvas_.control.scene.addUnit(p.x,p.y,0,design,collectionKey);
+                                            }}(model),
+                                        }
+                                    );
+                                });
+
+                            //push sublist
+                                collectionItemList.list.push(categoryList);
+                        });
 
                     //add this item list to the output array
-                    outputItemList.push(collectionItemList);
+                        outputItemList.push(collectionItemList);
                 });
 
                 return outputItemList;
@@ -133,7 +146,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
             breakHeight: 0.5,
             spaceHeight: 1,
             itemList:[
-            {type:'item', text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
+                {type:'item', text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
             ]
         },
     );

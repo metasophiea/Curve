@@ -76,6 +76,7 @@ this.multibandFilter = function(
             _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
         };
         this.gain = function(band,value){
+            if(band == undefined){ return flow.gainNodes.map(a => a.gain);}
             if(value == undefined){return flow.gainNodes[band].gain;}
             flow.gainNodes[band].gain = value;
             _canvas_.library.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
@@ -84,6 +85,7 @@ this.multibandFilter = function(
             saved.settings[band].fresh = true;
         };
         this.frequency = function(band,value){
+            if(band == undefined){ return flow.filterNodes.map(a => a.frequency);}
             if(value == undefined){return flow.filterNodes[band].frequency;}
             flow.filterNodes[band].frequency = value;
             _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
@@ -92,6 +94,7 @@ this.multibandFilter = function(
             saved.settings[band].fresh = true;
         };
         this.Q = function(band,value){
+            if(band == undefined){ return flow.filterNodes.map(a => a.Q);}
             if(value == undefined){return flow.filterNodes[band].Q;}
             flow.filterNodes[band].Q = value;
             _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);

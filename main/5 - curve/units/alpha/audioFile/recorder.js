@@ -89,7 +89,7 @@ this.recorder = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.recorder,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         //update functions

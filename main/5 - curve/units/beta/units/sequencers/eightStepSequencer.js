@@ -135,7 +135,7 @@ this.eightStepSequencer = function(x,y,a){
 
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.eightStepSequencer,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.exportData = function(){

@@ -43,7 +43,7 @@ this.audioScope = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.audioScope,design);
+        var object = _canvas_.interface.unit.builder(design);
     
     //circuitry
         object.elements.button_rectangle.holdKey.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};

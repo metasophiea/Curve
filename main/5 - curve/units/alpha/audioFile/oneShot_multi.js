@@ -143,7 +143,7 @@ this.oneShot_multi = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.oneShot_multi,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         var needles = [];

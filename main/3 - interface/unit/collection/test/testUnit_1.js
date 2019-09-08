@@ -116,7 +116,7 @@ this.testUnit_1 = function(x,y,angle){
     };
 
     //main object
-        var object = interface.unit.builder(this.testUnit_1,design);
+        var object = interface.unit.builder(design);
 
     //playing with the parts
         object.elements.readout_sixteenSegmentDisplay.test_readout_sixteenSegmentDisplay.text('hello');

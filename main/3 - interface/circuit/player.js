@@ -154,7 +154,7 @@ this.player = function(context){
             }else{jumpToTime(value);}
             playheadCompute();
         };
-        this.loop = function(data={active:false,start:0,end:1},percent=true){
+        this.loop = function(data/*={active:false,start:0,end:1}*/,percent=true){
             if(data == undefined){return state.loop;}
 
             if(data.active != undefined){

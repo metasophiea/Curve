@@ -32,7 +32,7 @@ this.data_combiner = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.data_combiner,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };

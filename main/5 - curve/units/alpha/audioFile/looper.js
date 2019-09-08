@@ -114,7 +114,7 @@ this.looper = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.looper,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         var needleExists = false;

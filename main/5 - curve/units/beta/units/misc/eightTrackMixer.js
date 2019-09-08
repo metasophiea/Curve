@@ -99,7 +99,7 @@ this.eightTrackMixer = function(x,y,a){
     }
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.eightTrackMixer,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal circuitry
         for(var a = 0; a < 8; a++){

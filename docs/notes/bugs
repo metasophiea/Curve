@@ -1,6 +1,8 @@
 [XXXX-XX-XX:1] moving groups of units around, doesn't work how you think it should when one of them collides with something (sorta?)
     it wasn't working great for duplication. Edits have been made to control.grapple:alt / control.selection.duplicate
     / control.selection.paste to allow for a more natural duplication experience (log:2019-08-22)
+[2019-09-01:2] if a connection node's callback doesn't work when doing a manual connection; everything falls apart
+    added try/catch code around all the callback callings
 
 [2019-07-31:1] control.interaction.mouseGripPanningEnabled when disabled doesn't allow for "click anywhere else" unit deselection
 [2019-08-03:1] buttons atop buttons don't hover right, nor click right
@@ -8,3 +10,5 @@
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
 [2019-08-25:1] synthesizer circuit: Regarding the wobble features, seems you can set them too high and collisions can occur
 [2019-08-26:1] (?) connection nodes can work accross panes (is it really an issue though?) 
+[2019-09-01:1] snapping and unit collision don't play well together
+[2019-09-07:1] 8 track mixer panning is wrong

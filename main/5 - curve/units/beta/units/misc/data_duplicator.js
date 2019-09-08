@@ -54,7 +54,7 @@ this.data_duplicator = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.data_duplicator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     return object;
 };

@@ -100,7 +100,7 @@ this.basicSequencer = function(x,y,a){
 
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         object.elements.rangeslide.viewselect.onchange = function(values){
@@ -253,7 +253,7 @@ this.basicSequencer2 = function(x,y,a){
 
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         object.elements.rangeslide.viewselect.onchange = function(values){

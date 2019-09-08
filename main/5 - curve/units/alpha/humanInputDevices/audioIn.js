@@ -53,7 +53,7 @@ this.audioIn = function(x,y,a,setupConnect=true){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.audioIn,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //keycapture
         object.elements.polygon.backing.onkeydown = function(x,y,event){

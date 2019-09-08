@@ -176,11 +176,15 @@ this.needleOverlay = function(
             if(!selectionArea){return;}
 
             //if there's no input, return the values
-            //if input is out of bounds, remove the needles
+            //if input is out of bounds; remove the needles
+            //if both bounds are set to 0; remove the needles
             //otherwise, set the position
                 if(positionA == undefined || positionB == undefined){
                     return {A:needleData.selection_A, B:needleData.selection_B};
                 }else if(positionA > 1 || positionA < 0 || positionB > 1 || positionB < 0 ){
+                    needleJumpTo('selection_A');
+                    needleJumpTo('selection_B');
+                }else if(positionA == 0 && positionB == 0 ){
                     needleJumpTo('selection_A');
                     needleJumpTo('selection_B');
                 }else{

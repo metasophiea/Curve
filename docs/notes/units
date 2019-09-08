@@ -48,7 +48,7 @@ alpha units
 
 
 beta units
-    the essentials (22/27)
+    the essentials (24/27)
     _/  - ruler
 
     _/  - pulse generator (signal)
@@ -71,20 +71,20 @@ beta units
     _/  - LED board readout (signal readout)
     _/  - voltmeter readout (voltage readout)
     _/  - data logger readout (data readout)
-        - audio scope readout (audio readout)
+    _/  - audio scope readout (audio readout)
 
-        - audio in (microphone)
+    _/  - audio in (microphone)
     _/  - audio sink (stereo audio connections)(looks like a speaker or amp)
 
     _/  - basic synthesizer
 
     _/  - distortion unit (mono)
-        - filter unit (mono)(high-med-low)
+    __  - filter unit (mono)(high-med-low)
     _/  - reverb unit (mono)
 
     _/  - basic 8 track mixer (8 mono to 1 stereo)(panning and volume)
 
-        - audio file player (with area selection and signal-shot input)
+    __  - audio file player (with area selection and signal-shot input)
 
         - audio recorder
 
@@ -124,7 +124,7 @@ beta units
         disk
         equalizer
 
-        signal NOT / AND / OR / XOR / NAND / NOR / XNOR
+        signal NOT / AND / OR / XOR / NAND / NOR / XNOR (NONE, ALL, ANY, EITHER)
         signal memory
 
         Neon Sign (that just says CURVE or something)
@@ -182,3 +182,5 @@ beta units
 
         signal tempo devider (eg. 8 on-offs go in, before 1 on-off comes out)
         signal tempo multiplier (predictive tempo generator from input)
+
+        printer

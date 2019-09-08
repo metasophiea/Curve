@@ -8,7 +8,7 @@ this.grapher_audioScope_static = function(
     backgroundStyle_colour={r:0,g:0.39,b:0,a:1},
     backgroundStyle_lineThickness=0.5,
     backgroundTextStyle_fill={r:0,g:0.59,b:0,a:1},
-    backgroundTextStyle_size=0.1,
+    backgroundTextStyle_size=7.5,
     backgroundTextStyle_font='Helvetica',
 
     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
@@ -62,7 +62,7 @@ this.grapher_audioScope_static = function(
         }
         function setBackground(){
             grapher.viewbox( {'l':-1.1,'h':1.1} );
-            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75,-1],printText:false});
+            grapher.horizontalMarkings({points:[1,0.75,0.5,0.25,0,-0.25,-0.5,-0.75],printText:true});
             grapher.verticalMarkings({points:[-0.25,-0.5,-0.75,0,0.25,0.5,0.75],printText:false});
             grapher.drawBackground();
         };
@@ -81,6 +81,9 @@ this.grapher_audioScope_static = function(
         object.resolution = function(res=null){
             if(res==null){return attributes.graph.resolution;}
             attributes.graph.resolution = res;
+            attributes.analyser.analyserNode.fftSize = attributes.graph.resolution;
+            attributes.analyser.timeDomainDataArray = new Uint8Array(attributes.analyser.analyserNode.fftSize);
+            attributes.analyser.frequencyData = new Uint8Array(attributes.analyser.analyserNode.fftSize);
             this.stop();
             this.start();
         };

@@ -53,7 +53,7 @@ this.pulseGenerator_hyper = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.pulseGenerator_hyper,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal circuitry
         object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
@@ -172,7 +172,7 @@ this.pulseGenerator_signal_hyper = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal circuitry
         object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
@@ -294,7 +294,7 @@ this.pulseGenerator_voltage_hyper = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal circuitry
         object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};
@@ -404,7 +404,7 @@ this.pulseGenerator_data_hyper = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.pulseGenerator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal circuitry
         object.elements.dial_continuous.tempo.onchange = function(value){updateTempo(Math.round(value*maxTempo));};

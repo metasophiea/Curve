@@ -107,7 +107,7 @@ this.basicSequencer_midiOut = function(x,y,a){
         function midiNumber_line_converter(num){ return vals.sequencer.midiRange.top - num; }
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.basicSequencer,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         object.elements.rangeslide.viewselect_y.onchange = function(values){ object.elements.sequencer.main.viewarea({topLeft:{y:values.start}, bottomRight:{y:values.end}},false); };

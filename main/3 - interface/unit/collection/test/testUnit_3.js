@@ -18,7 +18,7 @@ this.testUnit_3 = function(x,y,angle){
     };
 
     //main object
-        var object = interface.unit.builder(this.testUnit_2,design);
+        var object = interface.unit.builder(design);
     
     return object;
 };

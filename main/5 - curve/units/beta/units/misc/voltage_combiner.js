@@ -19,9 +19,9 @@ this.voltage_combiner = function(x,y,a){
             { x:0,                                  y:measurements.drawing.height -offset     },
         ],
         elements:[
-            {collection:'dynamic', type:'connectionNode_voltage', name:'output', data:{ x:0, y:measurements.drawing.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage }},
-            {collection:'dynamic', type:'connectionNode_voltage', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
-            {collection:'dynamic', type:'connectionNode_voltage', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-19.5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'output',   data:{ x:0, y:measurements.drawing.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'input_1',  data:{ x:measurements.drawing.width-3-1/3, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
+            {collection:'dynamic', type:'connectionNode_voltage', name:'input_2',  data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-18-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
             {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ x:measurements.drawing.width*0.78, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage }},
 
             {collection:'basic', type:'image', name:'backing', data:{ 
@@ -36,7 +36,7 @@ this.voltage_combiner = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.voltage_combiner,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         var mix = 0.5;

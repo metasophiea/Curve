@@ -102,7 +102,7 @@ this.musicalKeyboard = function(x,y,a){
 
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.musicalKeyboard,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //keycapture
         object.elements.polygon.backing.onkeydown = function(event){

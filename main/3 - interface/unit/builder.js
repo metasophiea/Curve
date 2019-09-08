@@ -15,8 +15,7 @@
         ] 
     }
 */
-this.builder = function(creatorMethod,design){
-    if(!creatorMethod){console.error("Interface Unit Builder :: creatorMethod missing");return;}
+this.builder = function(design){
 
     //input check
         if(design.x == undefined){ design.x = 0; }
@@ -25,7 +24,6 @@ this.builder = function(creatorMethod,design){
 
     //main group
         var unit = _canvas_.interface.part.builder('basic','group',design.name,{x:design.x, y:design.y, angle:design.angle});
-        unit.creatorMethod = creatorMethod;
         unit.model = design.name;
         unit.collisionActive = design.collisionActive == undefined ? true : design.collisionActive;
 

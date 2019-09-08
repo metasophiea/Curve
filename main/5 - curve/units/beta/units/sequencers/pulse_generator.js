@@ -86,7 +86,7 @@ this.pulse_generator = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.pulse_generator,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //wiring
         var storedValue = [1,2,0,0,0,0];
@@ -181,6 +181,6 @@ this.pulse_generator = function(x,y,a){
 
 this.pulse_generator.metadata = {
     name:'Pulse Generator',
-    category:'misc',
+    category:'sequencers',
     helpURL:'/help/units/beta/pulse_generator/'
 };

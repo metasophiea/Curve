@@ -27,7 +27,7 @@ this.connectionNode_voltage = function(
         object._update = function(a){
             if(a>0){ object.activate(); }
             else{ object.deactivate(); }
-            object.onchange(a);
+            try{object.onchange(a);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
         }
 
         object.set = function(a){
@@ -44,11 +44,11 @@ this.connectionNode_voltage = function(
         object._onconnect = function(instigator){
             var forignValue = object.getForeignNode()._getLocalValue();
             if(forignValue>0){ object.activate(); }
-            object.onchange(forignValue);
+            try{object.onchange(forignValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
         };
         object._ondisconnect = function(instigator){
             if(localValue==0){ object.deactivate(); }
-            object.onchange(localValue);
+            try{object.onchange(localValue);}catch(error){console.log('connectionNode_voltage::'+name+'::onchange error:',error);}
         };
 
     //callbacks

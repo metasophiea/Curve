@@ -29,11 +29,12 @@ this.grapher_waveWorkspace = function(
         //main graph
             var graph = interfacePart.builder('display','grapher_static', 'graph', {
                 width:width, height:height,
+                backgroundText_verticalMarkings:{ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:false },
                 style:{
                     foregrounds:foregroundStyles,   
                     foregroundText:foregroundTextStyles,
-                    backgroundStyle_colour:backgroundStyle_colour,
-                    backgroundStyle_lineThickness:backgroundStyle_lineThickness,
+                    background_colour:backgroundStyle_colour,
+                    background_lineThickness:backgroundStyle_lineThickness,
                     backgroundText_colour:backgroundTextStyle_colour,
                     backgroundText_size:backgroundTextStyle_size,
                     backgroundText_font:backgroundTextStyle_font,

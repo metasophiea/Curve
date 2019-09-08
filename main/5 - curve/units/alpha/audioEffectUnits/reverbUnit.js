@@ -74,7 +74,7 @@ this.reverbUnit = function(x,y){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.reverbUnit,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.importData = function(data){
@@ -219,7 +219,7 @@ this.reverbUnit_stereo = function(x,y){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.reverbUnit,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.importData = function(data){

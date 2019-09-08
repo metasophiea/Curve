@@ -32,7 +32,7 @@ this.signal_switch = function(x,y,a){
         ]
     };
     //main object
-        var object = _canvas_.interface.unit.builder(this.signal_switch,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //circuitry
         object.elements.slide_discrete_image.theSwitch.onchange = function(value){

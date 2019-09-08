@@ -31,13 +31,13 @@ this.connectionNode_data = function(
             object._flash();
             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
 
-            if(object.getForeignNode()!=undefined){ object.getForeignNode().onreceive(address,data); }
+            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().onreceive(address,data);}catch(error){console.log('connectionNode_data::'+name+'onreceive error:',error);} }
         };
         object.request = function(address){
             object._flash();
             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
 
-            if(object.getForeignNode()!=undefined){ object.getForeignNode().ongive(address); }
+            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().ongive(address);}catch(error){console.log('connectionNode_data::'+name+'ongive error:',error);} }
         };
 
         object.onreceive = onreceive;

@@ -18,12 +18,14 @@ this.grapher_static = function(
     backgroundTextStyle_colour={r:0,g:0.58,b:0,a:1},
     backgroundTextStyle_size=7.5,
     backgroundTextStyle_font='Helvetica',
+    backgroundTextStyle_horizontalMarkings={ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true },
+    backgroundTextStyle_verticalMarkings={ points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true },
 
     backingStyle={r:0.2,g:0.2,b:0.2,a:1},
 ){
     var viewbox = {'bottom':-1,'top':1,'left':-1,'right':1};
-    var horizontalMarkings = { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
-    var verticalMarkings =   { points:[0.75,0.5,0.25,0,-0.25,-0.5,-0.75], printingValues:[], mappedPosition:0, textPositionOffset:{x:1,y:-0.5}, printText:true };
+    var horizontalMarkings = backgroundTextStyle_horizontalMarkings;
+    var verticalMarkings = backgroundTextStyle_verticalMarkings;
     var foregroundElementsGroup = [];
 
     //elements 
@@ -192,6 +194,8 @@ interfacePart.partLibrary.display.grapher_static = function(name,data){
         data.style.foregrounds, data.style.foregroundText,
         data.style.background_colour, data.style.background_lineThickness,
         data.style.backgroundText_colour, data.style.backgroundText_size, data.style.backgroundText_font,
+        data.backgroundText_horizontalMarkings,
+        data.backgroundText_verticalMarkings,
         data.style.backing,
     ); 
 };

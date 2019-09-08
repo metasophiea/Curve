@@ -34,7 +34,7 @@ this.universalreadout = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.universalreadout,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal functions
         var lines = [];
@@ -105,7 +105,7 @@ this.universalreadout2 = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.universalreadout,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //internal functions
         var lines = [];

@@ -73,7 +73,7 @@ this.distortion = function(x,y,a){
     };
     
     //main object
-        var object = _canvas_.interface.unit.builder(this.distortion,design);
+        var object = _canvas_.interface.unit.builder(design);
         
     //circuitry
         object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
