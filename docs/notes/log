@@ -1,6 +1,7 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
 2019-09-15
-  - got the audio_file_player working (still not happy with it though)
+  - got the audio_file_player working (still not happy with it though)(it's
+    also missing the io connections for controls)
 
 
 2019-09-14

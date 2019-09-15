@@ -165,11 +165,11 @@ this.audio_file_player = function(x,y,a,setupConnect=true){
         object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
 
         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-            if(needle == 0){
+            if( !isNaN(parseInt(needle)) ){
                 if( object.player.progress(needle) == -1 ){
                     object.player.createPlayhead(value);
                 }else{
-                    object.player.jumpTo(0,value);
+                    object.player.jumpTo(needle,value);
                 }
             }
 
