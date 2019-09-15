@@ -1,6 +1,6 @@
-//view positioning
-// _canvas_.core.viewport.scale(5);
-// _canvas_.core.viewport.position(-1000,0);
+// // view positioning
+// _canvas_.core.viewport.scale(3.5);
+// _canvas_.core.viewport.position(-6450,-520);
 
 
 
@@ -43,7 +43,7 @@
     _canvas_.control.scene.addUnit(1640,25,0,'universalreadout2');
     _canvas_.control.scene.addUnit(1640,85,0,'audioScope');
 
-//audio playback units
+// audio playback units
     _canvas_.control.scene.addUnit(1860,25,0,'player');
     _canvas_.control.scene.addUnit(1860,110,0,'looper');
     _canvas_.control.scene.addUnit(1860,170,0,'oneShot_single');

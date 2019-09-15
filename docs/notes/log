@@ -1,4 +1,77 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-15
+  - got the audio_file_player working (still not happy with it though)
+
+
+2019-09-14
+  - list_image mouse scrolling was broken, but now it's fixed -thumbs up- (the 
+    cover.onwheel arguments list wasn't correct to what arguments were actually
+    being provided)
+  - new needleOverlay part (removed 'markers', added the ability to have lead
+    needles (with all that involves))
+  - new grapher_waveWorkspace (with the new needleOverlay)
+  - began work on the audio_file_player
+  
+  notes
+  - need to do a proper replacement of the old needleOverlay and 
+    grapher_waveWorkspace, as right now there's just needleOverlay2 and 
+    grapher_waveWorkspace2
+
+
+2019-09-13
+  - fixing up the new player circuit. it can do
+    - looping
+    - concurrent playing
+    - definable limit to concurrent playing (or no limit at all)
+    - individual or global control of 'playheads'
+    - play area selection
+    - playhead start/pause/stop/restart
+    - rate adjustment 
+
+    along with the retrival of information, such as playhead positions and
+    waveform segments; and loading/unloading of audio data, etc.
+
+  notes
+  - grapher_waveWorkspace is going to have to be rejiggered to allow for
+    multiple 'lead' needles
+
+
+2019-09-12
+  notes
+  - the player circuit needs to be redone, to improve the looping, add multiple
+    playback ability, "press play to restart" and "only play in the selected
+    area" functionality
+
+  - started work on the new player circuit
+
+
+2019-09-11
+  - added signal outputs to the musical keyboard, which adds both the
+    functionality of having a key-press signal generator, and midi-to-signal
+    converter (its already a signal-to-midi converter)
+  - added core.viewport.cameraAdjust callback, which returns the viewport state
+
+
+2019-09-09
+  notes
+  - A, the old multiband filter is a bit weird when it comes to displaying the
+    frequency response graphs.
+    B, there's no obvious way of getting the frequency response of multiple
+    filters in a row, so, I'm going to have to build something myself I think.
+    I think I'll make them from a new "manufacturer", bunding;
+      - the histogram audio visualizer
+      - the frequency response tester unit
+        (it's got a "ddoooOOOOOIP" thing, and a magnitude response grapher
+        thing)
+    names, maybe..
+      "Audio Research Technologies (ART)"
+      "Accoustic Labratories LLC (ALL)"
+      "Accoustic Research"
+    there's already a real life company that makes audio equipment called "Audio
+    Research" so I might just steal their aesthetic, or maybe "newtons4th"
+    ...test equipment doesn't have the coolest of designs, but we'll work on it
+
+
 2019-09-08
   - added the audio_in unit
   - did the artwork for the audio_file_player unit

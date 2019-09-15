@@ -82,7 +82,7 @@ this.player = function(x,y,a){
     //internal 
         function loadProcess(data){
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );                   
-            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
+            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,0);
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
         
             object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
@@ -111,7 +111,7 @@ this.player = function(x,y,a){
                     object.elements.readout_sixteenSegmentDisplay_static.time.print();
 
                 //wave box
-                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(object.player.progress(),false);
+                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,object.player.progress(),false);
             }
             setInterval(refresh,1000/30);
     
@@ -130,7 +130,7 @@ this.player = function(x,y,a){
     //wiring
         object.elements.dial_continuous.rate_dial.onchange = function(data){ object.player.rate( 2*data ); };
         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-            if(needle == 'lead'){ object.player.jumpTo(value); }
+            if(needle == 0){ object.player.jumpTo(value); }
             else if(needle == 'selection_A' || needle == 'selection_B'){
                 var temp = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
                 if(temp.A < temp.B){ object.player.loop({start:temp.A,end:temp.B}); }

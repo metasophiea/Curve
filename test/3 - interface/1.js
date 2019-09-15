@@ -3,12 +3,12 @@
 _canvas_.core.render.active(true);
 // _canvas_.core.render.frame();
 
-// // view positioning
-// _canvas_.core.viewport.scale(5);
-// var x = 612.5;
-// var y = 290;
-// _canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
-// // _canvas_.core.viewport.angle(-0.1);
+// view positioning
+_canvas_.core.viewport.scale(5);
+var x = 822.5;
+var y = 340;
+_canvas_.core.viewport.position(-x*_canvas_.core.viewport.scale(),-y*_canvas_.core.viewport.scale());
+// _canvas_.core.viewport.angle(-0.1);
 
 // _canvas_.core.stats.active(true);
 // var averages = [];
@@ -19,7 +19,6 @@ _canvas_.core.render.active(true);
 //     averages.push(tmp.framesPerSecond);
 //     console.log( 'rollingAverage:',_canvas_.library.math.averageArray(averages),tmp );
 // },1000);
-
 
 // console.log('\n\n\n');
 
@@ -73,59 +72,55 @@ _canvas_.core.render.active(true);
 //display
     var displayGroup = _canvas_.interface.part.builder( 'basic', 'group', 'display', { x:10, y:150, angle:0 } );
     _canvas_.system.pane.mm.append( displayGroup );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_rectangle', 'test_glowbox_rect', {x:0,y:0} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_circle', 'test_glowbox_circle', {x:10,y:45} ) );
-    var gb_i = _canvas_.interface.part.builder( 'display', 'glowbox_image', 'test_glowbox_image', { x:0,y:60, glowURL:'/images/testImages/Dore-munchausen-illustration.jpg', dimURL:'/images/testImages/mikeandbrian.jpg' } ); displayGroup.append( gb_i );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_polygon', 'test_glowbox_poly', {x:0,y:95} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_path', 'test_glowbox_path', {x:0,y:130} ) );
-
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'sevenSegmentDisplay_static', 'test_sevenSegmentDisplay_static', {x:35,y:70} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'sixteenSegmentDisplay_static', 'test_sixteenSegmentDisplay_static', {x:60,y:70} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sevenSegmentDisplay', 'test_readout_sevenSegmentDisplay', {x:85,y:0} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sevenSegmentDisplay_static', 'test_readout_sevenSegmentDisplay_static', {x:85,y:70} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:190,y:0} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sixteenSegmentDisplay_static', 'test_readout_sixteenSegmentDisplay_static', {x:190,y:70} ) );
-
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'level', 'test_level', {x:190, y:0} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'meter_level', 'test_meterLevel', {x:215, y:0} ) );
-    displayGroup.append( _canvas_.interface.part.builder( 'display', 'audio_meter_level', 'test_audioMeterLevel', {x:240, y:0} ) );
-    var g = _canvas_.interface.part.builder( 'display', 'gauge', 'test_gauge', {x:190, y:65} ); displayGroup.append(g);
-    var g_i = _canvas_.interface.part.builder( 'display', 'gauge_image', 'test_gauge_image', { x:245, y:65, backingURL:'/images/testImages/Dore-munchausen-illustration.jpg' } ); displayGroup.append(g_i);
-    var mg = _canvas_.interface.part.builder( 'display', 'meter_gauge', 'test_meterGauge', { 
-        x:190, y:100,
-        markings:{
-            upper:'...........'.split(''),
-            middle:'.........'.split(''),
-            lower:'.......'.split(''),
-        },
-        style:{markingStyle_font:'defaultThin'}
-    } ); displayGroup.append(mg);
-    var mg_i = _canvas_.interface.part.builder( 'display', 'meter_gauge_image', 'test_meterGauge_image', { x:245, y:100, backingURL:'/images/testImages/mikeandbrian.jpg' } ); displayGroup.append(mg_i);
-    var rastorDisplay = _canvas_.interface.part.builder( 'display', 'rastorDisplay', 'test_rastorDisplay1', {x:265, y:0} ); displayGroup.append( rastorDisplay ); rastorDisplay.test();
-    var grapher = _canvas_.interface.part.builder( 'display', 'grapher', 'test_grapher1', {x:330, y:0} );
-        displayGroup.append( grapher );
-        grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-        grapher.draw([0,0.25,1],undefined,1);
-    var grapher = _canvas_.interface.part.builder( 'display', 'grapher_static', 'test_grapher_static1', {x:330, y:70} );
-        displayGroup.append( grapher );
-        grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
-        grapher.draw([0,0.25,1],undefined,1);
-    var grapher = _canvas_.interface.part.builder( 'display', 'grapher_periodicWave', 'test_grapher_periodicWave1', {x:455, y:0} );
-        displayGroup.append( grapher );
-        grapher.updateBackground();
-        grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
-        grapher.draw();
-    var grapher = _canvas_.interface.part.builder( 'display', 'grapher_periodicWave_static', 'test_grapher_periodicWave_static1', {x:455, y:70} );
-        displayGroup.append( grapher );
-        grapher.updateBackground();
-        grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
-        grapher.draw();
-    var grapher = _canvas_.interface.part.builder( 'display', 'grapher_audioScope', 'test_grapher_audioScope1', {x:580, y:0} );
-        displayGroup.append( grapher );
-    var grapher = _canvas_.interface.part.builder( 'display', 'grapher_audioScope_static', 'test_grapher_audioScope_static1', {x:580, y:70} );
-        displayGroup.append( grapher );
+    //glowbox
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_rectangle', 'test_glowbox_rect', {x:0,y:0} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_circle', 'test_glowbox_circle', {x:15,y:45} ) );
+        var gb_i = _canvas_.interface.part.builder( 'display', 'glowbox_image', 'test_glowbox_image', { x:0,y:60, glowURL:'/images/testImages/Dore-munchausen-illustration.jpg', dimURL:'/images/testImages/mikeandbrian.jpg' } ); displayGroup.append( gb_i );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_polygon', 'test_glowbox_poly', {x:0,y:95} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'glowbox_path', 'test_glowbox_path', {x:0,y:130} ) );
+    //segment displays
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35,y:0} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'sevenSegmentDisplay_static', 'test_sevenSegmentDisplay_static', {x:35,y:70} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60,y:0} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'sixteenSegmentDisplay_static', 'test_sixteenSegmentDisplay_static', {x:60,y:70} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sevenSegmentDisplay', 'test_readout_sevenSegmentDisplay', {x:85,y:0} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sevenSegmentDisplay_static', 'test_readout_sevenSegmentDisplay_static', {x:85,y:70} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:190,y:0} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'readout_sixteenSegmentDisplay_static', 'test_readout_sixteenSegmentDisplay_static', {x:190,y:70} ) );
+    //levels
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'level', 'test_level', {x:295, y:0} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'meter_level', 'test_meterLevel', {x:320, y:0} ) );
+        displayGroup.append( _canvas_.interface.part.builder( 'display', 'audio_meter_level', 'test_audioMeterLevel', {x:345, y:0} ) );
+    //gauge
+        var g = _canvas_.interface.part.builder( 'display', 'gauge', 'test_gauge', {x:370, y:0} ); displayGroup.append(g);
+        var g_i = _canvas_.interface.part.builder( 'display', 'gauge_image', 'test_gauge_image', { x:425, y:0, backingURL:'/images/testImages/Dore-munchausen-illustration.jpg' } ); displayGroup.append(g_i);
+        var mg = _canvas_.interface.part.builder( 'display', 'meter_gauge', 'test_meterGauge', { x:480, y:0, markings:{ upper:'...........'.split(''), middle:'.........'.split(''), lower:'.......'.split('') }, style:{markingStyle_font:'defaultThin'} } ); displayGroup.append(mg);
+        var mg_i = _canvas_.interface.part.builder( 'display', 'meter_gauge_image', 'test_meterGauge_image', { x:535, y:0, backingURL:'/images/testImages/mikeandbrian.jpg' } ); displayGroup.append(mg_i);
+    //rastor
+        var rastorDisplay = _canvas_.interface.part.builder( 'display', 'rastorDisplay', 'test_rastorDisplay1', {x:590, y:0} ); displayGroup.append( rastorDisplay ); rastorDisplay.test();
+    //grapher
+        var grapher = _canvas_.interface.part.builder( 'display', 'grapher', 'test_grapher1', {x:655, y:0} );
+            displayGroup.append( grapher );
+            grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+            grapher.draw([0,0.25,1],undefined,1);
+        var grapher = _canvas_.interface.part.builder( 'display', 'grapher_static', 'test_grapher_static1', {x:655, y:70} );
+            displayGroup.append( grapher );
+            grapher.draw([0,-2,1,-1,2],[0,0.25,0.5,0.75,1]);
+            grapher.draw([0,0.25,1],undefined,1);
+        var grapher = _canvas_.interface.part.builder( 'display', 'grapher_periodicWave', 'test_grapher_periodicWave1', {x:780, y:0} );
+            displayGroup.append( grapher );
+            grapher.updateBackground();
+            grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
+            grapher.draw();
+        var grapher = _canvas_.interface.part.builder( 'display', 'grapher_periodicWave_static', 'test_grapher_periodicWave_static1', {x:780, y:70} );
+            displayGroup.append( grapher );
+            grapher.updateBackground();
+            grapher.wave( {sin:[0,1/1,0,1/3,0,1/5,0,1/7,0,1/9,0,1/11,0,1/13,0,1/15],cos:[0,0]} );
+            grapher.draw();
+        var grapher = _canvas_.interface.part.builder( 'display', 'grapher_audioScope', 'test_grapher_audioScope1', {x:905, y:0} );
+            displayGroup.append( grapher );
+        var grapher = _canvas_.interface.part.builder( 'display', 'grapher_audioScope_static', 'test_grapher_audioScope_static1', {x:905, y:70} );
+            displayGroup.append( grapher );
 
 
 
@@ -143,7 +138,7 @@ _canvas_.core.render.active(true);
 
 
 //control
-    var controlGroup = _canvas_.interface.part.builder( 'basic', 'group', 'control', { x:10, y:300, angle:0 } );
+    var controlGroup = _canvas_.interface.part.builder( 'basic', 'group', 'control', { x:10, y:350, angle:0 } );
     _canvas_.system.pane.mm.append( controlGroup );
     //slide
         var s_1 = _canvas_.interface.part.builder( 'control', 'slide_continuous', 'test_slide1', {x:0,y:0} ); controlGroup.append( s_1 );
@@ -233,7 +228,7 @@ _canvas_.core.render.active(true);
             backingURL__hover_glow_select:'/images/testImages/buttonStates/hover_glow_select.png',
             backingURL__hover_glow_select_press:'/images/testImages/buttonStates/hover_glow_select_press.png',
         } ); controlGroup.append(bi_1);
-    // list
+    //list
         var l_1 = _canvas_.interface.part.builder( 'control', 'list', 'test_list', {x:612.5,y:0,limitHeightTo:100,limitWidthTo:50,list:[
             { type:'space' },
             { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('item1 function');} },
@@ -360,31 +355,36 @@ _canvas_.core.render.active(true);
             uncheckURL:'/images/testImages/Dore-munchausen-illustration.jpg',
             checkURL:'/images/testImages/mikeandbrian.jpg',
         } ); controlGroup.append(ci_1);
-    var ras_1 = _canvas_.interface.part.builder( 'control', 'rastorgrid', 'test_rastorgrid1', {x:740,y:0} ); controlGroup.append(ras_1);
-    var no = _canvas_.interface.part.builder( 'control', 'needleOverlay', 'test_needleOverlay1', {x:822.5,y:0} );
-        controlGroup.append( no );
-        no.select(0.25);
-        no.area(0.5,0.75);
-        no.mark(0.1);
-        no.mark(0.1);
-    var gww = _canvas_.interface.part.builder( 'control', 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:945,y:0} );
-        controlGroup.append( gww );
-        gww.select(0.2);
-        gww.area(0.5,0.7);
-    var seq = _canvas_.interface.part.builder( 'control', 'sequencer', 'test_sequencer1', {x:1067.5,y:0,zoomLevel_x:1/2} );
-        controlGroup.append( seq );
-        seq.addSignal( 0,0,  10,0.0 );
-        seq.addSignal( 1,1,  10,0.1 );
-        seq.addSignal( 2,2,  10,0.2 );
-        seq.addSignal( 3,3,  10,0.3 );
-        seq.addSignal( 4,4,  10,0.4 );
-        seq.addSignal( 5,5,  10,0.5 );
-        seq.addSignal( 6,6,  10,0.6 );
-        seq.addSignal( 7,7,  10,0.7 );
-        seq.addSignal( 8,8,  10,0.8 );
-        seq.addSignal( 9,9,  10,0.9 );
-        seq.addSignal( 10,10,10,1.0 );
-        seq.event = function(data){console.log(data);};
+    //rastorgrid
+        var ras_1 = _canvas_.interface.part.builder( 'control', 'rastorgrid', 'test_rastorgrid1', {x:740,y:0} ); controlGroup.append(ras_1);
+    //needle overlay
+        var no_1 = _canvas_.interface.part.builder( 'control', 'needleOverlay', 'test_needleOverlay1', {x:822.5,y:0} );
+            controlGroup.append( no_1 );
+            no_1.select(0,0.25);
+            no_1.area(0.5,0.75);
+            no_1.onchange = function(needle,value){console.log(needle,value);};
+            no_1.onrelease = function(needle,value){console.log(needle,value);};
+            no_1.selectionAreaToggle = function(bool){console.log(bool);};
+    //grapher waveWorkspace
+        var gww_1 = _canvas_.interface.part.builder( 'control', 'grapher_waveWorkspace', 'test_grapher_waveWorkspace1', {x:945,y:0} );
+            controlGroup.append( gww_1 );
+            gww_1.select(0,0.2);
+            gww_1.area(0.5,0.7);
+    //sequencer
+        var seq = _canvas_.interface.part.builder( 'control', 'sequencer', 'test_sequencer1', {x:1067.5,y:0,zoomLevel_x:1/2} );
+            controlGroup.append( seq );
+            seq.addSignal( 0,0,  10,0.0 );
+            seq.addSignal( 1,1,  10,0.1 );
+            seq.addSignal( 2,2,  10,0.2 );
+            seq.addSignal( 3,3,  10,0.3 );
+            seq.addSignal( 4,4,  10,0.4 );
+            seq.addSignal( 5,5,  10,0.5 );
+            seq.addSignal( 6,6,  10,0.6 );
+            seq.addSignal( 7,7,  10,0.7 );
+            seq.addSignal( 8,8,  10,0.8 );
+            seq.addSignal( 9,9,  10,0.9 );
+            seq.addSignal( 10,10,10,1.0 );
+            seq.event = function(data){console.log(data);};
 
 
 
@@ -402,7 +402,7 @@ _canvas_.core.render.active(true);
 
 
 //dynamic
-    var dynamicGroup = _canvas_.interface.part.builder( 'basic', 'group', 'dynamic', { x:10, y:450, angle:0 } );
+    var dynamicGroup = _canvas_.interface.part.builder( 'basic', 'group', 'dynamic', { x:10, y:550, angle:0 } );
     _canvas_.system.pane.mm.append( dynamicGroup );
     dynamicGroup.append( _canvas_.interface.part.builder( 'dynamic', 'cable', 'test_cable1', {x1:0,y1:0,x2:100,y2:0} ) );
 

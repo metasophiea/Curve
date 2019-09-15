@@ -259,7 +259,7 @@ this.distortionUnit_stereo = function(x,y,a){
     };
 
     //main object
-        var object = _canvas_.interface.unit.builder(this.distortionUnit,design);
+        var object = _canvas_.interface.unit.builder(design);
 
     //import/export
         object.importData = function(data){

@@ -62,7 +62,7 @@ this.looper = function(x,y,a){
 
                     //if there's already a needle; delete it
                         if(needleExists){
-                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,-1);
                             clearTimeout(needleInterval);
                         }
 
@@ -74,18 +74,18 @@ this.looper = function(x,y,a){
                         needleInterval = setInterval(function(){
                             //remove previous mark
                                 if(previousPosition != undefined){
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,-1);
                                 }
 
                             previousPosition = currentPosition;
                             currentPosition += step;
 
                             //add new mark
-                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,currentPosition);
 
                             //check for ending
                                 if( currentPosition > 1 ){
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,-1);
                                     currentPosition = 0;
                                     previousPosition = undefined;
                                 }
@@ -100,7 +100,7 @@ this.looper = function(x,y,a){
 
                     //if there's a needle, remove it
                         if(needleExists){
-                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.mark(currentPosition);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0,-1);
                             needleExists = false;
                             currentPosition = undefined;
                             clearTimeout(needleInterval);
@@ -109,7 +109,7 @@ this.looper = function(x,y,a){
                 },
             }},
 
-            {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, selectNeedle:false, selectionArea:false }},
+            {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:30, y:5, width:185, height:45, interactable:false, selectionArea:false }},
         ]
     };
 

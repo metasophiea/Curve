@@ -67,7 +67,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
 
             //waveport
                 design.elements.push(
-                    {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{ x:35, y:5+a*(2+45), width:180, height:45, selectNeedle:false, selectionArea:true }}
+                    {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace_'+a, data:{ x:35, y:5+a*(2+45), width:180, height:45, interactable:false }}
                 );
 
             //load button
@@ -136,7 +136,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                                 needles[needleNumber].needleInterval = setInterval(function(nN){
                                     //remove previous mark
                                         if(needles[nN].previousPosition != undefined){
-                                            waveport.mark(needles[nN].currentPosition);
+                                            waveport.select(nN,-1);
                                         }
     
                                     //update position
@@ -144,11 +144,11 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                                         needles[nN].currentPosition += step;
     
                                     //add new mark
-                                        waveport.mark(needles[nN].currentPosition);
+                                        waveport.select(nN,needles[nN].currentPosition);
     
                                     //check for ending
                                         if( needles[nN].currentPosition > needles[nN].endPosition ){
-                                            waveport.mark(needles[nN].currentPosition);
+                                            waveport.select(nN,-1);
                                             clearInterval(needles[nN].needleInterval);
                                             delete needles[nN];
                                         }
@@ -176,7 +176,7 @@ this.oneShot_multi_multiTrack = function(x,y,a){
                                     clearTimeout(needles[a].needleInterval);
                                     delete needles[a];
                                 }
-                                waveport.removeAllMarks();
+                                waveport.removeAllMarker();
                             }
                         }(a)
                     }}

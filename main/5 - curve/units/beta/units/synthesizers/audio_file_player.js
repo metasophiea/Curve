@@ -103,83 +103,78 @@ this.audio_file_player = function(x,y,a,setupConnect=true){
         var object = _canvas_.interface.unit.builder(design);
         
     //circuitry
+        //audio file player
+            object.player = new _canvas_.interface.circuit.player2(_canvas_.library.audio.context);
+            object.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
+            object.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
+
         //fresh file load routine
             function loadProcess(data){
-                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );                   
-                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(0);
-                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(-1,-1);
+                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );
             
                 object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
                 object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
             }
-        
-        //audio file player
-            object.player = new _canvas_.interface.circuit.player(_canvas_.library.audio.context);
-
         //data refresh
             function refresh(){
                 //check if there's a track at all
                     if( !object.player.isLoaded() ){return;}
 
                 //time readout
-                    var time = _canvas_.library.math.seconds2time( Math.round(object.player.currentTime()));
+                    if(object.player.concurrentPlayCountLimit() == 1){
+                        var tmp = object.player.currentTime(0);
+                        if(tmp == -1){tmp = 0;}
+                        var time = _canvas_.library.math.seconds2time( Math.round(tmp));
 
-                    object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                        _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                        _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                        _canvas_.library.misc.padString(time.s,2,'0')
-                    );
-                    object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                            _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                            _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                            _canvas_.library.misc.padString(time.s,2,'0')
+                        );
+                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                    }else{
+                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                            _canvas_.library.misc.padString(object.player.currentTime().length,8,' ')
+                        );
+                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                    }
+                
+                //waveport
+                    var progressList = object.player.progress();
+                    var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
 
-                //wave box
-                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(object.player.progress(),false);
+                    //adjust needles to match player
+                        progressList.forEach((needlePosition,index) => {
+                            // console.log(progressList,needleList);
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
+                        });
+
+                    //remove unneeded needles
+                        while(Object.keys(needleList).length > progressList.length){
+                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select((Object.keys(needleList).length-1),-1,false);
+                            var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
+                        }
             }
             setInterval(refresh,1000/30);
-
     //wiring
-        object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
-        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-            if(needle == 'lead'){ object.player.jumpTo(value); }
-            else if(needle == 'selection_A' || needle == 'selection_B'){
-                var temp = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
-                if(temp.A < temp.B){ object.player.loop({start:temp.A,end:temp.B}); }
-                else{ object.player.loop({start:temp.B,end:temp.A}); }
-            }
-        };
         object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
         object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
         object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
-        object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.loop(val); };
+        object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
+        object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
+        object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
 
-        object.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
-        object.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
-        object.io.signal.io_play.onchange = function(val){
-            var element = object.elements.button_image.button_play;
-            if(val){ elememt.press(); }else{ element.release(); }
-        };
-        object.io.signal.io_stop.onchange = function(val){
-            var element = object.elements.button_image.button_stop;
-            if(val){ elememt.press(); }else{ element.release(); }
-        };
-        // object.io.signal.io_singleOrInfini.onchange = function(val){};
-        var io_loop__toggle = false;
-        object.io.signal.io_loop.onchange = function(val){ 
-            if(val){ 
-                io_loop__toggle = !io_loop__toggle;
-                object.elements.checkbox_image.checkbox_loop.set(io_loop__toggle);
+        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
+            if(needle == 0){
+                if( object.player.progress(needle) == -1 ){
+                    object.player.createPlayhead(value);
+                }else{
+                    object.player.jumpTo(0,value);
+                }
             }
-        };
-        object.io.voltage.io_playbackSpeed.onchange = function(val){
-            object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(val);
-        };
-        var io_waveworkspace__positions = {s:0,e:0};
-        object.io.voltage.io_waveworkspace_startPosition.onchange = function(val){ 
-            io_waveworkspace__positions.s = val;
-            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(io_waveworkspace__positions.s,io_waveworkspace__positions.e);
-        };
-        object.io.voltage.io_waveworkspace_endPosition.onchange = function(val){ 
-            io_waveworkspace__positions.e = val;
-            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(io_waveworkspace__positions.s,io_waveworkspace__positions.e);
+
+            if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
+            if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
         };
 
     //interface
@@ -187,15 +182,28 @@ this.audio_file_player = function(x,y,a,setupConnect=true){
             loadRaw:function(data){ object.player.loadRaw(data,loadProcess); },
             loadByFile:function(){ object.player.load('file',loadProcess); },
             loadByURL:function(url){ object.player.load('url',loadProcess,url); },
-            loop:function(onOff){ object.player.loop({active:onOff}); },
-            fire:function(){ 
-                object.player.start();
+            fire:function(){
+                if(object.i.concurrentPlayCountLimit() == 1 && object.player.currentTime().length > 0){ object.player.resume(); }
+                else{ object.player.start(); }
 
                 //flash light
                     object.elements.glowbox_rectangle.fireLight.on();
                     setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
             },
+            pause:function(){ object.player.pause(); },
+            resume:function(){ object.player.resume(); },
             stop:function(){ object.player.stop(); },
+            area:function(start,end){
+                if(start == undefined && end == undefined){ return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(); }
+                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(start,end,false);
+                if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ start = 0; end = 1; }
+                if(start > end){ var tmp = start; start = end; end = tmp; } //keepin' things straight
+                return object.player.area(start,end);
+            },
+            looping:function(bool){ return object.player.loop(bool); },
+            rate:function(value){ return object.player.rate(value); },
+            jumpTo:function(needle,position){ object.player.jumpTo(needle,position); },
+            concurrentPlayCountLimit:function(value){ return object.player.concurrentPlayCountLimit(value); },
         };
 
     return object;

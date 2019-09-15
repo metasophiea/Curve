@@ -10,3 +10,4 @@
 // {{include:5.js}} //connection node and cable position test
 // {{include:6.js}} //test of the external expansion of core's shape library and interface's part library
 // {{include:7.js}} //test of advanced connection node
+// {{include:8.js}} //test of player circuitry

@@ -93,7 +93,7 @@ this.oneShot_multi = function(x,y,a){
                             needles[needleNumber].needleInterval = setInterval(function(nN){
                                 //remove previous mark
                                     if(needles[nN].previousPosition != undefined){
-                                        waveport.mark(needles[nN].currentPosition);
+                                        waveport.select(nN,-1);
                                     }
 
                                 //update position
@@ -101,11 +101,11 @@ this.oneShot_multi = function(x,y,a){
                                     needles[nN].currentPosition += step;
 
                                 //add new mark
-                                    waveport.mark(needles[nN].currentPosition);
+                                    waveport.select(nN,needles[nN].currentPosition);
 
                                 //check for ending
                                     if( needles[nN].currentPosition > needles[nN].endPosition ){
-                                        waveport.mark(needles[nN].currentPosition);
+                                        waveport.select(nN,-1);
                                         clearInterval(needles[nN].needleInterval);
                                         delete needles[nN];
                                     }
@@ -125,7 +125,7 @@ this.oneShot_multi = function(x,y,a){
                             clearTimeout(needles[a].needleInterval);
                             delete needles[a];
                         }
-                        waveport.removeAllMarks();
+                        waveport.removeAllMarkers();
                     },
                 }},
 
@@ -138,7 +138,7 @@ this.oneShot_multi = function(x,y,a){
                 {collection:'display', type:'glowbox_rect', name:'glowbox_rect', data:{ x:32.5, y:5, width:2.5, height:45 }},
 
             //waveport
-                {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:35, y:5, width:180, height:45, selectNeedle:false, selectionArea:true }},
+                {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{ x:35, y:5, width:180, height:45, interactable:false }},
         ]
     };
 
@@ -162,7 +162,7 @@ this.oneShot_multi = function(x,y,a){
             }, url);
         };
         object.i.area = function(a,b){
-            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
+            return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(a,b);
         };
         
     return object;

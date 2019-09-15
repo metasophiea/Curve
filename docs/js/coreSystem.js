@@ -24103,6 +24103,8 @@
                                 });
                     
                                 calculateViewportExtremities();
+                    
+                                this.cameraAdjust( Object.assign({},state) );
                             };
                             this.scale = function(s){
                                 if(s == undefined){return state.scale;}
@@ -24111,6 +24113,8 @@
                                     if(item.heedCamera){ item.scale(state.scale); }
                                 });
                                 calculateViewportExtremities();
+                    
+                                this.cameraAdjust( Object.assign({},state) );
                             };
                             this.angle = function(a){
                                 if(a == undefined){return state.angle;}
@@ -24119,6 +24123,8 @@
                                     if(item.heedCamera){ item.angle(state.angle); }
                                 });
                                 calculateViewportExtremities();
+                    
+                                this.cameraAdjust( Object.assign({},state) );
                             };
                     
                         //mouse interaction
@@ -24167,7 +24173,10 @@
                             };
                             this.clickVisibility = function(a){ if(a==undefined){return mouseData.clickVisibility;} mouseData.clickVisibility=a; };
                             this.getHeight = function(){ return viewbox.points.br.y - viewbox.points.tl.y; };        
-                            this.getWidth= function(){ return viewbox.points.br.x - viewbox.points.tl.x; };   
+                            this.getWidth= function(){ return viewbox.points.br.x - viewbox.points.tl.x; };
+                    
+                        //callback
+                        this.cameraAdjust = function(){};
                     };
                     this.viewport.refresh();
                     

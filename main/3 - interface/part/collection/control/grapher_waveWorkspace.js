@@ -57,11 +57,12 @@ this.grapher_waveWorkspace = function(
             object.drawForeground = graph.drawForeground;
             object.draw = graph.draw;
         //needle overlay
-            object.mark = overlay.mark;
-            object.removeAllMarks = overlay.removeAllMarks;
+            object.removeAllMarkers = overlay.removeAllMarkers;
             object.select = overlay.select;
             object.area = overlay.area;
             object.interactable = overlay.interactable;
+            object.areaIsActive = overlay.areaIsActive;
+            object.list = overlay.list;
 
     //callbacks
         object.onchange = onchange;

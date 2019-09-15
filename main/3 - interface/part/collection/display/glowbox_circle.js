@@ -1,6 +1,6 @@
 this.glowbox_circle = function(
     name='glowbox_circle',
-    x, y, radius=10,
+    x, y, radius=12.5,
     glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
     dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
 ){

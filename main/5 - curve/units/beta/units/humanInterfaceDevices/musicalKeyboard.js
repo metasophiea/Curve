@@ -72,8 +72,13 @@ this.musicalKeyboard = function(x,y,a){
     
                 if(keyType == 'w'){
                     design.elements.unshift(
+                        {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
+                            x:55 +whiteOffset -0.5 -10, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                        }},
+                    );
+                    design.elements.unshift(
                         {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
-                            x:55 +whiteOffset - 0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                            x:55 +whiteOffset -0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                             onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
                         }},
                     );
@@ -96,8 +101,13 @@ this.musicalKeyboard = function(x,y,a){
     
                 if(keyType == 'b'){
                     design.elements.unshift(
+                        {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
+                            x:55 +blackOffset -0.5, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                        }},
+                    );
+                    design.elements.unshift(
                         {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
-                            x:65 +blackOffset - 0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                            x:65 +blackOffset -0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                             onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
                         }},
                     );
@@ -136,8 +146,10 @@ this.musicalKeyboard = function(x,y,a){
 
             if(mode == 'press'){
                 object.elements.glowbox_rectangle['LED'+keyNumber].on();
+                object.io.signal['signalOut_'+keyNumber].set(true);
             }else{
                 object.elements.glowbox_rectangle['LED'+keyNumber].off();
+                object.io.signal['signalOut_'+keyNumber].set(false);
             }
 
             object.io.data.midiOut.send('midinumber', { 
