@@ -121,25 +121,22 @@ this.launchpad = function(x,y,a){
             object.elements.glowbox_circle['LED_'+state.currentPage].on();
         }
         function changeToColumn(column){
+            for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+
             state.currentColumn = column;
 
-            for(var x = 0; x < 8; x++){
-                for(var y = 0; y < 8; y++){
-                    object.elements.checkbox_rectangle[y+'_'+x].light(false);
-                }
-            }
-
             for(var y = 0; y < 8; y++){
-                object.elements.connectionNode_signal['output_'+y].set(false);
                 object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(true);
-                if( state.pages[state.currentPage][y][state.currentColumn] ){
-                    object.elements.connectionNode_signal['output_'+y].set(true);
-                }
+                if( !object.elements.connectionNode_signal['output_'+y].read() && !state.pages[state.currentPage][y][state.currentColumn] ){ continue; }
+
+                object.elements.connectionNode_signal['output_'+y].set(false);
+                if( state.pages[state.currentPage][y][state.currentColumn] ){ object.elements.connectionNode_signal['output_'+y].set(true); }
             }
         }
         function step(){
-            state.currentColumn++; if(state.currentColumn > 7){state.currentColumn = 0;}
-            changeToColumn(state.currentColumn);
+            var tmp = state.currentColumn+1; 
+            if(tmp > 7){tmp = 0;}
+            changeToColumn(tmp);
         }
         function changeToPage(pageNumber){
             state.currentPage = pageNumber;

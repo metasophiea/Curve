@@ -33,11 +33,11 @@
 //// _canvas_.control.scene.addUnit(70,10,0,'filter','beta');
 
 // _canvas_.control.scene.addUnit(10,10,0,'audio_in','beta');
-var player = _canvas_.control.scene.addUnit(10,10,0,'audio_file_player','beta');
-    player.i.loadByURL('https://metasophiea.com/apps/partyCalculator/tracks/1-bassSynth_08.wav');
-    var amp = _canvas_.control.scene.addUnit(-200,10,0,'amplifier','beta');
-    amp.io.audio.input_R.connectTo(player.io.audio.io_output_R);
-    amp.io.audio.input_L.connectTo(player.io.audio.io_output_L);
+// var player = _canvas_.control.scene.addUnit(10,10,0,'audio_file_player','beta');
+//     player.i.loadByURL('https://metasophiea.com/apps/partyCalculator/tracks/1-bassSynth_08.wav');
+//     var amp = _canvas_.control.scene.addUnit(-200,10,0,'amplifier','beta');
+//     amp.io.audio.input_R.connectTo(player.io.audio.io_output_R);
+//     amp.io.audio.input_L.connectTo(player.io.audio.io_output_L);
 
 
 

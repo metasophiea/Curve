@@ -58,12 +58,13 @@ _canvas_.system.mouse.functionList.onmousedown.push(
     {
         requiredKeys:[],
         function:function(data){
+            _canvas_.control.selection.deselectEverything();
+            
             //control switch
                 if(!_canvas_.control.interaction.mouseGripPanningEnabled()){return;}
 
 
 
-            _canvas_.control.selection.deselectEverything();
 
             //save the viewport position and click position
                 _canvas_.system.mouse.tmp.oldPosition = _canvas_.core.viewport.position();

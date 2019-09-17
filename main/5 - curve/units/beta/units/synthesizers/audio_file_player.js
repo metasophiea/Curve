@@ -52,7 +52,7 @@ this.audio_file_player = function(x,y,a,setupConnect=true){
             }},
 
             {collection:'basic', type:'image', name:'backing', data:{ 
-                x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png'
+                x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
             }},
 
             {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
@@ -157,25 +157,58 @@ this.audio_file_player = function(x,y,a,setupConnect=true){
             }
             setInterval(refresh,1000/30);
     //wiring
-        object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
-        object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
-        object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
-        object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
-        object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
-        object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
+        //interface
+            object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
+            object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
+            object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
+            object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
+            object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
+            object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
 
-        object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-            if( !isNaN(parseInt(needle)) ){
-                if( object.player.progress(needle) == -1 ){
-                    object.player.createPlayhead(value);
-                }else{
-                    object.player.jumpTo(needle,value);
+            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
+                if( !isNaN(parseInt(needle)) ){
+                    if( object.player.progress(needle) == -1 ){
+                        object.player.createPlayhead(value);
+                    }else{
+                        object.player.jumpTo(needle,value);
+                    }
                 }
-            }
 
-            if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
-            if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
-        };
+                if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
+                if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
+            };
+        //io
+            object.io.signal.io_play.onchange = function(value){
+                var part = object.elements.button_image.button_play;
+                value ? part.press() : part.release();
+            };
+            object.io.signal.io_stop.onchange = function(value){
+                var part = object.elements.button_image.button_stop;
+                value ? part.press() : part.release();
+            };
+            object.io.signal.io_singleOrInfini.onchange = function(value){
+                if(!value){return;}
+                var part = object.elements.checkbox_image.checkbox_loop;
+                part.set(!part.get());
+            };
+            object.io.signal.io_loop.onchange = function(value){
+                if(!value){return;}
+                var part = object.elements.checkbox_image.checkbox_singleOrInfini;
+                part.set(!part.get());
+            };
+            object.io.voltage.io_playbackSpeed.onchange = function(value){
+                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
+            };
+            object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
+                var current = player.i.area().B;
+                if(current == undefined){current = 1;}
+                player.i.area(value,current);
+            };
+            object.io.voltage.io_waveworkspace_endPosition.onchange = function(value){
+                var current = player.i.area().A;
+                if(current == undefined){current = 0;}
+                player.i.area(current,value);
+            };
 
     //interface
         object.i = {

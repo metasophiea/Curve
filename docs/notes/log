@@ -1,5 +1,17 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-17
+  - made the launchpadmore efficient with how it sends signals
+  - fixed the issue with the 8 track mixer (I had the panning backwards)
+  - adjusted the mouse panning code so that one can still deselect units when 
+    mouseGripPanningEnabled is off
+
+
+2019-09-16
+  - added io code to audio_file_player
+
+
 2019-09-15
+  - replaced old needleOverlay and grapher_waveWorkspace with the newer ones
   - got the audio_file_player working (still not happy with it though)(it's
     also missing the io connections for controls)
 

@@ -27,7 +27,12 @@
 
     <body>
         <p class='generalTextSections'>The ruler is a tool you can use to measure things. It's about a metre long, supposedly. It won't collide with anything and comes in a delightful shade of grey.</p>
-        <canvas id='workspaceCanvas' workspace workspaceElementWidth='80%'workspaceElementHeight='300px' workspaceElementMinWidth='600px' workspaceElementMaxWidth='700px' ></canvas>
+        <canvas 
+            id='workspaceCanvas' 
+            workspace 
+            workspaceElementWidth='80%' workspaceElementHeight='300px' 
+            workspaceElementMinWidth='500px' workspaceElementMaxWidth='700px' 
+        ></canvas>
     </body>
 
 </html>
@@ -40,4 +45,5 @@
     document.getElementById('workspaceCanvas').control.interaction.enableUnloadWarning(false);
     document.getElementById('workspaceCanvas').control.scene.addUnit(10,10,0,'ruler','beta');
     document.getElementById('workspaceCanvas').control.interaction.enableUnitAdditionRemoval(false);
+    document.getElementById('workspaceCanvas').control.interaction.mouseGripPanningEnabled(false);
 </script>

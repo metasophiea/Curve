@@ -37609,12 +37609,13 @@
                     {
                         requiredKeys:[],
                         function:function(data){
+                            _canvas_.control.selection.deselectEverything();
+                            
                             //control switch
                                 if(!_canvas_.control.interaction.mouseGripPanningEnabled()){return;}
                 
                 
                 
-                            _canvas_.control.selection.deselectEverything();
                 
                             //save the viewport position and click position
                                 _canvas_.system.mouse.tmp.oldPosition = _canvas_.core.viewport.position();
@@ -45397,8 +45398,8 @@
                                     }(a);
                                     object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
                                         return function(value){
-                                            object['splitter_'+a].outGain(0,value);
-                                            object['splitter_'+a].outGain(1,1-value);
+                                            object['splitter_'+a].outGain(0,1-value);
+                                            object['splitter_'+a].outGain(1,value);
                                         }
                                     }(a);
                         
@@ -46760,7 +46761,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png'
+                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
                                     }},
                         
                                     {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
@@ -46865,25 +46866,58 @@
                                     }
                                     setInterval(refresh,1000/30);
                             //wiring
-                                object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
-                                object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
-                                object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
-                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
-                                object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
-                                object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
+                                //interface
+                                    object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
+                                    object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
+                                    object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
+                                    object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
+                                    object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
                         
-                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-                                    if( !isNaN(parseInt(needle)) ){
-                                        if( object.player.progress(needle) == -1 ){
-                                            object.player.createPlayhead(value);
-                                        }else{
-                                            object.player.jumpTo(needle,value);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
+                                        if( !isNaN(parseInt(needle)) ){
+                                            if( object.player.progress(needle) == -1 ){
+                                                object.player.createPlayhead(value);
+                                            }else{
+                                                object.player.jumpTo(needle,value);
+                                            }
                                         }
-                                    }
                         
-                                    if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
-                                    if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
-                                };
+                                        if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
+                                        if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
+                                    };
+                                //io
+                                    object.io.signal.io_play.onchange = function(value){
+                                        var part = object.elements.button_image.button_play;
+                                        value ? part.press() : part.release();
+                                    };
+                                    object.io.signal.io_stop.onchange = function(value){
+                                        var part = object.elements.button_image.button_stop;
+                                        value ? part.press() : part.release();
+                                    };
+                                    object.io.signal.io_singleOrInfini.onchange = function(value){
+                                        if(!value){return;}
+                                        var part = object.elements.checkbox_image.checkbox_loop;
+                                        part.set(!part.get());
+                                    };
+                                    object.io.signal.io_loop.onchange = function(value){
+                                        if(!value){return;}
+                                        var part = object.elements.checkbox_image.checkbox_singleOrInfini;
+                                        part.set(!part.get());
+                                    };
+                                    object.io.voltage.io_playbackSpeed.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
+                                    };
+                                    object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
+                                        var current = player.i.area().B;
+                                        if(current == undefined){current = 1;}
+                                        player.i.area(value,current);
+                                    };
+                                    object.io.voltage.io_waveworkspace_endPosition.onchange = function(value){
+                                        var current = player.i.area().A;
+                                        if(current == undefined){current = 0;}
+                                        player.i.area(current,value);
+                                    };
                         
                             //interface
                                 object.i = {
@@ -47476,8 +47510,8 @@
                                     }(a);
                                     object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
                                         return function(value){
-                                            object['splitter_'+a].outGain(0,value);
-                                            object['splitter_'+a].outGain(1,1-value);
+                                            object['splitter_'+a].outGain(0,1-value);
+                                            object['splitter_'+a].outGain(1,value);
                                         }
                                     }(a);
                         
@@ -48839,7 +48873,7 @@
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png'
+                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
                                     }},
                         
                                     {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
@@ -48944,25 +48978,58 @@
                                     }
                                     setInterval(refresh,1000/30);
                             //wiring
-                                object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
-                                object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
-                                object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
-                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
-                                object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
-                                object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
+                                //interface
+                                    object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
+                                    object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
+                                    object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
+                                    object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
+                                    object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
                         
-                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
-                                    if( !isNaN(parseInt(needle)) ){
-                                        if( object.player.progress(needle) == -1 ){
-                                            object.player.createPlayhead(value);
-                                        }else{
-                                            object.player.jumpTo(needle,value);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
+                                        if( !isNaN(parseInt(needle)) ){
+                                            if( object.player.progress(needle) == -1 ){
+                                                object.player.createPlayhead(value);
+                                            }else{
+                                                object.player.jumpTo(needle,value);
+                                            }
                                         }
-                                    }
                         
-                                    if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
-                                    if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
-                                };
+                                        if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
+                                        if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
+                                    };
+                                //io
+                                    object.io.signal.io_play.onchange = function(value){
+                                        var part = object.elements.button_image.button_play;
+                                        value ? part.press() : part.release();
+                                    };
+                                    object.io.signal.io_stop.onchange = function(value){
+                                        var part = object.elements.button_image.button_stop;
+                                        value ? part.press() : part.release();
+                                    };
+                                    object.io.signal.io_singleOrInfini.onchange = function(value){
+                                        if(!value){return;}
+                                        var part = object.elements.checkbox_image.checkbox_loop;
+                                        part.set(!part.get());
+                                    };
+                                    object.io.signal.io_loop.onchange = function(value){
+                                        if(!value){return;}
+                                        var part = object.elements.checkbox_image.checkbox_singleOrInfini;
+                                        part.set(!part.get());
+                                    };
+                                    object.io.voltage.io_playbackSpeed.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
+                                    };
+                                    object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
+                                        var current = player.i.area().B;
+                                        if(current == undefined){current = 1;}
+                                        player.i.area(value,current);
+                                    };
+                                    object.io.voltage.io_waveworkspace_endPosition.onchange = function(value){
+                                        var current = player.i.area().A;
+                                        if(current == undefined){current = 0;}
+                                        player.i.area(current,value);
+                                    };
                         
                             //interface
                                 object.i = {
@@ -50076,25 +50143,22 @@
                                     object.elements.glowbox_circle['LED_'+state.currentPage].on();
                                 }
                                 function changeToColumn(column){
+                                    for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+                        
                                     state.currentColumn = column;
                         
-                                    for(var x = 0; x < 8; x++){
-                                        for(var y = 0; y < 8; y++){
-                                            object.elements.checkbox_rectangle[y+'_'+x].light(false);
-                                        }
-                                    }
-                        
                                     for(var y = 0; y < 8; y++){
-                                        object.elements.connectionNode_signal['output_'+y].set(false);
                                         object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(true);
-                                        if( state.pages[state.currentPage][y][state.currentColumn] ){
-                                            object.elements.connectionNode_signal['output_'+y].set(true);
-                                        }
+                                        if( !object.elements.connectionNode_signal['output_'+y].read() && !state.pages[state.currentPage][y][state.currentColumn] ){ continue; }
+                        
+                                        object.elements.connectionNode_signal['output_'+y].set(false);
+                                        if( state.pages[state.currentPage][y][state.currentColumn] ){ object.elements.connectionNode_signal['output_'+y].set(true); }
                                     }
                                 }
                                 function step(){
-                                    state.currentColumn++; if(state.currentColumn > 7){state.currentColumn = 0;}
-                                    changeToColumn(state.currentColumn);
+                                    var tmp = state.currentColumn+1; 
+                                    if(tmp > 7){tmp = 0;}
+                                    changeToColumn(tmp);
                                 }
                                 function changeToPage(pageNumber){
                                     state.currentPage = pageNumber;
@@ -51232,25 +51296,22 @@
                                     object.elements.glowbox_circle['LED_'+state.currentPage].on();
                                 }
                                 function changeToColumn(column){
+                                    for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+                        
                                     state.currentColumn = column;
                         
-                                    for(var x = 0; x < 8; x++){
-                                        for(var y = 0; y < 8; y++){
-                                            object.elements.checkbox_rectangle[y+'_'+x].light(false);
-                                        }
-                                    }
-                        
                                     for(var y = 0; y < 8; y++){
-                                        object.elements.connectionNode_signal['output_'+y].set(false);
                                         object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(true);
-                                        if( state.pages[state.currentPage][y][state.currentColumn] ){
-                                            object.elements.connectionNode_signal['output_'+y].set(true);
-                                        }
+                                        if( !object.elements.connectionNode_signal['output_'+y].read() && !state.pages[state.currentPage][y][state.currentColumn] ){ continue; }
+                        
+                                        object.elements.connectionNode_signal['output_'+y].set(false);
+                                        if( state.pages[state.currentPage][y][state.currentColumn] ){ object.elements.connectionNode_signal['output_'+y].set(true); }
                                     }
                                 }
                                 function step(){
-                                    state.currentColumn++; if(state.currentColumn > 7){state.currentColumn = 0;}
-                                    changeToColumn(state.currentColumn);
+                                    var tmp = state.currentColumn+1; 
+                                    if(tmp > 7){tmp = 0;}
+                                    changeToColumn(tmp);
                                 }
                                 function changeToPage(pageNumber){
                                     state.currentPage = pageNumber;

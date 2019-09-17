@@ -115,8 +115,8 @@ this.eightTrackMixer = function(x,y,a){
             }(a);
             object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
                 return function(value){
-                    object['splitter_'+a].outGain(0,value);
-                    object['splitter_'+a].outGain(1,1-value);
+                    object['splitter_'+a].outGain(0,1-value);
+                    object['splitter_'+a].outGain(1,value);
                 }
             }(a);
 
