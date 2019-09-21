@@ -1,6 +1,10 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-21
+  - added the audio_recorder unit
+
+
 2019-09-17
-  - made the launchpadmore efficient with how it sends signals
+  - made the launchpad more efficient with how it sends signals
   - fixed the issue with the 8 track mixer (I had the panning backwards)
   - adjusted the mouse panning code so that one can still deselect units when 
     mouseGripPanningEnabled is off

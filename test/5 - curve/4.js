@@ -39,6 +39,7 @@
 //     amp.io.audio.input_R.connectTo(player.io.audio.io_output_R);
 //     amp.io.audio.input_L.connectTo(player.io.audio.io_output_L);
 
+var player = _canvas_.control.scene.addUnit(10,10,0,'audio_recorder','beta');
 
 
 

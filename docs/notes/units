@@ -48,7 +48,7 @@ alpha units
 
 
 beta units
-    the essentials (24/27)
+    the essentials (26/27)
     _/  - ruler
 
     _/  - pulse generator (signal)
@@ -84,9 +84,9 @@ beta units
 
     _/  - basic 8 track mixer (8 mono to 1 stereo)(panning and volume)
 
-    __  - audio file player (with area selection and signal-shot input)
+    _/  - audio file player (with area selection and signal-shot input)
 
-        - audio recorder
+    _/  - audio recorder
 
 
         
