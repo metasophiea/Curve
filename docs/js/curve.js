@@ -45457,7 +45457,7 @@
                                 ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
                                         data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
@@ -45586,7 +45586,7 @@
                                 ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.voltage,
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
                                     }},
                                     {collection:'basic', type:'image', name:'backing', data:{ 
                                         x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
@@ -47736,7 +47736,7 @@
                                 ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                                     {collection:'basic', type:'image', name:'backing', 
                                         data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
@@ -47865,7 +47865,7 @@
                                 ],
                                 elements:[
                                     {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.voltage,
+                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
                                     }},
                                     {collection:'basic', type:'image', name:'backing', data:{ 
                                         x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
@@ -49410,7 +49410,7 @@
                             var div = 6;
                             var offset = 20/div;
                             var measurements = { 
-                                file:{ width:719, height:389 },
+                                file:{ width:725, height:395 },
                                 design:{ width:11.75, height:6.25 },
                             };
                             measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
@@ -49444,10 +49444,10 @@
                                         x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
                                     }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
-                                        x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        x:50, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
-                                        x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        x:68, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
@@ -50477,7 +50477,7 @@
                                     object.elements.glowbox_circle['LED_'+state.currentPage].on();
                                 }
                                 function changeToColumn(column){
-                                    for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+                                    if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
                         
                                     state.currentColumn = column;
                         
@@ -50563,7 +50563,7 @@
                             var div = 6;
                             var offset = 20/div;
                             var measurements = { 
-                                file:{ width:719, height:389 },
+                                file:{ width:725, height:395 },
                                 design:{ width:11.75, height:6.25 },
                             };
                             measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
@@ -50597,10 +50597,10 @@
                                         x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
                                     }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
-                                        x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        x:50, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                                     {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
-                                        x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        x:68, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                     }},
                         
                                     {collection:'basic', type:'image', name:'backing', 
@@ -51630,7 +51630,7 @@
                                     object.elements.glowbox_circle['LED_'+state.currentPage].on();
                                 }
                                 function changeToColumn(column){
-                                    for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+                                    if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
                         
                                     state.currentColumn = column;
                         
@@ -51967,6 +51967,15 @@
                         this._collectionData = {
                             name:'Alpha',
                             itemWidth:210,
+                            categoryOrder:[
+                                'monitors',
+                                'humanInterfaceDevices',
+                                'sequencers',
+                                'synthesizers',
+                                'effects',
+                                'tools',
+                                'misc',
+                            ],   
                         };
                         this._categoryData = {
                             tools:{ printingName:'Tools',itemWidth:150},
@@ -52069,7 +52078,7 @@
                                                 }
                 
                                             //generate sub list for this category
-                                                var categoryList = { type:'list', text:categoryPrintingName, list:[], itemWidth:itemWidth, };
+                                                var categoryList = { type:'list', text:categoryPrintingName, categoryKey:categoryKey, list:[], itemWidth:itemWidth, };
                                                 categorySortingList[categoryKey].forEach(model => {
                                                     categoryList.list.push(
                                                         {
@@ -52086,9 +52095,17 @@
                                                 collectionItemList.list.push(categoryList);
                                         });
                 
+                                    //if the collection has an order for it's categories; resort the item list to match
+                                        if(collection._collectionData != undefined && collection._collectionData.categoryOrder != undefined){
+                                            collectionItemList.list = collection._collectionData.categoryOrder.map(category => {
+                                                return collectionItemList.list.filter(item => item.categoryKey==category)[0];
+                                            });
+                                        }
+                
                                     //add this item list to the output array
                                         outputItemList.push(collectionItemList);
                                 });
+                
                 
                                 return outputItemList;
                             })(),

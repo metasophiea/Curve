@@ -3,6 +3,15 @@
 this._collectionData = {
     name:'Alpha',
     itemWidth:210,
+    categoryOrder:[
+        'monitors',
+        'humanInterfaceDevices',
+        'sequencers',
+        'synthesizers',
+        'effects',
+        'tools',
+        'misc',
+    ],   
 };
 this._categoryData = {
     tools:{ printingName:'Tools',itemWidth:150},

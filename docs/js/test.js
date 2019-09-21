@@ -45508,7 +45508,7 @@
                             ],
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
@@ -45637,7 +45637,7 @@
                             ],
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.voltage,
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', data:{ 
                                     x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
@@ -47787,7 +47787,7 @@
                             ],
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
@@ -47916,7 +47916,7 @@
                             ],
                             elements:[
                                 {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.voltage,
+                                    x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
                                 }},
                                 {collection:'basic', type:'image', name:'backing', data:{ 
                                     x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
@@ -49461,7 +49461,7 @@
                         var div = 6;
                         var offset = 20/div;
                         var measurements = { 
-                            file:{ width:719, height:389 },
+                            file:{ width:725, height:395 },
                             design:{ width:11.75, height:6.25 },
                         };
                         measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
@@ -49495,10 +49495,10 @@
                                     x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
-                                    x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    x:50, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
-                                    x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    x:68, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
@@ -50528,7 +50528,7 @@
                                 object.elements.glowbox_circle['LED_'+state.currentPage].on();
                             }
                             function changeToColumn(column){
-                                for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+                                if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
                     
                                 state.currentColumn = column;
                     
@@ -50614,7 +50614,7 @@
                         var div = 6;
                         var offset = 20/div;
                         var measurements = { 
-                            file:{ width:719, height:389 },
+                            file:{ width:725, height:395 },
                             design:{ width:11.75, height:6.25 },
                         };
                         measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
@@ -50648,10 +50648,10 @@
                                     x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
-                                    x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    x:50, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                                 {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
-                                    x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                    x:68, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                     
                                 {collection:'basic', type:'image', name:'backing', 
@@ -51681,7 +51681,7 @@
                                 object.elements.glowbox_circle['LED_'+state.currentPage].on();
                             }
                             function changeToColumn(column){
-                                for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+                                if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
                     
                                 state.currentColumn = column;
                     
@@ -52018,6 +52018,15 @@
                     this._collectionData = {
                         name:'Alpha',
                         itemWidth:210,
+                        categoryOrder:[
+                            'monitors',
+                            'humanInterfaceDevices',
+                            'sequencers',
+                            'synthesizers',
+                            'effects',
+                            'tools',
+                            'misc',
+                        ],   
                     };
                     this._categoryData = {
                         tools:{ printingName:'Tools',itemWidth:150},
@@ -52120,7 +52129,7 @@
                                             }
             
                                         //generate sub list for this category
-                                            var categoryList = { type:'list', text:categoryPrintingName, list:[], itemWidth:itemWidth, };
+                                            var categoryList = { type:'list', text:categoryPrintingName, categoryKey:categoryKey, list:[], itemWidth:itemWidth, };
                                             categorySortingList[categoryKey].forEach(model => {
                                                 categoryList.list.push(
                                                     {
@@ -52137,9 +52146,17 @@
                                             collectionItemList.list.push(categoryList);
                                     });
             
+                                //if the collection has an order for it's categories; resort the item list to match
+                                    if(collection._collectionData != undefined && collection._collectionData.categoryOrder != undefined){
+                                        collectionItemList.list = collection._collectionData.categoryOrder.map(category => {
+                                            return collectionItemList.list.filter(item => item.categoryKey==category)[0];
+                                        });
+                                    }
+            
                                 //add this item list to the output array
                                     outputItemList.push(collectionItemList);
                             });
+            
             
                             return outputItemList;
                         })(),
@@ -52269,56 +52286,50 @@
             
 
             
+            _canvas_.control.scene.addUnit(10,-135,0,'distortion','beta');
+            _canvas_.control.scene.addUnit(-145,-170,0,'reverb','beta');
+            _canvas_.control.scene.addUnit(-180,240,0,'filter','beta');
+            
+            _canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','beta');
+            _canvas_.control.scene.addUnit(175,-95,0,'audio_in','beta');
+            _canvas_.control.scene.addUnit(140,-115,0,'signal_switch','beta');
+            _canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','beta');
+            
+            _canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','beta');
+            _canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','beta');
+            _canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','beta');
+            _canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','beta');
+            _canvas_.control.scene.addUnit(445,30,0,'signal_combiner','beta');
+            _canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','beta');
+            _canvas_.control.scene.addUnit(370,-35,0,'data_combiner','beta');
+            _canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','beta');
+            
+            _canvas_.control.scene.addUnit(10,-65,0,'amplifier','beta');
+            _canvas_.control.scene.addUnit(370,225,0,'audio_recorder','beta');
+            _canvas_.control.scene.addUnit(-280,85,0,'data_readout','beta');
+            _canvas_.control.scene.addUnit(-230,-110,0,'signal_readout','beta');
+            _canvas_.control.scene.addUnit(85,290,0,'voltage_readout','beta');
+            _canvas_.control.scene.addUnit(165,225,0,'audio_scope','beta');
+            
+            _canvas_.control.scene.addUnit(370,275,0,'pulse_generator','beta');
+            _canvas_.control.scene.addUnit(-200,290,0,'eightStepSequencer','beta');
+            _canvas_.control.scene.addUnit(-70,85,0,'launchpad','beta');
+            
+            _canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer','beta');
+            _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','beta');
+            
             // _canvas_.control.scene.addUnit(10,10,0,'ruler','beta');
             
             
-            // _canvas_.control.scene.addUnit(70,10,0,'eightTrackMixer','beta');
-            
-            // _canvas_.control.scene.addUnit(70,10,0,'amplifier','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'data_readout','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'signal_readout','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'voltage_readout','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'audio_scope','beta');
-            
-            // _canvas_.control.scene.addUnit(70,10,0,'signal_switch','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'voltage_dial','beta');
-            
-            // _canvas_.control.scene.addUnit(70,30,0,'signal_duplicator','beta');
-            // _canvas_.control.scene.addUnit(70,30,0,'voltage_duplicator','beta');
-            // _canvas_.control.scene.addUnit(125,30,0,'data_duplicator','beta');
-            // _canvas_.control.scene.addUnit(125,85,0,'audio_duplicator','beta');
-            // _canvas_.control.scene.addUnit(70,30,0,'signal_combiner','beta');
-            // _canvas_.control.scene.addUnit(70,30,0,'voltage_combiner','beta');
-            // _canvas_.control.scene.addUnit(70,30,0,'data_combiner','beta');
-            
-            // _canvas_.control.scene.addUnit(70,10,0,'pulse_generator','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'eightStepSequencer','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'launchpad','beta');
-            
-            // _canvas_.control.scene.addUnit(70,10,0,'basic_synthesizer','beta');
-            
-            // _canvas_.control.scene.addUnit(70,10,0,'musicalKeyboard','beta');
-            
-            // _canvas_.control.scene.addUnit(70,10,0,'distortion','beta');
-            // _canvas_.control.scene.addUnit(70,10,0,'reverb','beta');
-            //// _canvas_.control.scene.addUnit(70,10,0,'filter','beta');
-            
-            // _canvas_.control.scene.addUnit(10,10,0,'audio_in','beta');
-            // var player = _canvas_.control.scene.addUnit(10,10,0,'audio_file_player','beta');
-            //     player.i.loadByURL('https://metasophiea.com/apps/partyCalculator/tracks/1-bassSynth_08.wav');
-            //     var amp = _canvas_.control.scene.addUnit(-200,10,0,'amplifier','beta');
-            //     amp.io.audio.input_R.connectTo(player.io.audio.io_output_R);
-            //     amp.io.audio.input_L.connectTo(player.io.audio.io_output_L);
-            
-            var player = _canvas_.control.scene.addUnit(10,10,0,'audio_recorder','beta');
             
             
             
             
             
             
-            _canvas_.control.viewport.scale(6);
-            // _canvas_.control.viewport.position(-630,-15);
+            
+            // _canvas_.control.viewport.scale(6);
+            _canvas_.control.viewport.position(302,208);
 
 
         }

@@ -1,6 +1,14 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
 2019-09-21
   - added the audio_recorder unit
+  - fixed a small issue with the launchpad (that was introduced when I changed
+    it on 2019-09-17..slightly embarrassing)
+  - added a way to define the category order in a collection's drop down in the
+    menubar
+  - created a little family-portrait of the Alpha collection
+  - enlarged the bumpers of the distortion unit slightly
+  - changed the sizes of some of the signal and voltage nodes on some of the
+    unit (just so they'd all look consistent)
 
 
 2019-09-17

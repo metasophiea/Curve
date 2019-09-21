@@ -88,7 +88,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                                 }
 
                             //generate sub list for this category
-                                var categoryList = { type:'list', text:categoryPrintingName, list:[], itemWidth:itemWidth, };
+                                var categoryList = { type:'list', text:categoryPrintingName, categoryKey:categoryKey, list:[], itemWidth:itemWidth, };
                                 categorySortingList[categoryKey].forEach(model => {
                                     categoryList.list.push(
                                         {
@@ -105,9 +105,17 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                                 collectionItemList.list.push(categoryList);
                         });
 
+                    //if the collection has an order for it's categories; resort the item list to match
+                        if(collection._collectionData != undefined && collection._collectionData.categoryOrder != undefined){
+                            collectionItemList.list = collection._collectionData.categoryOrder.map(category => {
+                                return collectionItemList.list.filter(item => item.categoryKey==category)[0];
+                            });
+                        }
+
                     //add this item list to the output array
                         outputItemList.push(collectionItemList);
                 });
+
 
                 return outputItemList;
             })(),

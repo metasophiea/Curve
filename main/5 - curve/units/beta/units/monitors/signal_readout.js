@@ -20,7 +20,7 @@ this.signal_readout = function(x,y,a){
         ],
         elements:[
             {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                x:measurements.drawing.width-3.5, y:measurements.drawing.height-20, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
             }},
             {collection:'basic', type:'image', name:'backing', 
                 data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }

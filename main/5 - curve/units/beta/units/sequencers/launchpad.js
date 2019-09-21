@@ -121,7 +121,7 @@ this.launchpad = function(x,y,a){
             object.elements.glowbox_circle['LED_'+state.currentPage].on();
         }
         function changeToColumn(column){
-            for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); }
+            if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
 
             state.currentColumn = column;
 

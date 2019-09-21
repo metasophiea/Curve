@@ -4,7 +4,7 @@ this.distortion = function(x,y,a){
     var div = 6;
     var offset = 20/div;
     var measurements = { 
-        file:{ width:719, height:389 },
+        file:{ width:725, height:395 },
         design:{ width:11.75, height:6.25 },
     };
     measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
@@ -38,10 +38,10 @@ this.distortion = function(x,y,a){
                 x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
             }},
             {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
-                x:50, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                x:50, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
             }},
             {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
-                x:68, y:measurements.drawing.height-3.5, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                x:68, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
             }},
 
             {collection:'basic', type:'image', name:'backing', 
