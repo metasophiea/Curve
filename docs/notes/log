@@ -1,4 +1,8 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-23
+  - fixed the position of the slider on the distortion unit
+  
+
 2019-09-21
   - added the audio_recorder unit
   - fixed a small issue with the launchpad (that was introduced when I changed

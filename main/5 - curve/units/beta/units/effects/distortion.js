@@ -66,7 +66,7 @@ this.distortion = function(x,y,a){
             }},
 
             {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
-                x:41, y:57, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
+                x:41.5, y:57.5, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
                 handleURL:imageStoreURL_localPrefix+'handle.png',
             }},
         ]
