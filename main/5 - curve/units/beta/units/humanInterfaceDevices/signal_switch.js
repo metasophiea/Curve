@@ -38,6 +38,16 @@ this.signal_switch = function(x,y,a){
         object.elements.slide_discrete_image.theSwitch.onchange = function(value){
             object.elements.connectionNode_signal.out.set( 1-value == 0 ? false : true );
         };
+
+    //import/export
+        object.exportData = function(){
+            return {
+                state:object.elements.slide_discrete_image.theSwitch.get()
+            };
+        };
+        object.importData = function(data){
+            object.elements.slide_discrete_image.theSwitch.set(data.state);
+        };
         
     return object;
 };

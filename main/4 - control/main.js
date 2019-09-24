@@ -2,6 +2,7 @@
 {{include:keyboard.js}}
 
 _canvas_.control = new function(){
+    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:30} };
     var control = this;
 
     this.interaction = new function(){

@@ -1,18 +1,67 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-24
+  - updated a number of the units to have export/import data methods
+
+
 2019-09-23
+  compilation results
+  -> core
+          core.js 1577kb
+          core.min.js 414kb
+          reduced to 26.26% of original size
+  -> coreSystem
+          coreSystem.js 1589kb
+          coreSystem.min.js 418kb
+          reduced to 26.35% of original size
+  -> workspace
+          workspace.js 2698kb
+          workspace.min.js 698kb
+          reduced to 25.89% of original size
+  -> curve
+          curve.js 3707kb
+          curve.min.js 1085kb
+          reduced to 29.27% of original size
+
+  - changed demo 1 to 0, and added a new demo 1
+  - went back through the logs to find the last update dates for each layer,
+    and add those values to the versionInformations
+
+
+2019-09-22
   - fixed the position of the slider on the distortion unit
   
 
 2019-09-21
   - added the audio_recorder unit
-  - fixed a small issue with the launchpad (that was introduced when I changed
-    it on 2019-09-17..slightly embarrassing)
   - added a way to define the category order in a collection's drop down in the
     menubar
   - created a little family-portrait of the Alpha collection
   - enlarged the bumpers of the distortion unit slightly
   - changed the sizes of some of the signal and voltage nodes on some of the
     unit (just so they'd all look consistent)
+
+
+2019-09-19
+  - project files aren't being compressed when saved. Only because I never set 
+    the appropiate argument. Tis fixed now
+  - added import/export code to the pulse generator
+  - faffed with making a unit validator function
+
+    
+2019-09-18
+  - made a mistake with the fix to the launchpad yesterday. Easily fixed though
+    (on first step, the system would attempt to dim the previously lit coloumn
+    but ofcourse there wasn't a previous set coloumn. How it knows to skip this
+    code on first step)
+  - added the 'text' item to the list part (just a simple text element)
+  - added "versionInformation" to every layer, which contains a date which
+    (should) state when that layer was last modified (There's also a 'tick'
+    value but I'm not sure what to do with it)
+  - added "_canvas_.getVersionInformation" which gathers togeter all the version
+    information from each layer
+  - added an item to the menubar/dev section that displays the lastDateModified
+    version information of each layer (starting at either 0/0/0 or today)
+  - added links to the github and log files in menubar/dev
 
 
 2019-09-17
@@ -464,8 +513,8 @@
   - rotated slider control didn't work as expected. It wasn't taking into
     account the offset angle of any containing group shape. Adding this to its
     calculations fixed everything
-  - clink-n-drag cables follow the mouse as it makes its way from one connection
-    node in search of another
+  - clink-n-drag cables now follow the mouse as it makes its way from one 
+    connection node in search of another
 
 
 2019-07-16

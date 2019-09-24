@@ -29,6 +29,7 @@ The command uses a little JavaScript compiler written in Python3 called Gravity,
 
 ## Compatibility
 Recently (24/4/2019) I finished my overhaul of the graphical backend of the project, taking out the Canvas aspect of core and replacing it with webGL. So far it's been pretty happy working on most browsers, but more testing is needed. Safari is still unable to handle WebAudio, so I recommend just sticking with Chrome (and maybe Firefox, but the mouse-wheel zooming doesn't work that great just yet) for now.
+There also seems to be an issue with webGL rendering on windows. I usually develop on Linux and Mac, so, it's something I need to look in to.
 
 ## Interesting Links
 - [Dev Mode](https://curve.metasophiea.com?dev)

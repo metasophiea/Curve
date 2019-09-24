@@ -79,6 +79,18 @@ this.audio_scope = function(x,y,a){
             },
         };
 
+    //import/export
+        object.exportData = function(){
+            return {
+                framerate:object.i.framerate(),
+                sampleWidth:object.i.sampleWidth(),
+            };
+        };
+        object.importData = function(data){
+            object.i.framerate(data.framerate);
+            object.i.sampleWidth(data.sampleWidth);
+        };
+
     //setup
         object.elements.grapher_audioScope_static.waveport.start();
         object.elements.dial_colourWithIndent_continuous.dial_framerate.set(0);

@@ -238,6 +238,16 @@ this.audio_file_player = function(x,y,a,setupConnect=true){
             jumpTo:function(needle,position){ object.player.jumpTo(needle,position); },
             concurrentPlayCountLimit:function(value){ return object.player.concurrentPlayCountLimit(value); },
         };
+    
+    //import/export
+        object.exportData = function(){
+            return{
+                track: object.player.unloadRaw(),
+            };
+        };
+        object.importData = function(data){
+            object.i.loadRaw(data.track);
+        };
 
     return object;
 };

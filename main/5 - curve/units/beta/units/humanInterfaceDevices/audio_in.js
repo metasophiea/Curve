@@ -109,6 +109,16 @@ this.audio_in = function(x,y,a,setupConnect=true){
         object.io.signal.io_previous.onchange = function(value){ if(value){ object.elements.button_image.button_previous.press(); }else{ object.elements.button_image.button_previous.release(); } };
         object.io.signal.io_next.onchange = function(value){ if(value){ object.elements.button_image.button_next.press(); }else{ object.elements.button_image.button_next.release(); } };
 
+        //import/export
+            object.exportData = function(){
+                return {
+                    gain:object.elements.dial_colourWithIndent_continuous.outputGain.get(),
+                };
+            };
+            object.importData = function(data){
+                object.elements.dial_colourWithIndent_continuous.outputGain.get( data.gain );
+            };
+
     //setup
         object.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
         if(setupConnect){setTimeout(function(){selectDevice(0);},500);}

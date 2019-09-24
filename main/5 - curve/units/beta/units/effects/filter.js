@@ -113,6 +113,20 @@ this.filter = function(x,y,a){
         object.elements.dial_colourWithIndent_continuous.dial_midBand.onchange = function(value){ object.i.gain(1,value*2); };
         object.elements.dial_colourWithIndent_continuous.dial_highBand.onchange = function(value){ object.i.gain(2,value*2); };
 
+    //import/export
+        object.exportData = function(){
+            return {
+                low:object.elements.dial_colourWithIndent_continuous.dial_lowBand.get(),
+                mid:object.elements.dial_colourWithIndent_continuous.dial_midBand.get(),
+                high:object.elements.dial_colourWithIndent_continuous.dial_highBand.get(),
+            };
+        };
+        object.importData = function(data){
+            object.elements.dial_colourWithIndent_continuous.dial_lowBand.set( data.low );
+            object.elements.dial_colourWithIndent_continuous.dial_midBand.set( data.mid );
+            object.elements.dial_colourWithIndent_continuous.dial_highBand.set( data.high );
+        };
+
     //setup
         object.i.reset();
 

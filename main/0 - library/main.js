@@ -1,4 +1,5 @@
 _canvas_.library = new function(){
+    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:5,d:31} };
     var library = this;
     
     this.math = new function(){
@@ -23,5 +24,8 @@ _canvas_.library = new function(){
         var thirdparty = this;
         {{include:thirdparty/*}} /**/
     };
-    this.__tp = _thirdparty;
+};
+
+_canvas_.getVersionInformation = function(){
+    return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
 };

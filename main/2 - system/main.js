@@ -3,7 +3,9 @@ _canvas_.core.callback.activateShapeCallback('onmouseenter');
 _canvas_.core.callback.activateShapeCallback('onmouseleave');
 
 
-_canvas_.system = new function(){};
+_canvas_.system = new function(){
+    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:24} };
+};
 _canvas_.system.mouse = new function(){
     {{include:mouse.js}}
 };

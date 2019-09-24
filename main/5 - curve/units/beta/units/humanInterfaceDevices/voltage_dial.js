@@ -39,6 +39,16 @@ this.voltage_dial = function(x,y,a){
         object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){
             object.elements.connectionNode_voltage.out.set( value );
         };
+
+    //import/export
+        object.exportData = function(){
+            return {
+                state:object.elements.dial_colourWithIndent_continuous.theDial.get()
+            };
+        };
+        object.importData = function(data){
+            object.elements.dial_colourWithIndent_continuous.theDial.set(data.state);
+        };
         
     return object;
 };

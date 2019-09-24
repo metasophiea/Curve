@@ -150,6 +150,21 @@ this.list = function(
                         output.elements.push(textbreak_group);
                         output.calculatedListHeight += itemSpacingHeight+breakHeight;
                     break;
+                    case 'text': 
+                        var text = interfacePart.builder('basic','text', index+'_text', {
+                            x:xOffset + itemWidth*item_textHorizontalOffsetMux, 
+                            y:output.calculatedListHeight+itemHeight/2,
+                            width:item_textSize, height:item_textSize,
+                            printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
+                            text:item.text,
+                            font:item_textFont,
+                            colour:item_textColour,
+                            spacing:item_textSpacing,
+                            interCharacterSpacing:item_textInterCharacterSpacing,
+                        });
+                        output.elements.push(text);
+                        output.calculatedListHeight += itemHeight;
+                    break;
                     case 'checkbox':
                         var checkbox_group = interfacePart.builder('basic','group',index+'_checkbox');
                             var rectangleBacking = interfacePart.builder('basic', 'rectangle', 'backing', {

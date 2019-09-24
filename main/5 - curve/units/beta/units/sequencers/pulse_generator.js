@@ -171,6 +171,18 @@ this.pulse_generator = function(x,y,a){
             },
         };
 
+    //import/export
+        object.exportData = function(){
+            return {
+                tempo:tempo,
+            };
+        };
+        object.importData = function(data){
+            if(data == undefined){return;}
+
+            object.i.setTempo(data.tempo);
+        };
+
     //setup
         updateTempo(tempo);
 

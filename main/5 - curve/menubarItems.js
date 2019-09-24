@@ -13,7 +13,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
             itemList:[
                 {type:'item', text_left:'New Scene', function:function(){ _canvas_.control.scene.new(true); } },
                 {type:'item', text_left:'Open Scene',text_right:'ctrl-f2', function:function(){ _canvas_.control.scene.load(undefined,undefined,true); } },
-                {type:'item', text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene.save('project.crv'); } },
+                {type:'item', text_left:'Save Scene',text_right:'ctrl-f3', function:function(){ _canvas_.control.scene.save('project.crv',true); } },
             ]
         }
     );
@@ -155,6 +155,8 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
             spaceHeight: 1,
             itemList:[
                 {type:'item', text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
+                {type:'item', text_left:'Development Log', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/log');}},
+                {type:'item', text_left:'Github', function:function(){window.open('https://github.com/metasophiea/curve');}},
             ]
         },
     );
@@ -171,7 +173,17 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                 spaceHeight: 1,
                 itemList:[
                     {type:'item', text_left:'Release All Keyboard Keys', function:function(){ _canvas_.system.keyboard.releaseAll(); } },
-                ]
+                    {type:'textbreak',text:'last date layer was modified'}
+                ].concat(
+                    _canvas_.getVersionInformation().map(
+                            item => {
+                                if(item.name[0] == '_'){ item.name = item.name.substr(1); }
+                                return item.name+': '+item.data.lastDateModified.y+'/'+item.data.lastDateModified.m+'/'+item.data.lastDateModified.d;
+                            }
+                        ).map(
+                            item => ({type:'text',text:item})
+                        ).reverse()
+                )
             }
         );
     }
