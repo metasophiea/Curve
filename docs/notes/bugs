@@ -18,3 +18,5 @@
 [2019-08-26:1] (?) connection nodes can work accross panes (is it really an issue though?) 
 [2019-09-01:1] snapping and unit collision don't play well together
 [2019-09-15:1] something is up with webGl on windows, that isn't present on mac or linux..I think only with clipping
+[2019-09-26:1] ending a note too quickly on the basicSynthesizer results in a snap sound
+[2019-09-26:2] sometimes the panning gets stuck on

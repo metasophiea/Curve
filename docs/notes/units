@@ -94,7 +94,7 @@ beta units
 
 
 
-
+future units
     potential brand or model names
         walsh electronics
         [BLOCK]
@@ -191,3 +191,63 @@ beta units
         signal tempo multiplier (predictive tempo generator from input)
 
         printer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+design pattern
+    unitStyle
+        image store location URL
+        calculation of measurements
+        styling values
+
+    main object creation(design)
+        name
+        x y angle
+        space
+        elements
+    
+    circuitry
+        state
+    wiring
+        hid
+        io (updates hid)
+    interface
+        (updates hid)
+    import/export
+        exportData
+        importData
+
+    setup

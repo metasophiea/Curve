@@ -38540,7 +38540,7 @@
                                     printedUnits.push(unit);
                     
                                 //import data and select unit
-                                    if(unit.importData){unit.importData(item.data);}
+                                    if(unit.importData){ try{ unit.importData(item.data); }catch(error){console.warn('control.scene.printUnits:: unable to import data into unit correctly'); console.warn(error);} }
                                     if(autoselect){control.selection.selectUnit(unit);}
                     
                                 //go through its connections, and attempt to connect them to everything they should be connected to
@@ -46896,7 +46896,6 @@
                                     x:measurements.drawingUnit.width*(14+3/4-1/8 +2.4 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -2.4 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                     
-                    
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
                                 },
@@ -47092,194 +47091,353 @@
                             
                         return object;
                     };
-                    
-                    
-                    
                     this.basic_synthesizer.metadata = {
                         name:'Basic Synthesizer',
                         category:'synthesizers',
                         helpURL:'/help/units/beta/basic_synthesizer/'
                     };
-                    this.audio_file_player = function(x,y,a,setupConnect=true){
-                        var imageStoreURL_localPrefix = imageStoreURL+'audio_file_player/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:1025, height:305 },
-                            design:{ width:16.75, height:4.75 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                        measurements.drawingUnit = {
-                            width: measurements.drawing.width/measurements.design.width,
-                            height: measurements.drawing.height/measurements.design.height,
-                        };
                     
-                        var design = {
-                            name:'audio_file_player',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                  y:0                                   },
-                                { x:measurements.drawing.width -offset, y:0                                   },
-                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                { x:0,                                  y:measurements.drawing.height -offset },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_audio', name:'io_output_R', data:{ 
-                                    x:0, y:15 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_audio', name:'io_output_L', data:{ 
-                                    x:0, y:32.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_play', data:{ 
-                                    x:12.5, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_stop', data:{ 
-                                    x:25, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_singleOrInfini', data:{ 
-                                    x:measurements.drawing.width-3-1/3, y:34, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_loop', data:{ 
-                                    x:measurements.drawing.width-3-1/3, y:19, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_playbackSpeed', data:{ 
-                                    x:120, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_startPosition', data:{ 
-                                    x:10, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_endPosition', data:{ 
-                                    x:25, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                }},
                     
-                                {collection:'basic', type:'image', name:'backing', data:{ 
-                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                }},
                     
-                                {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
-                                    x:125, y:20, radius:67.5/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                    style:{ handle:{r:0.46,g:0.98,b:0.82,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                }},
-                                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, count:8
-                                }},
-                                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{
-                                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, count:14
-                                }},
-                                {collection:'control', type:'button_image', name:'button_play', data:{
-                                    x:2.5, y:35, width:10, height:10, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'button_play_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'button_play_down.png',
-                                }},
-                                {collection:'control', type:'button_image', name:'button_stop', data:{
-                                    x:15, y:35, width:10, height:10, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'button_stop_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'button_stop_down.png',
-                                }},
-                                {collection:'control', type:'button_image', name:'button_open', data:{
-                                    x:145, y:2.5, width:12.5, height:12.5, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'button_file_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'button_file_down.png',
-                                }},
-                                {collection:'control', type:'checkbox_image', name:'checkbox_loop', data:{
-                                    x:145, y:17.5, width:12.5, height:12.5,
-                                    uncheckURL:imageStoreURL_localPrefix+'loop_off.png', 
-                                    checkURL:imageStoreURL_localPrefix+'loop_on.png',
-                                }},
-                                {collection:'control', type:'checkbox_image', name:'checkbox_singleOrInfini', data:{
-                                    x:145, y:32.5, width:12.5, height:12.5,
-                                    uncheckURL:imageStoreURL_localPrefix+'single.png', 
-                                    checkURL:imageStoreURL_localPrefix+'infini.png',
-                                }},
-                                {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                                    x:5+10/16, y:2.5+10/16, width:102.5-10/8, height:30-10/8, style:{ background_lineThickness:0.1, backing:{r:0,g:0,b:0,a:1} }
-                                }},
-                                {collection:'display', type:'glowbox_rectangle',name:'fireLight',data:{ 
-                                    x:2.5, y:2.5, width:2.5, height:30, style:{ glow:{r:0.99,g:0.94,b:0.72,a:1}, dim:{r:0.62,g:0.57,b:0.36,a:1} }
-                                }},
-                            ]
-                        };
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
-                            
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    this.basic_synthesizer2 = function(x,y,angle){
+                        //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
+                    
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1115, height:680 },
+                                        design: { width:18.25, height:11 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
+                    
+                                //styling values
+                            };
+                    
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_file_player',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:unitStyle.drawingUnit.width,                                                 y:0 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset -unitStyle.drawingUnit.width, y:0 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height*4.5 + unitStyle.offset/2.5 },
+                                        { x:unitStyle.drawingUnit.width*12 -unitStyle.offset/1.5,                        y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:unitStyle.drawingUnit.width,                                                 y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                                                           y:unitStyle.drawingValue.height -unitStyle.offset -unitStyle.drawingUnit.height },
+                                        { x:0,                                                                           y:unitStyle.drawingUnit.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
+                                            x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
+                                            x:15, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_attack', data:{ 
+                                            x:50, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_release', data:{ 
+                                            x:82.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_detune_note', data:{ 
+                                            x:117.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_down', data:{ 
+                                            x:150 - 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_up', data:{ 
+                                            x:150 + 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'io_midiNoteInput', data:{ 
+                                            x:unitStyle.drawingValue.width - 5/1.5, y:27.5 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobblePeriod', data:{ 
+                                            x:90/2 - 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobbleDepth', data:{ 
+                                            x:90/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobblePeriod', data:{ 
+                                            x:155/2 - 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobbleDepth', data:{ 
+                                            x:155/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
+                                            x:unitStyle.drawingUnit.width*(14.75 -5/32), y:unitStyle.drawingUnit.height*(7.75 +3/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
+                                            x:unitStyle.drawingUnit.width*(13.5-0.04), y:unitStyle.drawingUnit.height*(9-0.04), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
+                                            x:unitStyle.drawingUnit.width*(15.4-1/40), y:unitStyle.drawingUnit.height*(7.1-1/40), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
+                                            x:unitStyle.drawingUnit.width*(17), y:unitStyle.drawingUnit.height*(5.5), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                    
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ]
+                                });
+                    
                         //circuitry
-                            //audio file player
-                                object.player = new _canvas_.interface.circuit.player2(_canvas_.library.audio.context);
-                                object.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
-                                object.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
-                    
-                            //fresh file load routine
-                                function loadProcess(data){
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );
-                                
-                                    object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
-                                    object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
-                                }
-                            //data refresh
-                                function refresh(){
-                                    //check if there's a track at all
-                                        if( !object.player.isLoaded() ){return;}
-                    
-                                    //time readout
-                                        if(object.player.concurrentPlayCountLimit() == 1){
-                                            var tmp = object.player.currentTime(0);
-                                            if(tmp == -1){tmp = 0;}
-                                            var time = _canvas_.library.math.seconds2time( Math.round(tmp));
-                    
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.s,2,'0')
-                                            );
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                        }else{
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(object.player.currentTime().length,8,' ')
-                                            );
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                        }
-                                    
-                                    //waveport
-                                        var progressList = object.player.progress();
-                                        var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
-                    
-                                        //adjust needles to match player
-                                            progressList.forEach((needlePosition,index) => {
-                                                // console.log(progressList,needleList);
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
-                                            });
-                    
-                                        //remove unneeded needles
-                                            while(Object.keys(needleList).length > progressList.length){
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select((Object.keys(needleList).length-1),-1,false);
-                                                var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
-                                            }
-                                }
-                                setInterval(refresh,1000/30);
                         //wiring
-                            //interface
-                                object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
-                                object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
-                                object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
-                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
-                                object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
-                                object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
+                            //hid
+                            //io
+                        //interface
+                        //import/export
+                        //setup
                     
+                        return object;
+                    };
+                    this.basic_synthesizer2.metadata = {
+                        name:'Basic Synthesizer2',
+                        category:'synthesizers',
+                        helpURL:'/help/units/beta/basic_synthesizer2/'
+                    };
+                    this.audio_file_player = function(x,y,angle){
+                        //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'audio_file_player/';
+                    
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1025, height:305 },
+                                        design: { width:16.75, height:4.75 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
+                    
+                                //styling values
+                                    this.dial_playbackSpeed = { handle:{r:0.46,g:0.98,b:0.82,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                    this.grapher_waveWorkspace = { background_lineThickness:0.1, backing:{r:0,g:0,b:0,a:1} };
+                                    this.fireLight = { glow:{r:0.99,g:0.94,b:0.72,a:1}, dim:{r:0.62,g:0.57,b:0.36,a:1} };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'audio_file_player',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output_R', data:{ 
+                                        x:0, y:15 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output_L', data:{ 
+                                        x:0, y:32.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_play', data:{ 
+                                        x:12.5, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_stop', data:{ 
+                                        x:25, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_singleOrInfini', data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:34, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_loop', data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:19, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_playbackSpeed', data:{ 
+                                        x:120, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_startPosition', data:{ 
+                                        x:10, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_endPosition', data:{ 
+                                        x:25, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                    
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                    }},
+                    
+                                    {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
+                                        x:125, y:20, radius:67.5/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_playbackSpeed,
+                                    }},
+                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
+                                        x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, count:8
+                                    }},
+                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{
+                                        x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, count:14
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_play', data:{
+                                        x:2.5, y:35, width:10, height:10, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_play_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_play_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_stop', data:{
+                                        x:15, y:35, width:10, height:10, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_stop_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_stop_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_open', data:{
+                                        x:145, y:2.5, width:12.5, height:12.5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_file_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_file_down.png',
+                                    }},
+                                    {collection:'control', type:'checkbox_image', name:'checkbox_loop', data:{
+                                        x:145, y:17.5, width:12.5, height:12.5,
+                                        uncheckURL:unitStyle.imageStoreURL_localPrefix+'loop_off.png', 
+                                        checkURL:unitStyle.imageStoreURL_localPrefix+'loop_on.png',
+                                    }},
+                                    {collection:'control', type:'checkbox_image', name:'checkbox_singleOrInfini', data:{
+                                        x:145, y:32.5, width:12.5, height:12.5,
+                                        uncheckURL:unitStyle.imageStoreURL_localPrefix+'single.png', 
+                                        checkURL:unitStyle.imageStoreURL_localPrefix+'infini.png',
+                                    }},
+                                    {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                                        x:5+10/16, y:2.5+10/16, width:102.5-10/6, height:30-10/8, style:unitStyle.grapher_waveWorkspace,
+                                    }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'fireLight',data:{ 
+                                        x:2.5, y:2.5, width:2.5, height:30, style:unitStyle.fireLight,
+                                    }},
+                                ]
+                            });
+                        
+                        //circuitry
+                            var state = {
+                                player: new _canvas_.interface.circuit.player2(_canvas_.library.audio.context),
+                            };
+                            function loadProcess(data){
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( state.player.waveformSegment() );
+                            
+                                object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
+                                object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
+                            }
+                            function refresh(){
+                                //check if there's a track at all
+                                    if( !state.player.isLoaded() ){return;}
+                    
+                                //time readout
+                                    if(state.player.concurrentPlayCountLimit() == 1){
+                                        var tmp = state.player.currentTime(0);
+                                        if(tmp == -1){tmp = 0;}
+                                        var time = _canvas_.library.math.seconds2time( Math.round(tmp));
+                    
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                            _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.s,2,'0')
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                    }else{
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                            _canvas_.library.misc.padString(state.player.currentTime().length,8,' ')
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                    }
+                                
+                                //waveport
+                                    var progressList = state.player.progress();
+                                    var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
+                    
+                                    //adjust needles to match player
+                                        progressList.forEach((needlePosition,index) => {
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
+                                        });
+                    
+                                    //remove unneeded needles
+                                        while(Object.keys(needleList).length > progressList.length){
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select((Object.keys(needleList).length-1),-1,false);
+                                            var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
+                                        }
+                            }
+                            setInterval(refresh,1000/30);
+                    
+                        //wiring
+                            //hid
+                                object.elements.button_image.button_open.onpress = function(){ state.player.load('file',loadProcess); };
+                                object.elements.button_image.button_play.onpress = function(){
+                                    if(object.i.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
+                                    else{ state.player.start(); }
+                    
+                                    //flash light
+                                        object.elements.glowbox_rectangle.fireLight.on();
+                                        setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
+                                };
+                                object.elements.button_image.button_stop.onpress = function(){ state.player.stop(); };
+                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ state.player.rate( 2*data ); };
+                                object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return state.player.loop(bool); };
+                                object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return state.player.concurrentPlayCountLimit(value); };
                                 object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
                                     if( !isNaN(parseInt(needle)) ){
-                                        if( object.player.progress(needle) == -1 ){
-                                            object.player.createPlayhead(value);
+                                        if( state.player.progress(needle) == -1 ){
+                                            state.player.createPlayhead(value);
                                         }else{
-                                            object.player.jumpTo(needle,value);
+                                            state.player.jumpTo(needle,value);
                                         }
                                     }
                     
-                                    if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
-                                    if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
+                                    var area = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                                    if(needle == 'selection_A'){ area.A = value; }
+                                    if(needle == 'selection_B'){ area.B = value; }
+                    
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(area.A,area.B,false);
+                                    if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ area.A = 0; area.B = 1; }
+                                    if(area.A > area.B){ var tmp = area.A; area.A = area.B; area.B = tmp; } //keepin' things straight
+                                    return state.player.area(area.A,area.B);
                                 };
                             //io
+                                state.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
+                                state.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
                                 object.io.signal.io_play.onchange = function(value){
                                     var part = object.elements.button_image.button_play;
                                     value ? part.press() : part.release();
@@ -47290,77 +47448,83 @@
                                 };
                                 object.io.signal.io_singleOrInfini.onchange = function(value){
                                     if(!value){return;}
-                                    var part = object.elements.checkbox_image.checkbox_loop;
+                                    var part = object.elements.checkbox_image.checkbox_singleOrInfini;
                                     part.set(!part.get());
                                 };
                                 object.io.signal.io_loop.onchange = function(value){
                                     if(!value){return;}
-                                    var part = object.elements.checkbox_image.checkbox_singleOrInfini;
+                                    var part = object.elements.checkbox_image.checkbox_loop;
                                     part.set(!part.get());
                                 };
                                 object.io.voltage.io_playbackSpeed.onchange = function(value){
                                     object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
                                 };
                                 object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
-                                    var current = player.i.area().B;
+                                    var current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
                                     if(current == undefined){current = 1;}
-                                    player.i.area(value,current);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(value,current);
                                 };
                                 object.io.voltage.io_waveworkspace_endPosition.onchange = function(value){
-                                    var current = player.i.area().A;
+                                    var current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().A;
                                     if(current == undefined){current = 0;}
-                                    player.i.area(current,value);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(current,value);
                                 };
                     
                         //interface
                             object.i = {
-                                loadRaw:function(data){ object.player.loadRaw(data,loadProcess); },
-                                loadByFile:function(){ object.player.load('file',loadProcess); },
-                                loadByURL:function(url){ object.player.load('url',loadProcess,url); },
+                                loadRaw:function(data){ state.player.loadRaw(data,loadProcess); },
+                                loadByFile:function(){ state.player.load('file',loadProcess); },
+                                loadByURL:function(url){ state.player.load('url',loadProcess,url); },
                                 fire:function(){
-                                    if(object.i.concurrentPlayCountLimit() == 1 && object.player.currentTime().length > 0){ object.player.resume(); }
-                                    else{ object.player.start(); }
+                                    if(state.player.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
+                                    else{ state.player.start(); }
                     
                                     //flash light
                                         object.elements.glowbox_rectangle.fireLight.on();
                                         setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
                                 },
-                                pause:function(){ object.player.pause(); },
-                                resume:function(){ object.player.resume(); },
-                                stop:function(){ object.player.stop(); },
-                                area:function(start,end){
-                                    if(start == undefined && end == undefined){ return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(); }
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(start,end,false);
-                                    if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ start = 0; end = 1; }
-                                    if(start > end){ var tmp = start; start = end; end = tmp; } //keepin' things straight
-                                    return object.player.area(start,end);
+                                pause:function(){ state.player.pause(); },
+                                resume:function(){ state.player.resume(); },
+                                stop:function(){ state.player.stop(); },
+                                area:function(start,end){ return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(start,end); },
+                                looping:function(bool){
+                                    if(bool == undefined){ return object.elements.checkbox_image.checkbox_loop.get(); }
+                                    object.elements.checkbox_image.checkbox_loop.set(bool);
                                 },
-                                looping:function(bool){ return object.player.loop(bool); },
-                                rate:function(value){ return object.player.rate(value); },
-                                jumpTo:function(needle,position){ object.player.jumpTo(needle,position); },
-                                concurrentPlayCountLimit:function(value){ return object.player.concurrentPlayCountLimit(value); },
+                                rate:function(value){
+                                    if(value == undefined){ return object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(); }
+                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
+                                },
+                                jumpTo:function(needle,position){ state.player.jumpTo(needle,position); },
+                                concurrentPlayCountLimit:function(value){ return state.player.concurrentPlayCountLimit(value); },
                             };
-                        
+                    
                         //import/export
                             object.exportData = function(){
                                 return{
-                                    track: object.player.unloadRaw(),
+                                    track: state.player.unloadRaw(),
+                                    rate: object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(),
+                                    loopActive: object.elements.checkbox_image.checkbox_loop.get(), 
+                                    selectedArea: object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(),
+                                    singleOrInfini: object.elements.checkbox_image.checkbox_singleOrInfini.get(),
                                 };
                             };
                             object.importData = function(data){
                                 object.i.loadRaw(data.track);
+                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(data.rate);
+                                object.elements.checkbox_image.checkbox_loop.set(data.loopActive);
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(data.selectedArea.A,data.selectedArea.B);
+                                object.elements.checkbox_image.checkbox_singleOrInfini.set(data.singleOrInfini);
                             };
                     
                         return object;
                     };
-                    
-                    
-                    
                     this.audio_file_player.metadata = {
                         name:'Audio File Player',
                         category:'synthesizers',
                         helpURL:'/help/units/beta/audio_file_player/'
                     };
+
                     this.voltage_combiner = function(x,y,a){
                         var imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
                     
@@ -49253,7 +49417,6 @@
                                     x:measurements.drawingUnit.width*(14+3/4-1/8 +2.4 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -2.4 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                 }},
                     
-                    
                                 {collection:'basic', type:'image', name:'backing', 
                                     data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
                                 },
@@ -49449,194 +49612,353 @@
                             
                         return object;
                     };
-                    
-                    
-                    
                     this.basic_synthesizer.metadata = {
                         name:'Basic Synthesizer',
                         category:'synthesizers',
                         helpURL:'/help/units/beta/basic_synthesizer/'
                     };
-                    this.audio_file_player = function(x,y,a,setupConnect=true){
-                        var imageStoreURL_localPrefix = imageStoreURL+'audio_file_player/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:1025, height:305 },
-                            design:{ width:16.75, height:4.75 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                        measurements.drawingUnit = {
-                            width: measurements.drawing.width/measurements.design.width,
-                            height: measurements.drawing.height/measurements.design.height,
-                        };
                     
-                        var design = {
-                            name:'audio_file_player',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                  y:0                                   },
-                                { x:measurements.drawing.width -offset, y:0                                   },
-                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                { x:0,                                  y:measurements.drawing.height -offset },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_audio', name:'io_output_R', data:{ 
-                                    x:0, y:15 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_audio', name:'io_output_L', data:{ 
-                                    x:0, y:32.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_play', data:{ 
-                                    x:12.5, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_stop', data:{ 
-                                    x:25, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_singleOrInfini', data:{ 
-                                    x:measurements.drawing.width-3-1/3, y:34, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'io_loop', data:{ 
-                                    x:measurements.drawing.width-3-1/3, y:19, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_playbackSpeed', data:{ 
-                                    x:120, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_startPosition', data:{ 
-                                    x:10, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_endPosition', data:{ 
-                                    x:25, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                }},
                     
-                                {collection:'basic', type:'image', name:'backing', data:{ 
-                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                }},
                     
-                                {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
-                                    x:125, y:20, radius:67.5/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                    style:{ handle:{r:0.46,g:0.98,b:0.82,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                }},
-                                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                                    x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, count:8
-                                }},
-                                {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{
-                                    x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, count:14
-                                }},
-                                {collection:'control', type:'button_image', name:'button_play', data:{
-                                    x:2.5, y:35, width:10, height:10, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'button_play_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'button_play_down.png',
-                                }},
-                                {collection:'control', type:'button_image', name:'button_stop', data:{
-                                    x:15, y:35, width:10, height:10, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'button_stop_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'button_stop_down.png',
-                                }},
-                                {collection:'control', type:'button_image', name:'button_open', data:{
-                                    x:145, y:2.5, width:12.5, height:12.5, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'button_file_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'button_file_down.png',
-                                }},
-                                {collection:'control', type:'checkbox_image', name:'checkbox_loop', data:{
-                                    x:145, y:17.5, width:12.5, height:12.5,
-                                    uncheckURL:imageStoreURL_localPrefix+'loop_off.png', 
-                                    checkURL:imageStoreURL_localPrefix+'loop_on.png',
-                                }},
-                                {collection:'control', type:'checkbox_image', name:'checkbox_singleOrInfini', data:{
-                                    x:145, y:32.5, width:12.5, height:12.5,
-                                    uncheckURL:imageStoreURL_localPrefix+'single.png', 
-                                    checkURL:imageStoreURL_localPrefix+'infini.png',
-                                }},
-                                {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
-                                    x:5+10/16, y:2.5+10/16, width:102.5-10/8, height:30-10/8, style:{ background_lineThickness:0.1, backing:{r:0,g:0,b:0,a:1} }
-                                }},
-                                {collection:'display', type:'glowbox_rectangle',name:'fireLight',data:{ 
-                                    x:2.5, y:2.5, width:2.5, height:30, style:{ glow:{r:0.99,g:0.94,b:0.72,a:1}, dim:{r:0.62,g:0.57,b:0.36,a:1} }
-                                }},
-                            ]
-                        };
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
-                            
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    this.basic_synthesizer2 = function(x,y,angle){
+                        //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
+                    
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1115, height:680 },
+                                        design: { width:18.25, height:11 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
+                    
+                                //styling values
+                            };
+                    
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_file_player',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:unitStyle.drawingUnit.width,                                                 y:0 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset -unitStyle.drawingUnit.width, y:0 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height*4.5 + unitStyle.offset/2.5 },
+                                        { x:unitStyle.drawingUnit.width*12 -unitStyle.offset/1.5,                        y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:unitStyle.drawingUnit.width,                                                 y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                                                           y:unitStyle.drawingValue.height -unitStyle.offset -unitStyle.drawingUnit.height },
+                                        { x:0,                                                                           y:unitStyle.drawingUnit.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
+                                            x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
+                                            x:15, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_attack', data:{ 
+                                            x:50, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_release', data:{ 
+                                            x:82.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_detune_note', data:{ 
+                                            x:117.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_down', data:{ 
+                                            x:150 - 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_up', data:{ 
+                                            x:150 + 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'io_midiNoteInput', data:{ 
+                                            x:unitStyle.drawingValue.width - 5/1.5, y:27.5 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobblePeriod', data:{ 
+                                            x:90/2 - 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobbleDepth', data:{ 
+                                            x:90/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobblePeriod', data:{ 
+                                            x:155/2 - 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobbleDepth', data:{ 
+                                            x:155/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
+                                            x:unitStyle.drawingUnit.width*(14.75 -5/32), y:unitStyle.drawingUnit.height*(7.75 +3/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
+                                            x:unitStyle.drawingUnit.width*(13.5-0.04), y:unitStyle.drawingUnit.height*(9-0.04), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
+                                            x:unitStyle.drawingUnit.width*(15.4-1/40), y:unitStyle.drawingUnit.height*(7.1-1/40), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
+                                            x:unitStyle.drawingUnit.width*(17), y:unitStyle.drawingUnit.height*(5.5), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                    
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ]
+                                });
+                    
                         //circuitry
-                            //audio file player
-                                object.player = new _canvas_.interface.circuit.player2(_canvas_.library.audio.context);
-                                object.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
-                                object.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
-                    
-                            //fresh file load routine
-                                function loadProcess(data){
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( object.player.waveformSegment() );
-                                
-                                    object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
-                                    object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
-                                }
-                            //data refresh
-                                function refresh(){
-                                    //check if there's a track at all
-                                        if( !object.player.isLoaded() ){return;}
-                    
-                                    //time readout
-                                        if(object.player.concurrentPlayCountLimit() == 1){
-                                            var tmp = object.player.currentTime(0);
-                                            if(tmp == -1){tmp = 0;}
-                                            var time = _canvas_.library.math.seconds2time( Math.round(tmp));
-                    
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.s,2,'0')
-                                            );
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                        }else{
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(object.player.currentTime().length,8,' ')
-                                            );
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                        }
-                                    
-                                    //waveport
-                                        var progressList = object.player.progress();
-                                        var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
-                    
-                                        //adjust needles to match player
-                                            progressList.forEach((needlePosition,index) => {
-                                                // console.log(progressList,needleList);
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
-                                            });
-                    
-                                        //remove unneeded needles
-                                            while(Object.keys(needleList).length > progressList.length){
-                                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select((Object.keys(needleList).length-1),-1,false);
-                                                var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
-                                            }
-                                }
-                                setInterval(refresh,1000/30);
                         //wiring
-                            //interface
-                                object.elements.button_image.button_open.onpress = function(){ object.i.loadByFile(); };
-                                object.elements.button_image.button_play.onpress = function(){ object.i.fire(); };
-                                object.elements.button_image.button_stop.onpress = function(){ object.i.stop(); };
-                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ object.player.rate( 2*data ); };
-                                object.elements.checkbox_image.checkbox_loop.onchange = function(val){ object.i.looping(val); };
-                                object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(val){ object.i.concurrentPlayCountLimit( val ? -1 : 1 ); };
+                            //hid
+                            //io
+                        //interface
+                        //import/export
+                        //setup
                     
+                        return object;
+                    };
+                    this.basic_synthesizer2.metadata = {
+                        name:'Basic Synthesizer2',
+                        category:'synthesizers',
+                        helpURL:'/help/units/beta/basic_synthesizer2/'
+                    };
+                    this.audio_file_player = function(x,y,angle){
+                        //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'audio_file_player/';
+                    
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1025, height:305 },
+                                        design: { width:16.75, height:4.75 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
+                    
+                                //styling values
+                                    this.dial_playbackSpeed = { handle:{r:0.46,g:0.98,b:0.82,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                    this.grapher_waveWorkspace = { background_lineThickness:0.1, backing:{r:0,g:0,b:0,a:1} };
+                                    this.fireLight = { glow:{r:0.99,g:0.94,b:0.72,a:1}, dim:{r:0.62,g:0.57,b:0.36,a:1} };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'audio_file_player',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output_R', data:{ 
+                                        x:0, y:15 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output_L', data:{ 
+                                        x:0, y:32.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_play', data:{ 
+                                        x:12.5, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_stop', data:{ 
+                                        x:25, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_singleOrInfini', data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:34, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_loop', data:{ 
+                                        x:unitStyle.drawingValue.width-3-1/3, y:19, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_playbackSpeed', data:{ 
+                                        x:120, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_startPosition', data:{ 
+                                        x:10, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_waveworkspace_endPosition', data:{ 
+                                        x:25, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                    }},
+                    
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                    }},
+                    
+                                    {collection:'control', type:'dial_colourWithIndent_continuous', name:'dial_playbackSpeed',data:{
+                                        x:125, y:20, radius:67.5/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_playbackSpeed,
+                                    }},
+                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
+                                        x:27.5+10/16, y:35+10/16, width:42.5 -10/8, height:10-10/8, count:8
+                                    }},
+                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'trackNameReadout', data:{
+                                        x:82.5 -10 +10/16, y:35+10/16, width:60*14/12 -10/8, height:10-10/8, count:14
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_play', data:{
+                                        x:2.5, y:35, width:10, height:10, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_play_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_play_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_stop', data:{
+                                        x:15, y:35, width:10, height:10, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_stop_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_stop_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_open', data:{
+                                        x:145, y:2.5, width:12.5, height:12.5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_file_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_file_down.png',
+                                    }},
+                                    {collection:'control', type:'checkbox_image', name:'checkbox_loop', data:{
+                                        x:145, y:17.5, width:12.5, height:12.5,
+                                        uncheckURL:unitStyle.imageStoreURL_localPrefix+'loop_off.png', 
+                                        checkURL:unitStyle.imageStoreURL_localPrefix+'loop_on.png',
+                                    }},
+                                    {collection:'control', type:'checkbox_image', name:'checkbox_singleOrInfini', data:{
+                                        x:145, y:32.5, width:12.5, height:12.5,
+                                        uncheckURL:unitStyle.imageStoreURL_localPrefix+'single.png', 
+                                        checkURL:unitStyle.imageStoreURL_localPrefix+'infini.png',
+                                    }},
+                                    {collection:'control', type:'grapher_waveWorkspace', name:'grapher_waveWorkspace', data:{
+                                        x:5+10/16, y:2.5+10/16, width:102.5-10/6, height:30-10/8, style:unitStyle.grapher_waveWorkspace,
+                                    }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'fireLight',data:{ 
+                                        x:2.5, y:2.5, width:2.5, height:30, style:unitStyle.fireLight,
+                                    }},
+                                ]
+                            });
+                        
+                        //circuitry
+                            var state = {
+                                player: new _canvas_.interface.circuit.player2(_canvas_.library.audio.context),
+                            };
+                            function loadProcess(data){
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( state.player.waveformSegment() );
+                            
+                                object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
+                                object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
+                            }
+                            function refresh(){
+                                //check if there's a track at all
+                                    if( !state.player.isLoaded() ){return;}
+                    
+                                //time readout
+                                    if(state.player.concurrentPlayCountLimit() == 1){
+                                        var tmp = state.player.currentTime(0);
+                                        if(tmp == -1){tmp = 0;}
+                                        var time = _canvas_.library.math.seconds2time( Math.round(tmp));
+                    
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                            _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.s,2,'0')
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                    }else{
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                            _canvas_.library.misc.padString(state.player.currentTime().length,8,' ')
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                    }
+                                
+                                //waveport
+                                    var progressList = state.player.progress();
+                                    var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
+                    
+                                    //adjust needles to match player
+                                        progressList.forEach((needlePosition,index) => {
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select(index,needlePosition,false);
+                                        });
+                    
+                                    //remove unneeded needles
+                                        while(Object.keys(needleList).length > progressList.length){
+                                            object.elements.grapher_waveWorkspace.grapher_waveWorkspace.select((Object.keys(needleList).length-1),-1,false);
+                                            var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
+                                        }
+                            }
+                            setInterval(refresh,1000/30);
+                    
+                        //wiring
+                            //hid
+                                object.elements.button_image.button_open.onpress = function(){ state.player.load('file',loadProcess); };
+                                object.elements.button_image.button_play.onpress = function(){
+                                    if(object.i.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
+                                    else{ state.player.start(); }
+                    
+                                    //flash light
+                                        object.elements.glowbox_rectangle.fireLight.on();
+                                        setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
+                                };
+                                object.elements.button_image.button_stop.onpress = function(){ state.player.stop(); };
+                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ state.player.rate( 2*data ); };
+                                object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return state.player.loop(bool); };
+                                object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return state.player.concurrentPlayCountLimit(value); };
                                 object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
                                     if( !isNaN(parseInt(needle)) ){
-                                        if( object.player.progress(needle) == -1 ){
-                                            object.player.createPlayhead(value);
+                                        if( state.player.progress(needle) == -1 ){
+                                            state.player.createPlayhead(value);
                                         }else{
-                                            object.player.jumpTo(needle,value);
+                                            state.player.jumpTo(needle,value);
                                         }
                                     }
                     
-                                    if(needle == 'selection_A'){ object.i.area(value,object.i.area().A); }
-                                    if(needle == 'selection_B'){ object.i.area(object.i.area().B,value); }
+                                    var area = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area();
+                                    if(needle == 'selection_A'){ area.A = value; }
+                                    if(needle == 'selection_B'){ area.B = value; }
+                    
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(area.A,area.B,false);
+                                    if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ area.A = 0; area.B = 1; }
+                                    if(area.A > area.B){ var tmp = area.A; area.A = area.B; area.B = tmp; } //keepin' things straight
+                                    return state.player.area(area.A,area.B);
                                 };
                             //io
+                                state.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
+                                state.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
                                 object.io.signal.io_play.onchange = function(value){
                                     var part = object.elements.button_image.button_play;
                                     value ? part.press() : part.release();
@@ -49647,77 +49969,83 @@
                                 };
                                 object.io.signal.io_singleOrInfini.onchange = function(value){
                                     if(!value){return;}
-                                    var part = object.elements.checkbox_image.checkbox_loop;
+                                    var part = object.elements.checkbox_image.checkbox_singleOrInfini;
                                     part.set(!part.get());
                                 };
                                 object.io.signal.io_loop.onchange = function(value){
                                     if(!value){return;}
-                                    var part = object.elements.checkbox_image.checkbox_singleOrInfini;
+                                    var part = object.elements.checkbox_image.checkbox_loop;
                                     part.set(!part.get());
                                 };
                                 object.io.voltage.io_playbackSpeed.onchange = function(value){
                                     object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
                                 };
                                 object.io.voltage.io_waveworkspace_startPosition.onchange = function(value){
-                                    var current = player.i.area().B;
+                                    var current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().B;
                                     if(current == undefined){current = 1;}
-                                    player.i.area(value,current);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(value,current);
                                 };
                                 object.io.voltage.io_waveworkspace_endPosition.onchange = function(value){
-                                    var current = player.i.area().A;
+                                    var current = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area().A;
                                     if(current == undefined){current = 0;}
-                                    player.i.area(current,value);
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(current,value);
                                 };
                     
                         //interface
                             object.i = {
-                                loadRaw:function(data){ object.player.loadRaw(data,loadProcess); },
-                                loadByFile:function(){ object.player.load('file',loadProcess); },
-                                loadByURL:function(url){ object.player.load('url',loadProcess,url); },
+                                loadRaw:function(data){ state.player.loadRaw(data,loadProcess); },
+                                loadByFile:function(){ state.player.load('file',loadProcess); },
+                                loadByURL:function(url){ state.player.load('url',loadProcess,url); },
                                 fire:function(){
-                                    if(object.i.concurrentPlayCountLimit() == 1 && object.player.currentTime().length > 0){ object.player.resume(); }
-                                    else{ object.player.start(); }
+                                    if(state.player.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
+                                    else{ state.player.start(); }
                     
                                     //flash light
                                         object.elements.glowbox_rectangle.fireLight.on();
                                         setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
                                 },
-                                pause:function(){ object.player.pause(); },
-                                resume:function(){ object.player.resume(); },
-                                stop:function(){ object.player.stop(); },
-                                area:function(start,end){
-                                    if(start == undefined && end == undefined){ return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(); }
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(start,end,false);
-                                    if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ start = 0; end = 1; }
-                                    if(start > end){ var tmp = start; start = end; end = tmp; } //keepin' things straight
-                                    return object.player.area(start,end);
+                                pause:function(){ state.player.pause(); },
+                                resume:function(){ state.player.resume(); },
+                                stop:function(){ state.player.stop(); },
+                                area:function(start,end){ return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(start,end); },
+                                looping:function(bool){
+                                    if(bool == undefined){ return object.elements.checkbox_image.checkbox_loop.get(); }
+                                    object.elements.checkbox_image.checkbox_loop.set(bool);
                                 },
-                                looping:function(bool){ return object.player.loop(bool); },
-                                rate:function(value){ return object.player.rate(value); },
-                                jumpTo:function(needle,position){ object.player.jumpTo(needle,position); },
-                                concurrentPlayCountLimit:function(value){ return object.player.concurrentPlayCountLimit(value); },
+                                rate:function(value){
+                                    if(value == undefined){ return object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(); }
+                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
+                                },
+                                jumpTo:function(needle,position){ state.player.jumpTo(needle,position); },
+                                concurrentPlayCountLimit:function(value){ return state.player.concurrentPlayCountLimit(value); },
                             };
-                        
+                    
                         //import/export
                             object.exportData = function(){
                                 return{
-                                    track: object.player.unloadRaw(),
+                                    track: state.player.unloadRaw(),
+                                    rate: object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(),
+                                    loopActive: object.elements.checkbox_image.checkbox_loop.get(), 
+                                    selectedArea: object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(),
+                                    singleOrInfini: object.elements.checkbox_image.checkbox_singleOrInfini.get(),
                                 };
                             };
                             object.importData = function(data){
                                 object.i.loadRaw(data.track);
+                                object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(data.rate);
+                                object.elements.checkbox_image.checkbox_loop.set(data.loopActive);
+                                object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(data.selectedArea.A,data.selectedArea.B);
+                                object.elements.checkbox_image.checkbox_singleOrInfini.set(data.singleOrInfini);
                             };
                     
                         return object;
                     };
-                    
-                    
-                    
                     this.audio_file_player.metadata = {
                         name:'Audio File Player',
                         category:'synthesizers',
                         helpURL:'/help/units/beta/audio_file_player/'
                     };
+
                     this.distortion = function(x,y,a){
                         var imageStoreURL_localPrefix = imageStoreURL+'distortion/';
                     
@@ -50253,101 +50581,118 @@
                         category:'effects',
                         helpURL:'/help/units/beta/filter/'
                     };
-                    this.pulse_generator = function(x,y,a){
-                        var imageStoreURL_localPrefix = imageStoreURL+'pulse_generator/';
+                    this.pulse_generator = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'pulse_generator/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:590, height:260 },
-                            design:{ width:9.5, height:4 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                        var colour = {
-                            LCD:{
-                                background:{r:0.1,g:0.1,b:0.1,a:1},
-                                glow:{r:0.3,g:0.64,b:0.22,a:1},
-                                dim:{r:0.1,g:0.24,b:0.12,a:1}
-                            }
-                        };
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:590, height:260 },
+                                        design: { width:9.5, height:4 },
+                                    };
                     
-                        var design = {
-                            name:'pulse_generator',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                        y:0                                            },
-                                { x:measurements.drawing.width -offset,       y:0                                            },
-                                { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
-                                { x:(measurements.drawing.width -offset)/9.5, y:measurements.drawing.height -offset          },
-                                { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{
-                                    x:0, y:21.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_sync', data:{
-                                    x:7.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_100_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*0, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_10_down',    data:{ x:10 + 21.65 + (0.85 + 60/div)*1, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_1_down',     data:{ x:10 + 21.65 + (0.85 + 60/div)*2, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*3, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_down',  data:{ x:10 + 21.65 + (0.85 + 60/div)*4, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_down', data:{ x:10 + 21.65 + (0.85 + 60/div)*5, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
                     
-                                {collection:'basic', type:'image', name:'backing', data:{ 
-                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                } },
-                    
-                                {collection:'display', type:'glowbox_path', name:'ledSyncFlash', data:{ 
-                                    x:0, y:0, points:[ {x:5-3/4,y:5-3/4}, {x:20+3/4,y:5-3/4}, {x:20+3/4,y:35+3/4}, {x:12.5-2/5,y:35+3/4}, {x:5-3/4,y:27.5+2/5} ],
-                                    looping:true, jointType:'round',
-                                    style:{ dim:{r:0.64,g:0.31,b:0.24,a:1}, glow:{r:0.94,g:0.31,b:0.34,a:1} },
-                                } },
-                                {collection:'control', type:'button_polygon', name:'sync', data:{
-                                    x:5, y:5, hoverable:false, points:[ {x:0,y:0}, {x:15,y:0}, {x:15,y:30}, {x:7.5,y:30}, {x:0,y:22.5} ],
-                                    style:{
-                                        background__up__colour:{r:0.69,g:0.69,b:0.69,a:1},
-                                        background__press__colour:{r:0.8,g:0.8,b:0.8,a:1},
+                                //styling values
+                                    this.LCD = {
+                                        background:{r:0.1,g:0.1,b:0.1,a:1},
+                                        glow: {r:0.3,g:0.64,b:0.22,a:1},
+                                        dim: {r:0.1,g:0.24,b:0.12,a:1}
                                     }
-                                }},
-                                {collection:'basic', type:'image', name:'time_symbol', data:{ 
-                                    x:6.25, y:12.5, width:74/div, height:74/div, url:imageStoreURL_localPrefix+'time_symbol.png'
-                                } },
+                                    this.ledSyncFlash = {
+                                        dim: {r:0.64,g:0.31,b:0.24,a:1}, 
+                                        glow: {r:0.94,g:0.31,b:0.34,a:1}
+                                    };
+                                    this.syncButton = {
+                                        background__up__colour: {r:0.69,g:0.69,b:0.69,a:1},
+                                        background__press__colour: {r:0.8,g:0.8,b:0.8,a:1},
+                                    };
+                            };
                     
-                                {collection:'display', type:'readout_sevenSegmentDisplay_static', name:'LCD', data:{ 
-                                    x:21.75, y:10.75, width:64, height:18.5, count:6, decimalPlaces:true, style:colour.LCD
-                                }},
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'pulse_generator',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                                    y:0                                                      },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,       y:0                                                      },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,       y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)/9.5, y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                    { x:0,                                                    y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{
+                                        x:0, y:21.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_sync', data:{
+                                        x:7.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_up',     data:{ x:21.65 + 10.85*0, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_up',      data:{ x:21.65 + 10.85*1, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_up',       data:{ x:21.65 + 10.85*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_up',     data:{ x:21.65 + 10.85*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_up',    data:{ x:21.65 + 10.85*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_up',   data:{ x:21.65 + 10.85*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_down',   data:{ x:10 + 21.65 + 10.85*0, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_down',    data:{ x:10 + 21.65 + 10.85*1, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_down',     data:{ x:10 + 21.65 + 10.85*2, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_down',   data:{ x:10 + 21.65 + 10.85*3, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_down',  data:{ x:10 + 21.65 + 10.85*4, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_down', data:{ x:10 + 21.65 + 10.85*5, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
                     
-                                {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'100_down',   data:{ x:21.65 + (0.85 + 60/div)*0, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'10_down',    data:{ x:21.65 + (0.85 + 60/div)*1, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'1_down',     data:{ x:21.65 + (0.85 + 60/div)*2, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.1_down',   data:{ x:21.65 + (0.85 + 60/div)*3, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.01_down',  data:{ x:21.65 + (0.85 + 60/div)*4, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.001_down', data:{ x:21.65 + (0.85 + 60/div)*5, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                            ]
-                        };
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                        width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                        url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                    } },
                     
-                        //wiring
-                            var storedValue = [1,2,0,0,0,0];
-                            var interval = null;
-                            var tempo = 120;
+                                    {collection:'display', type:'glowbox_path', name:'ledSyncFlash', data:{ 
+                                        x:0, y:0, points:[ {x:5-3/4,y:5-3/4}, {x:20+3/4,y:5-3/4}, {x:20+3/4,y:35+3/4}, {x:12.5-2/5,y:35+3/4}, {x:5-3/4,y:27.5+2/5} ],
+                                        looping:true, jointType:'round', style:unitStyle.ledSyncFlash,
+                                    } },
+                                    {collection:'control', type:'button_polygon', name:'sync', data:{
+                                        x:5, y:5, hoverable:false, points:[ {x:0,y:0}, {x:15,y:0}, {x:15,y:30}, {x:7.5,y:30}, {x:0,y:22.5} ], style:unitStyle.syncButton,
+                                    }},
+                                    {collection:'basic', type:'image', name:'time_symbol', data:{ 
+                                        x:6.25, y:12.5, width:12 + 1/3, height:12 + 1/3, url:unitStyle.imageStoreURL_localPrefix+'time_symbol.png'
+                                    } },
                     
+                                    {collection:'display', type:'readout_sevenSegmentDisplay_static', name:'LCD', data:{ 
+                                        x:21.75, y:10.75, width:64, height:18.5, count:6, decimalPlaces:true, style:unitStyle.LCD
+                                    }},
+                    
+                                    {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + 10.85*0, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_up',      data:{ x:21.65 + 10.85*1, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_up',       data:{ x:21.65 + 10.85*2, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_up',     data:{ x:21.65 + 10.85*3, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_up',    data:{ x:21.65 + 10.85*4, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_up',   data:{ x:21.65 + 10.85*5, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'100_down',   data:{ x:21.65 + 10.85*0, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_down',    data:{ x:21.65 + 10.85*1, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_down',     data:{ x:21.65 + 10.85*2, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_down',   data:{ x:21.65 + 10.85*3, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_down',  data:{ x:21.65 + 10.85*4, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_down', data:{ x:21.65 + 10.85*5, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                ],
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                storedValue: [1,2,0,0,0,0],
+                                interval: null,
+                                tempo: 120,
+                            };
                             function updateTempo(newTempo){
                                 //safety
                                     if(newTempo > 999){newTempo = 999;}
@@ -50370,9 +50715,9 @@
                                     object.elements.readout_sevenSegmentDisplay_static.LCD.print();
                     
                                 //update interval
-                                    if(interval){ clearInterval(interval); }
+                                    if(state.interval){ clearInterval(state.interval); }
                                     if(newTempo > 0){
-                                        interval = setInterval(function(){
+                                        state.interval = setInterval(function(){
                                             object.io.signal.output.set(true);
                                             object.elements.glowbox_path.ledSyncFlash.on();
                                             setTimeout(function(){
@@ -50388,252 +50733,205 @@
                                     object.io.signal.output.set(false);
                                     object.elements.glowbox_path.ledSyncFlash.off();
                                 },50)
-                                tempo = newTempo;
+                    
+                                //update state
+                                    state.tempo = newTempo;
+                    
+                                    state.storedValue = [0,0,0,0,0,0];
+                                    var tmp = String(state.tempo).split('');
+                                    
+                                    if(tmp.indexOf('.') == -1){
+                                        tmp.reverse().forEach((value,index) => { state.storedValue[2-index] = value; });
+                                    }else{
+                                        tmp.slice(0,(tmp.indexOf('.'))).reverse().forEach((value,index) => { state.storedValue[2-index] = value; });
+                                        tmp.slice((tmp.indexOf('.'))+1).forEach((value,index) => { state.storedValue[3+index] = value; });
+                                    }
+                    
+                                    state.storedValue = state.storedValue.map(item => parseInt(item));
                             }
                             function updateUsingStoredValue(){
-                                updateTempo( parseFloat(storedValue.slice(0,3).join('') +'.'+ storedValue.slice(3,6).join('')) );
+                                updateTempo( parseFloat(state.storedValue.slice(0,3).join('') +'.'+ state.storedValue.slice(3,6).join('')) );
                             }
                     
-                            object.elements.button_polygon.sync.onpress = function(){ updateTempo(tempo); };
-                            object.elements.button_image['100_up'].onpress = function(){ storedValue[0] = storedValue[0] == 9 ? 0 : storedValue[0]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['10_up'].onpress = function(){ storedValue[1] = storedValue[1] == 9 ? 0 : storedValue[1]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['1_up'].onpress = function(){ storedValue[2] = storedValue[2] == 9 ? 0 : storedValue[2]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.1_up'].onpress = function(){ storedValue[3] = storedValue[3] == 9 ? 0 : storedValue[3]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.01_up'].onpress = function(){ storedValue[4] = storedValue[4] == 9 ? 0 : storedValue[4]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.001_up'].onpress = function(){ storedValue[5] = storedValue[5] == 9 ? 0 : storedValue[5]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['100_down'].onpress = function(){ storedValue[0] = storedValue[0] == 0 ? 9 : storedValue[0]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['10_down'].onpress = function(){ storedValue[1] = storedValue[1] == 0 ? 9 : storedValue[1]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['1_down'].onpress = function(){ storedValue[2] = storedValue[2] == 0 ? 9 : storedValue[2]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.1_down'].onpress = function(){ storedValue[3] = storedValue[3] == 0 ? 9 : storedValue[3]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.01_down'].onpress = function(){ storedValue[4] = storedValue[4] == 0 ? 9 : storedValue[4]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.001_down'].onpress = function(){ storedValue[5] = storedValue[5] == 0 ? 9 : storedValue[5]-1; updateUsingStoredValue(); };
-                    
-                            [
-                                'sync',
-                                '100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up',
-                                '100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'
-                            ].forEach(portName => {
-                                object.io.signal['port_'+portName].onchange = function(value){
-                                    if(value){ object.elements.button_image[portName].press();   }
-                                    else{      object.elements.button_image[portName].release(); }
-                                };
-                            });
+                        //wiring
+                            //hid
+                                object.elements.button_polygon.sync.onpress = function(){ updateTempo(tempo); };
+                                ['100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up'].forEach((buttonName,index) => {
+                                    object.elements.button_image[buttonName].onpress = function(){ state.storedValue[index] = state.storedValue[index] == 9 ? 0 : state.storedValue[index]+1; updateUsingStoredValue(); };
+                                });
+                                ['100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'].forEach((buttonName,index) => {
+                                    object.elements.button_image[buttonName].onpress = function(){ state.storedValue[index] = state.storedValue[index] == 0 ? 9 : state.storedValue[index]-1; updateUsingStoredValue(); };
+                                });
+                                
+                            //io
+                                [
+                                    'sync',
+                                    '100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up',
+                                    '100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'
+                                ].forEach(portName => {
+                                    object.io.signal['port_'+portName].onchange = function(value){
+                                        if(value){ object.elements.button_image[portName].press();   }
+                                        else{      object.elements.button_image[portName].release(); }
+                                    };
+                                });
                     
                         //interface
                             object.i = {
-                                setTempo:function(value){
+                                tempo:function(value){
+                                    if(value == undefined){return state.tempo;}
                                     updateTempo(value);
                                 },
                             };
                     
                         //import/export
                             object.exportData = function(){
-                                return {
-                                    tempo:tempo,
-                                };
+                                return { tempo:state.tempo };
                             };
                             object.importData = function(data){
-                                if(data == undefined){return;}
-                    
-                                object.i.setTempo(data.tempo);
+                                object.i.tempo(data.tempo);
                             };
                     
                         //setup
-                            updateTempo(tempo);
+                            updateUsingStoredValue();
                     
                         return object;
                     };
-                    
-                    
-                    
                     this.pulse_generator.metadata = {
                         name:'Pulse Generator',
                         category:'sequencers',
                         helpURL:'/help/units/beta/pulse_generator/'
                     };
-                    this.eightStepSequencer = function(x,y,a){
-                        var stepCount = 8;
-                        var imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
+                    this.eightStepSequencer = function(x,y,angle){
+                            //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:1670, height:590 },
-                            design:{ width:27.5, height:9.5 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                        
-                        var design = {
-                            name:'eightStepSequencer',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                                                    y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
-                                { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
-                                    x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                    style:{ dim:style.connectionNode.data.dim, glow:style.connectionNode.data.glow, cable_dim:style.connectionCable.data.dim, cable_glow:style.connectionCable.data.glow }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
-                                    x:measurements.drawing.width-0.5 -offset, y:10, width:5, height:10, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(value){if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
-                                    x:measurements.drawing.width-0.5 -offset, y:22, width:5, height:10, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
-                                    x:measurements.drawing.width-0.5 -offset, y:33, width:5, height:10, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
-                                }},
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1670, height:590 },
+                                        design: { width:27.5, height:9.5 },
+                                    };
                     
-                                {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                },
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
                     
-                                {collection:'control', type:'button_image', name:'button_step', data:{
-                                    x:243.25, y:4.5, width:21, height:21, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'stepButton_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'stepButton_down.png',
-                                    onpress:step,
-                                }},
-                                {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
-                                    x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
-                                    handleURL:imageStoreURL_localPrefix+'directionSlideHandle.png',
-                                    onchange:function(value){ state.direction = value*2 - 1; }
-                                }},
-                            ]
-                        };
-                        //dynamic design
-                        for(var a = 0; a < stepCount; a++){
-                            design.elements.push(
-                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{
-                                    x:12.5 +30*a, y:2.5, width:10, height:2.5, 
-                                    style:{ glow:{r:232/255, g:160/255, b:111/255, a:1}, dim:{r:164/255, g:80/255, b:61/255, a:1} }
-                                }},
-                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
-                                    x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
-                                    style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    onchange:function(a){return function(value){state.stages[a].note=value}}(a),
-                                }},
-                                {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
-                                    x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
-                                    handleURL:imageStoreURL_localPrefix+'octaveSlideHandle_'+a+'.png',
-                                    onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
-                                }},
-                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
-                                    x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                    style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
-                                }},
-                                {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
-                                    x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
-                                    style:{ background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1} },
-                                    onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
-                                }},
-                            );
-                    
-                            design.elements.unshift(
-                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
-                                    x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(a){return function(value){
-                                        if(!value){return} 
-                    
-                                        var newNote = state.stages[a].note - 1;
-                                        var newOctave = state.stages[a].octave;
-                                        if(newNote < 0){ newNote = 11; newOctave--; }
-                                        if(newOctave < -1){ return; }
-                    
-                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
-                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
-                                    } }(a),
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
-                                    x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(a){return function(value){
-                                        if(!value){return}
-                    
-                                        var newNote = state.stages[a].note + 1;
-                                        var newOctave = state.stages[a].octave;
-                                        if(newNote > 11){ newNote = 0; newOctave++; }
-                                        if(newOctave > 1){ return; }
-                    
-                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
-                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
-                                    } }(a),
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
-                                    x:17 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(a){ return function(value){ if(!value){return} object.elements.button_rectangle['button_activate_'+a].press(); object.elements.button_rectangle['button_activate_'+a].release(); } }(a),
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
-                                    x:28 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
-                                    onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
-                                }}
-                            );
-                        }
-                    
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    stages:(new Array(stepCount).fill(0)).map( (item,index) => {
-                                        return {
-                                            note: object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].get(),
-                                            octave: object.elements.slide_discrete_image['slide_octave_'+index].get(),
-                                            velocity: object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].get(),
-                                        }
-                                    }),
-                                    direction: object.elements.slide_discrete_image.slide_direction.get(),
-                                };
-                            };
-                            object.importData = function(data){
-                                if(data == undefined){return;}
-                    
-                                object.elements.slide_discrete_image.slide_direction.set(data.direction);
-                    
-                                data.stages.forEach( (stage,index) => {
-                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
-                                    object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
-                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
-                                });
+                                //styling values
+                                    this.LED = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1},
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                                    this.dial = {
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    };
+                                    this.button = {
+                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1},
+                                        background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1},
+                                    };
                             };
                     
-                        //internal circuitry
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'eightStepSequencer',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                                  y:0                                                       },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,     y:0                                                       },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,     y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
+                                    { x:unitStyle.drawingUnit.width*26 -unitStyle.offset,   y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
+                                    { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*7   -unitStyle.offset*0.7  },
+                                    { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*9.5 -unitStyle.offset      },
+                                    { x:0,                                                  y:unitStyle.drawingValue.height    -unitStyle.offset      },
+                                ],
+                                elements:
+                                    (new Array(8).fill(0)).flatMap((value,index) => { 
+                                        return [
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+index, data:{ 
+                                                x:7 +30*index, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+index, data:{ 
+                                                x:18 +30*index, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+index, data:{ 
+                                                x:17 +30*index, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+index, data:{ 
+                                                x:28 +30*index, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                            }}
+                                        ]; 
+                                    }).concat(
+                                    [
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
+                                            x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
+                                            x:unitStyle.drawingValue.width-0.5 -unitStyle.offset, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
+                                            x:unitStyle.drawingValue.width-0.5 -unitStyle.offset, y:22, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
+                                            x:unitStyle.drawingValue.width-0.5 -unitStyle.offset, y:33, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                    
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                    
+                                        {collection:'control', type:'button_image', name:'button_step', data:{
+                                            x:243.25, y:4.5, width:21, height:21, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'stepButton_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'stepButton_down.png',
+                                        }},
+                                        {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
+                                            x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'directionSlideHandle.png',
+                                        }},
+                                    ]).concat(
+                                        (new Array(8).fill(0)).flatMap((value,index) => { 
+                                            return [
+                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+index,data:{
+                                                    x:12.5 +30*index, y:2.5, width:10, height:2.5, style:unitStyle.LED
+                                                }},
+                                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+index,data:{
+                                                    x:17.5 +30*index, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
+                                                    style:{ handle:style.primaryEight[index], slot:unitStyle.dial.slot, needle:unitStyle.dial.needle },
+                                                }},
+                                                {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+index,data:{
+                                                    x:5.6 +30*index, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
+                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'octaveSlideHandle_'+index+'.png',
+                                                }},
+                                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+index,data:{
+                                                    x:17.5 +30*index, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                                    style:{ handle:style.primaryEight[index], slot:unitStyle.dial.slot, needle:unitStyle.dial.needle },
+                                                }},
+                                                {collection:'control', type:'button_rectangle', name:'button_activate_'+index, data:{
+                                                    x:17.5 +30*index, y:68.5, width:16, height:16, angle:Math.PI/4, style:unitStyle.button,
+                                                }},
+                                            ]; 
+                                        })
+                                    )
+                            });
+                    
+                        //circuitry
                             var state = {
+                                stepCount:8,
                                 direction:1,
                                 previousPosition:-1,
                                 position:-1,
                                 requestedNextPosition:-1,
-                                stages:[
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                ],
+                                stages:new Array(8).fill(undefined).map(() => ({note:0, octave:0, velocity:0})),
                                 previousMidiNumber:-1,
-                            }
-                    
+                            };
                             function stageToMidiNoteNumber(stage){
                                 var octaveOffset = 4;
                                 var note = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][stage.note];
@@ -50645,7 +50943,7 @@
                                     state.previousPosition = state.position;
                                     state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction;
                                     state.requestedNextPosition = -1;
-                                    if(state.position > stepCount-1){state.position = 0;}else if(state.position < 0){state.position = stepCount-1;}
+                                    if(state.position > state.stepCount-1){state.position = 0;}else if(state.position < 0){state.position = stepCount-1;}
                     
                                 //stop previous note (unless there wasn't one) and send the new one
                                     var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
@@ -50657,7 +50955,54 @@
                                     if(state.previousPosition != -1){ object.elements.glowbox_rectangle['LED'+state.previousPosition].off(); }
                                     object.elements.glowbox_rectangle['LED'+state.position].on(); 
                             }
-                        
+                    
+                        //wiring
+                            //hid
+                                object.elements.button_image.button_step.onpress = step;
+                                object.elements.slide_discrete_image.slide_direction.onchange = function(value){ state.direction = value*2 - 1; };
+                                for(var index = 0; index < 8; index++){
+                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].onchange = function(index){return function(value){state.stages[index].note=value}}(index);
+                                    object.elements.slide_discrete_image['slide_octave_'+index].onchange = function(index){return function(value){state.stages[index].octave=value-1}}(index);
+                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].onchange = function(index){return function(value){state.stages[index].velocity=value}}(index);
+                                    object.elements.button_rectangle['button_activate_'+index].onpress = function(index){return function(){state.requestedNextPosition=index;step();}}(index);
+                                }
+                            //io
+                                object.io.signal.directionChange_step.onchange = function(value){ if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
+                                object.io.signal.directionChange_forwards.onchange = function(value){ if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
+                                object.io.signal.directionChange_backwards.onchange = function(value){ if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
+                                for(var index = 0; index < 8; index++){
+                                    object.io.signal['noteOctaveChange_back_'+index].onchange = function(index){return function(value){
+                                        if(!value){return} 
+                    
+                                        var newNote = state.stages[index].note - 1;
+                                        var newOctave = state.stages[index].octave;
+                                        if(newNote < 0){ newNote = 11; newOctave--; }
+                                        if(newOctave < -1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+index].set(newOctave+1);
+                                    } }(index);
+                                    object.io.signal['noteOctaveChange_fore_'+index].onchange = function(index){return function(value){
+                                        if(!value){return}
+                    
+                                        var newNote = state.stages[index].note + 1;
+                                        var newOctave = state.stages[index].octave;
+                                        if(newNote > 11){ newNote = 0; newOctave++; }
+                                        if(newOctave > 1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+index].set(newOctave+1);
+                                    } }(index);
+                                    object.io.signal['activate_'+index].onchange = function(index){ return function(value){ 
+                                        if(!value){return} 
+                                        object.elements.button_rectangle['button_activate_'+index].press(); 
+                                        object.elements.button_rectangle['button_activate_'+index].release(); 
+                                    } }(index);
+                                    object.io.voltage['velocity_'+index].onchange = function(index){ return function(value){ 
+                                        object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(value);
+                                    }}(index);
+                                }
+                    
                         //interface
                             object.i = {
                                 step:function(){ object.elements.button_image.button_step.press(); },
@@ -50684,129 +51029,138 @@
                                 getStages:function(){return state.stages;},
                             };
                     
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    stages:Object.assign([],state.stages),
+                                    direction: object.elements.slide_discrete_image.slide_direction.get(),
+                                    currentStage: state.position,
+                                };
+                            };
+                            object.importData = function(data){
+                                object.elements.slide_discrete_image.slide_direction.set(data.direction);
+                    
+                                data.stages.forEach( (stage,index) => {
+                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
+                                    object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
+                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
+                                });
+                    
+                                state.position = data.currentStage;
+                            };
+                    
                         return object;
                     };
-                    
-                    
-                    
                     this.eightStepSequencer.metadata = {
                         name:'Eight Step Sequencer',
                         category:'sequencers',
                         helpURL:'/help/units/beta/eightStepSequencer/'
                     };
-                    this.launchpad = function(x,y,a){
-                        var imageStoreURL_localPrefix = imageStoreURL+'launchpad/';
-                        var colour = {
-                            checkbox:{
-                                check:{r:0.56,g:0.42,b:0.61,a:1},
-                                backing:{r:0.74,g:0.53,b:0.8,a:1},
-                                checkGlow:{r:0.56+0.15,g:0.42+0.15,b:0.61+0.15,a:1},
-                                backingGlow:{r:0.74+0.1,g:0.53+0.1,b:0.8+0.15,a:1},
-                            }
-                        }
+                    this.launchpad = function(x,y,angle){
+                        //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'launchpad/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:1370, height:1200 },
-                            design:{ width:22.5, height:19.5 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1370, height:1200 },
+                                        design: { width:22.5, height:19.5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
+                    
+                                //styling values
+                                    this.checkbox = {
+                                        check: {r:0.56,g:0.42,b:0.61,a:1},
+                                        backing: {r:0.74,g:0.53,b:0.8,a:1},
+                                        checkGlow: {r:0.71,g:0.57,b:0.76,a:1},
+                                        backingGlow: {r:0.84,g:0.63,b:0.95,a:1},
+                                    };
+                                    this.glowbox_circle = {
+                                        glow: {r:0.97,g:0.89,b:0.99,a:1},
+                                        dim: {r:0.1,g:0.1,b:0.1,a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'launchpad',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                ],
+                                elements:(new Array(8).fill(0)).map( (item,y) => {
+                                    return {collection:'dynamic', type:'connectionNode_signal', name:'output_'+y, data:{
+                                        x:0, y:85/4 + (70/3)*y, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }};
+                                }).concat([
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_step', data:{ x:unitStyle.drawingValue.width-10/3, y:11.25, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_upPage', data:{ x:unitStyle.drawingValue.width-10/3, y:151.25, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_downPage', data:{ x:unitStyle.drawingValue.width-10/3, y:175, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
                         
-                        var design = {
-                            name:'launchpad',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                  y:0                                     },
-                                { x:measurements.drawing.width -offset, y:0                                     },
-                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                { x:0,                                  y:measurements.drawing.height -offset   },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_step', data:{ 
-                                    x:measurements.drawing.width-3.5, y:6.65 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                    onchange:function(value){if(value){step();}},
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_upPage', data:{ 
-                                    x:measurements.drawing.width-3.5, y:6.65+140 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                    onchange:function(value){if(value){backPage();}},
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_downPage', data:{ 
-                                    x:measurements.drawing.width-3.5, y:6.65+163.35 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                    onchange:function(value){if(value){nextPage();}},
-                                }},
-                    
-                                {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
-                                },
-                    
-                                {collection:'control', type:'button_image', name:'step', data:{
-                                    x:193.35, y:6.65, width:20, height:20, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'step_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'step_down.png',
-                                    onpress:step,
-                                }},
-                                {collection:'control', type:'button_image', name:'upPage', data:{
-                                    x:193.35, y:6.65+140, width:20, height:20, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'upPage_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'upPage_down.png',
-                                    onpress:backPage,
-                                }},
-                                {collection:'control', type:'button_image', name:'downPage', data:{
-                                    x:193.35, y:6.65+163.35, width:20, height:20, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'downPage_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'downPage_down.png',
-                                    onpress:nextPage,
-                                }},
-                            ]
-                        };
-                        //dynamic design
-                            for(var y = 0; y < 8; y++){
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_'+y, data:{
-                                        x:0, y:6.65+4.6+10 + 23.34*y, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }
+                                    },
+                        
+                                    {collection:'control', type:'button_image', name:'step', data:{
+                                        x:(190+10/3), y:6.66, width:20, height:20, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'step_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'step_down.png',
                                     }},
-                                );
-                    
-                                design.elements.push(
-                                    {collection:'display', type:'glowbox_circle', name:'LED_'+y, data:{
-                                        x:203.35, y:40 + 13.33*y, radius:2,
-                                        style:{glow:{r:0.97,g:0.89,b:0.99,a:1},dim:{r:0.1,g:0.1,b:0.1,a:1}},
-                                    }}
-                                );
-                    
-                                for(var x = 0; x < 8; x++){
-                                    design.elements.push(
-                                        {collection:'control', type:'checkbox_rectangle', name:y+'_'+x, data:{
-                                            x:6.65 + 23.34*x, y:6.65 + 23.34*y, width:20, height:20, 
-                                            style:{ check:colour.checkbox.check, backing:colour.checkbox.backing, checkGlow:colour.checkbox.checkGlow, backingGlow:colour.checkbox.backingGlow },
-                                            onchange:(function(x,y){return function(value){ state.pages[state.currentPage][y][x] = value; }})(x,y),
+                                    {collection:'control', type:'button_image', name:'upPage', data:{
+                                        x:(190+10/3), y:146.66, width:20, height:20, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'upPage_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'upPage_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'downPage', data:{
+                                        x:(190+10/3), y:170, width:20, height:20, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'downPage_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'downPage_down.png',
+                                    }},
+                                ]).concat(
+                                    (new Array(8).fill(0)).map( (item,y) => {
+                                        return {collection:'display', type:'glowbox_circle', name:'LED_'+y, data:{
+                                            x:(200+10/3), y:40 + (10+10/3)*y, radius:2, style:unitStyle.glowbox_circle,
                                         }}
-                                    );
-                                }
-                            }
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
+                                    })
+                                ).concat(
+                                    (new Array(8).fill(0)).flatMap( (item,y) => {
+                                        return (new Array(8).fill(0)).map( (item,x) => {
+                                            return {collection:'control', type:'checkbox_rectangle', name:y+'_'+x, data:{
+                                                x:(20 + 70*x)/3, y:(20 + 70*y)/3, width:20, height:20, style:unitStyle.checkbox,
+                                            }};
+                                        })
+                                    })
+                                )
+                            });
                     
                         //circuitry
                             var state = {
                                 currentColumn:-1,
                                 currentPage:0,
-                                pages:[],
+                                pages:(new Array(8).fill(undefined)).map(() => {
+                                    return (new Array(8).fill(undefined)).map(() => {
+                                        return (new Array(8).fill(false))
+                                    })
+                                }),
                             };
-                    
-                            //populate pages
-                                for(var page = 0; page < 8; page++){
-                                    state.pages.push([]);
-                                    for(var y = 0; y < 8; y++){
-                                        state.pages[page].push([]);
-                                        for(var x = 0; x < 8; x++){
-                                            state.pages[page][y].push(false);
-                                        }
-                                    }
-                                }
-                    
                             function refresh(){
                                 for(var y = 0; y < 8; y++){
                                     object.elements.glowbox_circle['LED_'+y].off();
@@ -50815,6 +51169,10 @@
                                     }
                                 }
                                 object.elements.glowbox_circle['LED_'+state.currentPage].on();
+                            }
+                            function changeToPage(pageNumber){
+                                state.currentPage = pageNumber;
+                                refresh();
                             }
                             function changeToColumn(column){
                                 if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
@@ -50829,15 +51187,6 @@
                                     if( state.pages[state.currentPage][y][state.currentColumn] ){ object.elements.connectionNode_signal['output_'+y].set(true); }
                                 }
                             }
-                            function step(){
-                                var tmp = state.currentColumn+1; 
-                                if(tmp > 7){tmp = 0;}
-                                changeToColumn(tmp);
-                            }
-                            function changeToPage(pageNumber){
-                                state.currentPage = pageNumber;
-                                refresh();
-                            }
                             function nextPage(){
                                 state.currentPage++;
                                 if(state.currentPage > 7){state.currentPage = 0}
@@ -50848,23 +51197,26 @@
                                 if(state.currentPage < 0){state.currentPage = 7}
                                 changeToPage(state.currentPage);
                             }
+                            function step(){
+                                var tmp = state.currentColumn+1; 
+                                if(tmp > 7){tmp = 0;}
+                                changeToColumn(tmp);
+                            }
                     
-                            changeToPage(0);
-                    
-                        //import/export
-                            object.exportData = function(){ return {
-                                currentPage:state.currentPage,
-                                currentColumn:state.currentColumn,
-                                pages:JSON.stringify(state.pages),
-                            }; };
-                            object.importData = function(data){
-                                state = {
-                                    currentColumn:data.currentColumn,
-                                    currentPage:data.currentPage,
-                                    pages:JSON.parse(data.pages),
-                                };
-                                refresh();
-                            };
+                        //wiring
+                            //hid
+                                object.elements.button_image.step.onpress = step;
+                                object.elements.button_image.upPage.onpress = backPage;
+                                object.elements.button_image.downPage.onpress = nextPage;
+                                for(var y = 0; y < 8; y++){ for(var x = 0; x < 8; x++){
+                                    object.elements.checkbox_rectangle[y+'_'+x].onchange = (function(x,y){return function(value){ 
+                                        state.pages[state.currentPage][y][x] = value; 
+                                    }})(x,y);
+                                } }
+                            //io
+                                object.io.signal.activate_step.onchange = function(value){if(value){step();}};
+                                object.io.signal.activate_upPage.onchange = function(value){if(value){backPage();}};
+                                object.io.signal.activate_downPage.onchange = function(value){if(value){nextPage();}};
                     
                         //interface
                             object.i = {
@@ -50885,12 +51237,27 @@
                                     refresh();
                                 }
                             };
-                            
+                    
+                        //import/export
+                            object.exportData = function(){ return {
+                                currentPage:state.currentPage,
+                                currentColumn:state.currentColumn,
+                                pages:JSON.stringify(state.pages),
+                            }; };
+                            object.importData = function(data){
+                                state = {
+                                    currentColumn:data.currentColumn,
+                                    currentPage:data.currentPage,
+                                    pages:JSON.parse(data.pages),
+                                };
+                                refresh();
+                            };
+                    
+                        //setup
+                            changeToPage(0);
+                    
                         return object;
                     };
-                    
-                    
-                    
                     this.launchpad.metadata = {
                         name:'Launchpad',
                         category:'sequencers',
@@ -51432,101 +51799,118 @@
                         category:'effects',
                         helpURL:'/help/units/beta/filter/'
                     };
-                    this.pulse_generator = function(x,y,a){
-                        var imageStoreURL_localPrefix = imageStoreURL+'pulse_generator/';
+                    this.pulse_generator = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'pulse_generator/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:590, height:260 },
-                            design:{ width:9.5, height:4 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                        var colour = {
-                            LCD:{
-                                background:{r:0.1,g:0.1,b:0.1,a:1},
-                                glow:{r:0.3,g:0.64,b:0.22,a:1},
-                                dim:{r:0.1,g:0.24,b:0.12,a:1}
-                            }
-                        };
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:590, height:260 },
+                                        design: { width:9.5, height:4 },
+                                    };
                     
-                        var design = {
-                            name:'pulse_generator',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                        y:0                                            },
-                                { x:measurements.drawing.width -offset,       y:0                                            },
-                                { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
-                                { x:(measurements.drawing.width -offset)/9.5, y:measurements.drawing.height -offset          },
-                                { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{
-                                    x:0, y:21.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_sync', data:{
-                                    x:7.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_100_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*0, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_10_down',    data:{ x:10 + 21.65 + (0.85 + 60/div)*1, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_1_down',     data:{ x:10 + 21.65 + (0.85 + 60/div)*2, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_down',   data:{ x:10 + 21.65 + (0.85 + 60/div)*3, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_down',  data:{ x:10 + 21.65 + (0.85 + 60/div)*4, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_down', data:{ x:10 + 21.65 + (0.85 + 60/div)*5, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
                     
-                                {collection:'basic', type:'image', name:'backing', data:{ 
-                                    x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                } },
-                    
-                                {collection:'display', type:'glowbox_path', name:'ledSyncFlash', data:{ 
-                                    x:0, y:0, points:[ {x:5-3/4,y:5-3/4}, {x:20+3/4,y:5-3/4}, {x:20+3/4,y:35+3/4}, {x:12.5-2/5,y:35+3/4}, {x:5-3/4,y:27.5+2/5} ],
-                                    looping:true, jointType:'round',
-                                    style:{ dim:{r:0.64,g:0.31,b:0.24,a:1}, glow:{r:0.94,g:0.31,b:0.34,a:1} },
-                                } },
-                                {collection:'control', type:'button_polygon', name:'sync', data:{
-                                    x:5, y:5, hoverable:false, points:[ {x:0,y:0}, {x:15,y:0}, {x:15,y:30}, {x:7.5,y:30}, {x:0,y:22.5} ],
-                                    style:{
-                                        background__up__colour:{r:0.69,g:0.69,b:0.69,a:1},
-                                        background__press__colour:{r:0.8,g:0.8,b:0.8,a:1},
+                                //styling values
+                                    this.LCD = {
+                                        background:{r:0.1,g:0.1,b:0.1,a:1},
+                                        glow: {r:0.3,g:0.64,b:0.22,a:1},
+                                        dim: {r:0.1,g:0.24,b:0.12,a:1}
                                     }
-                                }},
-                                {collection:'basic', type:'image', name:'time_symbol', data:{ 
-                                    x:6.25, y:12.5, width:74/div, height:74/div, url:imageStoreURL_localPrefix+'time_symbol.png'
-                                } },
+                                    this.ledSyncFlash = {
+                                        dim: {r:0.64,g:0.31,b:0.24,a:1}, 
+                                        glow: {r:0.94,g:0.31,b:0.34,a:1}
+                                    };
+                                    this.syncButton = {
+                                        background__up__colour: {r:0.69,g:0.69,b:0.69,a:1},
+                                        background__press__colour: {r:0.8,g:0.8,b:0.8,a:1},
+                                    };
+                            };
                     
-                                {collection:'display', type:'readout_sevenSegmentDisplay_static', name:'LCD', data:{ 
-                                    x:21.75, y:10.75, width:64, height:18.5, count:6, decimalPlaces:true, style:colour.LCD
-                                }},
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'pulse_generator',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                                    y:0                                                      },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,       y:0                                                      },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,       y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                    { x:(unitStyle.drawingValue.width -unitStyle.offset)/9.5, y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                    { x:0,                                                    y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{
+                                        x:0, y:21.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_sync', data:{
+                                        x:7.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_up',     data:{ x:21.65 + 10.85*0, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_up',      data:{ x:21.65 + 10.85*1, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_up',       data:{ x:21.65 + 10.85*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_up',     data:{ x:21.65 + 10.85*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_up',    data:{ x:21.65 + 10.85*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_up',   data:{ x:21.65 + 10.85*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_100_down',   data:{ x:10 + 21.65 + 10.85*0, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_10_down',    data:{ x:10 + 21.65 + 10.85*1, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_1_down',     data:{ x:10 + 21.65 + 10.85*2, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.1_down',   data:{ x:10 + 21.65 + 10.85*3, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.01_down',  data:{ x:10 + 21.65 + 10.85*4, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'port_0.001_down', data:{ x:10 + 21.65 + 10.85*5, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal }},
                     
-                                {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + (0.85 + 60/div)*0, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'10_up',      data:{ x:21.65 + (0.85 + 60/div)*1, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'1_up',       data:{ x:21.65 + (0.85 + 60/div)*2, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.1_up',     data:{ x:21.65 + (0.85 + 60/div)*3, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.01_up',    data:{ x:21.65 + (0.85 + 60/div)*4, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.001_up',   data:{ x:21.65 + (0.85 + 60/div)*5, y:5,  width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'100_down',   data:{ x:21.65 + (0.85 + 60/div)*0, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'10_down',    data:{ x:21.65 + (0.85 + 60/div)*1, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'1_down',     data:{ x:21.65 + (0.85 + 60/div)*2, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.1_down',   data:{ x:21.65 + (0.85 + 60/div)*3, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.01_down',  data:{ x:21.65 + (0.85 + 60/div)*4, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                                {collection:'control', type:'button_image', name:'0.001_down', data:{ x:21.65 + (0.85 + 60/div)*5, y:30, width:60/div, height:30/div, hoverable:false, backingURL__up:imageStoreURL_localPrefix+'button_up.png', backingURL__press:imageStoreURL_localPrefix+'button_down.png' }},
-                            ]
-                        };
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
+                                    {collection:'basic', type:'image', name:'backing', data:{ 
+                                        x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                        width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                        url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                    } },
                     
-                        //wiring
-                            var storedValue = [1,2,0,0,0,0];
-                            var interval = null;
-                            var tempo = 120;
+                                    {collection:'display', type:'glowbox_path', name:'ledSyncFlash', data:{ 
+                                        x:0, y:0, points:[ {x:5-3/4,y:5-3/4}, {x:20+3/4,y:5-3/4}, {x:20+3/4,y:35+3/4}, {x:12.5-2/5,y:35+3/4}, {x:5-3/4,y:27.5+2/5} ],
+                                        looping:true, jointType:'round', style:unitStyle.ledSyncFlash,
+                                    } },
+                                    {collection:'control', type:'button_polygon', name:'sync', data:{
+                                        x:5, y:5, hoverable:false, points:[ {x:0,y:0}, {x:15,y:0}, {x:15,y:30}, {x:7.5,y:30}, {x:0,y:22.5} ], style:unitStyle.syncButton,
+                                    }},
+                                    {collection:'basic', type:'image', name:'time_symbol', data:{ 
+                                        x:6.25, y:12.5, width:12 + 1/3, height:12 + 1/3, url:unitStyle.imageStoreURL_localPrefix+'time_symbol.png'
+                                    } },
                     
+                                    {collection:'display', type:'readout_sevenSegmentDisplay_static', name:'LCD', data:{ 
+                                        x:21.75, y:10.75, width:64, height:18.5, count:6, decimalPlaces:true, style:unitStyle.LCD
+                                    }},
+                    
+                                    {collection:'control', type:'button_image', name:'100_up',     data:{ x:21.65 + 10.85*0, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_up',      data:{ x:21.65 + 10.85*1, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_up',       data:{ x:21.65 + 10.85*2, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_up',     data:{ x:21.65 + 10.85*3, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_up',    data:{ x:21.65 + 10.85*4, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_up',   data:{ x:21.65 + 10.85*5, y:5,  width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'100_down',   data:{ x:21.65 + 10.85*0, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'10_down',    data:{ x:21.65 + 10.85*1, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'1_down',     data:{ x:21.65 + 10.85*2, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.1_down',   data:{ x:21.65 + 10.85*3, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.01_down',  data:{ x:21.65 + 10.85*4, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                    {collection:'control', type:'button_image', name:'0.001_down', data:{ x:21.65 + 10.85*5, y:30, width:10, height:5, hoverable:false, backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png', backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png' }},
+                                ],
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                storedValue: [1,2,0,0,0,0],
+                                interval: null,
+                                tempo: 120,
+                            };
                             function updateTempo(newTempo){
                                 //safety
                                     if(newTempo > 999){newTempo = 999;}
@@ -51549,9 +51933,9 @@
                                     object.elements.readout_sevenSegmentDisplay_static.LCD.print();
                     
                                 //update interval
-                                    if(interval){ clearInterval(interval); }
+                                    if(state.interval){ clearInterval(state.interval); }
                                     if(newTempo > 0){
-                                        interval = setInterval(function(){
+                                        state.interval = setInterval(function(){
                                             object.io.signal.output.set(true);
                                             object.elements.glowbox_path.ledSyncFlash.on();
                                             setTimeout(function(){
@@ -51567,252 +51951,205 @@
                                     object.io.signal.output.set(false);
                                     object.elements.glowbox_path.ledSyncFlash.off();
                                 },50)
-                                tempo = newTempo;
+                    
+                                //update state
+                                    state.tempo = newTempo;
+                    
+                                    state.storedValue = [0,0,0,0,0,0];
+                                    var tmp = String(state.tempo).split('');
+                                    
+                                    if(tmp.indexOf('.') == -1){
+                                        tmp.reverse().forEach((value,index) => { state.storedValue[2-index] = value; });
+                                    }else{
+                                        tmp.slice(0,(tmp.indexOf('.'))).reverse().forEach((value,index) => { state.storedValue[2-index] = value; });
+                                        tmp.slice((tmp.indexOf('.'))+1).forEach((value,index) => { state.storedValue[3+index] = value; });
+                                    }
+                    
+                                    state.storedValue = state.storedValue.map(item => parseInt(item));
                             }
                             function updateUsingStoredValue(){
-                                updateTempo( parseFloat(storedValue.slice(0,3).join('') +'.'+ storedValue.slice(3,6).join('')) );
+                                updateTempo( parseFloat(state.storedValue.slice(0,3).join('') +'.'+ state.storedValue.slice(3,6).join('')) );
                             }
                     
-                            object.elements.button_polygon.sync.onpress = function(){ updateTempo(tempo); };
-                            object.elements.button_image['100_up'].onpress = function(){ storedValue[0] = storedValue[0] == 9 ? 0 : storedValue[0]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['10_up'].onpress = function(){ storedValue[1] = storedValue[1] == 9 ? 0 : storedValue[1]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['1_up'].onpress = function(){ storedValue[2] = storedValue[2] == 9 ? 0 : storedValue[2]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.1_up'].onpress = function(){ storedValue[3] = storedValue[3] == 9 ? 0 : storedValue[3]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.01_up'].onpress = function(){ storedValue[4] = storedValue[4] == 9 ? 0 : storedValue[4]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.001_up'].onpress = function(){ storedValue[5] = storedValue[5] == 9 ? 0 : storedValue[5]+1; updateUsingStoredValue(); };
-                            object.elements.button_image['100_down'].onpress = function(){ storedValue[0] = storedValue[0] == 0 ? 9 : storedValue[0]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['10_down'].onpress = function(){ storedValue[1] = storedValue[1] == 0 ? 9 : storedValue[1]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['1_down'].onpress = function(){ storedValue[2] = storedValue[2] == 0 ? 9 : storedValue[2]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.1_down'].onpress = function(){ storedValue[3] = storedValue[3] == 0 ? 9 : storedValue[3]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.01_down'].onpress = function(){ storedValue[4] = storedValue[4] == 0 ? 9 : storedValue[4]-1; updateUsingStoredValue(); };
-                            object.elements.button_image['0.001_down'].onpress = function(){ storedValue[5] = storedValue[5] == 0 ? 9 : storedValue[5]-1; updateUsingStoredValue(); };
-                    
-                            [
-                                'sync',
-                                '100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up',
-                                '100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'
-                            ].forEach(portName => {
-                                object.io.signal['port_'+portName].onchange = function(value){
-                                    if(value){ object.elements.button_image[portName].press();   }
-                                    else{      object.elements.button_image[portName].release(); }
-                                };
-                            });
+                        //wiring
+                            //hid
+                                object.elements.button_polygon.sync.onpress = function(){ updateTempo(tempo); };
+                                ['100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up'].forEach((buttonName,index) => {
+                                    object.elements.button_image[buttonName].onpress = function(){ state.storedValue[index] = state.storedValue[index] == 9 ? 0 : state.storedValue[index]+1; updateUsingStoredValue(); };
+                                });
+                                ['100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'].forEach((buttonName,index) => {
+                                    object.elements.button_image[buttonName].onpress = function(){ state.storedValue[index] = state.storedValue[index] == 0 ? 9 : state.storedValue[index]-1; updateUsingStoredValue(); };
+                                });
+                                
+                            //io
+                                [
+                                    'sync',
+                                    '100_up', '10_up', '1_up', '0.1_up', '0.01_up', '0.001_up',
+                                    '100_down', '10_down', '1_down', '0.1_down', '0.01_down', '0.001_down'
+                                ].forEach(portName => {
+                                    object.io.signal['port_'+portName].onchange = function(value){
+                                        if(value){ object.elements.button_image[portName].press();   }
+                                        else{      object.elements.button_image[portName].release(); }
+                                    };
+                                });
                     
                         //interface
                             object.i = {
-                                setTempo:function(value){
+                                tempo:function(value){
+                                    if(value == undefined){return state.tempo;}
                                     updateTempo(value);
                                 },
                             };
                     
                         //import/export
                             object.exportData = function(){
-                                return {
-                                    tempo:tempo,
-                                };
+                                return { tempo:state.tempo };
                             };
                             object.importData = function(data){
-                                if(data == undefined){return;}
-                    
-                                object.i.setTempo(data.tempo);
+                                object.i.tempo(data.tempo);
                             };
                     
                         //setup
-                            updateTempo(tempo);
+                            updateUsingStoredValue();
                     
                         return object;
                     };
-                    
-                    
-                    
                     this.pulse_generator.metadata = {
                         name:'Pulse Generator',
                         category:'sequencers',
                         helpURL:'/help/units/beta/pulse_generator/'
                     };
-                    this.eightStepSequencer = function(x,y,a){
-                        var stepCount = 8;
-                        var imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
+                    this.eightStepSequencer = function(x,y,angle){
+                            //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:1670, height:590 },
-                            design:{ width:27.5, height:9.5 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                        
-                        var design = {
-                            name:'eightStepSequencer',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                                                    y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:0                                                                      },
-                                { x:measurements.drawing.width -offset,                                   y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(26/measurements.design.width)   -offset,  y:measurements.drawing.height*(5.5/measurements.design.height) -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(7/measurements.design.height)   -offset/2 },
-                                { x:measurements.drawing.width*(24.5/measurements.design.width) -offset,  y:measurements.drawing.height*(9.5/measurements.design.height) -offset   },
-                                { x:0,                                                                    y:measurements.drawing.height                                  -offset   },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
-                                    x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                    style:{ dim:style.connectionNode.data.dim, glow:style.connectionNode.data.glow, cable_dim:style.connectionCable.data.dim, cable_glow:style.connectionCable.data.glow }
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
-                                    x:measurements.drawing.width-0.5 -offset, y:10, width:5, height:10, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(value){if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
-                                    x:measurements.drawing.width-0.5 -offset, y:22, width:5, height:10, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
-                                    x:measurements.drawing.width-0.5 -offset, y:33, width:5, height:10, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(value){if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
-                                }},
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1670, height:590 },
+                                        design: { width:27.5, height:9.5 },
+                                    };
                     
-                                {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                },
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
                     
-                                {collection:'control', type:'button_image', name:'button_step', data:{
-                                    x:243.25, y:4.5, width:21, height:21, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'stepButton_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'stepButton_down.png',
-                                    onpress:step,
-                                }},
-                                {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
-                                    x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
-                                    handleURL:imageStoreURL_localPrefix+'directionSlideHandle.png',
-                                    onchange:function(value){ state.direction = value*2 - 1; }
-                                }},
-                            ]
-                        };
-                        //dynamic design
-                        for(var a = 0; a < stepCount; a++){
-                            design.elements.push(
-                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{
-                                    x:12.5 +30*a, y:2.5, width:10, height:2.5, 
-                                    style:{ glow:{r:232/255, g:160/255, b:111/255, a:1}, dim:{r:164/255, g:80/255, b:61/255, a:1} }
-                                }},
-                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+a,data:{
-                                    x:17.5 +30*a, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
-                                    style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    onchange:function(a){return function(value){state.stages[a].note=value}}(a),
-                                }},
-                                {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+a,data:{
-                                    x:5.6 +30*a, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
-                                    handleURL:imageStoreURL_localPrefix+'octaveSlideHandle_'+a+'.png',
-                                    onchange:function(a){return function(value){state.stages[a].octave=value-1}}(a),
-                                }},
-                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+a,data:{
-                                    x:17.5 +30*a, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                    style:{ handle:style.primaryEight[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    onchange:function(a){return function(value){state.stages[a].velocity=value}}(a),
-                                }},
-                                {collection:'control', type:'button_rectangle', name:'button_activate_'+a, data:{
-                                    x:17.5 +30*a, y:68.5, width:16, height:16, angle:Math.PI/4,
-                                    style:{ background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1} },
-                                    onpress:function(a){return function(){state.requestedNextPosition=a;step();}}(a),
-                                }},
-                            );
-                    
-                            design.elements.unshift(
-                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+a, data:{ 
-                                    x:7 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(a){return function(value){
-                                        if(!value){return} 
-                    
-                                        var newNote = state.stages[a].note - 1;
-                                        var newOctave = state.stages[a].octave;
-                                        if(newNote < 0){ newNote = 11; newOctave--; }
-                                        if(newOctave < -1){ return; }
-                    
-                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
-                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
-                                    } }(a),
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+a, data:{ 
-                                    x:18 +30*a, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(a){return function(value){
-                                        if(!value){return}
-                    
-                                        var newNote = state.stages[a].note + 1;
-                                        var newOctave = state.stages[a].octave;
-                                        if(newNote > 11){ newNote = 0; newOctave++; }
-                                        if(newOctave > 1){ return; }
-                    
-                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+a].set(newNote);
-                                        object.elements.slide_discrete_image['slide_octave_'+a].set(newOctave+1);
-                                    } }(a),
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+a, data:{ 
-                                    x:17 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.signal.dim, glow:style.connectionNode.signal.glow, cable_dim:style.connectionCable.signal.dim, cable_glow:style.connectionCable.signal.glow },
-                                    onchange:function(a){ return function(value){ if(!value){return} object.elements.button_rectangle['button_activate_'+a].press(); object.elements.button_rectangle['button_activate_'+a].release(); } }(a),
-                                }},
-                                {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+a, data:{ 
-                                    x:28 +30*a, y:measurements.drawing.height -offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
-                                    style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
-                                    onchange:function(a){ return function(value){ object.elements.dial_colourWithIndent_continuous['dial_velocity_'+a].set(value) }}(a),
-                                }}
-                            );
-                        }
-                    
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
-                    
-                        //import/export
-                            object.exportData = function(){
-                                return {
-                                    stages:(new Array(stepCount).fill(0)).map( (item,index) => {
-                                        return {
-                                            note: object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].get(),
-                                            octave: object.elements.slide_discrete_image['slide_octave_'+index].get(),
-                                            velocity: object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].get(),
-                                        }
-                                    }),
-                                    direction: object.elements.slide_discrete_image.slide_direction.get(),
-                                };
-                            };
-                            object.importData = function(data){
-                                if(data == undefined){return;}
-                    
-                                object.elements.slide_discrete_image.slide_direction.set(data.direction);
-                    
-                                data.stages.forEach( (stage,index) => {
-                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
-                                    object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
-                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
-                                });
+                                //styling values
+                                    this.LED = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1},
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                                    this.dial = {
+                                        slot:{r:0,g:0,b:0,a:0},
+                                        needle:{r:1,g:1,b:1,a:1},
+                                    };
+                                    this.button = {
+                                        background__up__colour:{r:175/255,g:175/255,b:175/255,a:1},
+                                        background__hover__colour:{r:200/255,g:200/255,b:200/255,a:1},
+                                    };
                             };
                     
-                        //internal circuitry
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'eightStepSequencer',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                                  y:0                                                       },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,     y:0                                                       },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset,     y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
+                                    { x:unitStyle.drawingUnit.width*26 -unitStyle.offset,   y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
+                                    { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*7   -unitStyle.offset*0.7  },
+                                    { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*9.5 -unitStyle.offset      },
+                                    { x:0,                                                  y:unitStyle.drawingValue.height    -unitStyle.offset      },
+                                ],
+                                elements:
+                                    (new Array(8).fill(0)).flatMap((value,index) => { 
+                                        return [
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_back_'+index, data:{ 
+                                                x:7 +30*index, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'noteOctaveChange_fore_'+index, data:{ 
+                                                x:18 +30*index, y:0, width:5, height:10, angle:Math.PI*1.5, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_signal', name:'activate_'+index, data:{ 
+                                                x:17 +30*index, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                            }},
+                                            {collection:'dynamic', type:'connectionNode_voltage', name:'velocity_'+index, data:{ 
+                                                x:28 +30*index, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                            }}
+                                        ]; 
+                                    }).concat(
+                                    [
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
+                                            x:0, y:30, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_step', data:{ 
+                                            x:unitStyle.drawingValue.width-0.5 -unitStyle.offset, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_forwards', data:{ 
+                                            x:unitStyle.drawingValue.width-0.5 -unitStyle.offset, y:22, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'directionChange_backwards', data:{ 
+                                            x:unitStyle.drawingValue.width-0.5 -unitStyle.offset, y:33, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                    
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                    
+                                        {collection:'control', type:'button_image', name:'button_step', data:{
+                                            x:243.25, y:4.5, width:21, height:21, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'stepButton_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'stepButton_down.png',
+                                        }},
+                                        {collection:'control', type:'slide_discrete_image',name:'slide_direction',data:{
+                                            x:244, y:37.125, width:9.25, height:19.4, handleHeight:1/2, resetValue:0.5, angle:-Math.PI/2, optionCount:2, value:1,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'directionSlideHandle.png',
+                                        }},
+                                    ]).concat(
+                                        (new Array(8).fill(0)).flatMap((value,index) => { 
+                                            return [
+                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+index,data:{
+                                                    x:12.5 +30*index, y:2.5, width:10, height:2.5, style:unitStyle.LED
+                                                }},
+                                                {collection:'control', type:'dial_colourWithIndent_discrete',name:'dial_noteSelect_'+index,data:{
+                                                    x:17.5 +30*index, y:22.5, radius:(150/6)/2, startAngle:(2.9*Math.PI)/4, maxAngle:1.55*Math.PI, optionCount:12, arcDistance:1.2, resetValue:0.5,
+                                                    style:{ handle:style.primaryEight[index], slot:unitStyle.dial.slot, needle:unitStyle.dial.needle },
+                                                }},
+                                                {collection:'control', type:'slide_discrete_image',name:'slide_octave_'+index,data:{
+                                                    x:5.6 +30*index, y:47.25, width:9.5, height:23.75, handleHeight:1/2.5, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:1,
+                                                    handleURL:unitStyle.imageStoreURL_localPrefix+'octaveSlideHandle_'+index+'.png',
+                                                }},
+                                                {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_velocity_'+index,data:{
+                                                    x:17.5 +30*index, y:57.5, radius:(75/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
+                                                    style:{ handle:style.primaryEight[index], slot:unitStyle.dial.slot, needle:unitStyle.dial.needle },
+                                                }},
+                                                {collection:'control', type:'button_rectangle', name:'button_activate_'+index, data:{
+                                                    x:17.5 +30*index, y:68.5, width:16, height:16, angle:Math.PI/4, style:unitStyle.button,
+                                                }},
+                                            ]; 
+                                        })
+                                    )
+                            });
+                    
+                        //circuitry
                             var state = {
+                                stepCount:8,
                                 direction:1,
                                 previousPosition:-1,
                                 position:-1,
                                 requestedNextPosition:-1,
-                                stages:[
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                    { note:0, octave:0, velocity:0 },
-                                ],
+                                stages:new Array(8).fill(undefined).map(() => ({note:0, octave:0, velocity:0})),
                                 previousMidiNumber:-1,
-                            }
-                    
+                            };
                             function stageToMidiNoteNumber(stage){
                                 var octaveOffset = 4;
                                 var note = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][stage.note];
@@ -51824,7 +52161,7 @@
                                     state.previousPosition = state.position;
                                     state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction;
                                     state.requestedNextPosition = -1;
-                                    if(state.position > stepCount-1){state.position = 0;}else if(state.position < 0){state.position = stepCount-1;}
+                                    if(state.position > state.stepCount-1){state.position = 0;}else if(state.position < 0){state.position = stepCount-1;}
                     
                                 //stop previous note (unless there wasn't one) and send the new one
                                     var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
@@ -51836,7 +52173,54 @@
                                     if(state.previousPosition != -1){ object.elements.glowbox_rectangle['LED'+state.previousPosition].off(); }
                                     object.elements.glowbox_rectangle['LED'+state.position].on(); 
                             }
-                        
+                    
+                        //wiring
+                            //hid
+                                object.elements.button_image.button_step.onpress = step;
+                                object.elements.slide_discrete_image.slide_direction.onchange = function(value){ state.direction = value*2 - 1; };
+                                for(var index = 0; index < 8; index++){
+                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].onchange = function(index){return function(value){state.stages[index].note=value}}(index);
+                                    object.elements.slide_discrete_image['slide_octave_'+index].onchange = function(index){return function(value){state.stages[index].octave=value-1}}(index);
+                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].onchange = function(index){return function(value){state.stages[index].velocity=value}}(index);
+                                    object.elements.button_rectangle['button_activate_'+index].onpress = function(index){return function(){state.requestedNextPosition=index;step();}}(index);
+                                }
+                            //io
+                                object.io.signal.directionChange_step.onchange = function(value){ if(!value){return} object.elements.button_image.button_step.press(); object.elements.button_image.button_step.release(); } 
+                                object.io.signal.directionChange_forwards.onchange = function(value){ if(!value){return} object.elements.slide_discrete_image.slide_direction.set(1); } 
+                                object.io.signal.directionChange_backwards.onchange = function(value){ if(!value){return} object.elements.slide_discrete_image.slide_direction.set(0); } 
+                                for(var index = 0; index < 8; index++){
+                                    object.io.signal['noteOctaveChange_back_'+index].onchange = function(index){return function(value){
+                                        if(!value){return} 
+                    
+                                        var newNote = state.stages[index].note - 1;
+                                        var newOctave = state.stages[index].octave;
+                                        if(newNote < 0){ newNote = 11; newOctave--; }
+                                        if(newOctave < -1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+index].set(newOctave+1);
+                                    } }(index);
+                                    object.io.signal['noteOctaveChange_fore_'+index].onchange = function(index){return function(value){
+                                        if(!value){return}
+                    
+                                        var newNote = state.stages[index].note + 1;
+                                        var newOctave = state.stages[index].octave;
+                                        if(newNote > 11){ newNote = 0; newOctave++; }
+                                        if(newOctave > 1){ return; }
+                    
+                                        object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(newNote);
+                                        object.elements.slide_discrete_image['slide_octave_'+index].set(newOctave+1);
+                                    } }(index);
+                                    object.io.signal['activate_'+index].onchange = function(index){ return function(value){ 
+                                        if(!value){return} 
+                                        object.elements.button_rectangle['button_activate_'+index].press(); 
+                                        object.elements.button_rectangle['button_activate_'+index].release(); 
+                                    } }(index);
+                                    object.io.voltage['velocity_'+index].onchange = function(index){ return function(value){ 
+                                        object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(value);
+                                    }}(index);
+                                }
+                    
                         //interface
                             object.i = {
                                 step:function(){ object.elements.button_image.button_step.press(); },
@@ -51863,129 +52247,138 @@
                                 getStages:function(){return state.stages;},
                             };
                     
+                        //import/export
+                            object.exportData = function(){
+                                return {
+                                    stages:Object.assign([],state.stages),
+                                    direction: object.elements.slide_discrete_image.slide_direction.get(),
+                                    currentStage: state.position,
+                                };
+                            };
+                            object.importData = function(data){
+                                object.elements.slide_discrete_image.slide_direction.set(data.direction);
+                    
+                                data.stages.forEach( (stage,index) => {
+                                    object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
+                                    object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
+                                    object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
+                                });
+                    
+                                state.position = data.currentStage;
+                            };
+                    
                         return object;
                     };
-                    
-                    
-                    
                     this.eightStepSequencer.metadata = {
                         name:'Eight Step Sequencer',
                         category:'sequencers',
                         helpURL:'/help/units/beta/eightStepSequencer/'
                     };
-                    this.launchpad = function(x,y,a){
-                        var imageStoreURL_localPrefix = imageStoreURL+'launchpad/';
-                        var colour = {
-                            checkbox:{
-                                check:{r:0.56,g:0.42,b:0.61,a:1},
-                                backing:{r:0.74,g:0.53,b:0.8,a:1},
-                                checkGlow:{r:0.56+0.15,g:0.42+0.15,b:0.61+0.15,a:1},
-                                backingGlow:{r:0.74+0.1,g:0.53+0.1,b:0.8+0.15,a:1},
-                            }
-                        }
+                    this.launchpad = function(x,y,angle){
+                        //style data
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'launchpad/';
                     
-                        var div = 6;
-                        var offset = 20/div;
-                        var measurements = { 
-                            file:{ width:1370, height:1200 },
-                            design:{ width:22.5, height:19.5 },
-                        };
-                        measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                //calculation of measurements
+                                    var div = 6;
+                                    var measurement = { 
+                                        file: { width:1370, height:1200 },
+                                        design: { width:22.5, height:19.5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                                    this.drawingUnit = {
+                                        width: this.drawingValue.width/measurement.design.width,
+                                        height: this.drawingValue.height/measurement.design.height,
+                                    };
+                    
+                                //styling values
+                                    this.checkbox = {
+                                        check: {r:0.56,g:0.42,b:0.61,a:1},
+                                        backing: {r:0.74,g:0.53,b:0.8,a:1},
+                                        checkGlow: {r:0.71,g:0.57,b:0.76,a:1},
+                                        backingGlow: {r:0.84,g:0.63,b:0.95,a:1},
+                                    };
+                                    this.glowbox_circle = {
+                                        glow: {r:0.97,g:0.89,b:0.99,a:1},
+                                        dim: {r:0.1,g:0.1,b:0.1,a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'launchpad',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                                              y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                    { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                ],
+                                elements:(new Array(8).fill(0)).map( (item,y) => {
+                                    return {collection:'dynamic', type:'connectionNode_signal', name:'output_'+y, data:{
+                                        x:0, y:85/4 + (70/3)*y, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }};
+                                }).concat([
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_step', data:{ x:unitStyle.drawingValue.width-10/3, y:11.25, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_upPage', data:{ x:unitStyle.drawingValue.width-10/3, y:151.25, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'activate_downPage', data:{ x:unitStyle.drawingValue.width-10/3, y:175, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
                         
-                        var design = {
-                            name:'launchpad',
-                            x:x, y:y, angle:a,
-                            space:[
-                                { x:0,                                  y:0                                     },
-                                { x:measurements.drawing.width -offset, y:0                                     },
-                                { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                { x:0,                                  y:measurements.drawing.height -offset   },
-                            ],
-                            elements:[
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_step', data:{ 
-                                    x:measurements.drawing.width-3.5, y:6.65 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                    onchange:function(value){if(value){step();}},
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_upPage', data:{ 
-                                    x:measurements.drawing.width-3.5, y:6.65+140 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                    onchange:function(value){if(value){backPage();}},
-                                }},
-                                {collection:'dynamic', type:'connectionNode_signal', name:'activate_downPage', data:{ 
-                                    x:measurements.drawing.width-3.5, y:6.65+163.35 + 4.6, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
-                                    onchange:function(value){if(value){nextPage();}},
-                                }},
-                    
-                                {collection:'basic', type:'image', name:'backing', 
-                                    data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
-                                },
-                    
-                                {collection:'control', type:'button_image', name:'step', data:{
-                                    x:193.35, y:6.65, width:20, height:20, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'step_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'step_down.png',
-                                    onpress:step,
-                                }},
-                                {collection:'control', type:'button_image', name:'upPage', data:{
-                                    x:193.35, y:6.65+140, width:20, height:20, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'upPage_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'upPage_down.png',
-                                    onpress:backPage,
-                                }},
-                                {collection:'control', type:'button_image', name:'downPage', data:{
-                                    x:193.35, y:6.65+163.35, width:20, height:20, hoverable:false, 
-                                    backingURL__up:imageStoreURL_localPrefix+'downPage_up.png',
-                                    backingURL__press:imageStoreURL_localPrefix+'downPage_down.png',
-                                    onpress:nextPage,
-                                }},
-                            ]
-                        };
-                        //dynamic design
-                            for(var y = 0; y < 8; y++){
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_'+y, data:{
-                                        x:0, y:6.65+4.6+10 + 23.34*y, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                            width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                            url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }
+                                    },
+                        
+                                    {collection:'control', type:'button_image', name:'step', data:{
+                                        x:(190+10/3), y:6.66, width:20, height:20, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'step_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'step_down.png',
                                     }},
-                                );
-                    
-                                design.elements.push(
-                                    {collection:'display', type:'glowbox_circle', name:'LED_'+y, data:{
-                                        x:203.35, y:40 + 13.33*y, radius:2,
-                                        style:{glow:{r:0.97,g:0.89,b:0.99,a:1},dim:{r:0.1,g:0.1,b:0.1,a:1}},
-                                    }}
-                                );
-                    
-                                for(var x = 0; x < 8; x++){
-                                    design.elements.push(
-                                        {collection:'control', type:'checkbox_rectangle', name:y+'_'+x, data:{
-                                            x:6.65 + 23.34*x, y:6.65 + 23.34*y, width:20, height:20, 
-                                            style:{ check:colour.checkbox.check, backing:colour.checkbox.backing, checkGlow:colour.checkbox.checkGlow, backingGlow:colour.checkbox.backingGlow },
-                                            onchange:(function(x,y){return function(value){ state.pages[state.currentPage][y][x] = value; }})(x,y),
+                                    {collection:'control', type:'button_image', name:'upPage', data:{
+                                        x:(190+10/3), y:146.66, width:20, height:20, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'upPage_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'upPage_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'downPage', data:{
+                                        x:(190+10/3), y:170, width:20, height:20, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'downPage_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'downPage_down.png',
+                                    }},
+                                ]).concat(
+                                    (new Array(8).fill(0)).map( (item,y) => {
+                                        return {collection:'display', type:'glowbox_circle', name:'LED_'+y, data:{
+                                            x:(200+10/3), y:40 + (10+10/3)*y, radius:2, style:unitStyle.glowbox_circle,
                                         }}
-                                    );
-                                }
-                            }
-                        
-                        //main object
-                            var object = _canvas_.interface.unit.builder(design);
+                                    })
+                                ).concat(
+                                    (new Array(8).fill(0)).flatMap( (item,y) => {
+                                        return (new Array(8).fill(0)).map( (item,x) => {
+                                            return {collection:'control', type:'checkbox_rectangle', name:y+'_'+x, data:{
+                                                x:(20 + 70*x)/3, y:(20 + 70*y)/3, width:20, height:20, style:unitStyle.checkbox,
+                                            }};
+                                        })
+                                    })
+                                )
+                            });
                     
                         //circuitry
                             var state = {
                                 currentColumn:-1,
                                 currentPage:0,
-                                pages:[],
+                                pages:(new Array(8).fill(undefined)).map(() => {
+                                    return (new Array(8).fill(undefined)).map(() => {
+                                        return (new Array(8).fill(false))
+                                    })
+                                }),
                             };
-                    
-                            //populate pages
-                                for(var page = 0; page < 8; page++){
-                                    state.pages.push([]);
-                                    for(var y = 0; y < 8; y++){
-                                        state.pages[page].push([]);
-                                        for(var x = 0; x < 8; x++){
-                                            state.pages[page][y].push(false);
-                                        }
-                                    }
-                                }
-                    
                             function refresh(){
                                 for(var y = 0; y < 8; y++){
                                     object.elements.glowbox_circle['LED_'+y].off();
@@ -51994,6 +52387,10 @@
                                     }
                                 }
                                 object.elements.glowbox_circle['LED_'+state.currentPage].on();
+                            }
+                            function changeToPage(pageNumber){
+                                state.currentPage = pageNumber;
+                                refresh();
                             }
                             function changeToColumn(column){
                                 if(state.currentColumn != -1){ for(var y = 0; y < 8; y++){ object.elements.checkbox_rectangle[y+'_'+state.currentColumn].light(false); } }
@@ -52008,15 +52405,6 @@
                                     if( state.pages[state.currentPage][y][state.currentColumn] ){ object.elements.connectionNode_signal['output_'+y].set(true); }
                                 }
                             }
-                            function step(){
-                                var tmp = state.currentColumn+1; 
-                                if(tmp > 7){tmp = 0;}
-                                changeToColumn(tmp);
-                            }
-                            function changeToPage(pageNumber){
-                                state.currentPage = pageNumber;
-                                refresh();
-                            }
                             function nextPage(){
                                 state.currentPage++;
                                 if(state.currentPage > 7){state.currentPage = 0}
@@ -52027,23 +52415,26 @@
                                 if(state.currentPage < 0){state.currentPage = 7}
                                 changeToPage(state.currentPage);
                             }
+                            function step(){
+                                var tmp = state.currentColumn+1; 
+                                if(tmp > 7){tmp = 0;}
+                                changeToColumn(tmp);
+                            }
                     
-                            changeToPage(0);
-                    
-                        //import/export
-                            object.exportData = function(){ return {
-                                currentPage:state.currentPage,
-                                currentColumn:state.currentColumn,
-                                pages:JSON.stringify(state.pages),
-                            }; };
-                            object.importData = function(data){
-                                state = {
-                                    currentColumn:data.currentColumn,
-                                    currentPage:data.currentPage,
-                                    pages:JSON.parse(data.pages),
-                                };
-                                refresh();
-                            };
+                        //wiring
+                            //hid
+                                object.elements.button_image.step.onpress = step;
+                                object.elements.button_image.upPage.onpress = backPage;
+                                object.elements.button_image.downPage.onpress = nextPage;
+                                for(var y = 0; y < 8; y++){ for(var x = 0; x < 8; x++){
+                                    object.elements.checkbox_rectangle[y+'_'+x].onchange = (function(x,y){return function(value){ 
+                                        state.pages[state.currentPage][y][x] = value; 
+                                    }})(x,y);
+                                } }
+                            //io
+                                object.io.signal.activate_step.onchange = function(value){if(value){step();}};
+                                object.io.signal.activate_upPage.onchange = function(value){if(value){backPage();}};
+                                object.io.signal.activate_downPage.onchange = function(value){if(value){nextPage();}};
                     
                         //interface
                             object.i = {
@@ -52064,12 +52455,27 @@
                                     refresh();
                                 }
                             };
-                            
+                    
+                        //import/export
+                            object.exportData = function(){ return {
+                                currentPage:state.currentPage,
+                                currentColumn:state.currentColumn,
+                                pages:JSON.stringify(state.pages),
+                            }; };
+                            object.importData = function(data){
+                                state = {
+                                    currentColumn:data.currentColumn,
+                                    currentPage:data.currentPage,
+                                    pages:JSON.parse(data.pages),
+                                };
+                                refresh();
+                            };
+                    
+                        //setup
+                            changeToPage(0);
+                    
                         return object;
                     };
-                    
-                    
-                    
                     this.launchpad.metadata = {
                         name:'Launchpad',
                         category:'sequencers',
@@ -52611,14 +53017,45 @@
             _canvas_.control.viewport.activeRender(true);
             _canvas_.core.render.activeLimitToFrameRate(true);
             
-            // var unit = _canvas_.interface.unit.collection.beta.basic_synthesizer(0,0,0);
-            // _canvas_.interface.unit.validator(unit);
-            Object.keys(_canvas_.interface.unit.collection.beta).forEach(model => {
-                if(model[0] == '_'){return;}
+            // _canvas_.control.scene.addUnit(10,-135,0,'distortion','beta');
+            // _canvas_.control.scene.addUnit(-145,-170,0,'reverb','beta');
+            // _canvas_.control.scene.addUnit(-180,240,0,'filter','beta');
             
-                console.log(model);
-                _canvas_.interface.unit.validator( _canvas_.interface.unit.collection.beta[model](0,0,0) );
-            });
+            // _canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','beta');
+            // _canvas_.control.scene.addUnit(175,-95,0,'audio_in','beta');
+            // _canvas_.control.scene.addUnit(140,-115,0,'signal_switch','beta');
+            // _canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','beta');
+            
+            // _canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','beta');
+            // _canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','beta');
+            // _canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','beta');
+            // _canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','beta');
+            // _canvas_.control.scene.addUnit(445,30,0,'signal_combiner','beta');
+            // _canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','beta');
+            // _canvas_.control.scene.addUnit(370,-35,0,'data_combiner','beta');
+            // _canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','beta');
+            
+            // _canvas_.control.scene.addUnit(10,-65,0,'amplifier','beta');
+            // _canvas_.control.scene.addUnit(370,225,0,'audio_recorder','beta');
+            // _canvas_.control.scene.addUnit(-280,85,0,'data_readout','beta');
+            // _canvas_.control.scene.addUnit(-230,-110,0,'signal_readout','beta');
+            // _canvas_.control.scene.addUnit(85,290,0,'voltage_readout','beta');
+            // _canvas_.control.scene.addUnit(165,225,0,'audio_scope','beta');
+            
+            // _canvas_.control.scene.addUnit(370,275,0,'pulse_generator','beta');
+            // _canvas_.control.scene.addUnit(-200,290,0,'eightStepSequencer','beta');
+            // _canvas_.control.scene.addUnit(-70,85,0,'launchpad','beta');
+            
+            _canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer2','beta');
+            // _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','beta');
+            
+            // _canvas_.control.scene.addUnit(10,10,0,'ruler','beta');
+            
+            
+            
+            
+            // _canvas_.control.viewport.scale(6);
+            _canvas_.control.viewport.position(302,208);
 
 
         }

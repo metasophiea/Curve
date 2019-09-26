@@ -1,41 +1,36 @@
-_canvas_.control.scene.addUnit(10,-135,0,'distortion','beta');
-_canvas_.control.scene.addUnit(-145,-170,0,'reverb','beta');
-_canvas_.control.scene.addUnit(-180,240,0,'filter','beta');
+// _canvas_.control.scene.addUnit(10,-135,0,'distortion','beta');
+// _canvas_.control.scene.addUnit(-145,-170,0,'reverb','beta');
+// _canvas_.control.scene.addUnit(-180,240,0,'filter','beta');
 
-_canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','beta');
-_canvas_.control.scene.addUnit(175,-95,0,'audio_in','beta');
-_canvas_.control.scene.addUnit(140,-115,0,'signal_switch','beta');
-_canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','beta');
+// _canvas_.control.scene.addUnit(160,85,0,'musicalKeyboard','beta');
+// _canvas_.control.scene.addUnit(175,-95,0,'audio_in','beta');
+// _canvas_.control.scene.addUnit(140,-115,0,'signal_switch','beta');
+// _canvas_.control.scene.addUnit(-235,240,0,'voltage_dial','beta');
 
-_canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','beta');
-_canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','beta');
-_canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','beta');
-_canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','beta');
-_canvas_.control.scene.addUnit(445,30,0,'signal_combiner','beta');
-_canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','beta');
-_canvas_.control.scene.addUnit(370,-35,0,'data_combiner','beta');
-_canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','beta');
+// _canvas_.control.scene.addUnit(500,30,0,'signal_duplicator','beta');
+// _canvas_.control.scene.addUnit(385,30,0,'voltage_duplicator','beta');
+// _canvas_.control.scene.addUnit(435,-35,0,'data_duplicator','beta');
+// _canvas_.control.scene.addUnit(360,-90,0,'audio_duplicator','beta');
+// _canvas_.control.scene.addUnit(445,30,0,'signal_combiner','beta');
+// _canvas_.control.scene.addUnit(330,30,0,'voltage_combiner','beta');
+// _canvas_.control.scene.addUnit(370,-35,0,'data_combiner','beta');
+// _canvas_.control.scene.addUnit(-255,-60,0,'eightTrackMixer','beta');
 
-_canvas_.control.scene.addUnit(10,-65,0,'amplifier','beta');
-_canvas_.control.scene.addUnit(370,225,0,'audio_recorder','beta');
-_canvas_.control.scene.addUnit(-280,85,0,'data_readout','beta');
-_canvas_.control.scene.addUnit(-230,-110,0,'signal_readout','beta');
-_canvas_.control.scene.addUnit(85,290,0,'voltage_readout','beta');
-_canvas_.control.scene.addUnit(165,225,0,'audio_scope','beta');
+// _canvas_.control.scene.addUnit(10,-65,0,'amplifier','beta');
+// _canvas_.control.scene.addUnit(370,225,0,'audio_recorder','beta');
+// _canvas_.control.scene.addUnit(-280,85,0,'data_readout','beta');
+// _canvas_.control.scene.addUnit(-230,-110,0,'signal_readout','beta');
+// _canvas_.control.scene.addUnit(85,290,0,'voltage_readout','beta');
+// _canvas_.control.scene.addUnit(165,225,0,'audio_scope','beta');
 
-_canvas_.control.scene.addUnit(370,275,0,'pulse_generator','beta');
-_canvas_.control.scene.addUnit(-200,290,0,'eightStepSequencer','beta');
-_canvas_.control.scene.addUnit(-70,85,0,'launchpad','beta');
+// _canvas_.control.scene.addUnit(370,275,0,'pulse_generator','beta');
+// _canvas_.control.scene.addUnit(-200,290,0,'eightStepSequencer','beta');
+// _canvas_.control.scene.addUnit(-70,85,0,'launchpad','beta');
 
-_canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer','beta');
-_canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','beta');
+_canvas_.control.scene.addUnit(175,-40,0,'basic_synthesizer2','beta');
+// _canvas_.control.scene.addUnit(-170,-115,0,'audio_file_player','beta');
 
 // _canvas_.control.scene.addUnit(10,10,0,'ruler','beta');
-
-
-
-
-
 
 
 

@@ -38489,7 +38489,7 @@
                                         printedUnits.push(unit);
                         
                                     //import data and select unit
-                                        if(unit.importData){unit.importData(item.data);}
+                                        if(unit.importData){ try{ unit.importData(item.data); }catch(error){console.warn('control.scene.printUnits:: unable to import data into unit correctly'); console.warn(error);} }
                                         if(autoselect){control.selection.selectUnit(unit);}
                         
                                     //go through its connections, and attempt to connect them to everything they should be connected to

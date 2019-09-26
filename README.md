@@ -1,7 +1,7 @@
 # [curve](https://curve.metasophiea.com/)
 
 ## A Project In Three Parts
-- **_Curve_** is a musical workstation designed to be like real-world music making machines. There's synthesizers and effect units and keyboards and all sorts of stuff you can plug together and play with. 
+- **_Curve_** is a musical sandbox designed to be like real-world music making machines. There's synthesizers and effect units and keyboards and all sorts of stuff you can plug together and play with. 
 
 - **_Workspace_** is a interface framework that is being written alongside Curve. With it, one can create graphical objects and have them interact with one another and the user, in a visual and natural way. Just play around with Curve and you'll understand.
 
@@ -35,3 +35,4 @@ There also seems to be an issue with webGL rendering on windows. I usually devel
 - [Dev Mode](https://curve.metasophiea.com?dev)
 - [Curve Demo 1](https://curve.metasophiea.com?demo=1)
 - [Curve Demo 2](https://curve.metasophiea.com?demo=2)
+- [Curve Demo 3](https://curve.metasophiea.com?demo=3)

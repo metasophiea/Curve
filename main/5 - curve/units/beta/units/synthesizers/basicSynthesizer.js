@@ -88,7 +88,6 @@ this.basic_synthesizer = function(x,y,a){
                 x:measurements.drawingUnit.width*(14+3/4-1/8 +2.4 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -2.4 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
             }},
 
-
             {collection:'basic', type:'image', name:'backing', 
                 data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
             },
@@ -284,11 +283,149 @@ this.basic_synthesizer = function(x,y,a){
         
     return object;
 };
-
-
-
 this.basic_synthesizer.metadata = {
     name:'Basic Synthesizer',
     category:'synthesizers',
     helpURL:'/help/units/beta/basic_synthesizer/'
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+this.basic_synthesizer2 = function(x,y,angle){
+    //style data
+        var unitStyle = new function(){
+            //image store location URL
+                this.imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
+
+            //calculation of measurements
+                var div = 6;
+                var measurement = { 
+                    file: { width:1115, height:680 },
+                    design: { width:18.25, height:11 },
+                };
+
+                this.offset = 20/div;
+                this.drawingValue = { 
+                    width: measurement.file.width/div, 
+                    height: measurement.file.height/div
+                };
+                this.drawingUnit = {
+                    width: this.drawingValue.width/measurement.design.width,
+                    height: this.drawingValue.height/measurement.design.height,
+                };
+
+            //styling values
+        };
+
+        //main object creation
+            var object = _canvas_.interface.unit.builder({
+                name:'audio_file_player',
+                x:x, y:y, angle:angle,
+                space:[
+                    { x:unitStyle.drawingUnit.width,                                                 y:0 },
+                    { x:unitStyle.drawingValue.width -unitStyle.offset -unitStyle.drawingUnit.width, y:0 },
+                    { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height },
+                    { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height*4.5 + unitStyle.offset/2.5 },
+                    { x:unitStyle.drawingUnit.width*12 -unitStyle.offset/1.5,                        y:unitStyle.drawingValue.height -unitStyle.offset },
+                    { x:unitStyle.drawingUnit.width,                                                 y:unitStyle.drawingValue.height -unitStyle.offset },
+                    { x:0,                                                                           y:unitStyle.drawingValue.height -unitStyle.offset -unitStyle.drawingUnit.height },
+                    { x:0,                                                                           y:unitStyle.drawingUnit.height },
+                ],
+                elements:[
+                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
+                        x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
+                        x:15, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_attack', data:{ 
+                        x:50, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_release', data:{ 
+                        x:82.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detune_note', data:{ 
+                        x:117.5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_down', data:{ 
+                        x:150 - 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_up', data:{ 
+                        x:150 + 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_data', name:'io_midiNoteInput', data:{ 
+                        x:unitStyle.drawingValue.width - 5/1.5, y:27.5 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobblePeriod', data:{ 
+                        x:90/2 - 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobbleDepth', data:{ 
+                        x:90/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobblePeriod', data:{ 
+                        x:155/2 - 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobbleDepth', data:{ 
+                        x:155/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
+                        x:unitStyle.drawingUnit.width*(14.75 -5/32), y:unitStyle.drawingUnit.height*(7.75 +3/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
+                        x:unitStyle.drawingUnit.width*(13.5-0.04), y:unitStyle.drawingUnit.height*(9-0.04), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
+                        x:unitStyle.drawingUnit.width*(15.4-1/40), y:unitStyle.drawingUnit.height*(7.1-1/40), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                    }},
+                    {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
+                        x:unitStyle.drawingUnit.width*(17), y:unitStyle.drawingUnit.height*(5.5), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                    }},
+
+                    {collection:'basic', type:'image', name:'backing', 
+                        data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                    },
+                ]
+            });
+
+    //circuitry
+    //wiring
+        //hid
+        //io
+    //interface
+    //import/export
+    //setup
+
+    return object;
+};
+this.basic_synthesizer2.metadata = {
+    name:'Basic Synthesizer2',
+    category:'synthesizers',
+    helpURL:'/help/units/beta/basic_synthesizer2/'
 };

@@ -1,4 +1,20 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-26
+  - rewrote the eightStepSequencer to be a little more beautiful
+  - rewrote the audio_file_player to be a little more beautiful
+
+
+2019-09-25
+  - updated the audio_file_player's import/export functions to include the
+    settings for everything
+  - updated the eightStepSequencer's import/export functions to include the
+    current position
+  - rewrote the launchpad to be a little more beautiful
+  - rewrote the pulse_generator to be a little more beautiful
+  - updated control.scene.printUnits to handle importing data to units where
+    the import function fails
+  
+
 2019-09-24
   - updated a number of the units to have export/import data methods
 

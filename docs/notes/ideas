@@ -177,3 +177,4 @@
 - rotate unit around point other than their origin (maybe it's 'centre')
 - dev output text console thing. Maybe activate with F3 or something (maybe just the url which adds an option in the menubar dropdown)
 - auto-generated "blotchy" background (maybe other background types too)
+- connection nodes expand when mousing over them
