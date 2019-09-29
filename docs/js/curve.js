@@ -50882,7 +50882,7 @@
                         
                                     data.stages.forEach( (stage,index) => {
                                         object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
-                                        object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
+                                        object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave+1);
                                         object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
                                     });
                         
@@ -52092,7 +52092,7 @@
                         
                                     data.stages.forEach( (stage,index) => {
                                         object.elements.dial_colourWithIndent_discrete['dial_noteSelect_'+index].set(stage.note);
-                                        object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave);
+                                        object.elements.slide_discrete_image['slide_octave_'+index].set(stage.octave+1);
                                         object.elements.dial_colourWithIndent_continuous['dial_velocity_'+index].set(stage.velocity);
                                     });
                         

@@ -8,6 +8,7 @@
     layer to allow for a definable collection order. Also, there's a second
     list that is only appended when devMode is active
   - added a darkmode™ parameter to the url reader thing (...?darkmode)
+  - broke the eightStepSequencer somewhere along the way, all good now
 
 
 2019-09-28
