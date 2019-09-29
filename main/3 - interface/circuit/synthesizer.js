@@ -41,10 +41,10 @@ this.synthesizer = function(
                     this.generator.start(0);
 
                 this.gain = context.createGain();
-                    this.generator.connect(this.gain);
-                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                    _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
-                    this.gain.connect(connection);
+                this.generator.connect(this.gain);
+                this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                this.gain.connect(connection);
 
                 this.detune = function(target,time,curve){
                     _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
@@ -53,7 +53,7 @@ this.synthesizer = function(
                     _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
                 };
                 this.stop = function(){
-                    _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
+                    _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
                     setTimeout(function(that){
                         that.gain.disconnect(); 
                         that.generator.stop(); 

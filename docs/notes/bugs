@@ -10,13 +10,18 @@
     things seems fine...I must have fixed it at some point
 [2019-07-31:1] control.interaction.mouseGripPanningEnabled when disabled doesn't allow for "click anywhere else" unit deselection
     /main/4 - control/mouse.js:://panning moved "_canvas_.control.selection.deselectEverything();" to before the switch, so it always run
+[2019-09-26:1] ending a note too quickly on the basicSynthesizer results in a snap sound
+[2019-08-25:1] synthesizer circuit: Regarding the wobble features, seems you can set them too high and collisions can occur
+    changed library.audio.changeAudioParam's "cancelScheduledValues" call from
+        if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+    to
+        if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
+    which seems to have fixed whatever collisions were occurring
 
 
 [2019-08-03:1] buttons atop buttons don't hover right, nor click right
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
-[2019-08-25:1] synthesizer circuit: Regarding the wobble features, seems you can set them too high and collisions can occur
-[2019-08-26:1] (?) connection nodes can work accross panes (is it really an issue though?) 
+[2019-08-26:1] (?) connection nodes can work across panes (is it really an issue though?) 
 [2019-09-01:1] snapping and unit collision don't play well together
 [2019-09-15:1] something is up with webGl on windows, that isn't present on mac or linux..I think only with clipping
-[2019-09-26:1] ending a note too quickly on the basicSynthesizer results in a snap sound
-[2019-09-26:2] sometimes the panning gets stuck on
+[2019-09-26:2] sometimes the camera panning gets stuck on

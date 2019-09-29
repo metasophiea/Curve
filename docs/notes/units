@@ -42,53 +42,6 @@ alpha units
 
 
 
-
-
-
-
-
-beta units
-    the essentials (26/27)
-    _/  - ruler
-
-    _/  - pulse generator (signal)
-    _/  - musical keyboard (velocity dial, sustain button/connection)(signal inputs for each note?)(data out:midi)
-
-    _/  - launchpad (1 signal in, 8 signals out)
-    _/  - analogue sequencer (8 step)
-
-    _/  - signal switch
-    _/  - voltage dial
-        
-    _/  - signal duplicator
-    _/  - voltage duplicator
-    _/  - data duplicator
-    _/  - audio duplicator
-    _/  - signal combiner
-    _/  - voltage combiner
-    _/  - data combiner
-
-    _/  - LED board readout (signal readout)
-    _/  - voltmeter readout (voltage readout)
-    _/  - data logger readout (data readout)
-    _/  - audio scope readout (audio readout)
-
-    _/  - audio in (microphone)
-    _/  - audio sink (stereo audio connections)(looks like a speaker or amp)
-
-    _/  - basic synthesizer
-
-    _/  - distortion unit (mono)
-    __  - filter unit (mono)(high-med-low)
-    _/  - reverb unit (mono)
-
-    _/  - basic 8 track mixer (8 mono to 1 stereo)(panning and volume)
-
-    _/  - audio file player (with area selection and signal-shot input)
-
-    _/  - audio recorder
-
-
         
 
 
@@ -187,10 +140,10 @@ future units
             like a programmable FPGA for dealing with signals
             could also include actual programmable elements
 
-        signal tempo devider (eg. 8 on-offs go in, before 1 on-off comes out)
+        signal tempo divider (eg. 8 on-offs go in, before 1 on-off comes out)
         signal tempo multiplier (predictive tempo generator from input)
 
-        printer
+        printer (saves to file)
 
 
 
@@ -243,6 +196,7 @@ design pattern
         state
     wiring
         hid
+        keycapture (updates hid)
         io (updates hid)
     interface
         (updates hid)

@@ -1138,7 +1138,7 @@
                             this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
                                 if(target==null){return audioParam.value;}
                             
-                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
                             
                                 try{
                                     switch(curve){
@@ -1159,7 +1159,7 @@
                                             audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                                         break;
                                         case 'instant': default:
-                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001*10);
                                         break;
                                     }
                                 }catch(e){
@@ -24396,7 +24396,7 @@
                 
                 
                 _canvas_.system = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:24} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:27} };
                 };
                 _canvas_.system.mouse = new function(){
                     //setup
@@ -24440,12 +24440,15 @@
                         };
                     
                     //connect callbacks to mouse function lists
-                        [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(callback => {
-                            _canvas_.core.callback.functions[callback] = function(x,y,event,shapes){
-                                if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
-                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
-                            }
-                        });
+                        this.setUpCallbacks = function(){
+                            [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(callback => {
+                                _canvas_.core.callback.functions[callback] = function(x,y,event,shapes){
+                                    if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
+                                    else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                                }
+                            });
+                        }
+                        this.setUpCallbacks();
                 };
                 _canvas_.system.keyboard = new function(){
                     //setup
@@ -24486,6 +24489,9 @@
                                 if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                                 _canvas_.system.keyboard.pressedKeys[event.code] = true;
                                 customKeyInterpreter(event,true);
+                    
+                            //ESCAPE operation code
+                                if(event.key == 'Escape'){ _canvas_.system.mouse.setUpCallbacks(); }
                             
                             //perform action
                                 for(var a = 0; a < shapes.length; a++){
@@ -24570,7 +24576,7 @@
                     };
 
                 _canvas_.interface = new function(){
-                    this.versionInformation = { tick:1, lastDateModified:{y:2019,m:9,d:19} };
+                    this.versionInformation = { tick:1, lastDateModified:{y:2019,m:9,d:29} };
                     var interface = this;
                 
                     this.circuit = new function(){
@@ -24688,7 +24694,7 @@
                         ){
                             //flow chain
                                 var flow = {
-                                    audioDevice: null,
+                                    audioDevice:undefined,
                                     outAggregator: {}
                                 };
                         
@@ -24713,8 +24719,9 @@
                                     var promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
                                     promise.then(
                                         function(source){
-                                            audioDevice = source;
-                                            _canvas_.library.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                                            if(flow.audioDevice != undefined){ flow.audioDevice.disconnect(); }
+                                            flow.audioDevice = _canvas_.library.audio.context.createMediaStreamSource(source);
+                                            flow.audioDevice.connect(flow.outAggregator.node);                    
                                         },
                                         function(error){
                                             console.warn('could not find audio input device: "' + deviceId + '"');
@@ -26090,10 +26097,10 @@
                                             this.generator.start(0);
                         
                                         this.gain = context.createGain();
-                                            this.generator.connect(this.gain);
-                                            this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                                            _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
-                                            this.gain.connect(connection);
+                                        this.generator.connect(this.gain);
+                                        this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                        _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                                        this.gain.connect(connection);
                         
                                         this.detune = function(target,time,curve){
                                             _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
@@ -26102,7 +26109,7 @@
                                             _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
                                         };
                                         this.stop = function(){
-                                            _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
+                                            _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
                                             setTimeout(function(that){
                                                 that.gain.disconnect(); 
                                                 that.generator.stop(); 
@@ -36824,13 +36831,13 @@
                                             object._flash();
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
-                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().onreceive(address,data);}catch(error){console.log('connectionNode_data::'+name+'onreceive error:',error);} }
+                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().onreceive(address,data);}catch(error){console.log('connectionNode_data::'+name+' onreceive error:',error);} }
                                         };
                                         object.request = function(address){
                                             object._flash();
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
-                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().ongive(address);}catch(error){console.log('connectionNode_data::'+name+'ongive error:',error);} }
+                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().ongive(address);}catch(error){console.log('connectionNode_data::'+name+' ongive error:',error);} }
                                         };
                                 
                                         object.onreceive = onreceive;
@@ -37854,7 +37861,7 @@
                 );
                 
                 _canvas_.control = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:30} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:29} };
                     var control = this;
                 
                     this.interaction = new function(){
@@ -38325,11 +38332,20 @@
                         
                         //unit manipulation
                             this.generateUnitName = function(){ return IDcounter++; };
-                            this.addUnit = function(x,y,a,model,collection='alpha',forceName,rectify=true,pane=_canvas_.system.pane.mm){
+                            this.addUnit = function(x,y,a,model,collection,forceName,rectify=true,pane=_canvas_.system.pane.mm){
                                 //control switch
                                     if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
                         
-                        
+                            
+                                //input checking
+                                    if(model == undefined){
+                                        console.warn('error::control.scene.addUnit: no model defined'); 
+                                        return;
+                                    }
+                                    if(collection == undefined){
+                                        console.warn('error::control.scene.addUnit: no collection defined'); 
+                                        return;
+                                    }
                         
                                 //generate new name for unit
                                     var name = forceName==undefined ? this.generateUnitName() : forceName;
@@ -38559,7 +38575,8 @@
                                         //restarting audio
                                             _canvas_.library.audio.destination.masterGain(1);
                         
-                                        //deselect all units
+                                        //select everything again to shift every unit in front of the cables, then deselect all units
+                                            control.selection.selectEverything(true);
                                             control.selection.deselectEverything();
                         
                                         //clear the actionReigister
@@ -38654,13 +38671,9 @@
                                 this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
                                 if(unit.ondeselect){unit.ondeselect();}
                         };
-                        this.selectEverything = function(){
+                        this.selectEverything = function(shiftToFront=false){
                             this.deselectEverything();
-                            for(var a = 0; a < _canvas_.system.pane.mm.children().length; a++){
-                                if( !_canvas_.system.pane.mm.children()[a]._isCable ){
-                                    this.selectUnit(_canvas_.system.pane.mm.children()[a],false);
-                                }
-                            }
+                            _canvas_.system.pane.mm.children().filter(item => !item._isCable).forEach(unit => { this.selectUnit(unit,shiftToFront); });
                         };
                         this.deselectEverything = function(){
                             while(this.selectedUnits.length > 0){
@@ -39203,9 +39216,6 @@
                     }
                 );
                 
-                window.onresize = _canvas_.control.viewport.refresh; 
-                _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
-                
                 _canvas_.control.misc = {
                     currentStyleMode:'light',
                     lightMode:function(){
@@ -39241,6 +39251,8 @@
                                     item__glow__colour:{r:220/255,g:220/255,b:220/255,a:1},
                                     item__hover_press__colour:{r:240/255,g:240/255,b:240/255,a:1},
                                     item__hover_glow_press__colour:{r:250/255,g:250/255,b:250/255,a:1},
+                
+                                    backing_style:{r:230/255,g:230/255,b:230/255,a:1},
                                 },
                             }
                         );
@@ -39281,11 +39293,16 @@
                                     item__glow__colour:{r:220/255*mux,g:220/255*mux,b:220/255*mux,a:1},
                                     item__hover_press__colour:{r:240/255*mux*2,g:240/255*mux*2,b:240/255*mux*2,a:1},
                                     item__hover_glow_press__colour:{r:250/255*mux*2,g:250/255*mux*2,b:250/255*mux*2,a:1},
+                
+                                    backing_style:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
                                 },
                             }
                         );
                     },
                 };
+                
+                window.onresize = _canvas_.control.viewport.refresh; 
+                _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
             })();
 
         }

@@ -1138,7 +1138,7 @@
                             this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
                                 if(target==null){return audioParam.value;}
                             
-                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
                             
                                 try{
                                     switch(curve){
@@ -1159,7 +1159,7 @@
                                             audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                                         break;
                                         case 'instant': default:
-                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001*10);
                                         break;
                                     }
                                 }catch(e){

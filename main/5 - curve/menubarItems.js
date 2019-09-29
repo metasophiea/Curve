@@ -57,7 +57,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                 var outputItemList = [];
                 var unitPlacementPosition = {x:30,y:30};
 
-                Object.keys(collections).sort().forEach(collectionKey => {
+                function populator(collectionKey){
                     var collection = collections[collectionKey];
                     var collectionItemList = {
                         type:'list', 
@@ -114,8 +114,13 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
 
                     //add this item list to the output array
                         outputItemList.push(collectionItemList);
-                });
+                }
 
+                collections.metadata.mainList.forEach(collectionKey => { populator(collectionKey); });
+                if(_canvas_.control.interaction.devMode()){
+                    outputItemList.push({type:'break'});
+                    collections.metadata.devList.forEach(collectionKey => { populator(collectionKey); });
+                }
 
                 return outputItemList;
             })(),

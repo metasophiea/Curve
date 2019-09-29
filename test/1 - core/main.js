@@ -1,7 +1,7 @@
 {{include:../../main/0 - library/main.js}}
 {{include:../../main/1 - core/main.js}}
 
-{{include:0.js}}  //all shapes
+// {{include:0.js}}  //all shapes
 // {{include:1.js}}  //wave boxes (forced slow refresh rate)
 // {{include:2.js}}  //heavy render / fps test
 // {{include:3.js}}  //angle and scale adjustment on groups with chilldren
@@ -14,4 +14,4 @@
 // {{include:10.js}}  //custom shape
 // {{include:11.js}}  //click boundry test
 // {{include:12.js}}  //colour test
-// {{include:13.js}}  //subcanvas test
+{{include:13.js}}  //subcanvas test

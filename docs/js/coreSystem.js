@@ -1138,7 +1138,7 @@
                             this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
                                 if(target==null){return audioParam.value;}
                             
-                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
                             
                                 try{
                                     switch(curve){
@@ -1159,7 +1159,7 @@
                                             audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                                         break;
                                         case 'instant': default:
-                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001*10);
                                         break;
                                     }
                                 }catch(e){
@@ -24396,7 +24396,7 @@
                 
                 
                 _canvas_.system = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:24} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:27} };
                 };
                 _canvas_.system.mouse = new function(){
                     //setup
@@ -24440,12 +24440,15 @@
                         };
                     
                     //connect callbacks to mouse function lists
-                        [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(callback => {
-                            _canvas_.core.callback.functions[callback] = function(x,y,event,shapes){
-                                if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
-                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
-                            }
-                        });
+                        this.setUpCallbacks = function(){
+                            [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(callback => {
+                                _canvas_.core.callback.functions[callback] = function(x,y,event,shapes){
+                                    if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
+                                    else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                                }
+                            });
+                        }
+                        this.setUpCallbacks();
                 };
                 _canvas_.system.keyboard = new function(){
                     //setup
@@ -24486,6 +24489,9 @@
                                 if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                                 _canvas_.system.keyboard.pressedKeys[event.code] = true;
                                 customKeyInterpreter(event,true);
+                    
+                            //ESCAPE operation code
+                                if(event.key == 'Escape'){ _canvas_.system.mouse.setUpCallbacks(); }
                             
                             //perform action
                                 for(var a = 0; a < shapes.length; a++){

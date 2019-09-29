@@ -1,4 +1,67 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-09-29
+  - added another attribute to the menubar settings for dark mode (to account
+    for the new 'text' item)(I should probably redo that little section so that
+    there's more control over the menubar style, and cleaner control too)
+  - changed the name of the 'alpha' collection to 'development' and 'beta' to 
+    'alpha'. Also added meta data and rejiggered the menubar maker in the curve
+    layer to allow for a definable collection order. Also, there's a second
+    list that is only appended when devMode is active
+  - added a darkmode™ parameter to the url reader thing (...?darkmode)
+
+
+2019-09-28
+  notes
+  - created a windows 10 vm, and things seemed to be fine..hmm...
+
+  - updated control.selection.selectEverything to have a "shiftToFront" argument
+    and to select all units in a better, more robust way
+  - added an new step to control.scene.load to select all the newly imported
+    units and shift them to the front
+  - fixed bug: [2019-09-26:1] "ending a note too quickly on the basicSynthesizer
+               results in a snap sound"
+    changed library.audio.changeAudioParam's "cancelScheduledValues" call from
+        audioParam.cancelScheduledValues(context.currentTime);
+    to
+        audioParam.cancelScheduledValues(0);
+    which seems to have fixed whatever collision was occurring
+
+    this seems to have also fixed [2019-08-25:1] "synthesizer circuit:
+    Regarding the wobble features, seems you can set them too high and
+    collisions can occur"
+  - rewrote the ruler to be a little more beautiful
+  - rewrote the musical_keyboard to be a little more beautiful
+  - rewrote the signal_switch to be a little more beautiful
+  - rewrote the voltage_dial to be a little more beautiful
+  - rewrote the signal_duplicator to be a little more beautiful
+  - rewrote the voltage_duplicator to be a little more beautiful
+  - rewrote the data_duplicator to be a little more beautiful
+  - rewrote the audio_duplicator to be a little more beautiful
+  - rewrote the signal_combiner to be a little more beautiful
+  - rewrote the voltage_combiner to be a little more beautiful
+  - rewrote the data_combiner to be a little more beautiful
+  - rewrote the LED_board to be a little more beautiful
+  - rewrote the voltmeter to be a little more beautiful
+  - rewrote the data_readout to be a little more beautiful
+  - rewrote the audio_scope to be a little more beautiful
+  - rewrote the audio_in to be a little more beautiful
+  - rewrote the distortion  to be a little more beautiful
+  - rewrote the filter to be a little more beautiful
+  - rewrote the reverb to be a little more beautiful
+  - rewrote the eightTrackMixer to be a little more beautiful
+  - rewrote the audio_recorder to be a little more beautiful
+  - removed "drawingUnit" along the way
+
+
+2019-09-27
+  - added code to system.keyboard within the callback function for 
+    core:onkeydown, so that if the Escape key is pressed; 
+    system.mouse.setUpCallbacks is run again. 'system.mouse.setUpCallbacks' now
+    contains all the code used to set up system, mouse interaction
+  - rewrote the basic_synthesizer to be a little more beautiful
+  - rewrote the amplifier to be a little more beautiful
+
+
 2019-09-26
   - rewrote the eightStepSequencer to be a little more beautiful
   - rewrote the audio_file_player to be a little more beautiful

@@ -28,7 +28,7 @@ You can use the 'comp' function (./compliation/comp.sh) in the compliation folde
 The command uses a little JavaScript compiler written in Python3 called Gravity, which goes through JS files looking for commands to execute, ultimatly producing a single JS file. So far there's only one command - a straightforward include - but that's all I really need right now. The 'heavyComp' is used to produce "production" versions of the code. This version uses gravity to build together the program, then Clousure to pack it all up.
 
 ## Compatibility
-Recently (24/4/2019) I finished my overhaul of the graphical backend of the project, taking out the Canvas aspect of core and replacing it with webGL. So far it's been pretty happy working on most browsers, but more testing is needed. Safari is still unable to handle WebAudio, so I recommend just sticking with Chrome (and maybe Firefox, but the mouse-wheel zooming doesn't work that great just yet) for now.
+Recently (24/4/2019) I finished my overhaul of the graphical backend of the project, taking out the Canvas aspect of core and replacing it with webGL. So far it's been pretty happy working on most browsers, but more testing is needed. Safari is still unable to handle WebAudio, so I recommend just sticking with Chrome (and maybe Firefox, but the mouse-wheel zooming doesn't work that great just yet, and the audio isn't great) for now.
 There also seems to be an issue with webGL rendering on windows. I usually develop on Linux and Mac, so, it's something I need to look in to.
 
 ## Interesting Links

@@ -3,7 +3,7 @@ this.audioIn = function(
 ){
     //flow chain
         var flow = {
-            audioDevice: null,
+            audioDevice:undefined,
             outAggregator: {}
         };
 
@@ -28,8 +28,9 @@ this.audioIn = function(
             var promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
             promise.then(
                 function(source){
-                    audioDevice = source;
-                    _canvas_.library.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                    if(flow.audioDevice != undefined){ flow.audioDevice.disconnect(); }
+                    flow.audioDevice = _canvas_.library.audio.context.createMediaStreamSource(source);
+                    flow.audioDevice.connect(flow.outAggregator.node);                    
                 },
                 function(error){
                     console.warn('could not find audio input device: "' + deviceId + '"');

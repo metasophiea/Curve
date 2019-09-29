@@ -5,8 +5,9 @@
 {{include:../../main/4 - control/main.js}}
 {{include:../../main/5 - curve/main.js}}
 
-// {{include:1.js}}
-// {{include:2.js}}
-// {{include:3.js}}
-{{include:4.js}}
-// {{include:5.js}}
+// {{include:1.js}} //development units - all
+// {{include:2.js}} //development units - testing copy/paste
+// {{include:3.js}} //development units - testing image-based units
+// {{include:4.js}} //alpha units
+// {{include:5.js}} //unit validator
+{{include:6.js}} //curveTech units

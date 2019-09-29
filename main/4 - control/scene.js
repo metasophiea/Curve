@@ -117,11 +117,20 @@ this.unpackData = function(data){
 
 //unit manipulation
     this.generateUnitName = function(){ return IDcounter++; };
-    this.addUnit = function(x,y,a,model,collection='alpha',forceName,rectify=true,pane=_canvas_.system.pane.mm){
+    this.addUnit = function(x,y,a,model,collection,forceName,rectify=true,pane=_canvas_.system.pane.mm){
         //control switch
             if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
 
-
+    
+        //input checking
+            if(model == undefined){
+                console.warn('error::control.scene.addUnit: no model defined'); 
+                return;
+            }
+            if(collection == undefined){
+                console.warn('error::control.scene.addUnit: no collection defined'); 
+                return;
+            }
 
         //generate new name for unit
             var name = forceName==undefined ? this.generateUnitName() : forceName;
@@ -351,7 +360,8 @@ this.unpackData = function(data){
                 //restarting audio
                     _canvas_.library.audio.destination.masterGain(1);
 
-                //deselect all units
+                //select everything again to shift every unit in front of the cables, then deselect all units
+                    control.selection.selectEverything(true);
                     control.selection.deselectEverything();
 
                 //clear the actionReigister

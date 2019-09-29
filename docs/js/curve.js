@@ -1138,7 +1138,7 @@
                             this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
                                 if(target==null){return audioParam.value;}
                             
-                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
+                                if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
                             
                                 try{
                                     switch(curve){
@@ -1159,7 +1159,7 @@
                                             audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
                                         break;
                                         case 'instant': default:
-                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001);
+                                            audioParam.setTargetAtTime(target, context.currentTime, 0.001*10);
                                         break;
                                     }
                                 }catch(e){
@@ -24396,7 +24396,7 @@
                 
                 
                 _canvas_.system = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:24} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:27} };
                 };
                 _canvas_.system.mouse = new function(){
                     //setup
@@ -24440,12 +24440,15 @@
                         };
                     
                     //connect callbacks to mouse function lists
-                        [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(callback => {
-                            _canvas_.core.callback.functions[callback] = function(x,y,event,shapes){
-                                if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
-                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
-                            }
-                        });
+                        this.setUpCallbacks = function(){
+                            [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(callback => {
+                                _canvas_.core.callback.functions[callback] = function(x,y,event,shapes){
+                                    if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
+                                    else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                                }
+                            });
+                        }
+                        this.setUpCallbacks();
                 };
                 _canvas_.system.keyboard = new function(){
                     //setup
@@ -24486,6 +24489,9 @@
                                 if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
                                 _canvas_.system.keyboard.pressedKeys[event.code] = true;
                                 customKeyInterpreter(event,true);
+                    
+                            //ESCAPE operation code
+                                if(event.key == 'Escape'){ _canvas_.system.mouse.setUpCallbacks(); }
                             
                             //perform action
                                 for(var a = 0; a < shapes.length; a++){
@@ -24570,7 +24576,7 @@
                     };
 
                 _canvas_.interface = new function(){
-                    this.versionInformation = { tick:1, lastDateModified:{y:2019,m:9,d:19} };
+                    this.versionInformation = { tick:1, lastDateModified:{y:2019,m:9,d:29} };
                     var interface = this;
                 
                     this.circuit = new function(){
@@ -24688,7 +24694,7 @@
                         ){
                             //flow chain
                                 var flow = {
-                                    audioDevice: null,
+                                    audioDevice:undefined,
                                     outAggregator: {}
                                 };
                         
@@ -24713,8 +24719,9 @@
                                     var promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
                                     promise.then(
                                         function(source){
-                                            audioDevice = source;
-                                            _canvas_.library.audio.context.createMediaStreamSource(source).connect(flow.outAggregator.node);                    
+                                            if(flow.audioDevice != undefined){ flow.audioDevice.disconnect(); }
+                                            flow.audioDevice = _canvas_.library.audio.context.createMediaStreamSource(source);
+                                            flow.audioDevice.connect(flow.outAggregator.node);                    
                                         },
                                         function(error){
                                             console.warn('could not find audio input device: "' + deviceId + '"');
@@ -26090,10 +26097,10 @@
                                             this.generator.start(0);
                         
                                         this.gain = context.createGain();
-                                            this.generator.connect(this.gain);
-                                            this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
-                                            _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
-                                            this.gain.connect(connection);
+                                        this.generator.connect(this.gain);
+                                        this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                        _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                                        this.gain.connect(connection);
                         
                                         this.detune = function(target,time,curve){
                                             _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
@@ -26102,7 +26109,7 @@
                                             _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
                                         };
                                         this.stop = function(){
-                                            _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve, false);
+                                            _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
                                             setTimeout(function(that){
                                                 that.gain.disconnect(); 
                                                 that.generator.stop(); 
@@ -36824,13 +36831,13 @@
                                             object._flash();
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
-                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().onreceive(address,data);}catch(error){console.log('connectionNode_data::'+name+'onreceive error:',error);} }
+                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().onreceive(address,data);}catch(error){console.log('connectionNode_data::'+name+' onreceive error:',error);} }
                                         };
                                         object.request = function(address){
                                             object._flash();
                                             if(object.getForeignNode()!=undefined){ object.getForeignNode()._flash(); }
                                 
-                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().ongive(address);}catch(error){console.log('connectionNode_data::'+name+'ongive error:',error);} }
+                                            if(object.getForeignNode()!=undefined){ try{object.getForeignNode().ongive(address);}catch(error){console.log('connectionNode_data::'+name+' ongive error:',error);} }
                                         };
                                 
                                         object.onreceive = onreceive;
@@ -37854,7 +37861,7 @@
                 );
                 
                 _canvas_.control = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:30} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:29} };
                     var control = this;
                 
                     this.interaction = new function(){
@@ -38325,11 +38332,20 @@
                         
                         //unit manipulation
                             this.generateUnitName = function(){ return IDcounter++; };
-                            this.addUnit = function(x,y,a,model,collection='alpha',forceName,rectify=true,pane=_canvas_.system.pane.mm){
+                            this.addUnit = function(x,y,a,model,collection,forceName,rectify=true,pane=_canvas_.system.pane.mm){
                                 //control switch
                                     if(!_canvas_.control.interaction.enableUnitAdditionRemoval()){return;}
                         
-                        
+                            
+                                //input checking
+                                    if(model == undefined){
+                                        console.warn('error::control.scene.addUnit: no model defined'); 
+                                        return;
+                                    }
+                                    if(collection == undefined){
+                                        console.warn('error::control.scene.addUnit: no collection defined'); 
+                                        return;
+                                    }
                         
                                 //generate new name for unit
                                     var name = forceName==undefined ? this.generateUnitName() : forceName;
@@ -38559,7 +38575,8 @@
                                         //restarting audio
                                             _canvas_.library.audio.destination.masterGain(1);
                         
-                                        //deselect all units
+                                        //select everything again to shift every unit in front of the cables, then deselect all units
+                                            control.selection.selectEverything(true);
                                             control.selection.deselectEverything();
                         
                                         //clear the actionReigister
@@ -38654,13 +38671,9 @@
                                 this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
                                 if(unit.ondeselect){unit.ondeselect();}
                         };
-                        this.selectEverything = function(){
+                        this.selectEverything = function(shiftToFront=false){
                             this.deselectEverything();
-                            for(var a = 0; a < _canvas_.system.pane.mm.children().length; a++){
-                                if( !_canvas_.system.pane.mm.children()[a]._isCable ){
-                                    this.selectUnit(_canvas_.system.pane.mm.children()[a],false);
-                                }
-                            }
+                            _canvas_.system.pane.mm.children().filter(item => !item._isCable).forEach(unit => { this.selectUnit(unit,shiftToFront); });
                         };
                         this.deselectEverything = function(){
                             while(this.selectedUnits.length > 0){
@@ -39203,9 +39216,6 @@
                     }
                 );
                 
-                window.onresize = _canvas_.control.viewport.refresh; 
-                _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
-                
                 _canvas_.control.misc = {
                     currentStyleMode:'light',
                     lightMode:function(){
@@ -39241,6 +39251,8 @@
                                     item__glow__colour:{r:220/255,g:220/255,b:220/255,a:1},
                                     item__hover_press__colour:{r:240/255,g:240/255,b:240/255,a:1},
                                     item__hover_glow_press__colour:{r:250/255,g:250/255,b:250/255,a:1},
+                
+                                    backing_style:{r:230/255,g:230/255,b:230/255,a:1},
                                 },
                             }
                         );
@@ -39281,17 +39293,22 @@
                                     item__glow__colour:{r:220/255*mux,g:220/255*mux,b:220/255*mux,a:1},
                                     item__hover_press__colour:{r:240/255*mux*2,g:240/255*mux*2,b:240/255*mux*2,a:1},
                                     item__hover_glow_press__colour:{r:250/255*mux*2,g:250/255*mux*2,b:250/255*mux*2,a:1},
+                
+                                    backing_style:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
                                 },
                             }
                         );
                     },
                 };
+                
+                window.onresize = _canvas_.control.viewport.refresh; 
+                _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
                 _canvas_.curve = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:24} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:29} };
                 };
                 
                 _canvas_.interface.unit.collection = new function(){
-                    this.alpha = new function(){
+                    this.development = new function(){
                         // this.audio_duplicator = function(x,y,a){
                         //     var style = {
                         //         background:{r:200/255,g:200/255,b:200/255,a:1},
@@ -42446,12 +42463,12 @@
                                 detuneLimits: {min:-100, max:100}
                             };
                             var style = {
-                                background:'/images/units/alpha/basicSynthesizer_2.png',
+                                background:'/images/units/0 - development/basicSynthesizer_2.png',
                         
                                 dial:{
-                                    handle:'/images/units/alpha/basicSynthesizer_2_dial_handle.png',
-                                    slot:'/images/units/alpha/basicSynthesizer_2_dial_slot.png',
-                                    needle:'/images/units/alpha/basicSynthesizer_2_dial_needle.png',
+                                    handle:'/images/units/0 - development/basicSynthesizer_2_dial_handle.png',
+                                    slot:'/images/units/0 - development/basicSynthesizer_2_dial_slot.png',
+                                    needle:'/images/units/0 - development/basicSynthesizer_2_dial_needle.png',
                                 },
                                 button:{
                                     background__up__colour:{r:175/255,g:175/255,b:175/255,a:1}, 
@@ -42462,7 +42479,7 @@
                             var design = {
                                 name:'basicSynthesizer_img',
                                 category:'synthesizers',
-                                collection: 'alpha',
+                                collection: '0 - development',
                                 x:x, y:y, angle:angle,
                                 space:[{x:0,y:0},{x:240,y:0},{x:240,y:40},{x:190,y:90},{x:0,y:90},{x:0,y:0}], 
                                 // spaceOutline: true,
@@ -42709,7 +42726,7 @@
                             name:'Basic Synthesizer With Image',
                             dev:true,
                             category:'synthesizer',
-                            helpURL:'https://curve.metasophiea.com/help/units/alpha/basicSynthesizer_img/'
+                            helpURL:'https://curve.metasophiea.com/help/units/0 - development/basicSynthesizer_img/'
                         };
                         this.audioIn = function(x,y,a,setupConnect=true){
                             var attributes = {
@@ -44704,7 +44721,7 @@
                             synthesizer:{ printingName:'Synthesizers' },
                         };
                     };
-                    this.beta = new function(){
+                    this.alpha = new function(){
                         _canvas_.core.shape.library.rectangleWithRoundEnds = function(){
                             var self = this;
                         
@@ -44953,576 +44970,594 @@
                         _canvas_.interface.part.partLibrary.basic.rectangleWithRoundEnds = function(name,data){ return _canvas_.interface.part.collection.basic.rectangleWithRoundEnds(
                             name, data.x, data.y, data.angle, data.width, data.height, data.detail, data.ignored, data.colour
                         ); }
-                        this.voltage_combiner = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
+                        this.voltage_combiner = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:260, height:260 },
-                                design:{ width:4, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'voltage_combiner',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:(measurements.drawing.height -offset)/2 },
-                                    { x:measurements.drawing.width -offset, y:0                                       },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
-                                    { x:0,                                  y:measurements.drawing.height -offset     },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output',   data:{ x:0, y:measurements.drawing.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_1',  data:{ x:measurements.drawing.width-3-1/3, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_2',  data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-18-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ x:measurements.drawing.width*0.78, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage }},
-                        
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                        
-                                    {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
-                                        x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
-                                        handleURL:imageStoreURL_localPrefix+'handle.png'
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //wiring
-                                var mix = 0.5;
-                                var inputValue = [0,0];
-                                function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
-                        
-                                object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
-                                object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
-                                object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
-                                object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
-                        
-                            //import/export
-                                object.exportData = function(){ return mix; };
-                                object.importData = function(data){
-                                    if(data == undefined){return;}
-                        
-                                    object.elements.slide_continuous_image.slide_mix.set(data); 
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                                 };
                         
-                            //interface
-                                object.i = {
-                                    mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
-                                };
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_combiner',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                                   },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'output',   data:{ 
+                                            x:0, y:unitStyle.drawingValue.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'input_1',  data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'input_2',  data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-18-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ 
+                                            x:unitStyle.drawingValue.width*0.78, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
                         
-                            return object;
-                        };
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        } },
                         
+                                        {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
+                                            x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png'
+                                        }},
+                                    ]
+                                });
                         
+                                //circuitry
+                                    var mix = 0.5;
+                                    var inputValue = [0,0];
+                                    function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
                         
+                                //wiring
+                                    //hid
+                                        object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
+                                    //io (updates hid)
+                                        object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
+                                        object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
+                                        object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
+                        
+                                //interface
+                                    object.i = {
+                                        mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
+                                    };
+                        
+                                //import/export
+                                    object.exportData = function(){ return mix; };
+                                    object.importData = function(data){
+                                        if(data == undefined){return;}
+                        
+                                        object.elements.slide_continuous_image.slide_mix.set(data); 
+                                    };
+                        
+                                return object;
+                            };
                         this.voltage_combiner.metadata = {
                             name:'Voltage Combiner',
                             category:'misc',
                             helpURL:'/help/units/beta/voltage_combiner/'
                         };
-                        this.audio_duplicator = function(x,y,a){
-                            var width = 320; var height = 320;
-                            var div = 6.4;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div*(0.85/5),y:0},
-                                {x:width/div*(4.5/5),y:height/div*(1/5)},
-                                {x:width/div*(4.5/5),y:height/div*(4/5)},
-                                {x:width/div*(0.85/5),y:height/div},
-                                {x:0,y:height/div},
+
+                        this.audio_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
                         
-                                {x:-width/div*(0.9/10),y:height/div*(4/5)},
-                                {x:-width/div*(1.25/10),y:height/div*(2.5/5)},
-                                {x:-width/div*(0.9/10),y:height/div*(1/5)},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
-                            var design = {
-                                name:'audio_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:(width/div)*(4.5/5)-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:320 },
+                                            design: { width:5, height:5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var reverseOffset = (unitStyle.drawingValue.width)*(0.875/10);
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:reverseOffset,                                                              y:0                                                       },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:0                                                       },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:reverseOffset,                                                              y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                        { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(1.25/10), y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/2) },
+                                        { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.5 - 15/2, 
+                                            width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
+                                            x:2.25, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2,
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
                                         },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
-                                        x:-width/div*(0.9/10), y:(height/div)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
-                                        x:-width/div*(0.45/10), y:(height/div) - 7.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow 
-                                        }
-                                    }},
+                                    ]
+                                });
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                        
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //circuitry
-                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                            //wiring
+                                //io
+                                    object.io.audio.input.out().connect( object.io.audio.output_1.in() );
+                                    object.io.audio.input.out().connect( object.io.audio.output_2.in() );
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_duplicator.metadata = {
                             name:'Audio Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/audio_duplicator/'
                         };
-                        this.data_combiner = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
+                        this.data_combiner = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:320, height:320 },
-                                design:{ width:5, height:5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:320 },
+                                            design: { width:5, height:5 },
+                                        };
                         
-                            var design = {
-                                name:'data_combiner',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0, y:(measurements.drawing.height -offset)*(1/5) },
-                                    { x:(measurements.drawing.width -offset)*(2/5), y:0 },
-                                    { x:measurements.drawing.width -offset, y:0                                       },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
-                                    { x:(measurements.drawing.width -offset)*(2/5),                                   y:measurements.drawing.height -offset     },
-                                    { x:0, y:(measurements.drawing.height -offset)*(4/5) },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ x:measurements.drawing.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ x:measurements.drawing.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_combiner',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:0                                                       },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:0                                                       },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ 
+                                            x:unitStyle.drawingValue.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ 
+                                            x:unitStyle.drawingValue.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                    ]
+                                });
                         
                             //wiring
-                                object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
-                                object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
-                        
+                                //io
+                                    object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                                    object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                            
                             return object;
                         };
-                        
-                        
-                        
                         this.data_combiner.metadata = {
                             name:'Data Combiner',
                             category:'misc',
                             helpURL:'/help/units/beta/data_combiner/'
                         };
-                        this.signal_combiner = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
+                        this.signal_combiner= function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:260, height:260 },
-                                design:{ width:4, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'signal_combiner',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                        y:(measurements.drawing.height -offset)/4      },
-                                    { x:measurements.drawing.width -offset,       y:0                                            },
-                                    { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
-                                    { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-20.5-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_combiner',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                        { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-20.5-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
+                                        },
+                                    ]
+                                });
                         
                             //wiring
-                                object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
-                                object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
+                                //io
+                                    object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
+                                    object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_combiner.metadata = {
                             name:'Signal Combiner',
                             category:'misc',
                             helpURL:'/help/units/beta/signal_combiner/'
                         };
-                        this.signal_duplicator = function(x,y,a){
-                            var width = 260; var height = 260;
-                            var div = 6.5;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div,y:height/(div*4)},
-                                {x:width/div,y:height/div - height/(div*4)},
-                                {x:0,y:height/div},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
-                            var design = {
-                                name:'signal_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
-                                        x:width/div-0.5, y:(height/div)/2 - 5, width:5, height:10, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow,
-                                            cable_dim:style.connectionCable.signal.dim,
-                                            cable_glow:style.connectionCable.signal.glow,
-                                        },
-                                        onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
-                                        x:0, y:(height/div)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow, 
-                                            cable_dim:style.connectionCable.signal.dim, 
-                                            cable_glow:style.connectionCable.signal.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
-                                        x:0, y:(height/div)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow, 
-                                            cable_dim:style.connectionCable.signal.dim, 
-                                            cable_glow:style.connectionCable.signal.glow 
-                                        }
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
+                        this.signal_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                                      },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
+                                        },
+                                    ]
+                                });
+                        
+                                //wiring
+                                    //io
+                                        object.io.signal.input.onchange = function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_duplicator.metadata = {
                             name:'Signal Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/signal_duplicator/'
                         };
-                        this.voltage_duplicator = function(x,y,a){
-                            var width = 260; var height = 260;
-                            var div = 6.5;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div,y:height/(div*4)*2},
-                                {x:width/div,y:height/div},
-                                {x:0,y:height/div},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
-                            var design = {
-                                name:'voltage_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
-                                        x:width/div-0.5, y:(height/div)*0.75 - 5, width:5, height:10, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow,
-                                            cable_dim:style.connectionCable.voltage.dim,
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                        onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
-                                        x:0, y:(height/div)/2, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
-                                        x:0, y:(height/div)*0.75 + 5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow 
-                                        }
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
+                        this.voltage_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                                   },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.75 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
+                                        },
+                                    ]
+                                });
+                        
+                            //wiring
+                                //io
+                                    object.io.voltage.input.onchange = function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.voltage_duplicator.metadata = {
                             name:'Voltage Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/voltage_duplicator/'
                         };
-                        this.data_duplicator = function(x,y,a){
-                            var width = 320; var height = 320;
-                            var div = 6.4;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div*(3/5),y:0},
-                                {x:width/div,y:height/div*(1/5)},
-                                {x:width/div,y:height/div*(4/5)},
-                                {x:width/div*(3/5),y:height/div},
-                                {x:0,y:height/div},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
-                            var design = {
-                                name:'data_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
-                                        x:width/div-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow,
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow,
+                        this.data_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:320 },
+                                            design: { width:5, height:5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'data_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                                      y:0                                                       },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:0                                                       },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:0,                                                      y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2,
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
                                         },
-                                        onreceive:function(address,data){
-                                            object.io.data.output_1.send(address,data);
-                                            object.io.data.output_2.send(address,data);
-                                        } 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
-                                        x:0, y:(height/div)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow, 
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
-                                        x:0, y:(height/div) - 7.5, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow, 
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow 
-                                        }
-                                    }},
+                                    ]
+                                });
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                        
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                            //wiring
+                                //io
+                                    object.io.data.input.onreceive = function(address,data){
+                                        object.io.data.output_1.send(address,data);
+                                        object.io.data.output_2.send(address,data);
+                                    };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.data_duplicator.metadata = {
                             name:'Data Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/data_duplicator/'
                         };
-                        this.eightTrackMixer = function(x,y,a){
-                            var trackCount = 8;
+                        this.eightTrackMixer = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
                         
-                            var width = 1530; var height = 810;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/6,y:0},
-                                {x:width/6,y:height/6},
-                                {x:0,y:height/6},
-                            ];
-                            var colours = [
-                                {r:1,g:0.01,b:0.02,a:1},
-                                {r:1,g:0.55,b:0,a:1},
-                                {r:1,g:0.93,b:0,a:1},
-                                {r:0,g:1,b:0,a:1},
-                                {r:0,g:1,b:0.81,a:1},
-                                {r:0,g:0.62,b:1,a:1},
-                                {r:0.08,g:0,b:1,a:1},
-                                {r:0.68,g:0,b:1,a:1}, 
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
-                            var design = {
-                                name:'eightTrackMixer',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
-                                        x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
-                                        x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:1550, height:830 },
+                                            design: { width:25.5, height:13.5 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                            //dynamic design
-                            for(var a = 0; a < trackCount; a++){
-                                design.elements.push(
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_panner_'+a,data:{
-                                        x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5,
-                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }
-                                    }},
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
-                                        x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                        handleURL:imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
-                                    }}
-                                );
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
-                                        x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
-                                );
+                                    //styling values
+                                        this.dial = style.primaryEight.map(item => { return { handle:item, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }; });
+                                };
                         
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
-                                        x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        }
-                                    }},
-                                );
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'eightTrackMixer',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
+                                            x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
+                                            x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ].concat(
+                                        (function(){
+                                            var newElements = [];
+                                            for(var a = 0; a < 8; a++){
+                                                newElements.push(
+                                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_panner_'+a,data:{
+                                                        x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5, style:unitStyle.dial[a],
+                                                    }},
+                                                );
+                                                newElements.push(
+                                                    {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
+                                                        x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
+                                                        handleURL:unitStyle.imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
+                                                    }}
+                                                );
+                                                newElements.unshift(
+                                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                                        x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                                    }},
+                                                );
+                                                newElements.unshift(
+                                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
+                                                        x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage
+                                                    }},
+                                                );
+                                                newElements.unshift(
+                                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
+                                                        x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage
+                                                    }},
+                                                );
+                                            }
+                                            return newElements;
+                                        })()
+                                    )
+                                });
                         
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
-                                        x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        }
-                                    }},
-                                );
-                            }
-                        
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //internal circuitry
-                                for(var a = 0; a < trackCount; a++){
-                                    object['splitter_'+a] = new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2);
-                                    object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
-                                    object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
-                                    object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
-                        
-                                    object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
-                                        return function(value){
-                                            object['splitter_'+a].inGain(2*(1-value));
-                                        }
-                                    }(a);
-                                    object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
-                                        return function(value){
-                                            object['splitter_'+a].outGain(0,1-value);
-                                            object['splitter_'+a].outGain(1,value);
-                                        }
-                                    }(a);
-                        
-                                    object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
-                                        return function(value){
-                                            object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
-                                        }
-                                    }(a);
-                                    object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
-                                        return function(value){
-                                            object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
-                                        }
-                                    }(a);
+                            //circuitry
+                                var audioLanes = []
+                                for(var a = 0; a < 8; a++){
+                                    audioLanes.push( new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2) );
                                 }
+                        
+                            //wiring
+                                //hid
+                                    for(var a = 0; a < 8; a++){
+                                        object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
+                                            return function(value){
+                                                audioLanes[a].inGain(2*(1-value));
+                                            }
+                                        }(a);
+                                        object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
+                                            return function(value){
+                                                audioLanes[a].outGain(0,1-value);
+                                                audioLanes[a].outGain(1,value);
+                                            }
+                                        }(a);
+                        
+                                        object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
+                                            return function(value){
+                                                object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
+                                            }
+                                        }(a);
+                                        object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
+                                            return function(value){
+                                                object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
+                                            }
+                                        }(a);
+                                    }
+                                //io
+                                    for(var a = 0; a < 8; a++){
+                                        object.elements.connectionNode_audio['input_'+a].out().connect(audioLanes[a].in());
+                                        audioLanes[a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
+                                        audioLanes[a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
+                                    }
                         
                             //interface
                                 object.i = {
@@ -45545,8 +45580,8 @@
                             //import/export
                                 object.exportData = function(){
                                     return {
-                                        gains:[...Array(trackCount).keys()].map(item => object.i.gain(item)),
-                                        pans:[...Array(trackCount).keys()].map(item => object.i.pan(item)),
+                                        gains:[...Array(8).keys()].map(item => object.i.gain(item)),
+                                        pans:[...Array(8).keys()].map(item => object.i.pan(item)),
                                     };
                                 };
                                 object.importData = function(data){
@@ -45555,117 +45590,126 @@
                                 };
                         
                             //setup
-                                for(var a = 0; a < trackCount; a++){
+                                for(var a = 0; a < 8; a++){
                                     object.i.gain(a,0.5);
                                     object.i.pan(a,0.5);
                                 }
-                            
+                        
                             return object;
                         };
-                        
                         this.eightTrackMixer.metadata = {
                             name:'Eight Track Mixer',
                             category:'misc',
                             helpURL:'/help/units/beta/eightTrackMixer/'
                         };
-                        this.signal_readout = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_readout/';
+                        this.signal_readout = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_readout/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:320, height:290 },
-                                design:{ width:5, height:4.5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'signal_readout',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                    {collection:'display', type:'glowbox_image', name:'lamp', 
-                                        data:{ 
-                                            x:5, y:5, width:35, height:35,
-                                            dimURL:imageStoreURL_localPrefix+'light_off.png',
-                                            glowURL:imageStoreURL_localPrefix+'light_on.png',
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:290 },
+                                            design: { width:5, height:4.5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_readout',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:unitStyle.drawingValue.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                         },
-                                    }
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        {collection:'display', type:'glowbox_image', name:'lamp', 
+                                            data:{ 
+                                                x:5, y:5, width:35, height:35,
+                                                dimURL:unitStyle.imageStoreURL_localPrefix+'light_off.png',
+                                                glowURL:unitStyle.imageStoreURL_localPrefix+'light_on.png',
+                                            },
+                                        }
+                                    ]
+                                });
                         
                             //wiring
-                                object.elements.connectionNode_signal.in.onchange = function(value){
-                                    if(value){ object.elements.glowbox_image.lamp.on(); }
-                                    else{ object.elements.glowbox_image.lamp.off(); }
-                                };
+                                //io
+                                    object.io.signal.in.onchange = function(value){
+                                        if(value){ object.elements.glowbox_image.lamp.on(); }
+                                        else{ object.elements.glowbox_image.lamp.off(); }
+                                    };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_readout.metadata = {
                             name:'Signal Readout',
                             category:'monitors',
                             helpURL:'/help/units/beta/signal_readout/'
                         };
-                        this.amplifier = function(x,y,a){
-                            var width = 935; var height = 860;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/6,y:0},
-                                {x:width/6,y:height/6},
-                                {x:0,y:height/6},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
-                            var design = {
-                                name:'amplifier',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_L', data:{ 
-                                        x:width/6 - 1, y:height/6 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_R', data:{ 
-                                        x:width/6 - 1, y:height/6 - 20 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
+                        this.amplifier = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:935, height:860 },
+                                            design: { width:15.5, height:14.25 },
+                                        };
                         
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'amplifier',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        {x:0,                                              y:0},
+                                        {x:unitStyle.drawingValue.width -unitStyle.offset, y:0},
+                                        {x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset},
+                                        {x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset},
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input_L', data:{
+                                            x:unitStyle.drawingValue.width-unitStyle.offset,
+                                            y:unitStyle.drawingValue.height-unitStyle.offset-20,
+                                            width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input_R', data:{ 
+                                            x:unitStyle.drawingValue.width-unitStyle.offset,
+                                            y:unitStyle.drawingValue.height-unitStyle.offset-40,
+                                            width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ]
+                                });
                         
                             //circuitry
                                 var flow = {
@@ -45689,137 +45733,145 @@
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.amplifier.metadata = {
                             name:'Amplifier',
                             category:'monitors',
                             helpURL:'/help/units/beta/amplifier/'
                         };
-                        this.voltage_readout = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_readout/';
+                        this.voltage_readout = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_readout/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:440, height:290 },
-                                design:{ width:7, height:4.5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'voltage_readout',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                                    {collection:'display', type:'gauge_image', name:'gauge', data:{ 
-                                        x:5, y:5, width:55, height:35,
-                                        backingURL:imageStoreURL_localPrefix+'gauge_backing.png',
-                                        style:{needles:[{r:0,g:0,b:0,a:1}]},
-                                    }, },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:440, height:290 },
+                                            design: { width:7, height:4.5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.gauge = {needles:[{r:0,g:0,b:0,a:1}]};
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_readout',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:unitStyle.drawingValue.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        } },
+                                        {collection:'display', type:'gauge_image', name:'gauge', data:{ 
+                                            x:5, y:5, width:55, height:35,
+                                            backingURL:unitStyle.imageStoreURL_localPrefix+'gauge_backing.png',
+                                            style:unitStyle.gauge,
+                                        }, },
+                                    ]
+                                });
                         
                             //wiring
-                                object.elements.connectionNode_voltage.in.onchange = function(value){
-                                    object.elements.gauge_image.gauge.needle(value);
-                                };
+                                //io
+                                    object.io.voltage.in.onchange = function(value){ object.elements.gauge_image.gauge.needle(value); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.voltage_readout.metadata = {
                             name:'Voltage Readout',
                             category:'monitors',
                             helpURL:'/help/units/beta/voltage_readout/'
                         };
-                        this.audio_scope = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_scope/';
+                        this.audio_scope = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_scope/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:1220, height:680 },
-                                design:{ width:20, height:11 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:1220, height:680 },
+                                            design: { width:20, height:11 },
+                                        };
                         
-                            var design = {
-                                name:'audio_scope',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                    y:0                                       },
-                                    { x:measurements.drawing.width -offset,   y:0                                       },
-                                    { x:measurements.drawing.width -offset,   y:measurements.drawingUnit.height*6 - 2   },
-                                    { x:measurements.drawingUnit.width*17.2, y:measurements.drawingUnit.height*6 - 2   },
-                                    { x:measurements.drawingUnit.width*15.75, y:measurements.drawingUnit.height*7.475 - 2 },
-                                    { x:measurements.drawingUnit.width*15.75, y:measurements.drawing.height -offset     },
-                                    { x:0,                                    y:measurements.drawing.height -offset     },
-                                ],
-                                elements:[
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:160, y:80, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_framerate',data:{
-                                        x:173.5, y:42.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:{r:0.93,g:0,b:0.55,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'button_image', name:'hold', data:{
-                                        x:158.5, y:5, width:30, height:15, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_down.png',
-                                    }},
-                                    {collection:'display', type:'grapher_audioScope_static', name:'waveport', data:{
-                                        x:5, y:5, width:150, height:100,
-                                        style:{
-                                            backgroundText_size:10,
-                                            backing:{r:0.15,g:0.15,b:0.15,a:1}
-                                        },
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.dial = { handle:{r:0.93,g:0,b:0.55,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.waveport = { backgroundText_size:10, backing:{r:0.15,g:0.15,b:0.15,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_scope',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                                          y:0                                                                 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,             y:0                                                                 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,             y:(unitStyle.drawingValue.height -unitStyle.offset)*(11.25/20) - 2  },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(17.5/20), y:(unitStyle.drawingValue.height -unitStyle.offset)*(11.25/20) - 2  },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(16/20),   y:(unitStyle.drawingValue.height -unitStyle.offset)*(14/20) - 2     },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(16/20),   y:unitStyle.drawingValue.height -unitStyle.offset                   },
+                                        { x:0,                                                          y:unitStyle.drawingValue.height -unitStyle.offset                   },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:160, y:80, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_framerate',data:{
+                                            x:173.5, y:42.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial,
+                                        }},
+                                        {collection:'control', type:'button_image', name:'hold', data:{
+                                            x:158.5, y:5, width:30, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
+                                        }},
+                                        {collection:'display', type:'grapher_audioScope_static', name:'waveport', data:{
+                                            x:5, y:5, width:150, height:100, style:unitStyle.waveport,
+                                        }},
+                                    ]
+                                });
                         
                             //circuitry
                                 var attributes = {
                                     framerateLimits: {min:1, max:30},
                                     framerate:1,
                                 };
-                                object.elements.button_image.hold.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
-                                object.elements.button_image.hold.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
-                                object.elements.connectionNode_audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
-                                object.elements.dial_colourWithIndent_continuous.dial_framerate.onchange = function(a){
-                                    attributes.framerate = attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a);
-                                    object.elements.grapher_audioScope_static.waveport.refreshRate(attributes.framerate);
-                                };
-                            
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.hold.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
+                                    object.elements.button_image.hold.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
+                                    object.elements.dial_colourWithIndent_continuous.dial_framerate.onchange = function(a){
+                                        attributes.framerate = attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a);
+                                        object.elements.grapher_audioScope_static.waveport.refreshRate(attributes.framerate);
+                                    };
+                                //io 
+                                    object.io.audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
+                        
                             //interface
                                 object.i = {
                                     framerate:function(a){
@@ -45849,47 +45901,53 @@
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_scope.metadata = {
                             name:'Audio Scope',
                             category:'monitors',
                             helpURL:'/help/units/beta/audio_scope/'
                         };
-                        this.data_readout = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
+
+                        this.data_readout = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:1220, height:920 },
-                                design:{ width:20, height:15 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'data_readout',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-30, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:1220, height:920 },
+                                            design: { width:20, height:15 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'data_readout',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'in', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:unitStyle.drawingValue.height-30, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ]
+                                });
                         
                             //circuitry
                                 var lineCount = 0;
@@ -45903,7 +45961,7 @@
                                     printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}
                                 };
                                 var maxPrintingWidth = 175;
-                                
+                        
                                 function printLine(line){
                                     //add the new text to the list, and if the list becomes too long, remove the oldest item
                                         lines.unshift( { prefix:(lineCount++)+':/> ', line:line } );
@@ -45946,341 +46004,377 @@
                                 }
                         
                             //wiring
-                                object.elements.connectionNode_data.in.onreceive = function(address,data){
-                                    printLine( JSON.stringify({address:address, data:data}) );
-                                };
-                                
+                                //io
+                                    object.io.data.in.onreceive = function(address,data){ printLine( JSON.stringify({address:address, data:data}) ); };
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.data_readout.metadata = {
                             name:'Data Readout',
                             category:'monitors',
                             helpURL:'/help/units/beta/data_readout/'
                         };
-                        this.audio_recorder = function(x,y,a,setupConnect=true){
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_recorder/';
+
+                        this.audio_recorder = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_recorder/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:590, height:260 },
-                                design:{ width:9.5, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:590, height:260 },
+                                            design: { width:9.5, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'audio_recorder',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                    { x:0,                                  y:measurements.drawing.height -offset },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_input_R', data:{ 
-                                        x:measurements.drawing.width-3-1/3, y:-2.5 + 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_input_L', data:{ 
-                                        x:measurements.drawing.width-3-1/3, y:15 + 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_empty', data:{
-                                        x:5, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_empty_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_empty.png',
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_recording', data:{
-                                        x:5+19.5+2/3, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_recording_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_recording.png',
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_paused', data:{
-                                        x:5+(19.5+2/3)*2, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_paused_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_paused.png',
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_stopped', data:{
-                                        x:5+(19.5+2/3)*3, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_stopped_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_stopped.png',
-                                    }},
+                                    //styling values
+                                };
                         
-                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                                        x:5+2/3, y:15+2/3, width:78.75, height:10-10/8, count:15
-                                    }},
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_recorder',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_input_R', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:5, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_input_L', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:22.5, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_empty', data:{
+                                            x:5, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_empty_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_empty.png',
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_recording', data:{
+                                            x:5+(19.5+2/3)*1, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_recording_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_recording.png',
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_paused', data:{
+                                            x:5+(19.5+2/3)*2, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_paused_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_paused.png',
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_stopped', data:{
+                                            x:5+(19.5+2/3)*3, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_stopped_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_stopped.png',
+                                        }},
+                                        {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
+                                            x:5+2/3, y:15+2/3, width:78.75, height:8.75, count:15
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_record', data:{
+                                            x:5, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_record.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_record_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_pause', data:{
+                                            x:5+(16+1/6)*1, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_pause.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_pause_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_stop', data:{
+                                            x:5+(16+1/6)*2, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_stop.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_stop_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_save', data:{
+                                            x:5+(16+1/6)*3, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_save.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_save_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_delete', data:{
+                                            x:5+(16+1/6)*4, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_delete.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_delete_active.png',
+                                        }},
+                                    ]
+                                });
                         
-                                    {collection:'control', type:'button_image', name:'button_record', data:{
-                                        x:5, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_record.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_record_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_pause', data:{
-                                        x:5+16+1/6, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_pause.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_pause_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_stop', data:{
-                                        x:5+(16+1/6)*2, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_stop.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_stop_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_save', data:{
-                                        x:5+(16+1/6)*3, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_save.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_save_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_delete', data:{
-                                        x:5+(16+1/6)*4, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_delete.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_delete_active.png',
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                                
                             //circuitry
-                                //audio recorder
-                                    object.recorder = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
-                                //update functions
-                                    //time readout
-                                        setInterval(function(){
-                                            var time = object.recorder.recordingTime();
-                                            var decimalValues = time % 1;
-                                            time = _canvas_.library.math.seconds2time( Math.round(time) );
+                                var recorderCircuit = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
                         
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.s,2,'0')+'.'+
-                                                _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
-                                            );
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                        },100);
-                                    //lights
-                                        var state = 'empty'; //empty - recording - paused - full
-                                        function updateLights(action){
-                                            if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
-                                            if( action == 'stop' || action == 'save' ){ state = 'full'; }
-                                            if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
-                                            if( action == 'clear' ){ state = 'empty'; }
-                                            if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
-                                            else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+                                //time readout
+                                    setInterval(function(){
+                                        var time = recorderCircuit.recordingTime();
+                                        var decimalValues = time % 1;
+                                        time = _canvas_.library.math.seconds2time( Math.round(time) );
                         
-                                            if(state == 'empty'){object.elements.glowbox_image.light_empty.on();}else{object.elements.glowbox_image.light_empty.off();}
-                                            if(state == 'recording'){object.elements.glowbox_image.light_recording.on();}else{object.elements.glowbox_image.light_recording.off();}
-                                            if(state == 'paused'){object.elements.glowbox_image.light_paused.on();}else{object.elements.glowbox_image.light_paused.off();}
-                                            if(state == 'full'){object.elements.glowbox_image.light_stopped.on();}else{object.elements.glowbox_image.light_stopped.off();}
-                                        }
-                                        updateLights('clear');
-                                        object.elements.glowbox_image.light_empty.on();
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                            _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.s,2,'0')+'.'+
+                                            _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                    },100);
+                        
+                                //lights
+                                    var state = 'empty'; //empty - recording - paused - full
+                                    function updateLights(action){
+                                        if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
+                                        if( action == 'stop' || action == 'save' ){ state = 'full'; }
+                                        if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
+                                        if( action == 'clear' ){ state = 'empty'; }
+                                        if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
+                                        else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+                        
+                                        if(state == 'empty'){object.elements.glowbox_image.light_empty.on();}else{object.elements.glowbox_image.light_empty.off();}
+                                        if(state == 'recording'){object.elements.glowbox_image.light_recording.on();}else{object.elements.glowbox_image.light_recording.off();}
+                                        if(state == 'paused'){object.elements.glowbox_image.light_paused.on();}else{object.elements.glowbox_image.light_paused.off();}
+                                        if(state == 'full'){object.elements.glowbox_image.light_stopped.on();}else{object.elements.glowbox_image.light_stopped.off();}
+                                    }
+                                    updateLights('clear');
+                                    object.elements.glowbox_image.light_empty.on();
                         
                             //wiring
-                                //interface
+                                //hid
                                     object.elements.button_image.button_record.onpress = function(){
-                                        if(state == 'paused'){object.recorder.resume();}
-                                        else{object.recorder.start();}
+                                        if(state == 'paused'){recorderCircuit.resume();}
+                                        else{recorderCircuit.start();}
                                         updateLights('rec');
                                     };
                                     object.elements.button_image.button_pause.onpress = function(){
-                                        if(state == 'paused'){object.recorder.resume();}
-                                        else{object.recorder.pause();}
+                                        if(state == 'paused'){recorderCircuit.resume();}
+                                        else{recorderCircuit.pause();}
                                         updateLights('pause/resume');
                                     };
                                     object.elements.button_image.button_stop.onpress = function(){
                                         updateLights('stop');
-                                        object.recorder.stop();
+                                        recorderCircuit.stop();
                                     }
                                     object.elements.button_image.button_save.onpress = function(){
                                         updateLights('save');
-                                        if(state != 'empty'){ object.recorder.save(); }
+                                        if(state != 'empty'){ recorderCircuit.save(); }
                                     };
                                     object.elements.button_image.button_delete.onpress = function(){
                                         updateLights('clear');
-                                        object.recorder.clear();
+                                        recorderCircuit.clear();
                                     };
                                 //io
-                                    object.elements.connectionNode_audio.io_input_R.out().connect( object.recorder.in_right() );
-                                    object.elements.connectionNode_audio.io_input_L.out().connect( object.recorder.in_left() );
+                                    object.io.audio.io_input_R.out().connect( recorderCircuit.in_right() );
+                                    object.io.audio.io_input_L.out().connect( recorderCircuit.in_left() );
                         
                             //interface
+                                object.i = {
+                                    record:function(){ object.elements.button_image.button_record.onpress(); },
+                                    pause:function(){ object.elements.button_image.button_pause.onpress(); },
+                                    stop:function(){ object.elements.button_image.button_stop.onpress(); },
+                                    save:function(){ object.elements.button_image.button_save.onpress(); },
+                                    clear:function(){ object.elements.button_image.button_delete.onpress(); },
+                                };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_recorder.metadata = {
                             name:'Audio Recorder',
                             category:'monitors',
                             helpURL:'/help/units/beta/audio_recorder/'
                         };
-                        this.ruler = function(x,y,a){
-                            var style = {
-                                background:{r:200/255,g:200/255,b:200/255,a:1},
-                                markings:{r:150/255,g:150/255,b:150/255,a:1},
-                            };
-                            var shape = [{x:0,y:0},{x:50,y:0},{x:50,y:1000},{x:0,y:1000}];
-                            var design = {
-                                name:'ruler',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                collisionActive:false,
-                                elements:[
-                                    {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:shape, colour:style.background }},
-                                ]
-                            };
+                        this.ruler = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //calculation of measurements
+                                        this.drawingValue = { 
+                                            width: 50, 
+                                            height: 1000,
+                                        };
                         
-                            //add markings
-                                for(var a = 1; a < 100; a++){
-                                    //centimetres
-                                    design.elements.push(
-                                        {collection:'basic', type:'rectangle', name:'centimetre_line_L_'+a, data:{
-                                            x:0, y:a*10 - 0.5, width:5, height:1, 
-                                            colour:style.markings,
-                                        }}
-                                    );
-                                    design.elements.push(
-                                        {collection:'basic', type:'rectangle', name:'centimetre_line_R_'+a, data:{
-                                            x:50-5, y:a*10 - 0.5, width:5, height:1, 
-                                            colour:style.markings,
-                                        }}
-                                    );
-                                    if( a%5 != 0 && a%10 != 0 ){
-                                        design.elements.push(
-                                            {collection:'basic', type:'text', name:'centimetre_line_text_'+a, data:{
-                                                x:50/2, y:a*10, text:a,
-                                                width:2.5,height:2.5,
-                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
-                                                colour:style.markings, font:'defaultThin',
-                                            }}
-                                        );
-                                    }
+                                    //styling values
+                                        this.background = {r:200/255,g:200/255,b:200/255,a:1};
+                                        this.markings = {r:150/255,g:150/255,b:150/255,a:1};
+                                };
                         
-                                    //pentimetres
-                                    if( a%5 == 0 ){
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'vigintimetre_line_L_'+a, data:{
-                                                x:0, y:a*10 - 0.5, width:10, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'vigintimetre_line_R_'+a, data:{
-                                                x:50-10, y:a*10 - 0.5, width:10, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        if( a%10 != 0 ){
-                                            design.elements.push(
-                                                {collection:'basic', type:'text', name:'vigintimetre_line_text_'+a, data:{
-                                                    x:50/2, y:a*10, text:a,
-                                                    width:5,height:5,
-                                                    printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
-                                                    colour:style.markings, font:'defaultThin',
-                                                }}
-                                            );
-                                        }
-                                    }
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'ruler',
+                                    x:x, y:y, angle:angle,
+                                    collisionActive:false,
+                                    space:[
+                                        { x:0,                            y:0                             },
+                                        { x:unitStyle.drawingValue.width, y:0                             },
+                                        { x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height },
+                                        { x:0,                            y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:
+                                        [
+                                            {collection:'basic', type:'polygon', name:'backing', data:{ 
+                                                pointsAsXYArray:[
+                                                    { x:0,                            y:0                             },
+                                                    { x:unitStyle.drawingValue.width, y:0                             },
+                                                    { x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height },
+                                                    { x:0,                            y:unitStyle.drawingValue.height },
+                                                ], 
+                                                colour:unitStyle.background
+                                            }},
+                                        ].concat(
+                                            (new Array(100).fill(0)).flatMap((value,index) => {
+                                                if(index == 0){return [];}
+                                                var newMarkings = []
                         
-                                    //decimetres
-                                    if( a%10 == 0 ){
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'decimetre_line_L_'+a, data:{
-                                                x:0, y:a*10 - 0.5, width:15, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'decimetre_line_R_'+a, data:{
-                                                x:50-15, y:a*10 - 0.5, width:15, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        design.elements.push(
-                                            {collection:'basic', type:'text', name:'decimetre_line_text_'+a, data:{
-                                                x:50/2, y:a*10, text:a,
-                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
-                                                colour:style.markings, font:'defaultThin',
-                                            }}
-                                        );
-                                    }
-                                }
+                                                //centimetres
+                                                    newMarkings.push(
+                                                        {collection:'basic', type:'rectangle', name:'centimetre_line_L_'+index, data:{
+                                                            x:0, y:index*10 - 0.5, width:5, height:1, 
+                                                            colour:unitStyle.markings,
+                                                        }}
+                                                    );
+                                                    newMarkings.push(
+                                                        {collection:'basic', type:'rectangle', name:'centimetre_line_R_'+index, data:{
+                                                            x:45, y:index*10 - 0.5, width:5, height:1, 
+                                                            colour:unitStyle.markings,
+                                                        }}
+                                                    );
+                                                    if( index%5 != 0 && index%10 != 0 ){
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'text', name:'centimetre_line_text_'+index, data:{
+                                                                x:25, y:index*10, text:index,
+                                                                width:2.5,height:2.5,
+                                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                                colour:unitStyle.markings, font:'defaultThin',
+                                                            }}
+                                                        );
+                                                    }
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                            
+                                                //pentimetres
+                                                    if( index%5 == 0 ){
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'pentimetre_line_L_'+index, data:{
+                                                                x:0, y:index*10 - 0.5, width:10, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'pentimetre_line_R_'+index, data:{
+                                                                x:40, y:index*10 - 0.5, width:10, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        if( index%10 != 0 ){
+                                                            newMarkings.push(
+                                                                {collection:'basic', type:'text', name:'pentimetre_line_text_'+index, data:{
+                                                                    x:25, y:index*10, text:index,
+                                                                    width:5,height:5,
+                                                                    printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                                    colour:unitStyle.markings, font:'defaultThin',
+                                                                }}
+                                                            );
+                                                        }
+                                                    }
+                        
+                                                //decimetres
+                                                    if( index%10 == 0 ){
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'decimetre_line_L_'+index, data:{
+                                                                x:0, y:index*10 - 0.5, width:15, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'decimetre_line_R_'+index, data:{
+                                                                x:35, y:index*10 - 0.5, width:15, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'text', name:'decimetre_line_text_'+index, data:{
+                                                                x:25, y:index*10, text:index,
+                                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                                colour:unitStyle.markings, font:'defaultThin',
+                                                            }}
+                                                        );
+                                                    }
+                        
+                                                return newMarkings;
+                                            })
+                                        )
+                                });
+                        
                             return object;
                         };
-                        
                         this.ruler.metadata = {
                             name:'Ruler',
                             category:'tools',
                             helpURL:'/help/units/beta/ruler/'
                         };
-                        this.voltage_dial = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_dial/';
+                        this.voltage_dial = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_dial/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:275, height:260 },
-                                design:{ width:4.25, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file:{ width:275, height:260 },
+                                            design:{ width:4.25, height:4 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.dial = { handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_dial',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'out', data:{ 
+                                            x:unitStyle.drawingValue.width/2.2 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'theDial',data:{
+                                            x:20, y:20, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial,
+                                        }},
+                                    ]
+                                });
+                        
                             
-                            var design = {
-                                name:'voltage_dial',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'out', data:{ 
-                                        x:measurements.drawing.width/2.2 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
+                            //wiring
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){ object.elements.connectionNode_voltage.out.set( value ); };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'theDial',data:{
-                                        x:20, y:20, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                ]
-                            };
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //circuitry
-                                object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){
-                                    object.elements.connectionNode_voltage.out.set( value );
-                                };
-                        
-                            //import/export
-                                object.exportData = function(){
-                                    return {
-                                        state:object.elements.dial_colourWithIndent_continuous.theDial.get()
+                                //import/export
+                                    object.exportData = function(){
+                                        return {
+                                            state:object.elements.dial_colourWithIndent_continuous.theDial.get()
+                                        };
                                     };
-                                };
-                                object.importData = function(data){
-                                    object.elements.dial_colourWithIndent_continuous.theDial.set(data.state);
-                                };
+                                    object.importData = function(data){
+                                        object.elements.dial_colourWithIndent_continuous.theDial.set(data.state);
+                                    };
                                 
                             return object;
                         };
@@ -46292,149 +46386,139 @@
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/voltage_dial/'
                         };
-                        this.musicalKeyboard = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
-                            var keyCount = 49;
-                            var midiNumberOffset = 60;
+                        this.musicalKeyboard = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:3800, height:800 },
-                                design:{ width:63.5, height:13 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            var colours = {
-                                whiteKey:{
-                                    background__up__colour:{r:0.97,g:0.97,b:0.97,a:1},
-                                    background__hover__colour:{r:1,g:1,b:1,a:1},
-                                    background__press__colour:{r:0.87,g:0.87,b:0.87,a:1},
-                                    background__hover_press__colour:{r:0.87,g:0.87,b:0.87,a:1},
-                                },
-                                blackKey:{ 
-                                    background__up__colour:{r:0.18,g:0.18,b:0.18,a:1}, 
-                                    background__hover__colour:{r:0.28,g:0.28,b:0.28,a:1}, 
-                                    background__press__colour:{r:0.08,g:0.08,b:0.08,a:1},
-                                    background__hover_press__colour:{r:0.08,g:0.08,b:0.08,a:1},
-                                },
-                                LEDs:{
-                                    glow:{r:232/255, g:160/255, b:111/255, a:1}, 
-                                    dim:{r:164/255, g:80/255, b:61/255, a:1},
-                                },
-                            };
-                            
-                            var design = {
-                                name:'musicalKeyboard',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'midiIn', data:{ 
-                                        x:measurements.drawing.width-3.5, y:10, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
-                                        onreceive:function(address, data){ if(address != 'midinumber'){return;} sendMidiData(data.num-midiNumberOffset,data.velocity>0?'press':'release'); },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'midiOut', data:{ 
-                                        x:0, y:117.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'velocityIn', data:{ 
-                                        x:25, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
-                                        onchange:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:3800, height:800 },
+                                            design: { width:63.5, height:13 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'velocity',data:{
-                                        x:20, y:110, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                ]
-                            };
-                            //dynamic design
-                                var keyPattern = 'wbwbwwbwbwbw'.split('');
-                        
-                                //white keys
-                                    var whiteOffset = 0;
-                                    for(var a = 0; a < keyCount; a++){
-                                        var keyType = keyPattern[a%keyPattern.length];
-                            
-                                        if(keyType == 'w'){
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
-                                                    x:55 +whiteOffset -0.5 -10, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                                }},
-                                            );
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
-                                                    x:55 +whiteOffset -0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
-                                                }},
-                                            );
-                                            design.elements.push(
-                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:41.25 +whiteOffset, y:6, width:17.5, height:1, style:colours.LEDs }},
-                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
-                                                    x:40.5 +whiteOffset, y:10, width:19, height:120, style:colours.whiteKey,
-                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
-                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
-                                                }},
-                                            );
-                                            whiteOffset += 20;
-                                        }
-                                    }
-                                //black keys
-                                    var blackOffset = 0;
-                        
-                                    for(var a = 0; a < keyCount; a++){
-                                        var keyType = keyPattern[a%keyPattern.length];
-                            
-                                        if(keyType == 'b'){
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
-                                                    x:55 +blackOffset -0.5, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                                }},
-                                            );
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
-                                                    x:65 +blackOffset -0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
-                                                }},
-                                            );
-                                            design.elements.push(
-                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:51.25 +blackOffset, y:2.75, width:17.5, height:1, style:colours.LEDs }},
-                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
-                                                    x:55 +blackOffset, y:10, width:10, height:70, style:colours.blackKey,
-                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
-                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
-                                                }},
-                                            );
-                                            blackOffset += 20;
-                                        }
-                                        if(keyType == keyPattern[(a-1)%keyPattern.length]){ blackOffset += 20; }
-                                    }
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //keycapture
-                                object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
-                                object.elements.image.backing.onkeydown = function(x,y,event){
-                                    if( this.glyphs.includes(event.key) ){
-                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].press();
-                                    }
+                                    //styling values
+                                        this.velocityDial = { handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.whiteKey = {
+                                            background__up__colour:{r:0.97,g:0.97,b:0.97,a:1},
+                                            background__hover__colour:{r:1,g:1,b:1,a:1},
+                                            background__press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                            background__hover_press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                        };
+                                        this.blackKey = { 
+                                            background__up__colour:{r:0.18,g:0.18,b:0.18,a:1}, 
+                                            background__hover__colour:{r:0.28,g:0.28,b:0.28,a:1}, 
+                                            background__press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                            background__hover_press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                        };
+                                        this.LEDs = {
+                                            glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                            dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                        };
+                                        this.keyCount = 49;
                                 };
-                                object.elements.image.backing.onkeyup = function(x,y,event){
-                                    if( this.glyphs.includes(event.key) ){
-                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].release();
-                                    }
-                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'musicalKeyboard',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'midiIn', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:10, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'midiOut', data:{ 
+                                            x:0, y:117.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'velocityIn', data:{ 
+                                            x:25, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'velocity',data:{
+                                            x:20, y:110, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.velocityDial,
+                                        }},
+                                    ].concat(
+                                        (function(){
+                                            var newKeys = [];
+                        
+                                            var keyPattern = 'wbwbwwbwbwbw'.split('');
+                        
+                                            //white keys
+                                                var whiteOffset = 0;
+                                                for(var a = 0; a < unitStyle.keyCount; a++){
+                                                    var keyType = keyPattern[a%keyPattern.length];
+                        
+                                                    if(keyType == 'w'){
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
+                                                                x:55 +whiteOffset -0.5 -10, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                                x:55 +whiteOffset -0.5, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.push(
+                                                            {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:41.25 +whiteOffset, y:6, width:17.5, height:1, style:unitStyle.LEDs }},
+                                                            {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ x:40.5 +whiteOffset, y:10, width:19, height:120, style:unitStyle.whiteKey }},
+                                                        );
+                                                        whiteOffset += 20;
+                                                    }
+                                                }
+                        
+                                            //black keys
+                                                var blackOffset = 0;
+                                                for(var a = 0; a < unitStyle.keyCount; a++){
+                                                    var keyType = keyPattern[a%keyPattern.length];
+                        
+                                                    if(keyType == 'b'){
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
+                                                                x:55 +blackOffset -0.5, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                                x:65 +blackOffset -0.5, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.push(
+                                                            {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:51.25 +blackOffset, y:2.75, width:17.5, height:1, style:unitStyle.LEDs }},
+                                                            {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ x:55 +blackOffset, y:10, width:10, height:70, style:unitStyle.blackKey }},
+                                                        );
+                                                        blackOffset += 20;
+                                                    }
+                                                    if(keyType == keyPattern[(a-1)%keyPattern.length]){ blackOffset += 20; }
+                        
+                                                }
+                        
+                                            return newKeys;
+                                        })()
+                                    )
+                                });
                         
                             //circuitry
+                                var state = {
+                                    midiNumberOffset:60,
+                                    velocity:0,
+                                };
+                        
                                 function sendMidiData(keyNumber,mode){
                                     if(keyNumber < 0){return;}
                         
@@ -46447,232 +46531,277 @@
                                     }
                         
                                     object.io.data.midiOut.send('midinumber', { 
-                                        num:keyNumber+midiNumberOffset,
+                                        num:keyNumber+state.midiNumberOffset,
                                         velocity: mode == 'press' ? object.elements.dial_colourWithIndent_continuous.velocity.get() : 0,
                                     } );
                                 }
                         
-                            //import/export
-                                object.exportData = function(){ return {velocity:object.elements.dial_colourWithIndent_continuous.velocity.get()}; };
-                                object.importData = function(data){ object.elements.dial_colourWithIndent_continuous.velocity.set(data.velocity); };
+                            //wiring
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.velocity.onchange = function(value){ state.velocity = value; };
+                                    for(var a = 0; a < unitStyle.keyCount; a++){
+                                        object.elements.button_rectangle['key_'+a].onpress = (function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a);
+                                        object.elements.button_rectangle['key_'+a].onrelease = (function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a);
+                                    }
+                        
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].release();
+                                        }
+                                    };
+                        
+                                //io
+                                    object.io.data.midiIn.onreceive = function(address, data){ if(address != 'midinumber'){return;} sendMidiData(data.num-state.midiNumberOffset,data.velocity>0?'press':'release'); };
+                                    object.io.voltage.velocityIn.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); };
+                                    for(var a = 0; a < unitStyle.keyCount; a++){
+                                        object.io.signal['activateKey_'+a].onchange = (function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a);
+                                    }
                         
                             //interface
                                 object.i = {
-                                    velocity:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
+                                    velocity:function(value){ 
+                                        if(value==undefined){return state.velocity; }
+                                        object.elements.dial_colourWithIndent_continuous.velocity.set(value);
+                                    },
                                     pushKey:function(key){ object.elements.button_rectangle['key_'+key].press(); },
                                     releaseKey:function(key){ object.elements.button_rectangle['key_'+key].release();},
                                     releaseAllKeys:function(){ for(var a = 0; a < keyCount; a++){ object.elements.button_rectangle['key_'+a].release(); } },
                                 };
-                                
+                        
+                            //import/export
+                                object.exportData = function(){ return {velocity:state.velocity}; };
+                                object.importData = function(data){ object.elements.dial_colourWithIndent_continuous.velocity.set(data.velocity); };
+                        
+                            //setup
+                                object.elements.dial_colourWithIndent_continuous.velocity.set(0.5);
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.musicalKeyboard.metadata = {
                             name:'Musical Keyboard',
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/musicalKeyboard/'
                         };
-                        this.audio_in = function(x,y,a,setupConnect=true){
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_in/';
+
+                        this.audio_in = function(x,y,angle,setupConnect=true){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_in/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:905, height:320 },
-                                design:{ width:14.75, height:5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:905, height:320 },
+                                            design: { width:14.75, height:5 },
+                                        };
                         
-                            var design = {
-                                name:'audio_in',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                    { x:0,                                  y:measurements.drawing.height -offset },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
-                                        x:0, y:25 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_previous', data:{ 
-                                        x:117.9 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_next', data:{ 
-                                        x:132.05 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous', name:'outputGain',data:{
-                                        x:20, y:25, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:{r:0.99,g:0.46,b:0.33,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_previous', data:{
-                                        x:112.5, y:12.5, width:10.85, height:10.85, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_down.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_next', data:{
-                                        x:137.5, y:23.35, width:10.85, height:10.85, hoverable:false, angle:Math.PI,
-                                        backingURL__up:imageStoreURL_localPrefix+'button_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_down.png',
-                                    }},
-                                    {collection:'display', type:'audio_meter_level', name:'audioIn',data:{ x:37.5+10/16, y:5+10/16, width:11.65-10/8, height:40-10/8 }},
-                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'index', data:{
-                                        x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, count:11
-                                    }},
-                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'text', data:{
-                                        x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, count:18
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //styling values
+                                        this.outputGain = { handle:{r:0.99,g:0.46,b:0.33,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_in',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
+                                            x:0, y:25 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_previous', data:{ 
+                                            x:117.9 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_next', data:{ 
+                                            x:132.05 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous', name:'outputGain',data:{
+                                            x:20, y:25, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.outputGain,
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_previous', data:{
+                                            x:112.5, y:12.5, width:10.85, height:10.85, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_next', data:{
+                                            x:137.5, y:23.35, width:10.85, height:10.85, hoverable:false, angle:Math.PI,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
+                                        }},
+                                        {collection:'display', type:'audio_meter_level', name:'audioIn',data:{ 
+                                            x:37.5+10/16, y:5+10/16, width:11.65-10/8, height:40-10/8
+                                        }},
+                                        {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'index', data:{
+                                            x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, count:11
+                                        }},
+                                        {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'text', data:{
+                                            x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, count:18
+                                        }},
+                                    ]
+                                });
                         
                             //circuitry
-                                var attributes = {
+                                var state = {
                                     deviceList:[],
                                     currentSelection: 0
                                 };
+                                var audioInCircuit = new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect);
                         
-                                object.circuitry = {
-                                    unit: new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect)
-                                };
-                                object.circuitry.unit.out().connect( object.elements.connectionNode_audio.io_output.in() );
-                                object.circuitry.unit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
+                                audioInCircuit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
                         
                                 function selectDevice(a){
-                                    if(attributes.deviceList.length == 0){
+                                    if(state.deviceList.length == 0){
                                         object.elements.readout_sixteenSegmentDisplay_static.index.text('');
                                         object.elements.readout_sixteenSegmentDisplay_static.index.print();
                                         object.elements.readout_sixteenSegmentDisplay_static.text.text(' -- no devices --');
                                         object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
                                         return;
                                     }
-                                    if( a < 0 || a >= attributes.deviceList.length ){return;}
-                                    attributes.currentSelection = a;
+                                    if( a < 0 || a >= state.deviceList.length ){return;}
+                                    state.currentSelection = a;
                         
                                     selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
-                                    totalNum=''+attributes.deviceList.length; while(totalNum.length < 2){ totalNum = '0'+totalNum; }
+                                    totalNum=''+state.deviceList.length; while(totalNum.length < 2){ totalNum = '0'+totalNum; }
                                     var text = selectionNum+'/'+totalNum; while(text.length < 8){ text = ' '+text; }
                                     object.elements.readout_sixteenSegmentDisplay_static.index.text(text);
                                     object.elements.readout_sixteenSegmentDisplay_static.index.print();
                         
-                                    var text = attributes.deviceList[a].deviceId;
-                                    if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
+                                    var text = state.deviceList[a].deviceId;
+                                    if(state.deviceList[a].label.length > 0){text = state.deviceList[a].label +' - '+ text;}
                                     object.elements.readout_sixteenSegmentDisplay_static.text.text(text);
                                     object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
                         
-                                    object.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
+                                    audioInCircuit.selectDevice( state.deviceList[a].deviceId );
                                 }
-                                function incSelection(){ selectDevice(attributes.currentSelection+1); }
-                                function decSelection(){ selectDevice(attributes.currentSelection-1); }
+                                function incSelection(){ selectDevice(state.currentSelection+1); }
+                                function decSelection(){ selectDevice(state.currentSelection-1); }
                         
                             //wiring
-                                object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){object.circuitry.unit.gain(value*2);}
-                                object.elements.button_image.button_previous.onpress = function(){ decSelection(); };
-                                object.elements.button_image.button_next.onpress = function(){ incSelection(); };
-                                object.io.signal.io_previous.onchange = function(value){ if(value){ object.elements.button_image.button_previous.press(); }else{ object.elements.button_image.button_previous.release(); } };
-                                object.io.signal.io_next.onchange = function(value){ if(value){ object.elements.button_image.button_next.press(); }else{ object.elements.button_image.button_next.release(); } };
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){audioInCircuit.gain(value*2);}
+                                    object.elements.button_image.button_previous.onpress = function(){ decSelection(); };
+                                    object.elements.button_image.button_next.onpress = function(){ incSelection(); };
+                                //io
+                                    audioInCircuit.out().connect( object.io.audio.io_output.in() );
+                                    object.io.signal.io_previous.onchange = function(value){ if(value){ object.elements.button_image.button_previous.press(); }else{ object.elements.button_image.button_previous.release(); } };
+                                    object.io.signal.io_next.onchange = function(value){ if(value){ object.elements.button_image.button_next.press(); }else{ object.elements.button_image.button_next.release(); } };
                         
-                                //import/export
-                                    object.exportData = function(){
-                                        return {
-                                            gain:object.elements.dial_colourWithIndent_continuous.outputGain.get(),
-                                        };
-                                    };
-                                    object.importData = function(data){
-                                        object.elements.dial_colourWithIndent_continuous.outputGain.get( data.gain );
-                                    };
+                            //interface
+                                object.i = {
+                                    gain:function(value){
+                                        if(value == undefined){return object.elements.dial_colourWithIndent_continuous.outputGain.get();}
+                                        object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                                    },
+                                };
                         
+                            //import/export
+                                object.exportData = function(){
+                                    return { gain: object.elements.dial_colourWithIndent_continuous.outputGain.get() };
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.get( data.gain );
+                                };
+                            
                             //setup
-                                object.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
+                                audioInCircuit.listDevices(function(a){state.deviceList=a;});
                                 if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
                                 object.elements.dial_colourWithIndent_continuous.outputGain.set(0.5);
                                 object.elements.audio_meter_level.audioIn.start();
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_in.metadata = {
                             name:'Audio In',
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/audio_in/'
                         };
-                        this.signal_switch = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_switch/';
+                        this.signal_switch = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_switch/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:149, height:260 },
-                                design:{ width:2.125, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'signal_switch',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
-                                        x:measurements.drawing.width/2.3 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                    {collection:'control', type:'slide_discrete_image',name:'theSwitch',data:{
-                                        x:5.25, y:5.25, width:9.5, height:29.5, handleHeight:1/2, resetValue:0, optionCount:2, value:1,
-                                        handleURL:imageStoreURL_localPrefix+'handle.png',
-                                    }},
-                                ]
-                            };
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:149, height:260 },
+                                            design: { width:2.125, height:4 },
+                                        };
                         
-                            //circuitry
-                                object.elements.slide_discrete_image.theSwitch.onchange = function(value){
-                                    object.elements.connectionNode_signal.out.set( 1-value == 0 ? false : true );
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
                                 };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_switch',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                            x:unitStyle.drawingValue.width/2.3 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'slide_discrete_image',name:'theSwitch',data:{
+                                            x:5.25, y:5.25, width:9.5, height:29.5, handleHeight:1/2, resetValue:0, optionCount:2, value:1,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png',
+                                        }},
+                                    ]
+                                });
+                            
+                            //wiring
+                                //hid
+                                    object.elements.slide_discrete_image.theSwitch.onchange = function(value){ object.elements.connectionNode_signal.out.set( 1-value == 0 ? false : true ); };
                         
                             //import/export
                                 object.exportData = function(){
-                                    return {
-                                        state:object.elements.slide_discrete_image.theSwitch.get()
-                                    };
+                                    return { state: object.elements.slide_discrete_image.theSwitch.get() };
                                 };
                                 object.importData = function(data){
                                     object.elements.slide_discrete_image.theSwitch.set(data.state);
                                 };
-                                
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_switch.metadata = {
                             name:'Signal Switch',
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/signal_switch/'
                         };
-                        var imageStoreURL = 'images/units/beta/';
+                        var imageStoreURL = 'images/units/1 - alpha/';
                         var style = {
                             background:{r:70/255,g:70/255,b:70/255,a:1},
                             bumper:{r:0.125,g:0.125,b:0.125,a:1},
@@ -46755,327 +46884,7 @@
                         //         thickness:15/4,
                         //     },
                         // };
-                        this.basic_synthesizer = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
-                        
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:1115, height:680 },
-                                design:{ width:18.25, height:11 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
-                            var dialColours = {
-                                outputGain:{r:0.93,g:0.45,b:0.31,a:1},
-                                attack:{r:0.99,g:0.93,b:0.31,a:1},
-                                release:{r:0.44,g:0.95,b:0.79,a:1},
-                                detune_note:{r:0.61,g:0.16,b:0.96,a:1},
-                                detune_octave:{r:0.92,g:0.2,b:0.47,a:1},
-                                periodicWaveType:{r:0.75,g:0.75,b:0.75,a:1},
-                                gainWobblePeriod:{r:0.57,g:0.97,b:0.3,a:1},
-                                gainWobbleDepth:{r:0.46,g:0.98,b:0.65,a:1},
-                                detuneWobblePeriod:{r:0.94,g:0.55,b:0.2,a:1},
-                                detuneWobbleDepth:{r:0.96,g:0.75,b:0.26,a:1},
-                            };
-                            
-                            var design = {
-                                name:'basic_synthesizer',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:measurements.drawingUnit.width, y:0 },
-                                    { x:measurements.drawing.width -offset -measurements.drawingUnit.width, y:0 },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height*4.5+offset/2.5 },
-                                    { x:measurements.drawingUnit.width*12 -offset/1.5, y:measurements.drawing.height -offset },
-                                    { x:measurements.drawingUnit.width, y:measurements.drawing.height -offset },
-                                    { x:0, y:measurements.drawing.height -offset -measurements.drawingUnit.height },
-                                    { x:0, y:measurements.drawingUnit.height },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
-                                        x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
-                                        x:20 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_attack', data:{ 
-                                        x:55 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_release', data:{ 
-                                        x:87.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detune_note', data:{ 
-                                        x:122.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_down', data:{ 
-                                        x:155 - 10/2 - 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_up', data:{ 
-                                        x:155 - 10/2 + 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'io_midiNoteInput', data:{ 
-                                        x:measurements.drawing.width - 5/1.5, y:27.5 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobblePeriod', data:{ 
-                                        x:40 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobbleDepth', data:{ 
-                                        x:40 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobblePeriod', data:{ 
-                                        x:72.5 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobbleDepth', data:{ 
-                                        x:72.5 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 - 1/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 -1.25 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 +1.25 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 +0.9 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -0.9 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 +2.4 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -2.4 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                        
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                        
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
-                                        x:20, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0.5, value:0.5,
-                                        style:{ handle:dialColours.outputGain, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'attack',data:{
-                                        x:55, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.attack, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'release',data:{
-                                        x:87.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.release, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detune_note',data:{
-                                        x:122.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:dialColours.detune_note, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
-                                        x:155, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:3, arcDistance:1.2, resetValue:3, optionCount:7,
-                                        style:{ handle:dialColours.detune_octave, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'periodicWaveType',data:{
-                                        x:130, y:72.5, radius:32.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.periodicWaveType, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobblePeriod',data:{
-                                        x:40, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.gainWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobbleDepth',data:{
-                                        x:40, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.gainWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobblePeriod',data:{
-                                        x:72.5, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.detuneWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobbleDepth',data:{
-                                        x:72.5, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.detuneWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                        
-                                    {collection:'control', type:'button_circle', name:'panicButton', data:{ 
-                                        x:162.5, y:52.5, r:15/2, style:{
-                                            background__up__colour:{r:0.75,g:0.75,b:0.75,a:1},
-                                            background__hover__colour:{r:0.85,g:0.85,b:0.85,a:1},
-                                            background__press__colour:{r:0.5,g:0.5,b:0.5,a:1},
-                                            background__hover_press__colour:{r:0.5,g:0.5,b:0.5,a:1},
-                                        },
-                                    }},
-                                ]
-                            };
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //import/export
-                                object.exportData = function(){
-                                    return {
-                                        gain: object.elements.dial_colourWithIndent_continuous.outputGain.get(),
-                                        attack: object.elements.dial_colourWithIndent_continuous.attack.get()*10,
-                                        release: object.elements.dial_colourWithIndent_continuous.release.get()*10,
-                                        detune: 100*((object.elements.dial_colourWithIndent_continuous.detune_note.get()*2)-1),
-                                        octave: object.elements.dial_colourWithIndent_discrete.detune_octave.get()-3,
-                                        waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_colourWithIndent_discrete.periodicWaveType.get()],
-                                        gainWobble:{
-                                            rate: object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.get()*100,
-                                            depth: object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.get()
-                                        },
-                                        detuneWobble:{
-                                            rate: object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.get()*100,
-                                            depth: object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.get()
-                                        },
-                                    };
-                                };
-                                object.importData = function(data){
-                                    if(data == undefined){return;}
-                        
-                                    object.elements.dial_colourWithIndent_continuous.outputGain.set(data.gain);
-                                    object.elements.dial_colourWithIndent_continuous.attack.set(data.attack/10);
-                                    object.elements.dial_colourWithIndent_continuous.release.set(data.release/10);
-                                    object.elements.dial_colourWithIndent_continuous.detune_note.set( (1+(data.detune/100))/2 );
-                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set(data.octave+3);
-                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
-                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(data.gainWobble.rate/100);
-                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(data.gainWobble.depth);
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(data.detuneWobble.rate/100);
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(data.detuneWobble.depth);
-                                };
-                        
-                            //circuitry
-                                var attributes = {
-                                    detuneLimits: {min:-100, max:100}
-                                };
-                                object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
-                                object.__synthesizer.out().connect( object.elements.connectionNode_audio.io_output.in() );
-                        
-                            //wiring
-                                object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){ object.__synthesizer.gain( value ); };
-                                object.elements.dial_colourWithIndent_continuous.attack.onchange = function(value){ object.__synthesizer.attack( value ); };
-                                object.elements.dial_colourWithIndent_continuous.release.onchange = function(value){ object.__synthesizer.release( value ); };
-                                object.elements.dial_colourWithIndent_continuous.detune_note.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); };
-                                object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){ object.__synthesizer.octave(value-3); };
-                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); };
-                                object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-                                object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value);};
-                                object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-                                object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); };
-                                object.elements.button_circle.panicButton.onpress = function(){object.__synthesizer.panic(); };
-                        
-                                object.elements.connectionNode_data.io_midiNoteInput.onreceive = function(address,data){
-                                    if(address != 'midinumber'){return;}
-                                    object.__synthesizer.perform(data);
-                                };
-                                object.elements.connectionNode_data.io_periodicWaveType_dataIn.onreceive = function(address,data){
-                                    if(address != 'periodicWave'){return;}
-                                    object.__synthesizer.periodicWave(data);
-                                };
-                                object.elements.connectionNode_voltage.io_outputGain.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_attack.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.attack.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_release.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.release.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_detune_note.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.detune_note.set(value);
-                                };
-                                object.elements.connectionNode_signal.io_detune_octave_down.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set(
-                                        object.elements.dial_colourWithIndent_discrete.detune_octave.get() - 1
-                                    );
-                                };
-                                object.elements.connectionNode_signal.io_detune_octave_up.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set(
-                                        object.elements.dial_colourWithIndent_discrete.detune_octave.get() + 1
-                                    );
-                                };
-                                object.elements.connectionNode_voltage.io_gainWobblePeriod.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_gainWobbleDepth.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_detuneWobblePeriod.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_detuneWobbleDepth.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);
-                                };
-                                object.elements.connectionNode_signal.io_periodicWaveType_down.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
-                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() - 1
-                                    );
-                                };
-                                object.elements.connectionNode_signal.io_periodicWaveType_up.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
-                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() + 1
-                                    );
-                                };
-                                object.elements.connectionNode_signal.io_panic.onchange = function(value){
-                                    if(value){
-                                        object.elements.button_circle.panicButton.press();
-                                    }else{
-                                        object.elements.button_circle.panicButton.release();
-                                    }
-                                };
-                        
-                            //interface
-                                object.i = {
-                                    periodicWave:function(data){object.__synthesizer.periodicWave(data);},
-                                    midiNote:function(data){object.__synthesizer.perform(data);},
-                        
-                                    gain:function(value){object.elements.dial_colourWithIndent_continuous.outputGain.set(value);},
-                                    attack:function(value){object.elements.dial_colourWithIndent_continuous.attack.set(value);},
-                                    release:function(value){object.elements.dial_colourWithIndent_continuous.release.set(value);},
-                                    detune:function(value){object.elements.dial_colourWithIndent_continuous.detune_note.set(value);},
-                                    octave:function(value){object.elements.dial_colourWithIndent_discrete.detune_octave.set(value);},
-                                    waveType:function(value){object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(value);},
-                                    gainWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);},
-                                    gainWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);},
-                                    detuneWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);},
-                                    detuneWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);},
-                                };
-                                
-                            return object;
-                        };
-                        this.basic_synthesizer.metadata = {
-                            name:'Basic Synthesizer',
-                            category:'synthesizers',
-                            helpURL:'/help/units/beta/basic_synthesizer/'
-                        };
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        this.basic_synthesizer2 = function(x,y,angle){
+                        this.basic_synthesizer = function(x,y,angle){
                             //style data
                                 var unitStyle = new function(){
                                     //image store location URL
@@ -47093,31 +46902,43 @@
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
                                         };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
-                                        };
                         
                                     //styling values
+                                        this.outputGain = { handle:{r:0.93,g:0.45,b:0.31,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.attack = { handle:{r:0.99,g:0.93,b:0.31,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.release = { handle:{r:0.44,g:0.95,b:0.79,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detune_note = { handle:{r:0.61,g:0.16,b:0.96,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detune_octave = { handle:{r:0.92,g:0.2,b:0.47,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.periodicWaveType = { handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.gainWobblePeriod = { handle:{r:0.57,g:0.97,b:0.3,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.gainWobbleDepth = { handle:{r:0.46,g:0.98,b:0.65,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detuneWobblePeriod = { handle:{r:0.94,g:0.55,b:0.2,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detuneWobbleDepth = { handle:{r:0.96,g:0.75,b:0.26,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.panicButton = {
+                                            background__up__colour:{r:0.75,g:0.75,b:0.75,a:1},
+                                            background__hover__colour:{r:0.85,g:0.85,b:0.85,a:1},
+                                            background__press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                            background__hover_press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                        };
                                 };
                         
                                 //main object creation
                                     var object = _canvas_.interface.unit.builder({
-                                        name:'audio_file_player',
+                                        name:'basic_synthesizer',
                                         x:x, y:y, angle:angle,
                                         space:[
-                                            { x:unitStyle.drawingUnit.width,                                                 y:0 },
-                                            { x:unitStyle.drawingValue.width -unitStyle.offset -unitStyle.drawingUnit.width, y:0 },
-                                            { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height },
-                                            { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height*4.5 + unitStyle.offset/2.5 },
-                                            { x:unitStyle.drawingUnit.width*12 -unitStyle.offset/1.5,                        y:unitStyle.drawingValue.height -unitStyle.offset },
-                                            { x:unitStyle.drawingUnit.width,                                                 y:unitStyle.drawingValue.height -unitStyle.offset },
-                                            { x:0,                                                                           y:unitStyle.drawingValue.height -unitStyle.offset -unitStyle.drawingUnit.height },
-                                            { x:0,                                                                           y:unitStyle.drawingUnit.height },
+                                            { x:unitStyle.drawingValue.width*(1/18.5),                        y:0                                                         },
+                                            { x:unitStyle.drawingValue.width*(17.5/18.5) -unitStyle.offset,   y:0                                                         },
+                                            { x:unitStyle.drawingValue.width -unitStyle.offset,               y:unitStyle.drawingValue.height*(1/11)                      },
+                                            { x:unitStyle.drawingValue.width -unitStyle.offset,               y:(unitStyle.drawingValue.height+unitStyle.offset)*(4.5/11) },
+                                            { x:(unitStyle.drawingValue.width-unitStyle.offset)*(12.15/18.5), y:unitStyle.drawingValue.height -unitStyle.offset           },
+                                            { x:unitStyle.drawingValue.width*(1/18.5),                        y:unitStyle.drawingValue.height -unitStyle.offset           },
+                                            { x:0,                                                            y:(unitStyle.drawingValue.height-unitStyle.offset)*(10/11)  },
+                                            { x:0,                                                            y:unitStyle.drawingValue.height*(1/11)                      },
                                         ],
                                         elements:[
                                             {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
-                                                x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                                x:0, y:35, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
                                                 x:15, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
@@ -47153,38 +46974,178 @@
                                                 x:155/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
-                                                x:unitStyle.drawingUnit.width*(14.75 -5/32), y:unitStyle.drawingUnit.height*(7.75 +3/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
+                                                x:unitStyle.drawingValue.width-35 -2.5, y:unitStyle.drawingValue.height-35 +2.5, width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
-                                                x:unitStyle.drawingUnit.width*(13.5-0.04), y:unitStyle.drawingUnit.height*(9-0.04), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                                x:unitStyle.drawingValue.width-35 -14, y:unitStyle.drawingValue.height-35 +14, width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
-                                                x:unitStyle.drawingUnit.width*(15.4-1/40), y:unitStyle.drawingUnit.height*(7.1-1/40), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                                x:unitStyle.drawingValue.width-35 +5.5, y:unitStyle.drawingValue.height-35 -5.5, width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
-                                                x:unitStyle.drawingUnit.width*(17), y:unitStyle.drawingUnit.height*(5.5), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                                x:unitStyle.drawingValue.width-35 +22.5, y:unitStyle.drawingValue.height-35 -22.5, width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                             }},
-                        
                                             {collection:'basic', type:'image', name:'backing', 
                                                 data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                             },
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
+                                                x:20, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0.5, value:0.5, style:unitStyle.outputGain,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'attack',data:{
+                                                x:55, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0, style:unitStyle.attack,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'release',data:{
+                                                x:87.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.release,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'detune_note',data:{
+                                                x:122.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.detune_note,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
+                                                x:155, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:3, arcDistance:1.2, resetValue:3, optionCount:7, style:unitStyle.detune_octave,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_discrete',name:'periodicWaveType',data:{
+                                                x:130, y:72.5, radius:32.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.periodicWaveType,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobblePeriod',data:{
+                                                x:40, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.gainWobblePeriod,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobbleDepth',data:{
+                                                x:40, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.gainWobbleDepth,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobblePeriod',data:{
+                                                x:72.5, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.detuneWobblePeriod,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobbleDepth',data:{
+                                                x:72.5, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.detuneWobbleDepth,
+                                            }},
+                                            {collection:'control', type:'button_circle', name:'panicButton', data:{ 
+                                                x:162.5, y:52.5, r:15/2, style:unitStyle.panicButton,
+                                            }},
                                         ]
                                     });
                         
                             //circuitry
+                                var detuneLimits = {min:-100, max:100};
+                                var synthesizerCircuit = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+                        
                             //wiring
                                 //hid
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){ synthesizerCircuit.gain( value ); };
+                                    object.elements.dial_colourWithIndent_continuous.attack.onchange = function(value){ synthesizerCircuit.attack( value ); };
+                                    object.elements.dial_colourWithIndent_continuous.release.onchange = function(value){ synthesizerCircuit.release( value ); };
+                                    object.elements.dial_colourWithIndent_continuous.detune_note.onchange = function(value){ synthesizerCircuit.detune( value*(detuneLimits.max-detuneLimits.min) + detuneLimits.min ); };
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){ synthesizerCircuit.octave( value-3 ); };
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.onchange = function(value){ synthesizerCircuit.waveType( ['sine','triangle','square','sawtooth','custom'][value] ); };
+                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleDepth(value);};
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.onchange = function(value){ synthesizerCircuit.detuneWobbleDepth( value*100 ); };
+                                    object.elements.button_circle.panicButton.onpress = function(){ synthesizerCircuit.panic(); };
                                 //io
-                            //interface
-                            //import/export
-                            //setup
+                                    synthesizerCircuit.out().connect( object.io.audio.io_output.in() );
                         
+                                    object.io.data.io_midiNoteInput.onreceive = function(address,data){
+                                        if(address != 'midinumber'){return;}
+                                        synthesizerCircuit.perform(data);
+                                    };
+                                    object.io.data.io_periodicWaveType_dataIn.onreceive = function(address,data){
+                                        if(address != 'periodicWave'){return;}
+                                        synthesizerCircuit.periodicWave(data);
+                                    };
+                                    object.io.voltage.io_outputGain.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                                    };
+                                    object.io.voltage.io_attack.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.attack.set(value);
+                                    };
+                                    object.io.voltage.io_release.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.release.set(value);
+                                    };
+                                    object.io.voltage.io_detune_note.onchange = function(value){ 
+                                        object.elements.dial_colourWithIndent_continuous.detune_note.set(value);
+                                    };
+                                    object.io.signal.io_detune_octave_down.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.detune_octave.set( object.elements.dial_colourWithIndent_discrete.detune_octave.get() - 1 );
+                                    };
+                                    object.io.signal.io_detune_octave_up.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.detune_octave.set( object.elements.dial_colourWithIndent_discrete.detune_octave.get() + 1 );
+                                    };
+                                    object.io.voltage.io_gainWobblePeriod.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);
+                                    };
+                                    object.io.voltage.io_gainWobbleDepth.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);
+                                    };
+                                    object.io.voltage.io_detuneWobblePeriod.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);
+                                    };
+                                    object.io.voltage.io_detuneWobbleDepth.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);
+                                    };
+                                    object.io.signal.io_periodicWaveType_down.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() - 1 );
+                                    };
+                                    object.io.signal.io_periodicWaveType_up.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() + 1 );
+                                    };
+                                    object.io.signal.io_panic.onchange = function(value){ value ? object.elements.button_circle.panicButton.press() : object.elements.button_circle.panicButton.release(); };
+                        
+                            //interface
+                                object.i = {
+                                    periodicWave:function(data){return synthesizerCircuit.periodicWave(data);},
+                                    performMidiNote:function(data){synthesizerCircuit.perform(data);},
+                                };
+                                ['gain','attack','release','detune','gainWobblePeriod','gainWobbleDepth','detuneWobblePeriod','detuneWobbleDepth'].forEach(dialName => {
+                                    object.i[dialName] = (function(element){
+                                        return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
+                                    })(object.elements.dial_colourWithIndent_continuous[dialName]);
+                                });
+                                ['octave','waveType'].forEach(dialName => {
+                                    object.i[dialName] = (function(element){
+                                        return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
+                                    })(object.elements.dial_colourWithIndent_discrete[dialName]);
+                                });
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        gain: object.elements.dial_colourWithIndent_continuous.outputGain.get(),
+                                        attack: object.elements.dial_colourWithIndent_continuous.attack.get()*10,
+                                        release: object.elements.dial_colourWithIndent_continuous.release.get()*10,
+                                        detune: 100*((object.elements.dial_colourWithIndent_continuous.detune_note.get()*2)-1),
+                                        octave: object.elements.dial_colourWithIndent_discrete.detune_octave.get()-3,
+                                        waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_colourWithIndent_discrete.periodicWaveType.get()],
+                                        gainWobble:{
+                                            rate: object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.get()*100,
+                                            depth: object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.get()
+                                        },
+                                        detuneWobble:{
+                                            rate: object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.get()*100,
+                                            depth: object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.get()
+                                        },
+                                    };
+                                };
+                                object.importData = function(data){
+                                    if(data == undefined){return;}
+                        
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.set( data.gain );
+                                    object.elements.dial_colourWithIndent_continuous.attack.set( data.attack/10 );
+                                    object.elements.dial_colourWithIndent_continuous.release.set( data.release/10 );
+                                    object.elements.dial_colourWithIndent_continuous.detune_note.set( (1+(data.detune/100))/2 );
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set( data.octave+3 );
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set( data.gainWobble.rate/100 );
+                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set( data.gainWobble.depth );
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set( data.detuneWobble.rate/100 );
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set( data.detuneWobble.depth );
+                                };
+                                
                             return object;
                         };
-                        this.basic_synthesizer2.metadata = {
-                            name:'Basic Synthesizer2',
+                        this.basic_synthesizer.metadata = {
+                            name:'Basic Synthesizer',
                             category:'synthesizers',
-                            helpURL:'/help/units/beta/basic_synthesizer2/'
+                            helpURL:'/help/units/beta/basic_synthesizer/'
                         };
                         this.audio_file_player = function(x,y,angle){
                             //style data
@@ -47203,10 +47164,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -47302,22 +47259,21 @@
                                 });
                             
                             //circuitry
-                                var state = {
-                                    player: new _canvas_.interface.circuit.player2(_canvas_.library.audio.context),
-                                };
+                                var playerCircuit = new _canvas_.interface.circuit.player2(_canvas_.library.audio.context);
+                                
                                 function loadProcess(data){
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( state.player.waveformSegment() );
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( playerCircuit.waveformSegment() );
                                 
                                     object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
                                     object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
                                 }
                                 function refresh(){
                                     //check if there's a track at all
-                                        if( !state.player.isLoaded() ){return;}
+                                        if( !playerCircuit.isLoaded() ){return;}
                         
                                     //time readout
-                                        if(state.player.concurrentPlayCountLimit() == 1){
-                                            var tmp = state.player.currentTime(0);
+                                        if(playerCircuit.concurrentPlayCountLimit() == 1){
+                                            var tmp = playerCircuit.currentTime(0);
                                             if(tmp == -1){tmp = 0;}
                                             var time = _canvas_.library.math.seconds2time( Math.round(tmp));
                         
@@ -47329,13 +47285,13 @@
                                             object.elements.readout_sixteenSegmentDisplay_static.time.print();
                                         }else{
                                             object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(state.player.currentTime().length,8,' ')
+                                                _canvas_.library.misc.padString(playerCircuit.currentTime().length,8,' ')
                                             );
                                             object.elements.readout_sixteenSegmentDisplay_static.time.print();
                                         }
                                     
                                     //waveport
-                                        var progressList = state.player.progress();
+                                        var progressList = playerCircuit.progress();
                                         var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
                         
                                         //adjust needles to match player
@@ -47353,25 +47309,25 @@
                         
                             //wiring
                                 //hid
-                                    object.elements.button_image.button_open.onpress = function(){ state.player.load('file',loadProcess); };
+                                    object.elements.button_image.button_open.onpress = function(){ playerCircuit.load('file',loadProcess); };
                                     object.elements.button_image.button_play.onpress = function(){
-                                        if(object.i.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
-                                        else{ state.player.start(); }
+                                        if(object.i.concurrentPlayCountLimit() == 1 && playerCircuit.currentTime().length > 0){ playerCircuit.resume(); }
+                                        else{ playerCircuit.start(); }
                         
                                         //flash light
                                             object.elements.glowbox_rectangle.fireLight.on();
                                             setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
                                     };
-                                    object.elements.button_image.button_stop.onpress = function(){ state.player.stop(); };
-                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ state.player.rate( 2*data ); };
-                                    object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return state.player.loop(bool); };
-                                    object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return state.player.concurrentPlayCountLimit(value); };
+                                    object.elements.button_image.button_stop.onpress = function(){ playerCircuit.stop(); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ playerCircuit.rate( 2*data ); };
+                                    object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return playerCircuit.loop(bool); };
+                                    object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return playerCircuit.concurrentPlayCountLimit(value); };
                                     object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
                                         if( !isNaN(parseInt(needle)) ){
-                                            if( state.player.progress(needle) == -1 ){
-                                                state.player.createPlayhead(value);
+                                            if( playerCircuit.progress(needle) == -1 ){
+                                                playerCircuit.createPlayhead(value);
                                             }else{
-                                                state.player.jumpTo(needle,value);
+                                                playerCircuit.jumpTo(needle,value);
                                             }
                                         }
                         
@@ -47382,11 +47338,11 @@
                                         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(area.A,area.B,false);
                                         if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ area.A = 0; area.B = 1; }
                                         if(area.A > area.B){ var tmp = area.A; area.A = area.B; area.B = tmp; } //keepin' things straight
-                                        return state.player.area(area.A,area.B);
+                                        return playerCircuit.area(area.A,area.B);
                                     };
                                 //io
-                                    state.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
-                                    state.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
+                                    playerCircuit.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
+                                    playerCircuit.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
                                     object.io.signal.io_play.onchange = function(value){
                                         var part = object.elements.button_image.button_play;
                                         value ? part.press() : part.release();
@@ -47421,20 +47377,20 @@
                         
                             //interface
                                 object.i = {
-                                    loadRaw:function(data){ state.player.loadRaw(data,loadProcess); },
-                                    loadByFile:function(){ state.player.load('file',loadProcess); },
-                                    loadByURL:function(url){ state.player.load('url',loadProcess,url); },
+                                    loadRaw:function(data){ playerCircuit.loadRaw(data,loadProcess); },
+                                    loadByFile:function(){ playerCircuit.load('file',loadProcess); },
+                                    loadByURL:function(url){ playerCircuit.load('url',loadProcess,url); },
                                     fire:function(){
-                                        if(state.player.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
-                                        else{ state.player.start(); }
+                                        if(playerCircuit.concurrentPlayCountLimit() == 1 && playerCircuit.currentTime().length > 0){ playerCircuit.resume(); }
+                                        else{ playerCircuit.start(); }
                         
                                         //flash light
                                             object.elements.glowbox_rectangle.fireLight.on();
                                             setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
                                     },
-                                    pause:function(){ state.player.pause(); },
-                                    resume:function(){ state.player.resume(); },
-                                    stop:function(){ state.player.stop(); },
+                                    pause:function(){ playerCircuit.pause(); },
+                                    resume:function(){ playerCircuit.resume(); },
+                                    stop:function(){ playerCircuit.stop(); },
                                     area:function(start,end){ return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(start,end); },
                                     looping:function(bool){
                                         if(bool == undefined){ return object.elements.checkbox_image.checkbox_loop.get(); }
@@ -47444,14 +47400,14 @@
                                         if(value == undefined){ return object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(); }
                                         object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
                                     },
-                                    jumpTo:function(needle,position){ state.player.jumpTo(needle,position); },
-                                    concurrentPlayCountLimit:function(value){ return state.player.concurrentPlayCountLimit(value); },
+                                    jumpTo:function(needle,position){ playerCircuit.jumpTo(needle,position); },
+                                    concurrentPlayCountLimit:function(value){ return playerCircuit.concurrentPlayCountLimit(value); },
                                 };
                         
                             //import/export
                                 object.exportData = function(){
                                     return{
-                                        track: state.player.unloadRaw(),
+                                        track: playerCircuit.unloadRaw(),
                                         rate: object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(),
                                         loopActive: object.elements.checkbox_image.checkbox_loop.get(), 
                                         selectedArea: object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(),
@@ -47474,576 +47430,594 @@
                             helpURL:'/help/units/beta/audio_file_player/'
                         };
 
-                        this.voltage_combiner = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
+                        this.voltage_combiner = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_combiner/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:260, height:260 },
-                                design:{ width:4, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'voltage_combiner',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:(measurements.drawing.height -offset)/2 },
-                                    { x:measurements.drawing.width -offset, y:0                                       },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
-                                    { x:0,                                  y:measurements.drawing.height -offset     },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output',   data:{ x:0, y:measurements.drawing.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_1',  data:{ x:measurements.drawing.width-3-1/3, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input_2',  data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-18-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ x:measurements.drawing.width*0.78, y:measurements.drawing.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage }},
-                        
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                        
-                                    {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
-                                        x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
-                                        handleURL:imageStoreURL_localPrefix+'handle.png'
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //wiring
-                                var mix = 0.5;
-                                var inputValue = [0,0];
-                                function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
-                        
-                                object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
-                                object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
-                                object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
-                                object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
-                        
-                            //import/export
-                                object.exportData = function(){ return mix; };
-                                object.importData = function(data){
-                                    if(data == undefined){return;}
-                        
-                                    object.elements.slide_continuous_image.slide_mix.set(data); 
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                                 };
                         
-                            //interface
-                                object.i = {
-                                    mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
-                                };
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_combiner',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                                   },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'output',   data:{ 
+                                            x:0, y:unitStyle.drawingValue.height-14.5 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'input_1',  data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:10, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'input_2',  data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-18-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'port_mix', data:{ 
+                                            x:unitStyle.drawingValue.width*0.78, y:unitStyle.drawingValue.height-3-1/3, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage 
+                                        }},
                         
-                            return object;
-                        };
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        } },
                         
+                                        {collection:'control', type:'slide_continuous_image',name:'slide_mix',data:{
+                                            x:32.5, y:10, width:5, height:25, handleHeight:0.18, value:0.5, resetValue:0.5,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png'
+                                        }},
+                                    ]
+                                });
                         
+                                //circuitry
+                                    var mix = 0.5;
+                                    var inputValue = [0,0];
+                                    function calculateOutput(){ object.io.voltage.output.set( inputValue[1]*mix + inputValue[0]*(1-mix) ); }
                         
+                                //wiring
+                                    //hid
+                                        object.elements.slide_continuous_image.slide_mix.onchange = function(value){ mix = value; calculateOutput(); };
+                                    //io (updates hid)
+                                        object.io.voltage.input_1.onchange = function(value){ inputValue[0] = value; calculateOutput(); };
+                                        object.io.voltage.input_2.onchange = function(value){ inputValue[1] = value; calculateOutput(); };
+                                        object.io.voltage.port_mix.onchange = function(value){ object.elements.slide_continuous_image.slide_mix.set(value); };
+                        
+                                //interface
+                                    object.i = {
+                                        mix:function(value){ object.elements.slide_continuous_image.slide_mix.set(value); },
+                                    };
+                        
+                                //import/export
+                                    object.exportData = function(){ return mix; };
+                                    object.importData = function(data){
+                                        if(data == undefined){return;}
+                        
+                                        object.elements.slide_continuous_image.slide_mix.set(data); 
+                                    };
+                        
+                                return object;
+                            };
                         this.voltage_combiner.metadata = {
                             name:'Voltage Combiner',
                             category:'misc',
                             helpURL:'/help/units/beta/voltage_combiner/'
                         };
-                        this.audio_duplicator = function(x,y,a){
-                            var width = 320; var height = 320;
-                            var div = 6.4;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div*(0.85/5),y:0},
-                                {x:width/div*(4.5/5),y:height/div*(1/5)},
-                                {x:width/div*(4.5/5),y:height/div*(4/5)},
-                                {x:width/div*(0.85/5),y:height/div},
-                                {x:0,y:height/div},
+
+                        this.audio_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
                         
-                                {x:-width/div*(0.9/10),y:height/div*(4/5)},
-                                {x:-width/div*(1.25/10),y:height/div*(2.5/5)},
-                                {x:-width/div*(0.9/10),y:height/div*(1/5)},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_duplicator/';
-                            var design = {
-                                name:'audio_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:(width/div)*(4.5/5)-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow,
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:320 },
+                                            design: { width:5, height:5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var reverseOffset = (unitStyle.drawingValue.width)*(0.875/10);
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:reverseOffset,                                                              y:0                                                       },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:0                                                       },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(9/10),    y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                        { x:reverseOffset + (unitStyle.drawingValue.width -unitStyle.offset)*(1.7/10),  y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:reverseOffset,                                                              y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                        { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(1.25/10), y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/2) },
+                                        { x:reverseOffset - (unitStyle.drawingValue.width -unitStyle.offset)*(0.9/10),  y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.5 - 15/2, 
+                                            width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
+                                            x:2.25, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2,
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
                                         },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_1', data:{ 
-                                        x:-width/div*(0.9/10), y:(height/div)/2 - 2.5, width:5, height:15, angle:0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_2', data:{ 
-                                        x:-width/div*(0.45/10), y:(height/div) - 7.5, width:5, height:15, angle:-0.15+Math.PI, isAudioOutput:true, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow 
-                                        }
-                                    }},
+                                    ]
+                                });
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-(width/div)*(1.25/10), y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                        
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //circuitry
-                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_1.in() );
-                                object.elements.connectionNode_audio.input.out().connect( object.elements.connectionNode_audio.output_2.in() );
+                            //wiring
+                                //io
+                                    object.io.audio.input.out().connect( object.io.audio.output_1.in() );
+                                    object.io.audio.input.out().connect( object.io.audio.output_2.in() );
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_duplicator.metadata = {
                             name:'Audio Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/audio_duplicator/'
                         };
-                        this.data_combiner = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
+                        this.data_combiner = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'data_combiner/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:320, height:320 },
-                                design:{ width:5, height:5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:320 },
+                                            design: { width:5, height:5 },
+                                        };
                         
-                            var design = {
-                                name:'data_combiner',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0, y:(measurements.drawing.height -offset)*(1/5) },
-                                    { x:(measurements.drawing.width -offset)*(2/5), y:0 },
-                                    { x:measurements.drawing.width -offset, y:0                                       },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset     },
-                                    { x:(measurements.drawing.width -offset)*(2/5),                                   y:measurements.drawing.height -offset     },
-                                    { x:0, y:(measurements.drawing.height -offset)*(4/5) },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ x:measurements.drawing.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ x:measurements.drawing.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_combiner',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:0                                                       },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:0                                                       },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(2/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15/2, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'input_1', data:{ 
+                                            x:unitStyle.drawingValue.width -3 -1/3, y:7.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'input_2', data:{ 
+                                            x:unitStyle.drawingValue.width -3 -1/3, y:27.5, width:5, height:15, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                    ]
+                                });
                         
                             //wiring
-                                object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
-                                object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
-                        
+                                //io
+                                    object.io.data.input_1.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                                    object.io.data.input_2.onreceive = function(address,data){ object.io.data.output.send(address,data); };
+                            
                             return object;
                         };
-                        
-                        
-                        
                         this.data_combiner.metadata = {
                             name:'Data Combiner',
                             category:'misc',
                             helpURL:'/help/units/beta/data_combiner/'
                         };
-                        this.signal_combiner = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
+                        this.signal_combiner= function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_combiner/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:260, height:260 },
-                                design:{ width:4, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'signal_combiner',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                        y:(measurements.drawing.height -offset)/4      },
-                                    { x:measurements.drawing.width -offset,       y:0                                            },
-                                    { x:measurements.drawing.width -offset,       y:measurements.drawing.height -offset          },
-                                    { x:0,                                        y:(measurements.drawing.height -offset)*0.75   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ x:0, y:(measurements.drawing.height-offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ x:measurements.drawing.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ x:measurements.drawing.width-3-1/3, y:measurements.drawing.height-20.5-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.signal }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_combiner',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                        { x:0,                                              y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'input_1', data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:7.5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'input_2', data:{ 
+                                            x:unitStyle.drawingValue.width-3-1/3, y:unitStyle.drawingValue.height-20.5-1/3, width:5, height:10, cableVersion:2, style:style.connectionNode.signal 
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
+                                        },
+                                    ]
+                                });
                         
                             //wiring
-                                object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
-                                object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
+                                //io
+                                    object.io.signal.input_1.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_2.read()); };
+                                    object.io.signal.input_2.onchange = function(value){ object.io.signal.output.set(value || object.io.signal.input_1.read()); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_combiner.metadata = {
                             name:'Signal Combiner',
                             category:'misc',
                             helpURL:'/help/units/beta/signal_combiner/'
                         };
-                        this.signal_duplicator = function(x,y,a){
-                            var width = 260; var height = 260;
-                            var div = 6.5;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div,y:height/(div*4)},
-                                {x:width/div,y:height/div - height/(div*4)},
-                                {x:0,y:height/div},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
-                            var design = {
-                                name:'signal_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
-                                        x:width/div-0.5, y:(height/div)/2 - 5, width:5, height:10, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow,
-                                            cable_dim:style.connectionCable.signal.dim,
-                                            cable_glow:style.connectionCable.signal.glow,
-                                        },
-                                        onchange:function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); } 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
-                                        x:0, y:(height/div)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow, 
-                                            cable_dim:style.connectionCable.signal.dim, 
-                                            cable_glow:style.connectionCable.signal.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
-                                        x:0, y:(height/div)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.signal.dim, 
-                                            glow:style.connectionNode.signal.glow, 
-                                            cable_dim:style.connectionCable.signal.dim, 
-                                            cable_glow:style.connectionCable.signal.glow 
-                                        }
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
+                        this.signal_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_duplicator/';
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                                      },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.25 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)*0.75 },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset        },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'output_2', data:{
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
+                                        },
+                                    ]
+                                });
+                        
+                                //wiring
+                                    //io
+                                        object.io.signal.input.onchange = function(value){ object.io.signal.output_1.set(value); object.io.signal.output_2.set(value); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_duplicator.metadata = {
                             name:'Signal Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/signal_duplicator/'
                         };
-                        this.voltage_duplicator = function(x,y,a){
-                            var width = 260; var height = 260;
-                            var div = 6.5;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div,y:height/(div*4)*2},
-                                {x:width/div,y:height/div},
-                                {x:0,y:height/div},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
-                            var design = {
-                                name:'voltage_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
-                                        x:width/div-0.5, y:(height/div)*0.75 - 5, width:5, height:10, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow,
-                                            cable_dim:style.connectionCable.voltage.dim,
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        },
-                                        onchange:function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); } 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
-                                        x:0, y:(height/div)/2, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
-                                        x:0, y:(height/div)*0.75 + 5, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow 
-                                        }
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
+                        this.voltage_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_duplicator/';
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:260, height:260 },
+                                            design: { width:4, height:4 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                                   },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:(unitStyle.drawingValue.height -unitStyle.offset)/2 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset     },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)*0.75 - 5, width:5, height:10, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'output_2', data:{
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 + 15, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2, 
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
+                                        },
+                                    ]
+                                });
+                        
+                            //wiring
+                                //io
+                                    object.io.voltage.input.onchange = function(value){ object.io.voltage.output_1.set(value); object.io.voltage.output_2.set(value); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.voltage_duplicator.metadata = {
                             name:'Voltage Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/voltage_duplicator/'
                         };
-                        this.data_duplicator = function(x,y,a){
-                            var width = 320; var height = 320;
-                            var div = 6.4;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/div*(3/5),y:0},
-                                {x:width/div,y:height/div*(1/5)},
-                                {x:width/div,y:height/div*(4/5)},
-                                {x:width/div*(3/5),y:height/div},
-                                {x:0,y:height/div},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
-                            var design = {
-                                name:'data_duplicator',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
-                                        x:width/div-0.5, y:(height/div)/2 - 7.5, width:5, height:15, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow,
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow,
+                        this.data_duplicator = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'data_duplicator/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:320 },
+                                            design: { width:5, height:5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'data_duplicator',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                                      y:0                                                       },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:0                                                       },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,         y:(unitStyle.drawingValue.height -unitStyle.offset)*(4/5) },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(3/5), y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                        { x:0,                                                      y:unitStyle.drawingValue.height -unitStyle.offset         },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
+                                            x:0, y:(unitStyle.drawingValue.height-unitStyle.offset)/2 - 2.5 + 20, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ 
+                                                x:-unitStyle.offset/2, y:-unitStyle.offset/2,
+                                                width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, 
+                                                url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                            }
                                         },
-                                        onreceive:function(address,data){
-                                            object.io.data.output_1.send(address,data);
-                                            object.io.data.output_2.send(address,data);
-                                        } 
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output_1', data:{ 
-                                        x:0, y:(height/div)/2 - 2.5, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow, 
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow 
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'output_2', data:{ 
-                                        x:0, y:(height/div) - 7.5, width:5, height:15, angle:Math.PI, cableVersion:2,
-                                        style:{ 
-                                            dim:style.connectionNode.data.dim, 
-                                            glow:style.connectionNode.data.glow, 
-                                            cable_dim:style.connectionCable.data.dim, 
-                                            cable_glow:style.connectionCable.data.glow 
-                                        }
-                                    }},
+                                    ]
+                                });
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/div, height: (height+20)/div, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                        
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                            //wiring
+                                //io
+                                    object.io.data.input.onreceive = function(address,data){
+                                        object.io.data.output_1.send(address,data);
+                                        object.io.data.output_2.send(address,data);
+                                    };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.data_duplicator.metadata = {
                             name:'Data Duplicator',
                             category:'misc',
                             helpURL:'/help/units/beta/data_duplicator/'
                         };
-                        this.eightTrackMixer = function(x,y,a){
-                            var trackCount = 8;
+                        this.eightTrackMixer = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
                         
-                            var width = 1530; var height = 810;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/6,y:0},
-                                {x:width/6,y:height/6},
-                                {x:0,y:height/6},
-                            ];
-                            var colours = [
-                                {r:1,g:0.01,b:0.02,a:1},
-                                {r:1,g:0.55,b:0,a:1},
-                                {r:1,g:0.93,b:0,a:1},
-                                {r:0,g:1,b:0,a:1},
-                                {r:0,g:1,b:0.81,a:1},
-                                {r:0,g:0.62,b:1,a:1},
-                                {r:0.08,g:0,b:1,a:1},
-                                {r:0.68,g:0,b:1,a:1}, 
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'eightTrackMixer/';
-                            var design = {
-                                name:'eightTrackMixer',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
-                                        x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
-                                        x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:1550, height:830 },
+                                            design: { width:25.5, height:13.5 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                            //dynamic design
-                            for(var a = 0; a < trackCount; a++){
-                                design.elements.push(
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_panner_'+a,data:{
-                                        x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5,
-                                        style:{ handle:colours[a], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }
-                                    }},
-                                );
-                                design.elements.push(
-                                    {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
-                                        x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
-                                        handleURL:imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
-                                    }}
-                                );
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
-                                        x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
-                                );
+                                    //styling values
+                                        this.dial = style.primaryEight.map(item => { return { handle:item, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} }; });
+                                };
                         
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
-                                        x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        }
-                                    }},
-                                );
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'eightTrackMixer',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_L', data:{ 
+                                            x:105, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output_R', data:{ 
+                                            x:130, y:0, width:5, height:15, angle:-Math.PI/2, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ].concat(
+                                        (function(){
+                                            var newElements = [];
+                                            for(var a = 0; a < 8; a++){
+                                                newElements.push(
+                                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_panner_'+a,data:{
+                                                        x:20 +30*a, y:32.75, radius:(165/6)/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, value:0.5, resetValue:0.5, style:unitStyle.dial[a],
+                                                    }},
+                                                );
+                                                newElements.push(
+                                                    {collection:'control', type:'slide_continuous_image',name:'slide_volume_'+a,data:{
+                                                        x:12.5 +30*a, y:52.5, width:15, height:75, handleHeight:0.125, value:1, resetValue:0.5,
+                                                        handleURL:unitStyle.imageStoreURL_localPrefix+'volumeSlideHandles_'+a+'.png'
+                                                    }}
+                                                );
+                                                newElements.unshift(
+                                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_'+a, data:{ 
+                                                        x:27.5 +30*a, y:135, width:5, height:15, angle:Math.PI/2, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                                    }},
+                                                );
+                                                newElements.unshift(
+                                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_panner_'+a, data:{ 
+                                                        x:0, y:20 +12.5*a, width:5, height:10, angle:Math.PI, cableVersion:2, style:style.connectionNode.voltage
+                                                    }},
+                                                );
+                                                newElements.unshift(
+                                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
+                                                        x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage
+                                                    }},
+                                                );
+                                            }
+                                            return newElements;
+                                        })()
+                                    )
+                                });
                         
-                                design.elements.unshift(
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'voltageConnection_volume_'+a, data:{ 
-                                        x:255, y:30 +12.5*a, width:5, height:10, angle:0, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.voltage.dim, 
-                                            glow:style.connectionNode.voltage.glow, 
-                                            cable_dim:style.connectionCable.voltage.dim, 
-                                            cable_glow:style.connectionCable.voltage.glow,
-                                        }
-                                    }},
-                                );
-                            }
-                        
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //internal circuitry
-                                for(var a = 0; a < trackCount; a++){
-                                    object['splitter_'+a] = new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2);
-                                    object.elements.connectionNode_audio['input_'+a].out().connect(object['splitter_'+a].in());
-                                    object['splitter_'+a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
-                                    object['splitter_'+a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
-                        
-                                    object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
-                                        return function(value){
-                                            object['splitter_'+a].inGain(2*(1-value));
-                                        }
-                                    }(a);
-                                    object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
-                                        return function(value){
-                                            object['splitter_'+a].outGain(0,1-value);
-                                            object['splitter_'+a].outGain(1,value);
-                                        }
-                                    }(a);
-                        
-                                    object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
-                                        return function(value){
-                                            object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
-                                        }
-                                    }(a);
-                                    object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
-                                        return function(value){
-                                            object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
-                                        }
-                                    }(a);
+                            //circuitry
+                                var audioLanes = []
+                                for(var a = 0; a < 8; a++){
+                                    audioLanes.push( new _canvas_.interface.circuit.channelMultiplier(_canvas_.library.audio.context,2) );
                                 }
+                        
+                            //wiring
+                                //hid
+                                    for(var a = 0; a < 8; a++){
+                                        object.elements.slide_continuous_image['slide_volume_'+a].onchange = function(a){
+                                            return function(value){
+                                                audioLanes[a].inGain(2*(1-value));
+                                            }
+                                        }(a);
+                                        object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].onchange = function(a){
+                                            return function(value){
+                                                audioLanes[a].outGain(0,1-value);
+                                                audioLanes[a].outGain(1,value);
+                                            }
+                                        }(a);
+                        
+                                        object.elements.connectionNode_voltage['voltageConnection_panner_'+a].onchange = function(a){
+                                            return function(value){
+                                                object.elements.dial_colourWithIndent_continuous['dial_panner_'+a].set(value);
+                                            }
+                                        }(a);
+                                        object.elements.connectionNode_voltage['voltageConnection_volume_'+a].onchange = function(a){
+                                            return function(value){
+                                                object.elements.slide_continuous_image['slide_volume_'+a].set(1-value);
+                                            }
+                                        }(a);
+                                    }
+                                //io
+                                    for(var a = 0; a < 8; a++){
+                                        object.elements.connectionNode_audio['input_'+a].out().connect(audioLanes[a].in());
+                                        audioLanes[a].out(0).connect( object.elements.connectionNode_audio['output_L'].in() );
+                                        audioLanes[a].out(1).connect( object.elements.connectionNode_audio['output_R'].in() );
+                                    }
                         
                             //interface
                                 object.i = {
@@ -48066,8 +48040,8 @@
                             //import/export
                                 object.exportData = function(){
                                     return {
-                                        gains:[...Array(trackCount).keys()].map(item => object.i.gain(item)),
-                                        pans:[...Array(trackCount).keys()].map(item => object.i.pan(item)),
+                                        gains:[...Array(8).keys()].map(item => object.i.gain(item)),
+                                        pans:[...Array(8).keys()].map(item => object.i.pan(item)),
                                     };
                                 };
                                 object.importData = function(data){
@@ -48076,117 +48050,126 @@
                                 };
                         
                             //setup
-                                for(var a = 0; a < trackCount; a++){
+                                for(var a = 0; a < 8; a++){
                                     object.i.gain(a,0.5);
                                     object.i.pan(a,0.5);
                                 }
-                            
+                        
                             return object;
                         };
-                        
                         this.eightTrackMixer.metadata = {
                             name:'Eight Track Mixer',
                             category:'misc',
                             helpURL:'/help/units/beta/eightTrackMixer/'
                         };
-                        this.signal_readout = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_readout/';
+                        this.signal_readout = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_readout/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:320, height:290 },
-                                design:{ width:5, height:4.5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'signal_readout',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                    {collection:'display', type:'glowbox_image', name:'lamp', 
-                                        data:{ 
-                                            x:5, y:5, width:35, height:35,
-                                            dimURL:imageStoreURL_localPrefix+'light_off.png',
-                                            glowURL:imageStoreURL_localPrefix+'light_on.png',
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:320, height:290 },
+                                            design: { width:5, height:4.5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_readout',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:unitStyle.drawingValue.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                         },
-                                    }
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        {collection:'display', type:'glowbox_image', name:'lamp', 
+                                            data:{ 
+                                                x:5, y:5, width:35, height:35,
+                                                dimURL:unitStyle.imageStoreURL_localPrefix+'light_off.png',
+                                                glowURL:unitStyle.imageStoreURL_localPrefix+'light_on.png',
+                                            },
+                                        }
+                                    ]
+                                });
                         
                             //wiring
-                                object.elements.connectionNode_signal.in.onchange = function(value){
-                                    if(value){ object.elements.glowbox_image.lamp.on(); }
-                                    else{ object.elements.glowbox_image.lamp.off(); }
-                                };
+                                //io
+                                    object.io.signal.in.onchange = function(value){
+                                        if(value){ object.elements.glowbox_image.lamp.on(); }
+                                        else{ object.elements.glowbox_image.lamp.off(); }
+                                    };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_readout.metadata = {
                             name:'Signal Readout',
                             category:'monitors',
                             helpURL:'/help/units/beta/signal_readout/'
                         };
-                        this.amplifier = function(x,y,a){
-                            var width = 935; var height = 860;
-                            var shape = [
-                                {x:0,y:0},
-                                {x:width/6,y:0},
-                                {x:width/6,y:height/6},
-                                {x:0,y:height/6},
-                            ];
-                            var imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
-                            var design = {
-                                name:'amplifier',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_L', data:{ 
-                                        x:width/6 - 1, y:height/6 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input_R', data:{ 
-                                        x:width/6 - 1, y:height/6 - 20 - 20, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:{
-                                            dim:style.connectionNode.audio.dim, 
-                                            glow:style.connectionNode.audio.glow, 
-                                            cable_dim:style.connectionCable.audio.dim, 
-                                            cable_glow:style.connectionCable.audio.glow,
-                                        }
-                                    }},
+                        this.amplifier = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'amplifier/';
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x: -10/6, y: -10/6, width: (width+20)/6, height: (height+20)/6, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:935, height:860 },
+                                            design: { width:15.5, height:14.25 },
+                                        };
                         
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'amplifier',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        {x:0,                                              y:0},
+                                        {x:unitStyle.drawingValue.width -unitStyle.offset, y:0},
+                                        {x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset},
+                                        {x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset},
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input_L', data:{
+                                            x:unitStyle.drawingValue.width-unitStyle.offset,
+                                            y:unitStyle.drawingValue.height-unitStyle.offset-20,
+                                            width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input_R', data:{ 
+                                            x:unitStyle.drawingValue.width-unitStyle.offset,
+                                            y:unitStyle.drawingValue.height-unitStyle.offset-40,
+                                            width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                        
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ]
+                                });
                         
                             //circuitry
                                 var flow = {
@@ -48210,137 +48193,145 @@
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.amplifier.metadata = {
                             name:'Amplifier',
                             category:'monitors',
                             helpURL:'/help/units/beta/amplifier/'
                         };
-                        this.voltage_readout = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_readout/';
+                        this.voltage_readout = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_readout/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:440, height:290 },
-                                design:{ width:7, height:4.5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'voltage_readout',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    } },
-                                    {collection:'display', type:'gauge_image', name:'gauge', data:{ 
-                                        x:5, y:5, width:55, height:35,
-                                        backingURL:imageStoreURL_localPrefix+'gauge_backing.png',
-                                        style:{needles:[{r:0,g:0,b:0,a:1}]},
-                                    }, },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:440, height:290 },
+                                            design: { width:7, height:4.5 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.gauge = {needles:[{r:0,g:0,b:0,a:1}]};
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_readout',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'in', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:unitStyle.drawingValue.height-15, width:5, height:10, angle:0, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        } },
+                                        {collection:'display', type:'gauge_image', name:'gauge', data:{ 
+                                            x:5, y:5, width:55, height:35,
+                                            backingURL:unitStyle.imageStoreURL_localPrefix+'gauge_backing.png',
+                                            style:unitStyle.gauge,
+                                        }, },
+                                    ]
+                                });
                         
                             //wiring
-                                object.elements.connectionNode_voltage.in.onchange = function(value){
-                                    object.elements.gauge_image.gauge.needle(value);
-                                };
+                                //io
+                                    object.io.voltage.in.onchange = function(value){ object.elements.gauge_image.gauge.needle(value); };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.voltage_readout.metadata = {
                             name:'Voltage Readout',
                             category:'monitors',
                             helpURL:'/help/units/beta/voltage_readout/'
                         };
-                        this.audio_scope = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_scope/';
+                        this.audio_scope = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_scope/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:1220, height:680 },
-                                design:{ width:20, height:11 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:1220, height:680 },
+                                            design: { width:20, height:11 },
+                                        };
                         
-                            var design = {
-                                name:'audio_scope',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                    y:0                                       },
-                                    { x:measurements.drawing.width -offset,   y:0                                       },
-                                    { x:measurements.drawing.width -offset,   y:measurements.drawingUnit.height*6 - 2   },
-                                    { x:measurements.drawingUnit.width*17.2, y:measurements.drawingUnit.height*6 - 2   },
-                                    { x:measurements.drawingUnit.width*15.75, y:measurements.drawingUnit.height*7.475 - 2 },
-                                    { x:measurements.drawingUnit.width*15.75, y:measurements.drawing.height -offset     },
-                                    { x:0,                                    y:measurements.drawing.height -offset     },
-                                ],
-                                elements:[
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:160, y:80, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_framerate',data:{
-                                        x:173.5, y:42.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:{r:0.93,g:0,b:0.55,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'button_image', name:'hold', data:{
-                                        x:158.5, y:5, width:30, height:15, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_down.png',
-                                    }},
-                                    {collection:'display', type:'grapher_audioScope_static', name:'waveport', data:{
-                                        x:5, y:5, width:150, height:100,
-                                        style:{
-                                            backgroundText_size:10,
-                                            backing:{r:0.15,g:0.15,b:0.15,a:1}
-                                        },
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.dial = { handle:{r:0.93,g:0,b:0.55,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.waveport = { backgroundText_size:10, backing:{r:0.15,g:0.15,b:0.15,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_scope',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                                          y:0                                                                 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,             y:0                                                                 },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,             y:(unitStyle.drawingValue.height -unitStyle.offset)*(11.25/20) - 2  },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(17.5/20), y:(unitStyle.drawingValue.height -unitStyle.offset)*(11.25/20) - 2  },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(16/20),   y:(unitStyle.drawingValue.height -unitStyle.offset)*(14/20) - 2     },
+                                        { x:(unitStyle.drawingValue.width -unitStyle.offset)*(16/20),   y:unitStyle.drawingValue.height -unitStyle.offset                   },
+                                        { x:0,                                                          y:unitStyle.drawingValue.height -unitStyle.offset                   },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:160, y:80, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_framerate',data:{
+                                            x:173.5, y:42.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial,
+                                        }},
+                                        {collection:'control', type:'button_image', name:'hold', data:{
+                                            x:158.5, y:5, width:30, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
+                                        }},
+                                        {collection:'display', type:'grapher_audioScope_static', name:'waveport', data:{
+                                            x:5, y:5, width:150, height:100, style:unitStyle.waveport,
+                                        }},
+                                    ]
+                                });
                         
                             //circuitry
                                 var attributes = {
                                     framerateLimits: {min:1, max:30},
                                     framerate:1,
                                 };
-                                object.elements.button_image.hold.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
-                                object.elements.button_image.hold.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
-                                object.elements.connectionNode_audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
-                                object.elements.dial_colourWithIndent_continuous.dial_framerate.onchange = function(a){
-                                    attributes.framerate = attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a);
-                                    object.elements.grapher_audioScope_static.waveport.refreshRate(attributes.framerate);
-                                };
-                            
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.hold.onpress = function(){object.elements.grapher_audioScope_static.waveport.stop();};
+                                    object.elements.button_image.hold.onrelease = function(){object.elements.grapher_audioScope_static.waveport.start();};
+                                    object.elements.dial_colourWithIndent_continuous.dial_framerate.onchange = function(a){
+                                        attributes.framerate = attributes.framerateLimits.min + Math.floor((attributes.framerateLimits.max - attributes.framerateLimits.min)*a);
+                                        object.elements.grapher_audioScope_static.waveport.refreshRate(attributes.framerate);
+                                    };
+                                //io 
+                                    object.io.audio.input.out().connect(object.elements.grapher_audioScope_static.waveport.getNode());
+                        
                             //interface
                                 object.i = {
                                     framerate:function(a){
@@ -48370,47 +48361,53 @@
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_scope.metadata = {
                             name:'Audio Scope',
                             category:'monitors',
                             helpURL:'/help/units/beta/audio_scope/'
                         };
-                        this.data_readout = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
+
+                        this.data_readout = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'data_readout/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:1220, height:920 },
-                                design:{ width:20, height:15 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'data_readout',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'in', data:{ 
-                                        x:measurements.drawing.width-3.5, y:measurements.drawing.height-30, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:1220, height:920 },
+                                            design: { width:20, height:15 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'data_readout',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'in', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:unitStyle.drawingValue.height-30, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                    ]
+                                });
                         
                             //circuitry
                                 var lineCount = 0;
@@ -48424,7 +48421,7 @@
                                     printingMode:{widthCalculation:'absolute',horizontal:'left',vertical:'top'}
                                 };
                                 var maxPrintingWidth = 175;
-                                
+                        
                                 function printLine(line){
                                     //add the new text to the list, and if the list becomes too long, remove the oldest item
                                         lines.unshift( { prefix:(lineCount++)+':/> ', line:line } );
@@ -48467,341 +48464,377 @@
                                 }
                         
                             //wiring
-                                object.elements.connectionNode_data.in.onreceive = function(address,data){
-                                    printLine( JSON.stringify({address:address, data:data}) );
-                                };
-                                
+                                //io
+                                    object.io.data.in.onreceive = function(address,data){ printLine( JSON.stringify({address:address, data:data}) ); };
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.data_readout.metadata = {
                             name:'Data Readout',
                             category:'monitors',
                             helpURL:'/help/units/beta/data_readout/'
                         };
-                        this.audio_recorder = function(x,y,a,setupConnect=true){
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_recorder/';
+
+                        this.audio_recorder = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_recorder/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:590, height:260 },
-                                design:{ width:9.5, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:590, height:260 },
+                                            design: { width:9.5, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'audio_recorder',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                    { x:0,                                  y:measurements.drawing.height -offset },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_input_R', data:{ 
-                                        x:measurements.drawing.width-3-1/3, y:-2.5 + 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_input_L', data:{ 
-                                        x:measurements.drawing.width-3-1/3, y:15 + 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_empty', data:{
-                                        x:5, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_empty_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_empty.png',
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_recording', data:{
-                                        x:5+19.5+2/3, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_recording_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_recording.png',
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_paused', data:{
-                                        x:5+(19.5+2/3)*2, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_paused_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_paused.png',
-                                    }},
-                                    {collection:'display', type:'glowbox_image', name:'light_stopped', data:{
-                                        x:5+(19.5+2/3)*3, y:4.15, height:10, width:19.5,
-                                        glowURL:imageStoreURL_localPrefix+'light_stopped_active.png',
-                                        dimURL:imageStoreURL_localPrefix+'light_stopped.png',
-                                    }},
+                                    //styling values
+                                };
                         
-                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
-                                        x:5+2/3, y:15+2/3, width:78.75, height:10-10/8, count:15
-                                    }},
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_recorder',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_input_R', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:5, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_input_L', data:{ 
+                                            x:unitStyle.drawingValue.width-10/3, y:22.5, width:5, height:15, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_empty', data:{
+                                            x:5, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_empty_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_empty.png',
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_recording', data:{
+                                            x:5+(19.5+2/3)*1, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_recording_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_recording.png',
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_paused', data:{
+                                            x:5+(19.5+2/3)*2, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_paused_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_paused.png',
+                                        }},
+                                        {collection:'display', type:'glowbox_image', name:'light_stopped', data:{
+                                            x:5+(19.5+2/3)*3, y:4.15, height:10, width:19.5,
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_stopped_active.png',
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_stopped.png',
+                                        }},
+                                        {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'time', data:{
+                                            x:5+2/3, y:15+2/3, width:78.75, height:8.75, count:15
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_record', data:{
+                                            x:5, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_record.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_record_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_pause', data:{
+                                            x:5+(16+1/6)*1, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_pause.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_pause_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_stop', data:{
+                                            x:5+(16+1/6)*2, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_stop.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_stop_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_save', data:{
+                                            x:5+(16+1/6)*3, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_save.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_save_active.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_delete', data:{
+                                            x:5+(16+1/6)*4, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_delete.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_delete_active.png',
+                                        }},
+                                    ]
+                                });
                         
-                                    {collection:'control', type:'button_image', name:'button_record', data:{
-                                        x:5, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_record.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_record_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_pause', data:{
-                                        x:5+16+1/6, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_pause.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_pause_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_stop', data:{
-                                        x:5+(16+1/6)*2, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_stop.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_stop_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_save', data:{
-                                        x:5+(16+1/6)*3, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_save.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_save_active.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_delete', data:{
-                                        x:5+(16+1/6)*4, y:25+4/5, width:15+1/3, height:10, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_delete.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_delete_active.png',
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                                
                             //circuitry
-                                //audio recorder
-                                    object.recorder = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
-                                //update functions
-                                    //time readout
-                                        setInterval(function(){
-                                            var time = object.recorder.recordingTime();
-                                            var decimalValues = time % 1;
-                                            time = _canvas_.library.math.seconds2time( Math.round(time) );
+                                var recorderCircuit = new _canvas_.interface.circuit.recorder(_canvas_.library.audio.context);
                         
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(time.h,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.m,2,'0')+':'+
-                                                _canvas_.library.misc.padString(time.s,2,'0')+'.'+
-                                                _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
-                                            );
-                                            object.elements.readout_sixteenSegmentDisplay_static.time.print();
-                                        },100);
-                                    //lights
-                                        var state = 'empty'; //empty - recording - paused - full
-                                        function updateLights(action){
-                                            if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
-                                            if( action == 'stop' || action == 'save' ){ state = 'full'; }
-                                            if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
-                                            if( action == 'clear' ){ state = 'empty'; }
-                                            if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
-                                            else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+                                //time readout
+                                    setInterval(function(){
+                                        var time = recorderCircuit.recordingTime();
+                                        var decimalValues = time % 1;
+                                        time = _canvas_.library.math.seconds2time( Math.round(time) );
                         
-                                            if(state == 'empty'){object.elements.glowbox_image.light_empty.on();}else{object.elements.glowbox_image.light_empty.off();}
-                                            if(state == 'recording'){object.elements.glowbox_image.light_recording.on();}else{object.elements.glowbox_image.light_recording.off();}
-                                            if(state == 'paused'){object.elements.glowbox_image.light_paused.on();}else{object.elements.glowbox_image.light_paused.off();}
-                                            if(state == 'full'){object.elements.glowbox_image.light_stopped.on();}else{object.elements.glowbox_image.light_stopped.off();}
-                                        }
-                                        updateLights('clear');
-                                        object.elements.glowbox_image.light_empty.on();
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.text(
+                                            _canvas_.library.misc.padString(time.h,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.m,2,'0')+':'+
+                                            _canvas_.library.misc.padString(time.s,2,'0')+'.'+
+                                            _canvas_.library.misc.padString((''+decimalValues).slice(2),2,'0')
+                                        );
+                                        object.elements.readout_sixteenSegmentDisplay_static.time.print();
+                                    },100);
+                        
+                                //lights
+                                    var state = 'empty'; //empty - recording - paused - full
+                                    function updateLights(action){
+                                        if( state == 'empty' && (action == 'save' || action == 'stop') ){return;}
+                                        if( action == 'stop' || action == 'save' ){ state = 'full'; }
+                                        if( state == 'empty' && action == 'rec' ){ state = 'recording'; }
+                                        if( action == 'clear' ){ state = 'empty'; }
+                                        if( state == 'recording' && action == 'pause/resume' ){ state = 'paused'; }
+                                        else if( state == 'paused' && (action == 'pause/resume' || action == 'rec') ){ state = 'recording'; }
+                        
+                                        if(state == 'empty'){object.elements.glowbox_image.light_empty.on();}else{object.elements.glowbox_image.light_empty.off();}
+                                        if(state == 'recording'){object.elements.glowbox_image.light_recording.on();}else{object.elements.glowbox_image.light_recording.off();}
+                                        if(state == 'paused'){object.elements.glowbox_image.light_paused.on();}else{object.elements.glowbox_image.light_paused.off();}
+                                        if(state == 'full'){object.elements.glowbox_image.light_stopped.on();}else{object.elements.glowbox_image.light_stopped.off();}
+                                    }
+                                    updateLights('clear');
+                                    object.elements.glowbox_image.light_empty.on();
                         
                             //wiring
-                                //interface
+                                //hid
                                     object.elements.button_image.button_record.onpress = function(){
-                                        if(state == 'paused'){object.recorder.resume();}
-                                        else{object.recorder.start();}
+                                        if(state == 'paused'){recorderCircuit.resume();}
+                                        else{recorderCircuit.start();}
                                         updateLights('rec');
                                     };
                                     object.elements.button_image.button_pause.onpress = function(){
-                                        if(state == 'paused'){object.recorder.resume();}
-                                        else{object.recorder.pause();}
+                                        if(state == 'paused'){recorderCircuit.resume();}
+                                        else{recorderCircuit.pause();}
                                         updateLights('pause/resume');
                                     };
                                     object.elements.button_image.button_stop.onpress = function(){
                                         updateLights('stop');
-                                        object.recorder.stop();
+                                        recorderCircuit.stop();
                                     }
                                     object.elements.button_image.button_save.onpress = function(){
                                         updateLights('save');
-                                        if(state != 'empty'){ object.recorder.save(); }
+                                        if(state != 'empty'){ recorderCircuit.save(); }
                                     };
                                     object.elements.button_image.button_delete.onpress = function(){
                                         updateLights('clear');
-                                        object.recorder.clear();
+                                        recorderCircuit.clear();
                                     };
                                 //io
-                                    object.elements.connectionNode_audio.io_input_R.out().connect( object.recorder.in_right() );
-                                    object.elements.connectionNode_audio.io_input_L.out().connect( object.recorder.in_left() );
+                                    object.io.audio.io_input_R.out().connect( recorderCircuit.in_right() );
+                                    object.io.audio.io_input_L.out().connect( recorderCircuit.in_left() );
                         
                             //interface
+                                object.i = {
+                                    record:function(){ object.elements.button_image.button_record.onpress(); },
+                                    pause:function(){ object.elements.button_image.button_pause.onpress(); },
+                                    stop:function(){ object.elements.button_image.button_stop.onpress(); },
+                                    save:function(){ object.elements.button_image.button_save.onpress(); },
+                                    clear:function(){ object.elements.button_image.button_delete.onpress(); },
+                                };
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_recorder.metadata = {
                             name:'Audio Recorder',
                             category:'monitors',
                             helpURL:'/help/units/beta/audio_recorder/'
                         };
-                        this.ruler = function(x,y,a){
-                            var style = {
-                                background:{r:200/255,g:200/255,b:200/255,a:1},
-                                markings:{r:150/255,g:150/255,b:150/255,a:1},
-                            };
-                            var shape = [{x:0,y:0},{x:50,y:0},{x:50,y:1000},{x:0,y:1000}];
-                            var design = {
-                                name:'ruler',
-                                x:x, y:y, angle:a,
-                                space:shape,
-                                collisionActive:false,
-                                elements:[
-                                    {collection:'basic', type:'polygon', name:'backing', data:{ pointsAsXYArray:shape, colour:style.background }},
-                                ]
-                            };
+                        this.ruler = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //calculation of measurements
+                                        this.drawingValue = { 
+                                            width: 50, 
+                                            height: 1000,
+                                        };
                         
-                            //add markings
-                                for(var a = 1; a < 100; a++){
-                                    //centimetres
-                                    design.elements.push(
-                                        {collection:'basic', type:'rectangle', name:'centimetre_line_L_'+a, data:{
-                                            x:0, y:a*10 - 0.5, width:5, height:1, 
-                                            colour:style.markings,
-                                        }}
-                                    );
-                                    design.elements.push(
-                                        {collection:'basic', type:'rectangle', name:'centimetre_line_R_'+a, data:{
-                                            x:50-5, y:a*10 - 0.5, width:5, height:1, 
-                                            colour:style.markings,
-                                        }}
-                                    );
-                                    if( a%5 != 0 && a%10 != 0 ){
-                                        design.elements.push(
-                                            {collection:'basic', type:'text', name:'centimetre_line_text_'+a, data:{
-                                                x:50/2, y:a*10, text:a,
-                                                width:2.5,height:2.5,
-                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
-                                                colour:style.markings, font:'defaultThin',
-                                            }}
-                                        );
-                                    }
+                                    //styling values
+                                        this.background = {r:200/255,g:200/255,b:200/255,a:1};
+                                        this.markings = {r:150/255,g:150/255,b:150/255,a:1};
+                                };
                         
-                                    //pentimetres
-                                    if( a%5 == 0 ){
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'vigintimetre_line_L_'+a, data:{
-                                                x:0, y:a*10 - 0.5, width:10, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'vigintimetre_line_R_'+a, data:{
-                                                x:50-10, y:a*10 - 0.5, width:10, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        if( a%10 != 0 ){
-                                            design.elements.push(
-                                                {collection:'basic', type:'text', name:'vigintimetre_line_text_'+a, data:{
-                                                    x:50/2, y:a*10, text:a,
-                                                    width:5,height:5,
-                                                    printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
-                                                    colour:style.markings, font:'defaultThin',
-                                                }}
-                                            );
-                                        }
-                                    }
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'ruler',
+                                    x:x, y:y, angle:angle,
+                                    collisionActive:false,
+                                    space:[
+                                        { x:0,                            y:0                             },
+                                        { x:unitStyle.drawingValue.width, y:0                             },
+                                        { x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height },
+                                        { x:0,                            y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:
+                                        [
+                                            {collection:'basic', type:'polygon', name:'backing', data:{ 
+                                                pointsAsXYArray:[
+                                                    { x:0,                            y:0                             },
+                                                    { x:unitStyle.drawingValue.width, y:0                             },
+                                                    { x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height },
+                                                    { x:0,                            y:unitStyle.drawingValue.height },
+                                                ], 
+                                                colour:unitStyle.background
+                                            }},
+                                        ].concat(
+                                            (new Array(100).fill(0)).flatMap((value,index) => {
+                                                if(index == 0){return [];}
+                                                var newMarkings = []
                         
-                                    //decimetres
-                                    if( a%10 == 0 ){
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'decimetre_line_L_'+a, data:{
-                                                x:0, y:a*10 - 0.5, width:15, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        design.elements.push(
-                                            {collection:'basic', type:'rectangle', name:'decimetre_line_R_'+a, data:{
-                                                x:50-15, y:a*10 - 0.5, width:15, height:1, 
-                                                colour:style.markings,
-                                            }}
-                                        );
-                                        design.elements.push(
-                                            {collection:'basic', type:'text', name:'decimetre_line_text_'+a, data:{
-                                                x:50/2, y:a*10, text:a,
-                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
-                                                colour:style.markings, font:'defaultThin',
-                                            }}
-                                        );
-                                    }
-                                }
+                                                //centimetres
+                                                    newMarkings.push(
+                                                        {collection:'basic', type:'rectangle', name:'centimetre_line_L_'+index, data:{
+                                                            x:0, y:index*10 - 0.5, width:5, height:1, 
+                                                            colour:unitStyle.markings,
+                                                        }}
+                                                    );
+                                                    newMarkings.push(
+                                                        {collection:'basic', type:'rectangle', name:'centimetre_line_R_'+index, data:{
+                                                            x:45, y:index*10 - 0.5, width:5, height:1, 
+                                                            colour:unitStyle.markings,
+                                                        }}
+                                                    );
+                                                    if( index%5 != 0 && index%10 != 0 ){
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'text', name:'centimetre_line_text_'+index, data:{
+                                                                x:25, y:index*10, text:index,
+                                                                width:2.5,height:2.5,
+                                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                                colour:unitStyle.markings, font:'defaultThin',
+                                                            }}
+                                                        );
+                                                    }
                         
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                            
+                                                //pentimetres
+                                                    if( index%5 == 0 ){
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'pentimetre_line_L_'+index, data:{
+                                                                x:0, y:index*10 - 0.5, width:10, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'pentimetre_line_R_'+index, data:{
+                                                                x:40, y:index*10 - 0.5, width:10, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        if( index%10 != 0 ){
+                                                            newMarkings.push(
+                                                                {collection:'basic', type:'text', name:'pentimetre_line_text_'+index, data:{
+                                                                    x:25, y:index*10, text:index,
+                                                                    width:5,height:5,
+                                                                    printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                                    colour:unitStyle.markings, font:'defaultThin',
+                                                                }}
+                                                            );
+                                                        }
+                                                    }
+                        
+                                                //decimetres
+                                                    if( index%10 == 0 ){
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'decimetre_line_L_'+index, data:{
+                                                                x:0, y:index*10 - 0.5, width:15, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'rectangle', name:'decimetre_line_R_'+index, data:{
+                                                                x:35, y:index*10 - 0.5, width:15, height:1, 
+                                                                colour:unitStyle.markings,
+                                                            }}
+                                                        );
+                                                        newMarkings.push(
+                                                            {collection:'basic', type:'text', name:'decimetre_line_text_'+index, data:{
+                                                                x:25, y:index*10, text:index,
+                                                                printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
+                                                                colour:unitStyle.markings, font:'defaultThin',
+                                                            }}
+                                                        );
+                                                    }
+                        
+                                                return newMarkings;
+                                            })
+                                        )
+                                });
+                        
                             return object;
                         };
-                        
                         this.ruler.metadata = {
                             name:'Ruler',
                             category:'tools',
                             helpURL:'/help/units/beta/ruler/'
                         };
-                        this.voltage_dial = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'voltage_dial/';
+                        this.voltage_dial = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'voltage_dial/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:275, height:260 },
-                                design:{ width:4.25, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file:{ width:275, height:260 },
+                                            design:{ width:4.25, height:4 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.dial = { handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'voltage_dial',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'out', data:{ 
+                                            x:unitStyle.drawingValue.width/2.2 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'theDial',data:{
+                                            x:20, y:20, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial,
+                                        }},
+                                    ]
+                                });
+                        
                             
-                            var design = {
-                                name:'voltage_dial',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'out', data:{ 
-                                        x:measurements.drawing.width/2.2 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
+                            //wiring
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){ object.elements.connectionNode_voltage.out.set( value ); };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'theDial',data:{
-                                        x:20, y:20, radius:30/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                ]
-                            };
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //circuitry
-                                object.elements.dial_colourWithIndent_continuous.theDial.onchange = function(value){
-                                    object.elements.connectionNode_voltage.out.set( value );
-                                };
-                        
-                            //import/export
-                                object.exportData = function(){
-                                    return {
-                                        state:object.elements.dial_colourWithIndent_continuous.theDial.get()
+                                //import/export
+                                    object.exportData = function(){
+                                        return {
+                                            state:object.elements.dial_colourWithIndent_continuous.theDial.get()
+                                        };
                                     };
-                                };
-                                object.importData = function(data){
-                                    object.elements.dial_colourWithIndent_continuous.theDial.set(data.state);
-                                };
+                                    object.importData = function(data){
+                                        object.elements.dial_colourWithIndent_continuous.theDial.set(data.state);
+                                    };
                                 
                             return object;
                         };
@@ -48813,149 +48846,139 @@
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/voltage_dial/'
                         };
-                        this.musicalKeyboard = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
-                            var keyCount = 49;
-                            var midiNumberOffset = 60;
+                        this.musicalKeyboard = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'musicalKeyboard/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:3800, height:800 },
-                                design:{ width:63.5, height:13 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            var colours = {
-                                whiteKey:{
-                                    background__up__colour:{r:0.97,g:0.97,b:0.97,a:1},
-                                    background__hover__colour:{r:1,g:1,b:1,a:1},
-                                    background__press__colour:{r:0.87,g:0.87,b:0.87,a:1},
-                                    background__hover_press__colour:{r:0.87,g:0.87,b:0.87,a:1},
-                                },
-                                blackKey:{ 
-                                    background__up__colour:{r:0.18,g:0.18,b:0.18,a:1}, 
-                                    background__hover__colour:{r:0.28,g:0.28,b:0.28,a:1}, 
-                                    background__press__colour:{r:0.08,g:0.08,b:0.08,a:1},
-                                    background__hover_press__colour:{r:0.08,g:0.08,b:0.08,a:1},
-                                },
-                                LEDs:{
-                                    glow:{r:232/255, g:160/255, b:111/255, a:1}, 
-                                    dim:{r:164/255, g:80/255, b:61/255, a:1},
-                                },
-                            };
-                            
-                            var design = {
-                                name:'musicalKeyboard',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_data', name:'midiIn', data:{ 
-                                        x:measurements.drawing.width-3.5, y:10, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
-                                        onreceive:function(address, data){ if(address != 'midinumber'){return;} sendMidiData(data.num-midiNumberOffset,data.velocity>0?'press':'release'); },
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'midiOut', data:{ 
-                                        x:0, y:117.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'velocityIn', data:{ 
-                                        x:25, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2,
-                                        style:{ dim:style.connectionNode.voltage.dim, glow:style.connectionNode.voltage.glow, cable_dim:style.connectionCable.voltage.dim, cable_glow:style.connectionCable.voltage.glow },
-                                        onchange:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:3800, height:800 },
+                                            design: { width:63.5, height:13 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'velocity',data:{
-                                        x:20, y:110, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                ]
-                            };
-                            //dynamic design
-                                var keyPattern = 'wbwbwwbwbwbw'.split('');
-                        
-                                //white keys
-                                    var whiteOffset = 0;
-                                    for(var a = 0; a < keyCount; a++){
-                                        var keyType = keyPattern[a%keyPattern.length];
-                            
-                                        if(keyType == 'w'){
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
-                                                    x:55 +whiteOffset -0.5 -10, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                                }},
-                                            );
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
-                                                    x:55 +whiteOffset -0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
-                                                }},
-                                            );
-                                            design.elements.push(
-                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:41.25 +whiteOffset, y:6, width:17.5, height:1, style:colours.LEDs }},
-                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
-                                                    x:40.5 +whiteOffset, y:10, width:19, height:120, style:colours.whiteKey,
-                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
-                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
-                                                }},
-                                            );
-                                            whiteOffset += 20;
-                                        }
-                                    }
-                                //black keys
-                                    var blackOffset = 0;
-                        
-                                    for(var a = 0; a < keyCount; a++){
-                                        var keyType = keyPattern[a%keyPattern.length];
-                            
-                                        if(keyType == 'b'){
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
-                                                    x:55 +blackOffset -0.5, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                                }},
-                                            );
-                                            design.elements.unshift(
-                                                {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
-                                                    x:65 +blackOffset -0.5, y:measurements.drawing.height -offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                                    onchange:(function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a),
-                                                }},
-                                            );
-                                            design.elements.push(
-                                                {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:51.25 +blackOffset, y:2.75, width:17.5, height:1, style:colours.LEDs }},
-                                                {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ 
-                                                    x:55 +blackOffset, y:10, width:10, height:70, style:colours.blackKey,
-                                                    onpress:(function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a),
-                                                    onrelease:(function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a),
-                                                }},
-                                            );
-                                            blackOffset += 20;
-                                        }
-                                        if(keyType == keyPattern[(a-1)%keyPattern.length]){ blackOffset += 20; }
-                                    }
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //keycapture
-                                object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
-                                object.elements.image.backing.onkeydown = function(x,y,event){
-                                    if( this.glyphs.includes(event.key) ){
-                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].press();
-                                    }
+                                    //styling values
+                                        this.velocityDial = { handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.whiteKey = {
+                                            background__up__colour:{r:0.97,g:0.97,b:0.97,a:1},
+                                            background__hover__colour:{r:1,g:1,b:1,a:1},
+                                            background__press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                            background__hover_press__colour:{r:0.87,g:0.87,b:0.87,a:1},
+                                        };
+                                        this.blackKey = { 
+                                            background__up__colour:{r:0.18,g:0.18,b:0.18,a:1}, 
+                                            background__hover__colour:{r:0.28,g:0.28,b:0.28,a:1}, 
+                                            background__press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                            background__hover_press__colour:{r:0.08,g:0.08,b:0.08,a:1},
+                                        };
+                                        this.LEDs = {
+                                            glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                            dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                        };
+                                        this.keyCount = 49;
                                 };
-                                object.elements.image.backing.onkeyup = function(x,y,event){
-                                    if( this.glyphs.includes(event.key) ){
-                                        object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].release();
-                                    }
-                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'musicalKeyboard',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_data', name:'midiIn', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:10, width:5, height:15, angle:0, cableVersion:2, style:style.connectionNode.data,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_data', name:'midiOut', data:{ 
+                                            x:0, y:117.5, width:5, height:15, angle:Math.PI, cableVersion:2, style:style.connectionNode.data
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'velocityIn', data:{ 
+                                            x:25, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'velocity',data:{
+                                            x:20, y:110, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.velocityDial,
+                                        }},
+                                    ].concat(
+                                        (function(){
+                                            var newKeys = [];
+                        
+                                            var keyPattern = 'wbwbwwbwbwbw'.split('');
+                        
+                                            //white keys
+                                                var whiteOffset = 0;
+                                                for(var a = 0; a < unitStyle.keyCount; a++){
+                                                    var keyType = keyPattern[a%keyPattern.length];
+                        
+                                                    if(keyType == 'w'){
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
+                                                                x:55 +whiteOffset -0.5 -10, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                                x:55 +whiteOffset -0.5, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.push(
+                                                            {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:41.25 +whiteOffset, y:6, width:17.5, height:1, style:unitStyle.LEDs }},
+                                                            {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ x:40.5 +whiteOffset, y:10, width:19, height:120, style:unitStyle.whiteKey }},
+                                                        );
+                                                        whiteOffset += 20;
+                                                    }
+                                                }
+                        
+                                            //black keys
+                                                var blackOffset = 0;
+                                                for(var a = 0; a < unitStyle.keyCount; a++){
+                                                    var keyType = keyPattern[a%keyPattern.length];
+                        
+                                                    if(keyType == 'b'){
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'signalOut_'+a, data:{ 
+                                                                x:55 +blackOffset -0.5, y:0, width:5, height:9, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.unshift(
+                                                            {collection:'dynamic', type:'connectionNode_signal', name:'activateKey_'+a, data:{ 
+                                                                x:65 +blackOffset -0.5, y:unitStyle.drawingValue.height -unitStyle.offset, width:5, height:9, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                                            }},
+                                                        );
+                                                        newKeys.push(
+                                                            {collection:'display', type:'glowbox_rectangle',name:'LED'+a,data:{ x:51.25 +blackOffset, y:2.75, width:17.5, height:1, style:unitStyle.LEDs }},
+                                                            {collection:'control', type:'button_rectangle', name:'key_'+a, data:{ x:55 +blackOffset, y:10, width:10, height:70, style:unitStyle.blackKey }},
+                                                        );
+                                                        blackOffset += 20;
+                                                    }
+                                                    if(keyType == keyPattern[(a-1)%keyPattern.length]){ blackOffset += 20; }
+                        
+                                                }
+                        
+                                            return newKeys;
+                                        })()
+                                    )
+                                });
                         
                             //circuitry
+                                var state = {
+                                    midiNumberOffset:60,
+                                    velocity:0,
+                                };
+                        
                                 function sendMidiData(keyNumber,mode){
                                     if(keyNumber < 0){return;}
                         
@@ -48968,232 +48991,277 @@
                                     }
                         
                                     object.io.data.midiOut.send('midinumber', { 
-                                        num:keyNumber+midiNumberOffset,
+                                        num:keyNumber+state.midiNumberOffset,
                                         velocity: mode == 'press' ? object.elements.dial_colourWithIndent_continuous.velocity.get() : 0,
                                     } );
                                 }
                         
-                            //import/export
-                                object.exportData = function(){ return {velocity:object.elements.dial_colourWithIndent_continuous.velocity.get()}; };
-                                object.importData = function(data){ object.elements.dial_colourWithIndent_continuous.velocity.set(data.velocity); };
+                            //wiring
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.velocity.onchange = function(value){ state.velocity = value; };
+                                    for(var a = 0; a < unitStyle.keyCount; a++){
+                                        object.elements.button_rectangle['key_'+a].onpress = (function(keyNumber){ return function(){sendMidiData(keyNumber,'press');} })(a);
+                                        object.elements.button_rectangle['key_'+a].onrelease = (function(keyNumber){ return function(){sendMidiData(keyNumber,'release');} })(a);
+                                    }
+                        
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '`','a','z','s','x','c','f','v','g','b','h','n','m','k',',','l','.','/', '1','q','2','w','3','e','r','5','t','6','y','u','8','i','9','o','0','p','[' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_rectangle['key_'+this.glyphs.indexOf(event.key)].release();
+                                        }
+                                    };
+                        
+                                //io
+                                    object.io.data.midiIn.onreceive = function(address, data){ if(address != 'midinumber'){return;} sendMidiData(data.num-state.midiNumberOffset,data.velocity>0?'press':'release'); };
+                                    object.io.voltage.velocityIn.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); };
+                                    for(var a = 0; a < unitStyle.keyCount; a++){
+                                        object.io.signal['activateKey_'+a].onchange = (function(keyNumber){ return function(value){ sendMidiData(keyNumber,value?'press':'release'); } })(a);
+                                    }
                         
                             //interface
                                 object.i = {
-                                    velocity:function(value){ object.elements.dial_colourWithIndent_continuous.velocity.set(value); },
+                                    velocity:function(value){ 
+                                        if(value==undefined){return state.velocity; }
+                                        object.elements.dial_colourWithIndent_continuous.velocity.set(value);
+                                    },
                                     pushKey:function(key){ object.elements.button_rectangle['key_'+key].press(); },
                                     releaseKey:function(key){ object.elements.button_rectangle['key_'+key].release();},
                                     releaseAllKeys:function(){ for(var a = 0; a < keyCount; a++){ object.elements.button_rectangle['key_'+a].release(); } },
                                 };
-                                
+                        
+                            //import/export
+                                object.exportData = function(){ return {velocity:state.velocity}; };
+                                object.importData = function(data){ object.elements.dial_colourWithIndent_continuous.velocity.set(data.velocity); };
+                        
+                            //setup
+                                object.elements.dial_colourWithIndent_continuous.velocity.set(0.5);
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.musicalKeyboard.metadata = {
                             name:'Musical Keyboard',
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/musicalKeyboard/'
                         };
-                        this.audio_in = function(x,y,a,setupConnect=true){
-                            var imageStoreURL_localPrefix = imageStoreURL+'audio_in/';
+
+                        this.audio_in = function(x,y,angle,setupConnect=true){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'audio_in/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:905, height:320 },
-                                design:{ width:14.75, height:5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:905, height:320 },
+                                            design: { width:14.75, height:5 },
+                                        };
                         
-                            var design = {
-                                name:'audio_in',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                    { x:0,                                  y:measurements.drawing.height -offset },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
-                                        x:0, y:25 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_previous', data:{ 
-                                        x:117.9 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_next', data:{ 
-                                        x:132.05 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous', name:'outputGain',data:{
-                                        x:20, y:25, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:{r:0.99,g:0.46,b:0.33,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_previous', data:{
-                                        x:112.5, y:12.5, width:10.85, height:10.85, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'button_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_down.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'button_next', data:{
-                                        x:137.5, y:23.35, width:10.85, height:10.85, hoverable:false, angle:Math.PI,
-                                        backingURL__up:imageStoreURL_localPrefix+'button_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'button_down.png',
-                                    }},
-                                    {collection:'display', type:'audio_meter_level', name:'audioIn',data:{ x:37.5+10/16, y:5+10/16, width:11.65-10/8, height:40-10/8 }},
-                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'index', data:{
-                                        x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, count:11
-                                    }},
-                                    {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'text', data:{
-                                        x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, count:18
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //styling values
+                                        this.outputGain = { handle:{r:0.99,g:0.46,b:0.33,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'audio_in',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
+                                            x:0, y:25 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_previous', data:{ 
+                                            x:117.9 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'io_next', data:{ 
+                                            x:132.05 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous', name:'outputGain',data:{
+                                            x:20, y:25, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.outputGain,
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_previous', data:{
+                                            x:112.5, y:12.5, width:10.85, height:10.85, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_next', data:{
+                                            x:137.5, y:23.35, width:10.85, height:10.85, hoverable:false, angle:Math.PI,
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_down.png',
+                                        }},
+                                        {collection:'display', type:'audio_meter_level', name:'audioIn',data:{ 
+                                            x:37.5+10/16, y:5+10/16, width:11.65-10/8, height:40-10/8
+                                        }},
+                                        {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'index', data:{
+                                            x:52.5+10/16, y:12.5+10/16, width:56.65-10/8, height:10.85-10/8, count:11
+                                        }},
+                                        {collection:'display', type:'readout_sixteenSegmentDisplay_static', name:'text', data:{
+                                            x:52.5+10/16, y:26.7+10/16, width:85-10/8, height:10.85-10/8, count:18
+                                        }},
+                                    ]
+                                });
                         
                             //circuitry
-                                var attributes = {
+                                var state = {
                                     deviceList:[],
                                     currentSelection: 0
                                 };
+                                var audioInCircuit = new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect);
                         
-                                object.circuitry = {
-                                    unit: new _canvas_.interface.circuit.audioIn(_canvas_.library.audio.context,setupConnect)
-                                };
-                                object.circuitry.unit.out().connect( object.elements.connectionNode_audio.io_output.in() );
-                                object.circuitry.unit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
+                                audioInCircuit.out().connect( object.elements.audio_meter_level.audioIn.audioIn() );
                         
                                 function selectDevice(a){
-                                    if(attributes.deviceList.length == 0){
+                                    if(state.deviceList.length == 0){
                                         object.elements.readout_sixteenSegmentDisplay_static.index.text('');
                                         object.elements.readout_sixteenSegmentDisplay_static.index.print();
                                         object.elements.readout_sixteenSegmentDisplay_static.text.text(' -- no devices --');
                                         object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
                                         return;
                                     }
-                                    if( a < 0 || a >= attributes.deviceList.length ){return;}
-                                    attributes.currentSelection = a;
+                                    if( a < 0 || a >= state.deviceList.length ){return;}
+                                    state.currentSelection = a;
                         
                                     selectionNum=''+(a+1);while(selectionNum.length < 2){ selectionNum = '0'+selectionNum;}
-                                    totalNum=''+attributes.deviceList.length; while(totalNum.length < 2){ totalNum = '0'+totalNum; }
+                                    totalNum=''+state.deviceList.length; while(totalNum.length < 2){ totalNum = '0'+totalNum; }
                                     var text = selectionNum+'/'+totalNum; while(text.length < 8){ text = ' '+text; }
                                     object.elements.readout_sixteenSegmentDisplay_static.index.text(text);
                                     object.elements.readout_sixteenSegmentDisplay_static.index.print();
                         
-                                    var text = attributes.deviceList[a].deviceId;
-                                    if(attributes.deviceList[a].label.length > 0){text = attributes.deviceList[a].label +' - '+ text;}
+                                    var text = state.deviceList[a].deviceId;
+                                    if(state.deviceList[a].label.length > 0){text = state.deviceList[a].label +' - '+ text;}
                                     object.elements.readout_sixteenSegmentDisplay_static.text.text(text);
                                     object.elements.readout_sixteenSegmentDisplay_static.text.print('smart');
                         
-                                    object.circuitry.unit.selectDevice( attributes.deviceList[a].deviceId );
+                                    audioInCircuit.selectDevice( state.deviceList[a].deviceId );
                                 }
-                                function incSelection(){ selectDevice(attributes.currentSelection+1); }
-                                function decSelection(){ selectDevice(attributes.currentSelection-1); }
+                                function incSelection(){ selectDevice(state.currentSelection+1); }
+                                function decSelection(){ selectDevice(state.currentSelection-1); }
                         
                             //wiring
-                                object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){object.circuitry.unit.gain(value*2);}
-                                object.elements.button_image.button_previous.onpress = function(){ decSelection(); };
-                                object.elements.button_image.button_next.onpress = function(){ incSelection(); };
-                                object.io.signal.io_previous.onchange = function(value){ if(value){ object.elements.button_image.button_previous.press(); }else{ object.elements.button_image.button_previous.release(); } };
-                                object.io.signal.io_next.onchange = function(value){ if(value){ object.elements.button_image.button_next.press(); }else{ object.elements.button_image.button_next.release(); } };
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){audioInCircuit.gain(value*2);}
+                                    object.elements.button_image.button_previous.onpress = function(){ decSelection(); };
+                                    object.elements.button_image.button_next.onpress = function(){ incSelection(); };
+                                //io
+                                    audioInCircuit.out().connect( object.io.audio.io_output.in() );
+                                    object.io.signal.io_previous.onchange = function(value){ if(value){ object.elements.button_image.button_previous.press(); }else{ object.elements.button_image.button_previous.release(); } };
+                                    object.io.signal.io_next.onchange = function(value){ if(value){ object.elements.button_image.button_next.press(); }else{ object.elements.button_image.button_next.release(); } };
                         
-                                //import/export
-                                    object.exportData = function(){
-                                        return {
-                                            gain:object.elements.dial_colourWithIndent_continuous.outputGain.get(),
-                                        };
-                                    };
-                                    object.importData = function(data){
-                                        object.elements.dial_colourWithIndent_continuous.outputGain.get( data.gain );
-                                    };
+                            //interface
+                                object.i = {
+                                    gain:function(value){
+                                        if(value == undefined){return object.elements.dial_colourWithIndent_continuous.outputGain.get();}
+                                        object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                                    },
+                                };
                         
+                            //import/export
+                                object.exportData = function(){
+                                    return { gain: object.elements.dial_colourWithIndent_continuous.outputGain.get() };
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.get( data.gain );
+                                };
+                            
                             //setup
-                                object.circuitry.unit.listDevices(function(a){attributes.deviceList=a;});
+                                audioInCircuit.listDevices(function(a){state.deviceList=a;});
                                 if(setupConnect){setTimeout(function(){selectDevice(0);},500);}
                                 object.elements.dial_colourWithIndent_continuous.outputGain.set(0.5);
                                 object.elements.audio_meter_level.audioIn.start();
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.audio_in.metadata = {
                             name:'Audio In',
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/audio_in/'
                         };
-                        this.signal_switch = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'signal_switch/';
+                        this.signal_switch = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'signal_switch/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:149, height:260 },
-                                design:{ width:2.125, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'signal_switch',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
-                                        x:measurements.drawing.width/2.3 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                                    {collection:'control', type:'slide_discrete_image',name:'theSwitch',data:{
-                                        x:5.25, y:5.25, width:9.5, height:29.5, handleHeight:1/2, resetValue:0, optionCount:2, value:1,
-                                        handleURL:imageStoreURL_localPrefix+'handle.png',
-                                    }},
-                                ]
-                            };
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:149, height:260 },
+                                            design: { width:2.125, height:4 },
+                                        };
                         
-                            //circuitry
-                                object.elements.slide_discrete_image.theSwitch.onchange = function(value){
-                                    object.elements.connectionNode_signal.out.set( 1-value == 0 ? false : true );
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
                                 };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'signal_switch',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                            x:unitStyle.drawingValue.width/2.3 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'slide_discrete_image',name:'theSwitch',data:{
+                                            x:5.25, y:5.25, width:9.5, height:29.5, handleHeight:1/2, resetValue:0, optionCount:2, value:1,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png',
+                                        }},
+                                    ]
+                                });
+                            
+                            //wiring
+                                //hid
+                                    object.elements.slide_discrete_image.theSwitch.onchange = function(value){ object.elements.connectionNode_signal.out.set( 1-value == 0 ? false : true ); };
                         
                             //import/export
                                 object.exportData = function(){
-                                    return {
-                                        state:object.elements.slide_discrete_image.theSwitch.get()
-                                    };
+                                    return { state: object.elements.slide_discrete_image.theSwitch.get() };
                                 };
                                 object.importData = function(data){
                                     object.elements.slide_discrete_image.theSwitch.set(data.state);
                                 };
-                                
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.signal_switch.metadata = {
                             name:'Signal Switch',
                             category:'humanInterfaceDevices',
                             helpURL:'/help/units/beta/signal_switch/'
                         };
-                        var imageStoreURL = 'images/units/beta/';
+                        var imageStoreURL = 'images/units/1 - alpha/';
                         var style = {
                             background:{r:70/255,g:70/255,b:70/255,a:1},
                             bumper:{r:0.125,g:0.125,b:0.125,a:1},
@@ -49276,327 +49344,7 @@
                         //         thickness:15/4,
                         //     },
                         // };
-                        this.basic_synthesizer = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'basic_synthesizer/';
-                        
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:1115, height:680 },
-                                design:{ width:18.25, height:11 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
-                            var dialColours = {
-                                outputGain:{r:0.93,g:0.45,b:0.31,a:1},
-                                attack:{r:0.99,g:0.93,b:0.31,a:1},
-                                release:{r:0.44,g:0.95,b:0.79,a:1},
-                                detune_note:{r:0.61,g:0.16,b:0.96,a:1},
-                                detune_octave:{r:0.92,g:0.2,b:0.47,a:1},
-                                periodicWaveType:{r:0.75,g:0.75,b:0.75,a:1},
-                                gainWobblePeriod:{r:0.57,g:0.97,b:0.3,a:1},
-                                gainWobbleDepth:{r:0.46,g:0.98,b:0.65,a:1},
-                                detuneWobblePeriod:{r:0.94,g:0.55,b:0.2,a:1},
-                                detuneWobbleDepth:{r:0.96,g:0.75,b:0.26,a:1},
-                            };
-                            
-                            var design = {
-                                name:'basic_synthesizer',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:measurements.drawingUnit.width, y:0 },
-                                    { x:measurements.drawing.width -offset -measurements.drawingUnit.width, y:0 },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawingUnit.height*4.5+offset/2.5 },
-                                    { x:measurements.drawingUnit.width*12 -offset/1.5, y:measurements.drawing.height -offset },
-                                    { x:measurements.drawingUnit.width, y:measurements.drawing.height -offset },
-                                    { x:0, y:measurements.drawing.height -offset -measurements.drawingUnit.height },
-                                    { x:0, y:measurements.drawingUnit.height },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
-                                        x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
-                                        x:20 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_attack', data:{ 
-                                        x:55 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_release', data:{ 
-                                        x:87.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detune_note', data:{ 
-                                        x:122.5 - 10/2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_down', data:{ 
-                                        x:155 - 10/2 - 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_detune_octave_up', data:{ 
-                                        x:155 - 10/2 + 6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'io_midiNoteInput', data:{ 
-                                        x:measurements.drawing.width - 5/1.5, y:27.5 - 15/2, width:5, height:15, cableVersion:2, style:style.connectionNode.data,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobblePeriod', data:{ 
-                                        x:40 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_gainWobbleDepth', data:{ 
-                                        x:40 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobblePeriod', data:{ 
-                                        x:72.5 + 10/2 - 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'io_detuneWobbleDepth', data:{ 
-                                        x:72.5 + 10/2 + 6, y:measurements.drawing.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 - 1/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 -1.25 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 +1.25 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 +0.9 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -0.9 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
-                                        x:measurements.drawingUnit.width*(14+3/4-1/8 +2.4 - 1/32), y:measurements.drawingUnit.height*(7+3/4+1/8 -2.4 - 1/32), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                        
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
-                        
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
-                                        x:20, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0.5, value:0.5,
-                                        style:{ handle:dialColours.outputGain, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'attack',data:{
-                                        x:55, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.attack, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'release',data:{
-                                        x:87.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.release, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detune_note',data:{
-                                        x:122.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:dialColours.detune_note, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
-                                        x:155, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:3, arcDistance:1.2, resetValue:3, optionCount:7,
-                                        style:{ handle:dialColours.detune_octave, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_discrete',name:'periodicWaveType',data:{
-                                        x:130, y:72.5, radius:32.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.periodicWaveType, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobblePeriod',data:{
-                                        x:40, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.gainWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobbleDepth',data:{
-                                        x:40, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.gainWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobblePeriod',data:{
-                                        x:72.5, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.detuneWobblePeriod, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobbleDepth',data:{
-                                        x:72.5, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0,
-                                        style:{ handle:dialColours.detuneWobbleDepth, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                        
-                                    {collection:'control', type:'button_circle', name:'panicButton', data:{ 
-                                        x:162.5, y:52.5, r:15/2, style:{
-                                            background__up__colour:{r:0.75,g:0.75,b:0.75,a:1},
-                                            background__hover__colour:{r:0.85,g:0.85,b:0.85,a:1},
-                                            background__press__colour:{r:0.5,g:0.5,b:0.5,a:1},
-                                            background__hover_press__colour:{r:0.5,g:0.5,b:0.5,a:1},
-                                        },
-                                    }},
-                                ]
-                            };
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                        
-                            //import/export
-                                object.exportData = function(){
-                                    return {
-                                        gain: object.elements.dial_colourWithIndent_continuous.outputGain.get(),
-                                        attack: object.elements.dial_colourWithIndent_continuous.attack.get()*10,
-                                        release: object.elements.dial_colourWithIndent_continuous.release.get()*10,
-                                        detune: 100*((object.elements.dial_colourWithIndent_continuous.detune_note.get()*2)-1),
-                                        octave: object.elements.dial_colourWithIndent_discrete.detune_octave.get()-3,
-                                        waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_colourWithIndent_discrete.periodicWaveType.get()],
-                                        gainWobble:{
-                                            rate: object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.get()*100,
-                                            depth: object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.get()
-                                        },
-                                        detuneWobble:{
-                                            rate: object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.get()*100,
-                                            depth: object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.get()
-                                        },
-                                    };
-                                };
-                                object.importData = function(data){
-                                    if(data == undefined){return;}
-                        
-                                    object.elements.dial_colourWithIndent_continuous.outputGain.set(data.gain);
-                                    object.elements.dial_colourWithIndent_continuous.attack.set(data.attack/10);
-                                    object.elements.dial_colourWithIndent_continuous.release.set(data.release/10);
-                                    object.elements.dial_colourWithIndent_continuous.detune_note.set( (1+(data.detune/100))/2 );
-                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set(data.octave+3);
-                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
-                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(data.gainWobble.rate/100);
-                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(data.gainWobble.depth);
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(data.detuneWobble.rate/100);
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(data.detuneWobble.depth);
-                                };
-                        
-                            //circuitry
-                                var attributes = {
-                                    detuneLimits: {min:-100, max:100}
-                                };
-                                object.__synthesizer = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
-                                object.__synthesizer.out().connect( object.elements.connectionNode_audio.io_output.in() );
-                        
-                            //wiring
-                                object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){ object.__synthesizer.gain( value ); };
-                                object.elements.dial_colourWithIndent_continuous.attack.onchange = function(value){ object.__synthesizer.attack( value ); };
-                                object.elements.dial_colourWithIndent_continuous.release.onchange = function(value){ object.__synthesizer.release( value ); };
-                                object.elements.dial_colourWithIndent_continuous.detune_note.onchange = function(value){ object.__synthesizer.detune( value*(attributes.detuneLimits.max-attributes.detuneLimits.min) + attributes.detuneLimits.min ); };
-                                object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){ object.__synthesizer.octave(value-3); };
-                                object.elements.dial_colourWithIndent_discrete.periodicWaveType.onchange = function(value){ object.__synthesizer.waveType(['sine','triangle','square','sawtooth','custom'][value]); };
-                                object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.onchange = function(value){ object.__synthesizer.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-                                object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.onchange = function(value){ object.__synthesizer.gainWobbleDepth(value);};
-                                object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.onchange = function(value){ object.__synthesizer.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
-                                object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.onchange = function(value){ object.__synthesizer.detuneWobbleDepth(value*100); };
-                                object.elements.button_circle.panicButton.onpress = function(){object.__synthesizer.panic(); };
-                        
-                                object.elements.connectionNode_data.io_midiNoteInput.onreceive = function(address,data){
-                                    if(address != 'midinumber'){return;}
-                                    object.__synthesizer.perform(data);
-                                };
-                                object.elements.connectionNode_data.io_periodicWaveType_dataIn.onreceive = function(address,data){
-                                    if(address != 'periodicWave'){return;}
-                                    object.__synthesizer.periodicWave(data);
-                                };
-                                object.elements.connectionNode_voltage.io_outputGain.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_attack.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.attack.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_release.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.release.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_detune_note.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.detune_note.set(value);
-                                };
-                                object.elements.connectionNode_signal.io_detune_octave_down.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set(
-                                        object.elements.dial_colourWithIndent_discrete.detune_octave.get() - 1
-                                    );
-                                };
-                                object.elements.connectionNode_signal.io_detune_octave_up.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set(
-                                        object.elements.dial_colourWithIndent_discrete.detune_octave.get() + 1
-                                    );
-                                };
-                                object.elements.connectionNode_voltage.io_gainWobblePeriod.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_gainWobbleDepth.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_detuneWobblePeriod.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);
-                                };
-                                object.elements.connectionNode_voltage.io_detuneWobbleDepth.onchange = function(value){
-                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);
-                                };
-                                object.elements.connectionNode_signal.io_periodicWaveType_down.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
-                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() - 1
-                                    );
-                                };
-                                object.elements.connectionNode_signal.io_periodicWaveType_up.onchange = function(value){
-                                    if(!value){return;}
-                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(
-                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() + 1
-                                    );
-                                };
-                                object.elements.connectionNode_signal.io_panic.onchange = function(value){
-                                    if(value){
-                                        object.elements.button_circle.panicButton.press();
-                                    }else{
-                                        object.elements.button_circle.panicButton.release();
-                                    }
-                                };
-                        
-                            //interface
-                                object.i = {
-                                    periodicWave:function(data){object.__synthesizer.periodicWave(data);},
-                                    midiNote:function(data){object.__synthesizer.perform(data);},
-                        
-                                    gain:function(value){object.elements.dial_colourWithIndent_continuous.outputGain.set(value);},
-                                    attack:function(value){object.elements.dial_colourWithIndent_continuous.attack.set(value);},
-                                    release:function(value){object.elements.dial_colourWithIndent_continuous.release.set(value);},
-                                    detune:function(value){object.elements.dial_colourWithIndent_continuous.detune_note.set(value);},
-                                    octave:function(value){object.elements.dial_colourWithIndent_discrete.detune_octave.set(value);},
-                                    waveType:function(value){object.elements.dial_colourWithIndent_discrete.periodicWaveType.set(value);},
-                                    gainWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);},
-                                    gainWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);},
-                                    detuneWobblePeriod:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);},
-                                    detuneWobbleDepth:function(value){object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);},
-                                };
-                                
-                            return object;
-                        };
-                        this.basic_synthesizer.metadata = {
-                            name:'Basic Synthesizer',
-                            category:'synthesizers',
-                            helpURL:'/help/units/beta/basic_synthesizer/'
-                        };
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        this.basic_synthesizer2 = function(x,y,angle){
+                        this.basic_synthesizer = function(x,y,angle){
                             //style data
                                 var unitStyle = new function(){
                                     //image store location URL
@@ -49614,31 +49362,43 @@
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
                                         };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
-                                        };
                         
                                     //styling values
+                                        this.outputGain = { handle:{r:0.93,g:0.45,b:0.31,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.attack = { handle:{r:0.99,g:0.93,b:0.31,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.release = { handle:{r:0.44,g:0.95,b:0.79,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detune_note = { handle:{r:0.61,g:0.16,b:0.96,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detune_octave = { handle:{r:0.92,g:0.2,b:0.47,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.periodicWaveType = { handle:{r:0.75,g:0.75,b:0.75,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.gainWobblePeriod = { handle:{r:0.57,g:0.97,b:0.3,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.gainWobbleDepth = { handle:{r:0.46,g:0.98,b:0.65,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detuneWobblePeriod = { handle:{r:0.94,g:0.55,b:0.2,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.detuneWobbleDepth = { handle:{r:0.96,g:0.75,b:0.26,a:1}, slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.panicButton = {
+                                            background__up__colour:{r:0.75,g:0.75,b:0.75,a:1},
+                                            background__hover__colour:{r:0.85,g:0.85,b:0.85,a:1},
+                                            background__press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                            background__hover_press__colour:{r:0.5,g:0.5,b:0.5,a:1},
+                                        };
                                 };
                         
                                 //main object creation
                                     var object = _canvas_.interface.unit.builder({
-                                        name:'audio_file_player',
+                                        name:'basic_synthesizer',
                                         x:x, y:y, angle:angle,
                                         space:[
-                                            { x:unitStyle.drawingUnit.width,                                                 y:0 },
-                                            { x:unitStyle.drawingValue.width -unitStyle.offset -unitStyle.drawingUnit.width, y:0 },
-                                            { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height },
-                                            { x:unitStyle.drawingValue.width -unitStyle.offset,                              y:unitStyle.drawingUnit.height*4.5 + unitStyle.offset/2.5 },
-                                            { x:unitStyle.drawingUnit.width*12 -unitStyle.offset/1.5,                        y:unitStyle.drawingValue.height -unitStyle.offset },
-                                            { x:unitStyle.drawingUnit.width,                                                 y:unitStyle.drawingValue.height -unitStyle.offset },
-                                            { x:0,                                                                           y:unitStyle.drawingValue.height -unitStyle.offset -unitStyle.drawingUnit.height },
-                                            { x:0,                                                                           y:unitStyle.drawingUnit.height },
+                                            { x:unitStyle.drawingValue.width*(1/18.5),                        y:0                                                         },
+                                            { x:unitStyle.drawingValue.width*(17.5/18.5) -unitStyle.offset,   y:0                                                         },
+                                            { x:unitStyle.drawingValue.width -unitStyle.offset,               y:unitStyle.drawingValue.height*(1/11)                      },
+                                            { x:unitStyle.drawingValue.width -unitStyle.offset,               y:(unitStyle.drawingValue.height+unitStyle.offset)*(4.5/11) },
+                                            { x:(unitStyle.drawingValue.width-unitStyle.offset)*(12.15/18.5), y:unitStyle.drawingValue.height -unitStyle.offset           },
+                                            { x:unitStyle.drawingValue.width*(1/18.5),                        y:unitStyle.drawingValue.height -unitStyle.offset           },
+                                            { x:0,                                                            y:(unitStyle.drawingValue.height-unitStyle.offset)*(10/11)  },
+                                            { x:0,                                                            y:unitStyle.drawingValue.height*(1/11)                      },
                                         ],
                                         elements:[
                                             {collection:'dynamic', type:'connectionNode_audio', name:'io_output', data:{ 
-                                                x:0, y:27.5 + 15/2, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                                x:0, y:35, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_voltage', name:'io_outputGain', data:{ 
                                                 x:15, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
@@ -49674,38 +49434,178 @@
                                                 x:155/2 + 6, y:unitStyle.drawingValue.height - 5/1.5, width:5, height:10, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.voltage,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_data', name:'io_periodicWaveType_dataIn', data:{ 
-                                                x:unitStyle.drawingUnit.width*(14.75 -5/32), y:unitStyle.drawingUnit.height*(7.75 +3/32), width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
+                                                x:unitStyle.drawingValue.width-35 -2.5, y:unitStyle.drawingValue.height-35 +2.5, width:5, height:15, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.data,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_down', data:{ 
-                                                x:unitStyle.drawingUnit.width*(13.5-0.04), y:unitStyle.drawingUnit.height*(9-0.04), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                                x:unitStyle.drawingValue.width-35 -14, y:unitStyle.drawingValue.height-35 +14, width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_signal', name:'io_periodicWaveType_up', data:{ 
-                                                x:unitStyle.drawingUnit.width*(15.4-1/40), y:unitStyle.drawingUnit.height*(7.1-1/40), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                                x:unitStyle.drawingValue.width-35 +5.5, y:unitStyle.drawingValue.height-35 -5.5, width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                             }},
                                             {collection:'dynamic', type:'connectionNode_signal', name:'io_panic', data:{ 
-                                                x:unitStyle.drawingUnit.width*(17), y:unitStyle.drawingUnit.height*(5.5), width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
+                                                x:unitStyle.drawingValue.width-35 +22.5, y:unitStyle.drawingValue.height-35 -22.5, width:5, height:10, angle:Math.PI/4, cableVersion:2, style:style.connectionNode.signal,
                                             }},
-                        
                                             {collection:'basic', type:'image', name:'backing', 
                                                 data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
                                             },
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'outputGain',data:{
+                                                x:20, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0.5, value:0.5, style:unitStyle.outputGain,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'attack',data:{
+                                                x:55, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, arcDistance:1.2, resetValue:0, style:unitStyle.attack,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'release',data:{
+                                                x:87.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.release,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'detune_note',data:{
+                                                x:122.5, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.detune_note,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_discrete',name:'detune_octave',data:{
+                                                x:155, y:27.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:3, arcDistance:1.2, resetValue:3, optionCount:7, style:unitStyle.detune_octave,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_discrete',name:'periodicWaveType',data:{
+                                                x:130, y:72.5, radius:32.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.periodicWaveType,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobblePeriod',data:{
+                                                x:40, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.gainWobblePeriod,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'gainWobbleDepth',data:{
+                                                x:40, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.gainWobbleDepth,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobblePeriod',data:{
+                                                x:72.5, y:62.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.detuneWobblePeriod,
+                                            }},
+                                            {collection:'control', type:'dial_colourWithIndent_continuous',name:'detuneWobbleDepth',data:{
+                                                x:72.5, y:92.5, radius:25/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0, style:unitStyle.detuneWobbleDepth,
+                                            }},
+                                            {collection:'control', type:'button_circle', name:'panicButton', data:{ 
+                                                x:162.5, y:52.5, r:15/2, style:unitStyle.panicButton,
+                                            }},
                                         ]
                                     });
                         
                             //circuitry
+                                var detuneLimits = {min:-100, max:100};
+                                var synthesizerCircuit = new _canvas_.interface.circuit.synthesizer(_canvas_.library.audio.context);
+                        
                             //wiring
                                 //hid
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.onchange = function(value){ synthesizerCircuit.gain( value ); };
+                                    object.elements.dial_colourWithIndent_continuous.attack.onchange = function(value){ synthesizerCircuit.attack( value ); };
+                                    object.elements.dial_colourWithIndent_continuous.release.onchange = function(value){ synthesizerCircuit.release( value ); };
+                                    object.elements.dial_colourWithIndent_continuous.detune_note.onchange = function(value){ synthesizerCircuit.detune( value*(detuneLimits.max-detuneLimits.min) + detuneLimits.min ); };
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.onchange = function(value){ synthesizerCircuit.octave( value-3 ); };
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.onchange = function(value){ synthesizerCircuit.waveType( ['sine','triangle','square','sawtooth','custom'][value] ); };
+                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.onchange = function(value){ synthesizerCircuit.gainWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.onchange = function(value){ synthesizerCircuit.gainWobbleDepth(value);};
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.onchange = function(value){ synthesizerCircuit.detuneWobblePeriod( (1-value)<0.01?0.011:(1-value) ); };
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.onchange = function(value){ synthesizerCircuit.detuneWobbleDepth( value*100 ); };
+                                    object.elements.button_circle.panicButton.onpress = function(){ synthesizerCircuit.panic(); };
                                 //io
-                            //interface
-                            //import/export
-                            //setup
+                                    synthesizerCircuit.out().connect( object.io.audio.io_output.in() );
                         
+                                    object.io.data.io_midiNoteInput.onreceive = function(address,data){
+                                        if(address != 'midinumber'){return;}
+                                        synthesizerCircuit.perform(data);
+                                    };
+                                    object.io.data.io_periodicWaveType_dataIn.onreceive = function(address,data){
+                                        if(address != 'periodicWave'){return;}
+                                        synthesizerCircuit.periodicWave(data);
+                                    };
+                                    object.io.voltage.io_outputGain.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.outputGain.set(value);
+                                    };
+                                    object.io.voltage.io_attack.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.attack.set(value);
+                                    };
+                                    object.io.voltage.io_release.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.release.set(value);
+                                    };
+                                    object.io.voltage.io_detune_note.onchange = function(value){ 
+                                        object.elements.dial_colourWithIndent_continuous.detune_note.set(value);
+                                    };
+                                    object.io.signal.io_detune_octave_down.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.detune_octave.set( object.elements.dial_colourWithIndent_discrete.detune_octave.get() - 1 );
+                                    };
+                                    object.io.signal.io_detune_octave_up.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.detune_octave.set( object.elements.dial_colourWithIndent_discrete.detune_octave.get() + 1 );
+                                    };
+                                    object.io.voltage.io_gainWobblePeriod.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set(value);
+                                    };
+                                    object.io.voltage.io_gainWobbleDepth.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set(value);
+                                    };
+                                    object.io.voltage.io_detuneWobblePeriod.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set(value);
+                                    };
+                                    object.io.voltage.io_detuneWobbleDepth.onchange = function(value){
+                                        object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set(value);
+                                    };
+                                    object.io.signal.io_periodicWaveType_down.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() - 1 );
+                                    };
+                                    object.io.signal.io_periodicWaveType_up.onchange = function(value){ if(!value){return;}
+                                        object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( object.elements.dial_colourWithIndent_discrete.periodicWaveType.get() + 1 );
+                                    };
+                                    object.io.signal.io_panic.onchange = function(value){ value ? object.elements.button_circle.panicButton.press() : object.elements.button_circle.panicButton.release(); };
+                        
+                            //interface
+                                object.i = {
+                                    periodicWave:function(data){return synthesizerCircuit.periodicWave(data);},
+                                    performMidiNote:function(data){synthesizerCircuit.perform(data);},
+                                };
+                                ['gain','attack','release','detune','gainWobblePeriod','gainWobbleDepth','detuneWobblePeriod','detuneWobbleDepth'].forEach(dialName => {
+                                    object.i[dialName] = (function(element){
+                                        return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
+                                    })(object.elements.dial_colourWithIndent_continuous[dialName]);
+                                });
+                                ['octave','waveType'].forEach(dialName => {
+                                    object.i[dialName] = (function(element){
+                                        return function(value){ if(value==undefined){return element.get();}else{element.set(value);} }
+                                    })(object.elements.dial_colourWithIndent_discrete[dialName]);
+                                });
+                        
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        gain: object.elements.dial_colourWithIndent_continuous.outputGain.get(),
+                                        attack: object.elements.dial_colourWithIndent_continuous.attack.get()*10,
+                                        release: object.elements.dial_colourWithIndent_continuous.release.get()*10,
+                                        detune: 100*((object.elements.dial_colourWithIndent_continuous.detune_note.get()*2)-1),
+                                        octave: object.elements.dial_colourWithIndent_discrete.detune_octave.get()-3,
+                                        waveType: ['sine','triangle','square','sawtooth','custom'][object.elements.dial_colourWithIndent_discrete.periodicWaveType.get()],
+                                        gainWobble:{
+                                            rate: object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.get()*100,
+                                            depth: object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.get()
+                                        },
+                                        detuneWobble:{
+                                            rate: object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.get()*100,
+                                            depth: object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.get()
+                                        },
+                                    };
+                                };
+                                object.importData = function(data){
+                                    if(data == undefined){return;}
+                        
+                                    object.elements.dial_colourWithIndent_continuous.outputGain.set( data.gain );
+                                    object.elements.dial_colourWithIndent_continuous.attack.set( data.attack/10 );
+                                    object.elements.dial_colourWithIndent_continuous.release.set( data.release/10 );
+                                    object.elements.dial_colourWithIndent_continuous.detune_note.set( (1+(data.detune/100))/2 );
+                                    object.elements.dial_colourWithIndent_discrete.detune_octave.set( data.octave+3 );
+                                    object.elements.dial_colourWithIndent_discrete.periodicWaveType.set( ['sine','triangle','square','sawtooth','custom'].indexOf(data.waveType) );
+                                    object.elements.dial_colourWithIndent_continuous.gainWobblePeriod.set( data.gainWobble.rate/100 );
+                                    object.elements.dial_colourWithIndent_continuous.gainWobbleDepth.set( data.gainWobble.depth );
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobblePeriod.set( data.detuneWobble.rate/100 );
+                                    object.elements.dial_colourWithIndent_continuous.detuneWobbleDepth.set( data.detuneWobble.depth );
+                                };
+                                
                             return object;
                         };
-                        this.basic_synthesizer2.metadata = {
-                            name:'Basic Synthesizer2',
+                        this.basic_synthesizer.metadata = {
+                            name:'Basic Synthesizer',
                             category:'synthesizers',
-                            helpURL:'/help/units/beta/basic_synthesizer2/'
+                            helpURL:'/help/units/beta/basic_synthesizer/'
                         };
                         this.audio_file_player = function(x,y,angle){
                             //style data
@@ -49724,10 +49624,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -49823,22 +49719,21 @@
                                 });
                             
                             //circuitry
-                                var state = {
-                                    player: new _canvas_.interface.circuit.player2(_canvas_.library.audio.context),
-                                };
+                                var playerCircuit = new _canvas_.interface.circuit.player2(_canvas_.library.audio.context);
+                                
                                 function loadProcess(data){
-                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( state.player.waveformSegment() );
+                                    object.elements.grapher_waveWorkspace.grapher_waveWorkspace.draw( playerCircuit.waveformSegment() );
                                 
                                     object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.text(data.name);
                                     object.elements.readout_sixteenSegmentDisplay_static.trackNameReadout.print('smart');
                                 }
                                 function refresh(){
                                     //check if there's a track at all
-                                        if( !state.player.isLoaded() ){return;}
+                                        if( !playerCircuit.isLoaded() ){return;}
                         
                                     //time readout
-                                        if(state.player.concurrentPlayCountLimit() == 1){
-                                            var tmp = state.player.currentTime(0);
+                                        if(playerCircuit.concurrentPlayCountLimit() == 1){
+                                            var tmp = playerCircuit.currentTime(0);
                                             if(tmp == -1){tmp = 0;}
                                             var time = _canvas_.library.math.seconds2time( Math.round(tmp));
                         
@@ -49850,13 +49745,13 @@
                                             object.elements.readout_sixteenSegmentDisplay_static.time.print();
                                         }else{
                                             object.elements.readout_sixteenSegmentDisplay_static.time.text(
-                                                _canvas_.library.misc.padString(state.player.currentTime().length,8,' ')
+                                                _canvas_.library.misc.padString(playerCircuit.currentTime().length,8,' ')
                                             );
                                             object.elements.readout_sixteenSegmentDisplay_static.time.print();
                                         }
                                     
                                     //waveport
-                                        var progressList = state.player.progress();
+                                        var progressList = playerCircuit.progress();
                                         var needleList = object.elements.grapher_waveWorkspace.grapher_waveWorkspace.list();
                         
                                         //adjust needles to match player
@@ -49874,25 +49769,25 @@
                         
                             //wiring
                                 //hid
-                                    object.elements.button_image.button_open.onpress = function(){ state.player.load('file',loadProcess); };
+                                    object.elements.button_image.button_open.onpress = function(){ playerCircuit.load('file',loadProcess); };
                                     object.elements.button_image.button_play.onpress = function(){
-                                        if(object.i.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
-                                        else{ state.player.start(); }
+                                        if(object.i.concurrentPlayCountLimit() == 1 && playerCircuit.currentTime().length > 0){ playerCircuit.resume(); }
+                                        else{ playerCircuit.start(); }
                         
                                         //flash light
                                             object.elements.glowbox_rectangle.fireLight.on();
                                             setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
                                     };
-                                    object.elements.button_image.button_stop.onpress = function(){ state.player.stop(); };
-                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ state.player.rate( 2*data ); };
-                                    object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return state.player.loop(bool); };
-                                    object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return state.player.concurrentPlayCountLimit(value); };
+                                    object.elements.button_image.button_stop.onpress = function(){ playerCircuit.stop(); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ playerCircuit.rate( 2*data ); };
+                                    object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return playerCircuit.loop(bool); };
+                                    object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return playerCircuit.concurrentPlayCountLimit(value); };
                                     object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
                                         if( !isNaN(parseInt(needle)) ){
-                                            if( state.player.progress(needle) == -1 ){
-                                                state.player.createPlayhead(value);
+                                            if( playerCircuit.progress(needle) == -1 ){
+                                                playerCircuit.createPlayhead(value);
                                             }else{
-                                                state.player.jumpTo(needle,value);
+                                                playerCircuit.jumpTo(needle,value);
                                             }
                                         }
                         
@@ -49903,11 +49798,11 @@
                                         object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(area.A,area.B,false);
                                         if(!object.elements.grapher_waveWorkspace.grapher_waveWorkspace.areaIsActive()){ area.A = 0; area.B = 1; }
                                         if(area.A > area.B){ var tmp = area.A; area.A = area.B; area.B = tmp; } //keepin' things straight
-                                        return state.player.area(area.A,area.B);
+                                        return playerCircuit.area(area.A,area.B);
                                     };
                                 //io
-                                    state.player.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
-                                    state.player.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
+                                    playerCircuit.out_right().connect( object.elements.connectionNode_audio.io_output_R.in() );
+                                    playerCircuit.out_left().connect( object.elements.connectionNode_audio.io_output_L.in() );
                                     object.io.signal.io_play.onchange = function(value){
                                         var part = object.elements.button_image.button_play;
                                         value ? part.press() : part.release();
@@ -49942,20 +49837,20 @@
                         
                             //interface
                                 object.i = {
-                                    loadRaw:function(data){ state.player.loadRaw(data,loadProcess); },
-                                    loadByFile:function(){ state.player.load('file',loadProcess); },
-                                    loadByURL:function(url){ state.player.load('url',loadProcess,url); },
+                                    loadRaw:function(data){ playerCircuit.loadRaw(data,loadProcess); },
+                                    loadByFile:function(){ playerCircuit.load('file',loadProcess); },
+                                    loadByURL:function(url){ playerCircuit.load('url',loadProcess,url); },
                                     fire:function(){
-                                        if(state.player.concurrentPlayCountLimit() == 1 && state.player.currentTime().length > 0){ state.player.resume(); }
-                                        else{ state.player.start(); }
+                                        if(playerCircuit.concurrentPlayCountLimit() == 1 && playerCircuit.currentTime().length > 0){ playerCircuit.resume(); }
+                                        else{ playerCircuit.start(); }
                         
                                         //flash light
                                             object.elements.glowbox_rectangle.fireLight.on();
                                             setTimeout(object.elements.glowbox_rectangle.fireLight.off, 100);
                                     },
-                                    pause:function(){ state.player.pause(); },
-                                    resume:function(){ state.player.resume(); },
-                                    stop:function(){ state.player.stop(); },
+                                    pause:function(){ playerCircuit.pause(); },
+                                    resume:function(){ playerCircuit.resume(); },
+                                    stop:function(){ playerCircuit.stop(); },
                                     area:function(start,end){ return object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(start,end); },
                                     looping:function(bool){
                                         if(bool == undefined){ return object.elements.checkbox_image.checkbox_loop.get(); }
@@ -49965,14 +49860,14 @@
                                         if(value == undefined){ return object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(); }
                                         object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.set(value);
                                     },
-                                    jumpTo:function(needle,position){ state.player.jumpTo(needle,position); },
-                                    concurrentPlayCountLimit:function(value){ return state.player.concurrentPlayCountLimit(value); },
+                                    jumpTo:function(needle,position){ playerCircuit.jumpTo(needle,position); },
+                                    concurrentPlayCountLimit:function(value){ return playerCircuit.concurrentPlayCountLimit(value); },
                                 };
                         
                             //import/export
                                 object.exportData = function(){
                                     return{
-                                        track: state.player.unloadRaw(),
+                                        track: playerCircuit.unloadRaw(),
                                         rate: object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.get(),
                                         loopActive: object.elements.checkbox_image.checkbox_loop.get(), 
                                         selectedArea: object.elements.grapher_waveWorkspace.grapher_waveWorkspace.area(),
@@ -49995,124 +49890,109 @@
                             helpURL:'/help/units/beta/audio_file_player/'
                         };
 
-                        this.distortion = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'distortion/';
+                        this.distortion = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'distortion/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:725, height:395 },
-                                design:{ width:11.75, height:6.25 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'distortion',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:measurements.drawing.width-2.9, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'inGain_connection', data:{ 
-                                        x:97, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'resolution_connection', data:{ 
-                                        x:67, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'distortion_connection', data:{ 
-                                        x:32, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'outGain_connection', data:{ 
-                                        x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
-                                        x:50, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
-                                        x:68, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:725, height:395 },
+                                            design: { width:11.75, height:6.25 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'inGain',data:{
-                                        x:92, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[1], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'resolution',data:{
-                                        x:72, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[7], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'distortion',data:{
-                                        x:37, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[4], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'outGain',data:{
-                                        x:17, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
+                                    //styling values
+                                        this.inGain = { handle:style.primaryEight[1], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.resolution = { handle:style.primaryEight[7], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.distortion = { handle:style.primaryEight[4], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.outGain = { handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
                         
-                                    {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
-                                        x:41.5, y:57.5, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
-                                        handleURL:imageStoreURL_localPrefix+'handle.png',
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                                
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'distortion',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-2.9, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                            x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'inGain_connection', data:{ 
+                                            x:97, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'resolution_connection', data:{ 
+                                            x:67, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'distortion_connection', data:{ 
+                                            x:32, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'outGain_connection', data:{ 
+                                            x:22, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
+                                            x:50, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
+                                            x:68, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'inGain',data:{
+                                            x:92, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.inGain,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'resolution',data:{
+                                            x:72, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.resolution,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'distortion',data:{
+                                            x:37, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.distortion,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'outGain',data:{
+                                            x:17, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.outGain,
+                                        }},
+                                        {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
+                                            x:41.5, y:57.5, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png',
+                                        }},
+                                    ]
+                                });
+                        
                             //circuitry
-                                object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.input.out().connect( object.distortionCircuit.in() );
-                                object.distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
                         
                             //wiring
-                                object.elements.dial_colourWithIndent_continuous.inGain.onchange = function(value){object.distortionCircuit.inGain(2*value);};
-                                object.elements.dial_colourWithIndent_continuous.resolution.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
-                                object.elements.dial_colourWithIndent_continuous.distortion.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
-                                object.elements.dial_colourWithIndent_continuous.outGain.onchange = function(value){object.distortionCircuit.outGain(value);};
-                                object.elements.slide_discrete_image.oversample.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
-                                object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
-                                object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
-                                object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.inGain.set(value); };
-                                object.elements.connectionNode_voltage.resolution_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.resolution.set(value); };
-                                object.elements.connectionNode_voltage.distortion_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.distortion.set(value); };
-                                object.elements.connectionNode_voltage.outGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.outGain.set(value); };
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.inGain.onchange = function(value){distortionCircuit.inGain(2*value);};
+                                    object.elements.dial_colourWithIndent_continuous.resolution.onchange = function(value){distortionCircuit.resolution(Math.round(value*1000));};
+                                    object.elements.dial_colourWithIndent_continuous.distortion.onchange = function(value){distortionCircuit.distortionAmount(value*100);};
+                                    object.elements.dial_colourWithIndent_continuous.outGain.onchange = function(value){distortionCircuit.outGain(value);};
+                                    object.elements.slide_discrete_image.oversample.onchange = function(value){distortionCircuit.oversample(['none','2x','4x'][value]);};
+                                //io
+                                    object.elements.connectionNode_audio.input.out().connect( distortionCircuit.in() );
+                                    distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                    object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
+                                    object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
+                                    object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.inGain.set(value); };
+                                    object.elements.connectionNode_voltage.resolution_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.resolution.set(value); };
+                                    object.elements.connectionNode_voltage.distortion_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.distortion.set(value); };
+                                    object.elements.connectionNode_voltage.outGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.outGain.set(value); };
                         
-                            //setup
-                                object.elements.dial_colourWithIndent_continuous.resolution.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.inGain.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.outGain.set(1);
-                            
-                            //import/export
-                                object.importData = function(data){
-                                    object.elements.dial_colourWithIndent_continuous.outGain.set(data.outGain);
-                                    object.elements.dial_colourWithIndent_continuous.distortion.set(data.distortionAmount);
-                                    object.elements.dial_colourWithIndent_continuous.resolution.set(data.resolution);
-                                    object.elements.slide_discrete_image.oversample.set(data.overSample);
-                                    object.elements.dial_colourWithIndent_continuous.inGain.set(data.inGain);
-                                };
-                                object.exportData = function(){
-                                    return {
-                                        outGain:          object.elements.dial_colourWithIndent_continuous.outGain.get(), 
-                                        distortionAmount: object.elements.dial_colourWithIndent_continuous.distortion.get(), 
-                                        resolution:       object.elements.dial_colourWithIndent_continuous.resolution.get(), 
-                                        overSample:       object.elements.slide_discrete_image.oversample.get(), 
-                                        inGain:           object.elements.dial_colourWithIndent_continuous.inGain.get()
-                                    };
-                                };
-                            
                             //interface
                                 object.i = {
                                     outGain:function(value){
@@ -50135,144 +50015,162 @@
                                         if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.inGain.get(); }
                                         object.elements.dial_colourWithIndent_continuous.inGain.set(value);
                                     },
-                        
                                 };
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.outGain.set(data.outGain);
+                                    object.elements.dial_colourWithIndent_continuous.distortion.set(data.distortionAmount);
+                                    object.elements.dial_colourWithIndent_continuous.resolution.set(data.resolution);
+                                    object.elements.slide_discrete_image.oversample.set(data.overSample);
+                                    object.elements.dial_colourWithIndent_continuous.inGain.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:          object.elements.dial_colourWithIndent_continuous.outGain.get(), 
+                                        distortionAmount: object.elements.dial_colourWithIndent_continuous.distortion.get(), 
+                                        resolution:       object.elements.dial_colourWithIndent_continuous.resolution.get(), 
+                                        overSample:       object.elements.slide_discrete_image.oversample.get(), 
+                                        inGain:           object.elements.dial_colourWithIndent_continuous.inGain.get()
+                                    };
+                                };
+                        
+                            //setup
+                                object.elements.dial_colourWithIndent_continuous.resolution.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.inGain.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.outGain.set(1);
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.distortion.metadata = {
                             name:'Distortion',
                             category:'effects',
                             helpURL:'/help/units/beta/distortion/'
                         };
-                        this.reverb = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'reverb/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:885, height:320 },
-                                design:{ width:14.5, height:5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            var colour = {
-                                LCD:{
-                                    background:{r:0.1,g:0.1,b:0.1,a:1},
-                                    glow:{r:0.3,g:0.64,b:0.22,a:1},
-                                    dim:{r:0.1,g:0.24,b:0.12,a:1}
-                                }
-                            };
-                            
-                            var design = {
-                                name:'reverb',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:measurements.drawing.width-3.5, y:30, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:45, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'wet_connection', data:{ 
-                                        x:87.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'dry_connection', data:{ 
-                                        x:87.5+32.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_down_connection', data:{ 
-                                        x:69, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_up_connection', data:{ 
-                                        x:59, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
+
+                        this.reverb = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'reverb/';
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
-                                    },
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:885, height:320 },
+                                            design: { width:14.5, height:5 },
+                                        };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'wet',data:{
-                                        x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dry',data:{
-                                        x:87.5+32.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[2], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'button_image', name:'rocker_up', data:{
-                                        x:58.7, y:10, width:10, height:15, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'rocker_up_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'rocker_up_down.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'rocker_down', data:{
-                                        x:58.7, y:10+15, width:10, height:15, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'rocker_down_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'rocker_down_down.png',
-                                    }},
-                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, style:colour.LCD }},
-                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, style:colour.LCD }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                            //circuitry
+                                    //styling values
+                                        this.LCD = {
+                                            background:{r:0.1,g:0.1,b:0.1,a:1},
+                                            glow:{r:0.3,g:0.64,b:0.22,a:1},
+                                            dim:{r:0.1,g:0.24,b:0.12,a:1}
+                                        };
+                                        this.dial_wet = { handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.dial_dry = { handle:style.primaryEight[2], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'reverb',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:30, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                            x:0, y:45, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'wet_connection', data:{ 
+                                            x:92.5, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'dry_connection', data:{ 
+                                            x:125, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'rocker_down_connection', data:{ 
+                                            x:69, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'rocker_up_connection', data:{ 
+                                            x:59, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'wet',data:{
+                                            x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_wet,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dry',data:{
+                                            x:120, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_dry,
+                                        }},
+                                        {collection:'control', type:'button_image', name:'rocker_up', data:{
+                                            x:58.7, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'rocker_up_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'rocker_up_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'rocker_down', data:{
+                                            x:58.7, y:25, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'rocker_down_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'rocker_down_down.png',
+                                        }},
+                                        {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, style:unitStyle.LCD }},
+                                        {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, style:unitStyle.LCD }},
+                                    ]
+                                });
+                        
+                            //circuitry        
                                 var state = {
                                     reverbTypeSelected:0,
                                     availableTypes:[],
                                     wet:0.5,
                                     dry:0.5,
                                 };
-                        
-                                //reverb
-                                    object.reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
-                                    object.elements.connectionNode_audio.input.out().connect( object.reverbCircuit.in() );
-                                    object.reverbCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
-                                    object.reverbCircuit.getTypes( a => {
-                                        state.availableTypes = a;
-                                        setReverbType(state.reverbTypeSelected);
-                                    } );
+                                var reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
                                     
                                 //internal functions
                                     var loadingScreenIntervalID;
                                     var journeyHistory = [];
                                     var journey = [
-                                    //big loop
-                                        // ['LCD_1',0],
-                                        // ['LCD_1',2],
-                                        // ['LCD_1',5],
-                                        // ['LCD_1',6],
-                                        // ['LCD_10',6],
-                                        // ['LCD_10',4],
-                                        // ['LCD_10',1],
-                                        // ['LCD_10',0],
+                                        //big loop
+                                            // ['LCD_1',0],
+                                            // ['LCD_1',2],
+                                            // ['LCD_1',5],
+                                            // ['LCD_1',6],
+                                            // ['LCD_10',6],
+                                            // ['LCD_10',4],
+                                            // ['LCD_10',1],
+                                            // ['LCD_10',0],
                         
-                                    //four loops
-                                        ['LCD_10',3],
-                                        ['LCD_10',1],
-                                        ['LCD_10',0],
-                                        ['LCD_10',2],
-                                        ['LCD_10',5],
-                                        ['LCD_10',6],
-                                        ['LCD_10',4],
-                                        ['LCD_10',3],
-                                        ['LCD_1',3],
-                                        ['LCD_1',5],
-                                        ['LCD_1',6],
-                                        ['LCD_1',4],
-                                        ['LCD_1',1],
-                                        ['LCD_1',0],
-                                        ['LCD_1',2],
-                                        ['LCD_1',3],
+                                        //four loops
+                                            ['LCD_10',3],
+                                            ['LCD_10',1],
+                                            ['LCD_10',0],
+                                            ['LCD_10',2],
+                                            ['LCD_10',5],
+                                            ['LCD_10',6],
+                                            ['LCD_10',4],
+                                            ['LCD_10',3],
+                                            ['LCD_1',3],
+                                            ['LCD_1',5],
+                                            ['LCD_1',6],
+                                            ['LCD_1',4],
+                                            ['LCD_1',1],
+                                            ['LCD_1',0],
+                                            ['LCD_1',2],
+                                            ['LCD_1',3],
                                     ];
                                     var step = 0;
                                     function startReadoutLoadingScreen(){
@@ -50314,137 +50212,133 @@
                             
                                         state.reverbTypeSelected = a;
                                         startReadoutLoadingScreen();
-                                        object.reverbCircuit.type( state.availableTypes[a], function(){stopReadoutLoadingScreen(); setReadout(state.reverbTypeSelected);} );    
+                                        reverbCircuit.type( state.availableTypes[a], function(){stopReadoutLoadingScreen(); setReadout(state.reverbTypeSelected);} );    
                                     }
                                     function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
                                     function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
-                                    function updateWetDry(){ object.reverbCircuit.wetdry('manualControl',state.wet,state.dry); }
+                                    function updateWetDry(){ reverbCircuit.wetdry('manualControl',state.wet,state.dry); }
                         
-                                //wiring
+                            //wiring
+                                //hid
                                     object.elements.dial_colourWithIndent_continuous.wet.onchange = function(value){ state.wet = value; updateWetDry(); };
                                     object.elements.dial_colourWithIndent_continuous.dry.onchange = function(value){ state.dry = value; updateWetDry(); };
                                     object.elements.button_image.rocker_up.onpress = function(){ incReverbType(); };
                                     object.elements.button_image.rocker_down.onpress = function(){ decReverbType(); };
-                                    object.elements.connectionNode_voltage.wet_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.wet.set(value); };
-                                    object.elements.connectionNode_voltage.dry_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.dry.set(value); };
-                                    object.elements.connectionNode_signal.rocker_down_connection.onchange = function(value){
-                                        if(value){
-                                            object.elements.button_image.rocker_down.press();
-                                        }else{
-                                            object.elements.button_image.rocker_down.release();
-                                        }
+                                //io
+                                    object.io.audio.input.out().connect( reverbCircuit.in() );
+                                    reverbCircuit.out().connect( object.io.audio.output.in() );
+                                    object.io.voltage.wet_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.wet.set(value); };
+                                    object.io.voltage.dry_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.dry.set(value); };
+                                    object.io.signal.rocker_down_connection.onchange = function(value){
+                                        value ? object.elements.button_image.rocker_down.press() : object.elements.button_image.rocker_down.release();
                                     };
-                                    object.elements.connectionNode_signal.rocker_up_connection.onchange = function(value){
-                                        if(value){
-                                            object.elements.button_image.rocker_up.press();
-                                        }else{
-                                            object.elements.button_image.rocker_up.release();
-                                        }
-                                    };
-                                    
-                                //import/export
-                                    object.exportData = function(){
-                                        return {
-                                            wet: object.elements.dial_colourWithIndent_continuous.wet.get(),
-                                            dry: object.elements.dial_colourWithIndent_continuous.dry.get(),
-                                            reverbNumber: state.reverbTypeSelected,
-                                        };
-                                    };
-                                    object.importData = function(data){
-                                        object.elements.dial_colourWithIndent_continuous.wet.set(data.wet);
-                                        object.elements.dial_colourWithIndent_continuous.dry.set(data.dry);
-                                        state.reverbTypeSelected = data.reverbNumber;
+                                    object.io.signal.rocker_up_connection.onchange = function(value){
+                                        value ? object.elements.button_image.rocker_up.press() : object.elements.button_image.rocker_up.release();
                                     };
                         
-                                //interface 
-                                    object.i = {
-                                        wet: function(value){
-                                            if(value == undefined){
-                                                return object.elements.dial_colourWithIndent_continuous.wet.get();
-                                            }else{
-                                                object.elements.dial_colourWithIndent_continuous.wet.set(value);
-                                            }
-                                        },
-                                        dry: function(value){
-                                            if(value == undefined){
-                                                return object.elements.dial_colourWithIndent_continuous.dry.get();
-                                            }else{
-                                                object.elements.dial_colourWithIndent_continuous.dry.set(value);
-                                            }
-                                        },
-                                        reverbNumber: function(number){ if(value == undefined){ return state.reverbTypeSelected; }else{ setReverbType(number); } }
-                                    };
+                            //interface
+                                object.i = {
+                                    wet: function(value){
+                                        if(value == undefined){
+                                            return object.elements.dial_colourWithIndent_continuous.wet.get();
+                                        }else{
+                                            object.elements.dial_colourWithIndent_continuous.wet.set(value);
+                                        }
+                                    },
+                                    dry: function(value){
+                                        if(value == undefined){
+                                            return object.elements.dial_colourWithIndent_continuous.dry.get();
+                                        }else{
+                                            object.elements.dial_colourWithIndent_continuous.dry.set(value);
+                                        }
+                                    },
+                                    reverbNumber: function(number){ if(value == undefined){ return state.reverbTypeSelected; }else{ setReverbType(number); } }
+                                };
                         
-                                //setup
-                                    startReadoutLoadingScreen();
-                                
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        wet: object.elements.dial_colourWithIndent_continuous.wet.get(),
+                                        dry: object.elements.dial_colourWithIndent_continuous.dry.get(),
+                                        reverbNumber: state.reverbTypeSelected,
+                                    };
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.wet.set(data.wet);
+                                    object.elements.dial_colourWithIndent_continuous.dry.set(data.dry);
+                                    state.reverbTypeSelected = data.reverbNumber;
+                                };
+                        
+                            //setup 
+                                reverbCircuit.getTypes( a => { state.availableTypes = a; setReverbType(state.reverbTypeSelected); } );
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.reverb.metadata = {
                             name:'Reverb',
                             category:'effects',
                             helpURL:'/help/units/beta/reverb/'
                         };
-                        this.filter = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'filter/';
+                        this.filter = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'filter/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:620, height:260 },
-                                design:{ width:10, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:620, height:260 },
+                                            design: { width:10, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'filter',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                    { x:0,                                  y:measurements.drawing.height -offset },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:measurements.drawing.width - 3-1/3, y:measurements.drawing.height/2 - 9, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:measurements.drawing.height/2 + 6, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2,
-                                        style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_lowBand',data:{
-                                        x:17.5, y:22.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_midBand',data:{
-                                        x:17.5+30, y:22.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[3], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_highBand',data:{
-                                        x:17.5+60, y:22.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.dial_lowBand = { handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.dial_midBand = { handle:style.primaryEight[3], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.dial_highBand = { handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'filter',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width - 10/3, y:unitStyle.drawingValue.height/2 - 9, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                            x:0, y:unitStyle.drawingValue.height/2 + 6, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_lowBand',data:{
+                                            x:17.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_lowBand,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_midBand',data:{
+                                            x:47.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_midBand,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_highBand',data:{
+                                            x:77.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_highBand,
+                                        }},
+                                    ]
+                                });
                         
                             //circuitry
                                 var curvePointExponentialSharpness = 10.586609649448984;
-                                var vars = {
+                                var state = {
                                     currentValues:{
                                         gain: [1,1,1],
                                         frequency: [250,700,2500],
@@ -50456,33 +50350,45 @@
                                         Q: [0,0.35,0],
                                     }
                                 };
+                                var filterCircuit = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, 3, true);
                         
-                                object.filterCircuit = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, 3, true);
-                                object.elements.connectionNode_audio.input.out().connect( object.filterCircuit.in() );
-                                object.filterCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                function setGain(band,value){ 
+                                    if(band == undefined){return state.currentValues.gain;}
+                                    if(value == undefined){return state.currentValues.gain[band];}
+                        
+                                    state.currentValues.gain[band] = value;
+                                    filterCircuit.gain(band,state.currentValues.gain[band]);
+                                }
+                        
+                            //wiring
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.dial_lowBand.onchange = function(value){ setGain(0,value*2); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_midBand.onchange = function(value){ setGain(1,value*2); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_highBand.onchange = function(value){ setGain(2,value*2); };
+                                //io
+                                    object.io.audio.input.out().connect( filterCircuit.in() );
+                                    filterCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
                         
                             //interface
                                 object.i = {
-                                    gain:function(band,value){ 
-                                        if(band == undefined){return vars.currentValues.gain;}
-                                        if(value == undefined){return vars.currentValues.gain[band];}
-                        
-                                        vars.currentValues.gain[band] = value;
-                                        object.filterCircuit.gain(band,vars.currentValues.gain[band]);
+                                    gain:function(band,value){
+                                        var element = object.elements.dial_colourWithIndent_continuous[ ['dial_lowBand','dial_midBand','dial_highBand'][band] ];
+                                        if(value == undefined){ return element.get(); }
+                                        element.set(value);
                                     },
                                     Q:function(band,value){ 
-                                        if(band == undefined){return vars.currentValues.Q;}
-                                        if(value == undefined){return vars.currentValues.Q[band];}
+                                        if(band == undefined){return state.currentValues.Q;}
+                                        if(value == undefined){return state.currentValues.Q[band];}
                         
-                                        vars.currentValues.Q[band] = value;
-                                        object.filterCircuit.Q(band, _canvas_.library.math.curvePoint.exponential(vars.currentValues.Q[band],0,20000,curvePointExponentialSharpness));
+                                        state.currentValues.Q[band] = value;
+                                        filterCircuit.Q(band, _canvas_.library.math.curvePoint.exponential(state.currentValues.Q[band],0,20000,curvePointExponentialSharpness));
                                     },
                                     frequency:function(band,value){
-                                        if(band == undefined){return vars.currentValues.frequency;}
-                                        if(value == undefined){return vars.currentValues.frequency[band];}
+                                        if(band == undefined){return state.currentValues.frequency;}
+                                        if(value == undefined){return state.currentValues.frequency[band];}
                         
-                                        vars.currentValues.frequency[band] = value;
-                                        object.filterCircuit.frequency(band, vars.currentValues.frequency[band]);
+                                        state.currentValues.frequency[band] = value;
+                                        filterCircuit.frequency(band, state.currentValues.frequency[band]);
                                     },
                                     reset:function(channel){
                                         if(channel == undefined){
@@ -50491,24 +50397,19 @@
                                             return;
                                         }
                                         for(var a = 0; a < 3; a++){
-                                            object.i.gain(a,vars.defaultValues.gain[a]);
-                                            object.i.Q(a,vars.defaultValues.Q[a]);
-                                            object.i.frequency(a,vars.defaultValues.frequency[a]);
+                                            object.i.gain(a,state.defaultValues.gain[a]);
+                                            object.i.Q(a,state.defaultValues.Q[a]);
+                                            object.i.frequency(a,state.defaultValues.frequency[a]);
                                         }
                                     },
                                 };
                         
-                            //wiring
-                                object.elements.dial_colourWithIndent_continuous.dial_lowBand.onchange = function(value){ object.i.gain(0,value*2); };
-                                object.elements.dial_colourWithIndent_continuous.dial_midBand.onchange = function(value){ object.i.gain(1,value*2); };
-                                object.elements.dial_colourWithIndent_continuous.dial_highBand.onchange = function(value){ object.i.gain(2,value*2); };
-                        
                             //import/export
                                 object.exportData = function(){
                                     return {
-                                        low:object.elements.dial_colourWithIndent_continuous.dial_lowBand.get(),
-                                        mid:object.elements.dial_colourWithIndent_continuous.dial_midBand.get(),
-                                        high:object.elements.dial_colourWithIndent_continuous.dial_highBand.get(),
+                                        low: object.elements.dial_colourWithIndent_continuous.dial_lowBand.get(),
+                                        mid: object.elements.dial_colourWithIndent_continuous.dial_midBand.get(),
+                                        high: object.elements.dial_colourWithIndent_continuous.dial_highBand.get(),
                                     };
                                 };
                                 object.importData = function(data){
@@ -50522,14 +50423,12 @@
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.filter.metadata = {
                             name:'Filter (unfinished)',
                             category:'effects',
                             helpURL:'/help/units/beta/filter/'
                         };
+
                         this.pulse_generator = function(x,y,angle){
                             //unitStyle
                                 var unitStyle = new function(){
@@ -50547,10 +50446,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -50751,7 +50646,7 @@
                             helpURL:'/help/units/beta/pulse_generator/'
                         };
                         this.eightStepSequencer = function(x,y,angle){
-                                //style data
+                            //style data
                                 var unitStyle = new function(){
                                     //image store location URL
                                         this.imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
@@ -50767,10 +50662,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -50793,13 +50684,13 @@
                                     name:'eightStepSequencer',
                                     x:x, y:y, angle:angle,
                                     space:[
-                                        { x:0,                                                  y:0                                                       },
-                                        { x:unitStyle.drawingValue.width -unitStyle.offset,     y:0                                                       },
-                                        { x:unitStyle.drawingValue.width -unitStyle.offset,     y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
-                                        { x:unitStyle.drawingUnit.width*26 -unitStyle.offset,   y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
-                                        { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*7   -unitStyle.offset*0.7  },
-                                        { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*9.5 -unitStyle.offset      },
-                                        { x:0,                                                  y:unitStyle.drawingValue.height    -unitStyle.offset      },
+                                        { x:0,                                                           y:0                                                           },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,              y:0                                                           },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,              y:(unitStyle.drawingValue.height -unitStyle.offset)*(5.5/9.5) },
+                                        { x:(unitStyle.drawingValue.width-unitStyle.offset)*(26/27.5),   y:(unitStyle.drawingValue.height -unitStyle.offset)*(5.5/9.5) },
+                                        { x:(unitStyle.drawingValue.width-unitStyle.offset)*(24.5/27.5), y:(unitStyle.drawingValue.height -unitStyle.offset)*(7/9.5)   },
+                                        { x:(unitStyle.drawingValue.width-unitStyle.offset)*(24.5/27.5), y:unitStyle.drawingValue.height -unitStyle.offset             },
+                                        { x:0,                                                           y:unitStyle.drawingValue.height -unitStyle.offset             },
                                     ],
                                     elements:
                                         (new Array(8).fill(0)).flatMap((value,index) => { 
@@ -51022,10 +50913,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -51213,124 +51100,109 @@
                             helpURL:'/help/units/beta/launchpad/'
                         };
 
-                        this.distortion = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'distortion/';
+                        this.distortion = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'distortion/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:725, height:395 },
-                                design:{ width:11.75, height:6.25 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            
-                            var design = {
-                                name:'distortion',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:measurements.drawing.width-2.9, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'inGain_connection', data:{ 
-                                        x:97, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'resolution_connection', data:{ 
-                                        x:67, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'distortion_connection', data:{ 
-                                        x:32, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'outGain_connection', data:{ 
-                                        x:22, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
-                                        x:50, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
-                                        x:68, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:725, height:395 },
+                                            design: { width:11.75, height:6.25 },
+                                        };
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png' }
-                                    },
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'inGain',data:{
-                                        x:92, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[1], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'resolution',data:{
-                                        x:72, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[7], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'distortion',data:{
-                                        x:37, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[4], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'outGain',data:{
-                                        x:17, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
+                                    //styling values
+                                        this.inGain = { handle:style.primaryEight[1], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.resolution = { handle:style.primaryEight[7], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.distortion = { handle:style.primaryEight[4], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.outGain = { handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
                         
-                                    {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
-                                        x:41.5, y:57.5, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
-                                        handleURL:imageStoreURL_localPrefix+'handle.png',
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
-                                
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'distortion',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-2.9, y:40, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                            x:0, y:55, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'inGain_connection', data:{ 
+                                            x:97, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'resolution_connection', data:{ 
+                                            x:67, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'distortion_connection', data:{ 
+                                            x:32, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'outGain_connection', data:{ 
+                                            x:22, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'oversample_left', data:{ 
+                                            x:50, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'oversample_right', data:{ 
+                                            x:68, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'inGain',data:{
+                                            x:92, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.inGain,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'resolution',data:{
+                                            x:72, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.resolution,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'distortion',data:{
+                                            x:37, y:19.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.distortion,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'outGain',data:{
+                                            x:17, y:47, radius:22.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.outGain,
+                                        }},
+                                        {collection:'control', type:'slide_discrete_image',name:'oversample',data:{
+                                            x:41.5, y:57.5, width:10, height:27, handleHeight:1/3, resetValue:0.5, angle:-Math.PI/2, optionCount:3, value:0,
+                                            handleURL:unitStyle.imageStoreURL_localPrefix+'handle.png',
+                                        }},
+                                    ]
+                                });
+                        
                             //circuitry
-                                object.distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
-                                object.elements.connectionNode_audio.input.out().connect( object.distortionCircuit.in() );
-                                object.distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                distortionCircuit = new _canvas_.interface.circuit.distortionUnit(_canvas_.library.audio.context);
                         
                             //wiring
-                                object.elements.dial_colourWithIndent_continuous.inGain.onchange = function(value){object.distortionCircuit.inGain(2*value);};
-                                object.elements.dial_colourWithIndent_continuous.resolution.onchange = function(value){object.distortionCircuit.resolution(Math.round(value*1000));};
-                                object.elements.dial_colourWithIndent_continuous.distortion.onchange = function(value){object.distortionCircuit.distortionAmount(value*100);};
-                                object.elements.dial_colourWithIndent_continuous.outGain.onchange = function(value){object.distortionCircuit.outGain(value);};
-                                object.elements.slide_discrete_image.oversample.onchange = function(value){object.distortionCircuit.oversample(['none','2x','4x'][value]);};
-                                object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
-                                object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
-                                object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.inGain.set(value); };
-                                object.elements.connectionNode_voltage.resolution_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.resolution.set(value); };
-                                object.elements.connectionNode_voltage.distortion_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.distortion.set(value); };
-                                object.elements.connectionNode_voltage.outGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.outGain.set(value); };
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.inGain.onchange = function(value){distortionCircuit.inGain(2*value);};
+                                    object.elements.dial_colourWithIndent_continuous.resolution.onchange = function(value){distortionCircuit.resolution(Math.round(value*1000));};
+                                    object.elements.dial_colourWithIndent_continuous.distortion.onchange = function(value){distortionCircuit.distortionAmount(value*100);};
+                                    object.elements.dial_colourWithIndent_continuous.outGain.onchange = function(value){distortionCircuit.outGain(value);};
+                                    object.elements.slide_discrete_image.oversample.onchange = function(value){distortionCircuit.oversample(['none','2x','4x'][value]);};
+                                //io
+                                    object.elements.connectionNode_audio.input.out().connect( distortionCircuit.in() );
+                                    distortionCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                    object.elements.connectionNode_signal.oversample_left.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() - 1 ); };
+                                    object.elements.connectionNode_signal.oversample_right.onchange = function(value){ if(!value){return;} object.elements.slide_discrete_image.oversample.set( object.elements.slide_discrete_image.oversample.get() + 1 ); };
+                                    object.elements.connectionNode_voltage.inGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.inGain.set(value); };
+                                    object.elements.connectionNode_voltage.resolution_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.resolution.set(value); };
+                                    object.elements.connectionNode_voltage.distortion_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.distortion.set(value); };
+                                    object.elements.connectionNode_voltage.outGain_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.outGain.set(value); };
                         
-                            //setup
-                                object.elements.dial_colourWithIndent_continuous.resolution.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.inGain.set(0.5);
-                                object.elements.dial_colourWithIndent_continuous.outGain.set(1);
-                            
-                            //import/export
-                                object.importData = function(data){
-                                    object.elements.dial_colourWithIndent_continuous.outGain.set(data.outGain);
-                                    object.elements.dial_colourWithIndent_continuous.distortion.set(data.distortionAmount);
-                                    object.elements.dial_colourWithIndent_continuous.resolution.set(data.resolution);
-                                    object.elements.slide_discrete_image.oversample.set(data.overSample);
-                                    object.elements.dial_colourWithIndent_continuous.inGain.set(data.inGain);
-                                };
-                                object.exportData = function(){
-                                    return {
-                                        outGain:          object.elements.dial_colourWithIndent_continuous.outGain.get(), 
-                                        distortionAmount: object.elements.dial_colourWithIndent_continuous.distortion.get(), 
-                                        resolution:       object.elements.dial_colourWithIndent_continuous.resolution.get(), 
-                                        overSample:       object.elements.slide_discrete_image.oversample.get(), 
-                                        inGain:           object.elements.dial_colourWithIndent_continuous.inGain.get()
-                                    };
-                                };
-                            
                             //interface
                                 object.i = {
                                     outGain:function(value){
@@ -51353,144 +51225,162 @@
                                         if(value==undefined){ return object.elements.dial_colourWithIndent_continuous.inGain.get(); }
                                         object.elements.dial_colourWithIndent_continuous.inGain.set(value);
                                     },
-                        
                                 };
+                        
+                            //import/export
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.outGain.set(data.outGain);
+                                    object.elements.dial_colourWithIndent_continuous.distortion.set(data.distortionAmount);
+                                    object.elements.dial_colourWithIndent_continuous.resolution.set(data.resolution);
+                                    object.elements.slide_discrete_image.oversample.set(data.overSample);
+                                    object.elements.dial_colourWithIndent_continuous.inGain.set(data.inGain);
+                                };
+                                object.exportData = function(){
+                                    return {
+                                        outGain:          object.elements.dial_colourWithIndent_continuous.outGain.get(), 
+                                        distortionAmount: object.elements.dial_colourWithIndent_continuous.distortion.get(), 
+                                        resolution:       object.elements.dial_colourWithIndent_continuous.resolution.get(), 
+                                        overSample:       object.elements.slide_discrete_image.oversample.get(), 
+                                        inGain:           object.elements.dial_colourWithIndent_continuous.inGain.get()
+                                    };
+                                };
+                        
+                            //setup
+                                object.elements.dial_colourWithIndent_continuous.resolution.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.inGain.set(0.5);
+                                object.elements.dial_colourWithIndent_continuous.outGain.set(1);
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.distortion.metadata = {
                             name:'Distortion',
                             category:'effects',
                             helpURL:'/help/units/beta/distortion/'
                         };
-                        this.reverb = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'reverb/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:885, height:320 },
-                                design:{ width:14.5, height:5 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            var colour = {
-                                LCD:{
-                                    background:{r:0.1,g:0.1,b:0.1,a:1},
-                                    glow:{r:0.3,g:0.64,b:0.22,a:1},
-                                    dim:{r:0.1,g:0.24,b:0.12,a:1}
-                                }
-                            };
-                            
-                            var design = {
-                                name:'reverb',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:0                                     },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset   },
-                                    { x:0,                                  y:measurements.drawing.height -offset   },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:measurements.drawing.width-3.5, y:30, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:45, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'wet_connection', data:{ 
-                                        x:87.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_voltage', name:'dry_connection', data:{ 
-                                        x:87.5+32.5+5, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_down_connection', data:{ 
-                                        x:69, y:measurements.drawing.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_signal', name:'rocker_up_connection', data:{ 
-                                        x:59, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
-                                    }},
+
+                        this.reverb = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'reverb/';
                         
-                                    {collection:'basic', type:'image', name:'backing', 
-                                        data:{ x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'guide.png' }
-                                    },
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:885, height:320 },
+                                            design: { width:14.5, height:5 },
+                                        };
                         
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'wet',data:{
-                                        x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dry',data:{
-                                        x:87.5+32.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[2], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'button_image', name:'rocker_up', data:{
-                                        x:58.7, y:10, width:10, height:15, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'rocker_up_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'rocker_up_down.png',
-                                    }},
-                                    {collection:'control', type:'button_image', name:'rocker_down', data:{
-                                        x:58.7, y:10+15, width:10, height:15, hoverable:false, 
-                                        backingURL__up:imageStoreURL_localPrefix+'rocker_down_up.png',
-                                        backingURL__press:imageStoreURL_localPrefix+'rocker_down_down.png',
-                                    }},
-                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, style:colour.LCD }},
-                                    {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, style:colour.LCD }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
                         
-                            //circuitry
+                                    //styling values
+                                        this.LCD = {
+                                            background:{r:0.1,g:0.1,b:0.1,a:1},
+                                            glow:{r:0.3,g:0.64,b:0.22,a:1},
+                                            dim:{r:0.1,g:0.24,b:0.12,a:1}
+                                        };
+                                        this.dial_wet = { handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.dial_dry = { handle:style.primaryEight[2], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'reverb',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width-3.5, y:30, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                            x:0, y:45, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'wet_connection', data:{ 
+                                            x:92.5, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_voltage', name:'dry_connection', data:{ 
+                                            x:125, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.voltage,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'rocker_down_connection', data:{ 
+                                            x:69, y:unitStyle.drawingValue.height-3.5, width:5, height:10, angle:Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'rocker_up_connection', data:{ 
+                                            x:59, y:0, width:5, height:10, angle:-Math.PI*0.5, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'guide.png' }
+                                        },
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'wet',data:{
+                                            x:87.5, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_wet,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dry',data:{
+                                            x:120, y:22.5, radius:27.5/2, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_dry,
+                                        }},
+                                        {collection:'control', type:'button_image', name:'rocker_up', data:{
+                                            x:58.7, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'rocker_up_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'rocker_up_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'rocker_down', data:{
+                                            x:58.7, y:25, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'rocker_down_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'rocker_down_down.png',
+                                        }},
+                                        {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_10', data:{ x:5, y:5, width:25, height:40, style:unitStyle.LCD }},
+                                        {collection:'display', type:'sevenSegmentDisplay_static', name:'LCD_1', data:{ x:30, y:5, width:25, height:40, style:unitStyle.LCD }},
+                                    ]
+                                });
+                        
+                            //circuitry        
                                 var state = {
                                     reverbTypeSelected:0,
                                     availableTypes:[],
                                     wet:0.5,
                                     dry:0.5,
                                 };
-                        
-                                //reverb
-                                    object.reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
-                                    object.elements.connectionNode_audio.input.out().connect( object.reverbCircuit.in() );
-                                    object.reverbCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
-                                    object.reverbCircuit.getTypes( a => {
-                                        state.availableTypes = a;
-                                        setReverbType(state.reverbTypeSelected);
-                                    } );
+                                var reverbCircuit = new _canvas_.interface.circuit.reverbUnit(_canvas_.library.audio.context);
                                     
                                 //internal functions
                                     var loadingScreenIntervalID;
                                     var journeyHistory = [];
                                     var journey = [
-                                    //big loop
-                                        // ['LCD_1',0],
-                                        // ['LCD_1',2],
-                                        // ['LCD_1',5],
-                                        // ['LCD_1',6],
-                                        // ['LCD_10',6],
-                                        // ['LCD_10',4],
-                                        // ['LCD_10',1],
-                                        // ['LCD_10',0],
+                                        //big loop
+                                            // ['LCD_1',0],
+                                            // ['LCD_1',2],
+                                            // ['LCD_1',5],
+                                            // ['LCD_1',6],
+                                            // ['LCD_10',6],
+                                            // ['LCD_10',4],
+                                            // ['LCD_10',1],
+                                            // ['LCD_10',0],
                         
-                                    //four loops
-                                        ['LCD_10',3],
-                                        ['LCD_10',1],
-                                        ['LCD_10',0],
-                                        ['LCD_10',2],
-                                        ['LCD_10',5],
-                                        ['LCD_10',6],
-                                        ['LCD_10',4],
-                                        ['LCD_10',3],
-                                        ['LCD_1',3],
-                                        ['LCD_1',5],
-                                        ['LCD_1',6],
-                                        ['LCD_1',4],
-                                        ['LCD_1',1],
-                                        ['LCD_1',0],
-                                        ['LCD_1',2],
-                                        ['LCD_1',3],
+                                        //four loops
+                                            ['LCD_10',3],
+                                            ['LCD_10',1],
+                                            ['LCD_10',0],
+                                            ['LCD_10',2],
+                                            ['LCD_10',5],
+                                            ['LCD_10',6],
+                                            ['LCD_10',4],
+                                            ['LCD_10',3],
+                                            ['LCD_1',3],
+                                            ['LCD_1',5],
+                                            ['LCD_1',6],
+                                            ['LCD_1',4],
+                                            ['LCD_1',1],
+                                            ['LCD_1',0],
+                                            ['LCD_1',2],
+                                            ['LCD_1',3],
                                     ];
                                     var step = 0;
                                     function startReadoutLoadingScreen(){
@@ -51532,137 +51422,133 @@
                             
                                         state.reverbTypeSelected = a;
                                         startReadoutLoadingScreen();
-                                        object.reverbCircuit.type( state.availableTypes[a], function(){stopReadoutLoadingScreen(); setReadout(state.reverbTypeSelected);} );    
+                                        reverbCircuit.type( state.availableTypes[a], function(){stopReadoutLoadingScreen(); setReadout(state.reverbTypeSelected);} );    
                                     }
                                     function incReverbType(){ setReverbType(state.reverbTypeSelected+1); }
                                     function decReverbType(){ setReverbType(state.reverbTypeSelected-1); }
-                                    function updateWetDry(){ object.reverbCircuit.wetdry('manualControl',state.wet,state.dry); }
+                                    function updateWetDry(){ reverbCircuit.wetdry('manualControl',state.wet,state.dry); }
                         
-                                //wiring
+                            //wiring
+                                //hid
                                     object.elements.dial_colourWithIndent_continuous.wet.onchange = function(value){ state.wet = value; updateWetDry(); };
                                     object.elements.dial_colourWithIndent_continuous.dry.onchange = function(value){ state.dry = value; updateWetDry(); };
                                     object.elements.button_image.rocker_up.onpress = function(){ incReverbType(); };
                                     object.elements.button_image.rocker_down.onpress = function(){ decReverbType(); };
-                                    object.elements.connectionNode_voltage.wet_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.wet.set(value); };
-                                    object.elements.connectionNode_voltage.dry_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.dry.set(value); };
-                                    object.elements.connectionNode_signal.rocker_down_connection.onchange = function(value){
-                                        if(value){
-                                            object.elements.button_image.rocker_down.press();
-                                        }else{
-                                            object.elements.button_image.rocker_down.release();
-                                        }
+                                //io
+                                    object.io.audio.input.out().connect( reverbCircuit.in() );
+                                    reverbCircuit.out().connect( object.io.audio.output.in() );
+                                    object.io.voltage.wet_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.wet.set(value); };
+                                    object.io.voltage.dry_connection.onchange = function(value){ object.elements.dial_colourWithIndent_continuous.dry.set(value); };
+                                    object.io.signal.rocker_down_connection.onchange = function(value){
+                                        value ? object.elements.button_image.rocker_down.press() : object.elements.button_image.rocker_down.release();
                                     };
-                                    object.elements.connectionNode_signal.rocker_up_connection.onchange = function(value){
-                                        if(value){
-                                            object.elements.button_image.rocker_up.press();
-                                        }else{
-                                            object.elements.button_image.rocker_up.release();
-                                        }
-                                    };
-                                    
-                                //import/export
-                                    object.exportData = function(){
-                                        return {
-                                            wet: object.elements.dial_colourWithIndent_continuous.wet.get(),
-                                            dry: object.elements.dial_colourWithIndent_continuous.dry.get(),
-                                            reverbNumber: state.reverbTypeSelected,
-                                        };
-                                    };
-                                    object.importData = function(data){
-                                        object.elements.dial_colourWithIndent_continuous.wet.set(data.wet);
-                                        object.elements.dial_colourWithIndent_continuous.dry.set(data.dry);
-                                        state.reverbTypeSelected = data.reverbNumber;
+                                    object.io.signal.rocker_up_connection.onchange = function(value){
+                                        value ? object.elements.button_image.rocker_up.press() : object.elements.button_image.rocker_up.release();
                                     };
                         
-                                //interface 
-                                    object.i = {
-                                        wet: function(value){
-                                            if(value == undefined){
-                                                return object.elements.dial_colourWithIndent_continuous.wet.get();
-                                            }else{
-                                                object.elements.dial_colourWithIndent_continuous.wet.set(value);
-                                            }
-                                        },
-                                        dry: function(value){
-                                            if(value == undefined){
-                                                return object.elements.dial_colourWithIndent_continuous.dry.get();
-                                            }else{
-                                                object.elements.dial_colourWithIndent_continuous.dry.set(value);
-                                            }
-                                        },
-                                        reverbNumber: function(number){ if(value == undefined){ return state.reverbTypeSelected; }else{ setReverbType(number); } }
-                                    };
+                            //interface
+                                object.i = {
+                                    wet: function(value){
+                                        if(value == undefined){
+                                            return object.elements.dial_colourWithIndent_continuous.wet.get();
+                                        }else{
+                                            object.elements.dial_colourWithIndent_continuous.wet.set(value);
+                                        }
+                                    },
+                                    dry: function(value){
+                                        if(value == undefined){
+                                            return object.elements.dial_colourWithIndent_continuous.dry.get();
+                                        }else{
+                                            object.elements.dial_colourWithIndent_continuous.dry.set(value);
+                                        }
+                                    },
+                                    reverbNumber: function(number){ if(value == undefined){ return state.reverbTypeSelected; }else{ setReverbType(number); } }
+                                };
                         
-                                //setup
-                                    startReadoutLoadingScreen();
-                                
+                            //import/export
+                                object.exportData = function(){
+                                    return {
+                                        wet: object.elements.dial_colourWithIndent_continuous.wet.get(),
+                                        dry: object.elements.dial_colourWithIndent_continuous.dry.get(),
+                                        reverbNumber: state.reverbTypeSelected,
+                                    };
+                                };
+                                object.importData = function(data){
+                                    object.elements.dial_colourWithIndent_continuous.wet.set(data.wet);
+                                    object.elements.dial_colourWithIndent_continuous.dry.set(data.dry);
+                                    state.reverbTypeSelected = data.reverbNumber;
+                                };
+                        
+                            //setup 
+                                reverbCircuit.getTypes( a => { state.availableTypes = a; setReverbType(state.reverbTypeSelected); } );
+                        
                             return object;
                         };
-                        
-                        
-                        
                         this.reverb.metadata = {
                             name:'Reverb',
                             category:'effects',
                             helpURL:'/help/units/beta/reverb/'
                         };
-                        this.filter = function(x,y,a){
-                            var imageStoreURL_localPrefix = imageStoreURL+'filter/';
+                        this.filter = function(x,y,angle){
+                            //style data
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'filter/';
                         
-                            var div = 6;
-                            var offset = 20/div;
-                            var measurements = { 
-                                file:{ width:620, height:260 },
-                                design:{ width:10, height:4 },
-                            };
-                            measurements.drawing = { width: measurements.file.width/div, height: measurements.file.height/div };
-                            measurements.drawingUnit = {
-                                width: measurements.drawing.width/measurements.design.width,
-                                height: measurements.drawing.height/measurements.design.height,
-                            };
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:620, height:260 },
+                                            design: { width:10, height:4 },
+                                        };
                         
-                            var design = {
-                                name:'filter',
-                                x:x, y:y, angle:a,
-                                space:[
-                                    { x:0,                                  y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:0                                   },
-                                    { x:measurements.drawing.width -offset, y:measurements.drawing.height -offset },
-                                    { x:0,                                  y:measurements.drawing.height -offset },
-                                ],
-                                elements:[
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
-                                        x:measurements.drawing.width - 3-1/3, y:measurements.drawing.height/2 - 9, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2,
-                                        style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
-                                        x:0, y:measurements.drawing.height/2 + 6, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2,
-                                        style:style.connectionNode.audio,
-                                    }},
-                                    {collection:'basic', type:'image', name:'backing', data:{ 
-                                        x:-offset/2, y:-offset/2, width:measurements.drawing.width, height:measurements.drawing.height, url:imageStoreURL_localPrefix+'backing.png'
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_lowBand',data:{
-                                        x:17.5, y:22.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_midBand',data:{
-                                        x:17.5+30, y:22.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[3], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                    {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_highBand',data:{
-                                        x:17.5+60, y:22.5, radius:75/6, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5,
-                                        style:{ handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} },
-                                    }},
-                                ]
-                            };
-                            
-                            //main object
-                                var object = _canvas_.interface.unit.builder(design);
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                        
+                                    //styling values
+                                        this.dial_lowBand = { handle:style.primaryEight[0], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.dial_midBand = { handle:style.primaryEight[3], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                        this.dial_highBand = { handle:style.primaryEight[5], slot:{r:0,g:0,b:0,a:0}, needle:{r:1,g:1,b:1,a:1} };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'filter',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                                              y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:0                                               },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset, y:unitStyle.drawingValue.height -unitStyle.offset },
+                                        { x:0,                                              y:unitStyle.drawingValue.height -unitStyle.offset },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'input', data:{ 
+                                            x:unitStyle.drawingValue.width - 10/3, y:unitStyle.drawingValue.height/2 - 9, width:5, height:15, angle:0, isAudioOutput:false, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_audio', name:'output', data:{ 
+                                            x:0, y:unitStyle.drawingValue.height/2 + 6, width:5, height:15, angle:Math.PI, isAudioOutput:true, cableVersion:2, style:style.connectionNode.audio,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', data:{ 
+                                            x:-unitStyle.offset/2, y:-unitStyle.offset/2, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png'
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_lowBand',data:{
+                                            x:17.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_lowBand,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_midBand',data:{
+                                            x:47.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_midBand,
+                                        }},
+                                        {collection:'control', type:'dial_colourWithIndent_continuous',name:'dial_highBand',data:{
+                                            x:77.5, y:22.5, radius:12.5, startAngle:(3*Math.PI)/4, maxAngle:1.5*Math.PI, value:0.5, arcDistance:1.2, resetValue:0.5, style:unitStyle.dial_highBand,
+                                        }},
+                                    ]
+                                });
                         
                             //circuitry
                                 var curvePointExponentialSharpness = 10.586609649448984;
-                                var vars = {
+                                var state = {
                                     currentValues:{
                                         gain: [1,1,1],
                                         frequency: [250,700,2500],
@@ -51674,33 +51560,45 @@
                                         Q: [0,0.35,0],
                                     }
                                 };
+                                var filterCircuit = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, 3, true);
                         
-                                object.filterCircuit = new _canvas_.interface.circuit.multibandFilter(_canvas_.library.audio.context, 3, true);
-                                object.elements.connectionNode_audio.input.out().connect( object.filterCircuit.in() );
-                                object.filterCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
+                                function setGain(band,value){ 
+                                    if(band == undefined){return state.currentValues.gain;}
+                                    if(value == undefined){return state.currentValues.gain[band];}
+                        
+                                    state.currentValues.gain[band] = value;
+                                    filterCircuit.gain(band,state.currentValues.gain[band]);
+                                }
+                        
+                            //wiring
+                                //hid
+                                    object.elements.dial_colourWithIndent_continuous.dial_lowBand.onchange = function(value){ setGain(0,value*2); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_midBand.onchange = function(value){ setGain(1,value*2); };
+                                    object.elements.dial_colourWithIndent_continuous.dial_highBand.onchange = function(value){ setGain(2,value*2); };
+                                //io
+                                    object.io.audio.input.out().connect( filterCircuit.in() );
+                                    filterCircuit.out().connect( object.elements.connectionNode_audio.output.in() );
                         
                             //interface
                                 object.i = {
-                                    gain:function(band,value){ 
-                                        if(band == undefined){return vars.currentValues.gain;}
-                                        if(value == undefined){return vars.currentValues.gain[band];}
-                        
-                                        vars.currentValues.gain[band] = value;
-                                        object.filterCircuit.gain(band,vars.currentValues.gain[band]);
+                                    gain:function(band,value){
+                                        var element = object.elements.dial_colourWithIndent_continuous[ ['dial_lowBand','dial_midBand','dial_highBand'][band] ];
+                                        if(value == undefined){ return element.get(); }
+                                        element.set(value);
                                     },
                                     Q:function(band,value){ 
-                                        if(band == undefined){return vars.currentValues.Q;}
-                                        if(value == undefined){return vars.currentValues.Q[band];}
+                                        if(band == undefined){return state.currentValues.Q;}
+                                        if(value == undefined){return state.currentValues.Q[band];}
                         
-                                        vars.currentValues.Q[band] = value;
-                                        object.filterCircuit.Q(band, _canvas_.library.math.curvePoint.exponential(vars.currentValues.Q[band],0,20000,curvePointExponentialSharpness));
+                                        state.currentValues.Q[band] = value;
+                                        filterCircuit.Q(band, _canvas_.library.math.curvePoint.exponential(state.currentValues.Q[band],0,20000,curvePointExponentialSharpness));
                                     },
                                     frequency:function(band,value){
-                                        if(band == undefined){return vars.currentValues.frequency;}
-                                        if(value == undefined){return vars.currentValues.frequency[band];}
+                                        if(band == undefined){return state.currentValues.frequency;}
+                                        if(value == undefined){return state.currentValues.frequency[band];}
                         
-                                        vars.currentValues.frequency[band] = value;
-                                        object.filterCircuit.frequency(band, vars.currentValues.frequency[band]);
+                                        state.currentValues.frequency[band] = value;
+                                        filterCircuit.frequency(band, state.currentValues.frequency[band]);
                                     },
                                     reset:function(channel){
                                         if(channel == undefined){
@@ -51709,24 +51607,19 @@
                                             return;
                                         }
                                         for(var a = 0; a < 3; a++){
-                                            object.i.gain(a,vars.defaultValues.gain[a]);
-                                            object.i.Q(a,vars.defaultValues.Q[a]);
-                                            object.i.frequency(a,vars.defaultValues.frequency[a]);
+                                            object.i.gain(a,state.defaultValues.gain[a]);
+                                            object.i.Q(a,state.defaultValues.Q[a]);
+                                            object.i.frequency(a,state.defaultValues.frequency[a]);
                                         }
                                     },
                                 };
                         
-                            //wiring
-                                object.elements.dial_colourWithIndent_continuous.dial_lowBand.onchange = function(value){ object.i.gain(0,value*2); };
-                                object.elements.dial_colourWithIndent_continuous.dial_midBand.onchange = function(value){ object.i.gain(1,value*2); };
-                                object.elements.dial_colourWithIndent_continuous.dial_highBand.onchange = function(value){ object.i.gain(2,value*2); };
-                        
                             //import/export
                                 object.exportData = function(){
                                     return {
-                                        low:object.elements.dial_colourWithIndent_continuous.dial_lowBand.get(),
-                                        mid:object.elements.dial_colourWithIndent_continuous.dial_midBand.get(),
-                                        high:object.elements.dial_colourWithIndent_continuous.dial_highBand.get(),
+                                        low: object.elements.dial_colourWithIndent_continuous.dial_lowBand.get(),
+                                        mid: object.elements.dial_colourWithIndent_continuous.dial_midBand.get(),
+                                        high: object.elements.dial_colourWithIndent_continuous.dial_highBand.get(),
                                     };
                                 };
                                 object.importData = function(data){
@@ -51740,14 +51633,12 @@
                         
                             return object;
                         };
-                        
-                        
-                        
                         this.filter.metadata = {
                             name:'Filter (unfinished)',
                             category:'effects',
                             helpURL:'/help/units/beta/filter/'
                         };
+
                         this.pulse_generator = function(x,y,angle){
                             //unitStyle
                                 var unitStyle = new function(){
@@ -51765,10 +51656,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -51969,7 +51856,7 @@
                             helpURL:'/help/units/beta/pulse_generator/'
                         };
                         this.eightStepSequencer = function(x,y,angle){
-                                //style data
+                            //style data
                                 var unitStyle = new function(){
                                     //image store location URL
                                         this.imageStoreURL_localPrefix = imageStoreURL+'eightStepSequencer/';
@@ -51985,10 +51872,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -52011,13 +51894,13 @@
                                     name:'eightStepSequencer',
                                     x:x, y:y, angle:angle,
                                     space:[
-                                        { x:0,                                                  y:0                                                       },
-                                        { x:unitStyle.drawingValue.width -unitStyle.offset,     y:0                                                       },
-                                        { x:unitStyle.drawingValue.width -unitStyle.offset,     y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
-                                        { x:unitStyle.drawingUnit.width*26 -unitStyle.offset,   y:unitStyle.drawingUnit.height*5.5 -unitStyle.offset*0.55 },
-                                        { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*7   -unitStyle.offset*0.7  },
-                                        { x:unitStyle.drawingUnit.width*24.5 -unitStyle.offset, y:unitStyle.drawingUnit.height*9.5 -unitStyle.offset      },
-                                        { x:0,                                                  y:unitStyle.drawingValue.height    -unitStyle.offset      },
+                                        { x:0,                                                           y:0                                                           },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,              y:0                                                           },
+                                        { x:unitStyle.drawingValue.width -unitStyle.offset,              y:(unitStyle.drawingValue.height -unitStyle.offset)*(5.5/9.5) },
+                                        { x:(unitStyle.drawingValue.width-unitStyle.offset)*(26/27.5),   y:(unitStyle.drawingValue.height -unitStyle.offset)*(5.5/9.5) },
+                                        { x:(unitStyle.drawingValue.width-unitStyle.offset)*(24.5/27.5), y:(unitStyle.drawingValue.height -unitStyle.offset)*(7/9.5)   },
+                                        { x:(unitStyle.drawingValue.width-unitStyle.offset)*(24.5/27.5), y:unitStyle.drawingValue.height -unitStyle.offset             },
+                                        { x:0,                                                           y:unitStyle.drawingValue.height -unitStyle.offset             },
                                     ],
                                     elements:
                                         (new Array(8).fill(0)).flatMap((value,index) => { 
@@ -52240,10 +52123,6 @@
                                         this.drawingValue = { 
                                             width: measurement.file.width/div, 
                                             height: measurement.file.height/div
-                                        };
-                                        this.drawingUnit = {
-                                            width: this.drawingValue.width/measurement.design.width,
-                                            height: this.drawingValue.height/measurement.design.height,
                                         };
                         
                                     //styling values
@@ -52709,6 +52588,15 @@
                         };
                     };
                 };
+                
+                _canvas_.interface.unit.collection.metadata = {
+                    mainList:[
+                        'alpha',
+                    ],
+                    devList:[
+                        'development',
+                    ],
+                };
                 //a design object for the menubar options and their respective dropdown menu items
                 _canvas_.control.gui.elements.menubar.dropdowns = [];
                 
@@ -52768,7 +52656,7 @@
                                 var outputItemList = [];
                                 var unitPlacementPosition = {x:30,y:30};
                 
-                                Object.keys(collections).sort().forEach(collectionKey => {
+                                function populator(collectionKey){
                                     var collection = collections[collectionKey];
                                     var collectionItemList = {
                                         type:'list', 
@@ -52825,8 +52713,13 @@
                 
                                     //add this item list to the output array
                                         outputItemList.push(collectionItemList);
-                                });
+                                }
                 
+                                collections.metadata.mainList.forEach(collectionKey => { populator(collectionKey); });
+                                if(_canvas_.control.interaction.devMode()){
+                                    outputItemList.push({type:'break'});
+                                    collections.metadata.devList.forEach(collectionKey => { populator(collectionKey); });
+                                }
                 
                                 return outputItemList;
                             })(),
@@ -52965,6 +52858,7 @@
                 _canvas_.control.viewport.stopMouseScroll(true);
                 _canvas_.control.viewport.activeRender(true);
                 _canvas_.core.render.activeLimitToFrameRate(true);
+                if( (new URL(window.location.href)).searchParams.get("darkmode") != null ){ _canvas_.control.misc.darkMode(); }
             })();
 
         }

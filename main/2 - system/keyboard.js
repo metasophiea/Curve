@@ -36,6 +36,9 @@
             if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
             _canvas_.system.keyboard.pressedKeys[event.code] = true;
             customKeyInterpreter(event,true);
+
+        //ESCAPE operation code
+            if(event.key == 'Escape'){ _canvas_.system.mouse.setUpCallbacks(); }
         
         //perform action
             for(var a = 0; a < shapes.length; a++){

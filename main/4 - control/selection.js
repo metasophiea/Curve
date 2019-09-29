@@ -44,13 +44,9 @@ this.deselectUnit = function(unit){
         this.selectedUnits.splice(this.selectedUnits.indexOf(unit),1);
         if(unit.ondeselect){unit.ondeselect();}
 };
-this.selectEverything = function(){
+this.selectEverything = function(shiftToFront=false){
     this.deselectEverything();
-    for(var a = 0; a < _canvas_.system.pane.mm.children().length; a++){
-        if( !_canvas_.system.pane.mm.children()[a]._isCable ){
-            this.selectUnit(_canvas_.system.pane.mm.children()[a],false);
-        }
-    }
+    _canvas_.system.pane.mm.children().filter(item => !item._isCable).forEach(unit => { this.selectUnit(unit,shiftToFront); });
 };
 this.deselectEverything = function(){
     while(this.selectedUnits.length > 0){

@@ -1,0 +1,1 @@
+_canvas_.control.scene.addUnit(0,0,0,'ruler','alpha');

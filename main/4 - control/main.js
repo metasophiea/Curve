@@ -2,7 +2,7 @@
 {{include:keyboard.js}}
 
 _canvas_.control = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:30} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:29} };
     var control = this;
 
     this.interaction = new function(){
@@ -213,9 +213,6 @@ _canvas_.control = new function(){
 
 {{include:grapple.js}}
 
-window.onresize = _canvas_.control.viewport.refresh; 
-_canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
-
 _canvas_.control.misc = {
     currentStyleMode:'light',
     lightMode:function(){
@@ -251,6 +248,8 @@ _canvas_.control.misc = {
                     item__glow__colour:{r:220/255,g:220/255,b:220/255,a:1},
                     item__hover_press__colour:{r:240/255,g:240/255,b:240/255,a:1},
                     item__hover_glow_press__colour:{r:250/255,g:250/255,b:250/255,a:1},
+
+                    backing_style:{r:230/255,g:230/255,b:230/255,a:1},
                 },
             }
         );
@@ -291,8 +290,13 @@ _canvas_.control.misc = {
                     item__glow__colour:{r:220/255*mux,g:220/255*mux,b:220/255*mux,a:1},
                     item__hover_press__colour:{r:240/255*mux*2,g:240/255*mux*2,b:240/255*mux*2,a:1},
                     item__hover_glow_press__colour:{r:250/255*mux*2,g:250/255*mux*2,b:250/255*mux*2,a:1},
+
+                    backing_style:{r:240/255*mux,g:240/255*mux,b:240/255*mux,a:1},
                 },
             }
         );
     },
 };
+
+window.onresize = _canvas_.control.viewport.refresh; 
+_canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
