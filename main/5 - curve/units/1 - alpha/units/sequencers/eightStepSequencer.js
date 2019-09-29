@@ -136,7 +136,7 @@ this.eightStepSequencer = function(x,y,angle){
                 state.previousPosition = state.position;
                 state.position = state.requestedNextPosition != -1 ? state.requestedNextPosition : state.position+state.direction;
                 state.requestedNextPosition = -1;
-                if(state.position > state.stepCount-1){state.position = 0;}else if(state.position < 0){state.position = stepCount-1;}
+                if(state.position > state.stepCount-1){state.position = 0;}else if(state.position < 0){state.position = state.stepCount-1;}
 
             //stop previous note (unless there wasn't one) and send the new one
                 var midiNumber = stageToMidiNoteNumber(state.stages[state.position]);
