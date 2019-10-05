@@ -61,6 +61,6 @@ console.log('%cTesting - library.misc', 'font-size:15px; font-weight:bold;');
 
 //loadFileFromURL
     //(the results of this are dependent on when the response is received, so, they could arrive out of order with the rest)
-    _canvas_.library.misc.loadFileFromURL('http://0.0.0.0:8000/CNAME', function(response){console.log('%c- loadFileFromURL', 'font-weight: bold;');tester(response,'curve.metasophiea.com\n')}, 'text');
+    _canvas_.library.misc.loadFileFromURL('http://localhost:8000/CNAME', function(response){console.log('%c- loadFileFromURL', 'font-weight: bold;');tester(response,'curve.metasophiea.com\n')}, 'text');
 
 console.log('');

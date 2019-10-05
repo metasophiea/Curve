@@ -108,7 +108,9 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                     //if the collection has an order for it's categories; resort the item list to match
                         if(collection._collectionData != undefined && collection._collectionData.categoryOrder != undefined){
                             collectionItemList.list = collection._collectionData.categoryOrder.map(category => {
-                                return collectionItemList.list.filter(item => item.categoryKey==category)[0];
+                                var result = collectionItemList.list.filter(item => item.categoryKey==category)[0];
+                                if(result == undefined){ console.error('Error::menubar generation::create: bad sorting for "'+collectionKey+'" for the category: "'+category+'"'); }
+                                return result
                             });
                         }
 

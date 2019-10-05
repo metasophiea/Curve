@@ -1,16 +1,26 @@
-this.padString = function(string,length,padding=' '){
+this.padString = function(string,length,padding=' ',paddingSide='l'){
+    library._control.logflow.log('misc.padString');
     if(padding.length<1){return string;}
     string = ''+string;
 
-    while(string.length < length){
-        string = padding + string;
+    if(paddingSide == 'l'){
+        while(string.length < length){ string = padding + string; }
+    }else{
+        while(string.length < length){ string = string + padding; }
     }
 
     return string;
 };
-this.compressString = function(string){return _thirdparty.lzString.compress(string);};
-this.decompressString = function(string){return _thirdparty.lzString.decompress(string);};
+this.compressString = function(string){
+    library._control.logflow.log('misc.compressString');
+    return _thirdparty.lzString.compress(string);
+};
+this.decompressString = function(string){
+    library._control.logflow.log('misc.decompressString');
+    return _thirdparty.lzString.decompress(string);
+};
 this.serialize = function(data,compress=true){
+    library._control.logflow.log('misc.serialize');
     function getType(obj){
         return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
     }
@@ -46,6 +56,7 @@ this.serialize = function(data,compress=true){
     return data;
 };
 this.unserialize = function(data,compressed=true){
+    library._control.logflow.log('misc.unserialize');
     if(data === undefined){return undefined;}
 
     if(compressed){ data = library.misc.decompressString(data); }
@@ -87,6 +98,7 @@ this.unserialize = function(data,compressed=true){
     });
 };
 this.openFile = function(callback,readAsType='readAsBinaryString'){
+    library._control.logflow.log('misc.openFile');
     var i = document.createElement('input');
     i.type = 'file';
     i.onchange = function(){
@@ -102,12 +114,14 @@ this.openFile = function(callback,readAsType='readAsBinaryString'){
     i.click();
 };
 this.printFile = function(filename,data){
+    library._control.logflow.log('misc.printFile');
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([data]));
     a.download = filename;
     a.click();
 };
 this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
+    library._control.logflow.log('misc.loadFileFromURL');
     //responseType: text / arraybuffer / blob / document / json 
 
     var xhttp = new XMLHttpRequest();

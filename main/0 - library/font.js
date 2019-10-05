@@ -1,11 +1,14 @@
 this.listAllAvailableGlyphs = function(fontFileData){
+    library._control.logflow.log('font.listAllAvailableGlyphs');
     var font = this.decodeFont(fontFileData);
     return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
 };
 this.decodeFont = function(fontFileData){
+    library._control.logflow.log('font.decodeFont');
     return _thirdparty.opentype.parse(fontFileData);
 };
 this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
+    library._control.logflow.log('font.getAllAvailableGlyphDrawingPaths');
     var glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
     var paths = glyphs.map( a => font.getPath(a,0,0,1) );
 
@@ -17,6 +20,7 @@ this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
     return outputData;
 };
 this.convertPathToPoints = function(path,detail=2){
+    library._control.logflow.log('font.convertPathToPoints');
     var output = [];
     var currentPoints = [];
 
@@ -59,6 +63,7 @@ this.convertPathToPoints = function(path,detail=2){
     return output;
 };
 this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
+    library._control.logflow.log('font.getTrianglesFromGlyphPath');
     //input checking
         if(glyphPath.length == 0){return [];}
 
@@ -111,6 +116,7 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
         return triangles;
 };
 this.extractGlyphs = function(fontFileData,reducedGlyphSet){
+    library._control.logflow.log('font.extractGlyphs');
     //decode font data
         var font = library.font.decodeFont(fontFileData);
     //collect all glyph paths

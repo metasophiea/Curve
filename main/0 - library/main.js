@@ -1,6 +1,20 @@
 _canvas_.library = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:5,d:31} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:4} };
     var library = this;
+
+    this._control = new function(){
+        this.logflow = new function(){
+            var logflowActive = false;
+            var logflow = {};
+            this.active = function(value){ if(value==undefined){return logflowActive;} logflowActive = value; };
+            this.printResults = function(){ return logflow; };
+            this.log = function(flowName){
+                if(!logflowActive){return;}
+                if(flowName in logflow){ logflow[flowName]++; }
+                else{ logflow[flowName] = 1; }
+            };
+        };
+    };
     
     this.math = new function(){
         {{include:math.js}}
@@ -29,3 +43,4 @@ _canvas_.library = new function(){
 _canvas_.getVersionInformation = function(){
     return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
 };
+

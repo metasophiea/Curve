@@ -7,16 +7,41 @@
             (function() {
                 var _canvas_ = __canvasElements[__canvasElements_count];
                 _canvas_.library = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:5,d:31} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:4} };
                     var library = this;
+                
+                    this._control = new function(){
+                        this.logflow = new function(){
+                            var logflowActive = false;
+                            var logflow = {};
+                            this.active = function(value){ if(value==undefined){return logflowActive;} logflowActive = value; };
+                            this.printResults = function(){ return logflow; };
+                            this.log = function(flowName){
+                                if(!logflowActive){return;}
+                                if(flowName in logflow){ logflow[flowName]++; }
+                                else{ logflow[flowName] = 1; }
+                            };
+                        };
+                    };
                     
                     this.math = new function(){
-                        this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+                        this.averageArray = function(array){
+                            library._control.logflow.log('math.averageArray');
+                            // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
+                        
+                            //this seems to be a little faster
+                            var sum = array[0];
+                            for(var a = 1; a < array.length; a++){ sum += array[a]; }
+                            return sum/array.length;
+                        };
+                        
                         this.averagePoint = function(points){
+                            library._control.logflow.log('math.averagePoint');
                             var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
                             return {x:sum.x/points.length,y:sum.y/points.length};
                         };
                         this.boundingBoxFromPoints = function(points){
+                            library._control.logflow.log('math.boundingBoxFromPoints');
                             if(points.length == 0){
                                 return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
                             }
@@ -38,14 +63,29 @@
                             };
                         };
                         this.cartesianAngleAdjust = function(x,y,angle){
-                            if(angle == 0 || angle%(Math.PI*2) == 0){ return {x:x,y:y}; }
-                            var polar = library.math.cartesian2polar( x, y );
-                            polar.ang += angle;
-                            return library.math.polar2cartesian( polar.ang, polar.dis );
+                            library._control.logflow.log('math.cartesianAngleAdjust');
+                        
+                            // //v1    
+                            //     if(angle == 0){ return {x:x,y:y}; }
+                            //     if(angle == Math.PI){ return {x:-x,y:-y}; }
+                            //     if(angle == Math.PI*0.5){ return {x:-y,y:x}; }
+                            //     if(angle == Math.PI*1.5){ return {x:y,y:-x}; }
+                        
+                            //     var polar = library.math.cartesian2polar( x, y );
+                            //     polar.ang += angle;
+                            //     return library.math.polar2cartesian( polar.ang, polar.dis );
+                            
+                            //v2    
+                                if(angle == 0){ return {x:x,y:y}; }
+                                return { x:x*Math.cos(angle) - y*Math.sin(angle), y:y*Math.cos(angle) + x*Math.sin(angle) };
                         };
                         this.convertColour = new function(){
-                            this.obj2rgba = obj => 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
+                            this.obj2rgba = function(obj){
+                                library._control.logflow.log('math.convertColour.obj2rgba');
+                                return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
+                            };
                             this.rgba2obj = function(rgba){
+                                library._control.logflow.log('math.convertColour.rgba2obj');
                                 rgba = rgba.split(',');
                                 rgba[0] = rgba[0].replace('rgba(', '');
                                 rgba[3] = rgba[3].replace(')', '');
@@ -55,6 +95,7 @@
                         };
                         this.curveGenerator = new function(){
                             this.linear = function(stepCount=2, start=0, end=1){
+                                library._control.logflow.log('math.curveGenerator.linear');
                                 stepCount = Math.abs(stepCount)-1; var outputArray = [0];
                                 for(var a = 1; a < stepCount; a++){ 
                                     outputArray.push(a/stepCount);
@@ -69,6 +110,7 @@
                                 return outputArray;
                             };
                             this.sin = function(stepCount=2, start=0, end=1){
+                                library._control.logflow.log('math.curveGenerator.sin');
                                 stepCount = Math.abs(stepCount) -1;
                                 var outputArray = [0];
                                 for(var a = 1; a < stepCount; a++){ 
@@ -86,6 +128,7 @@
                                 return outputArray;		
                             };
                             this.cos = function(stepCount=2, start=0, end=1){
+                                library._control.logflow.log('math.curveGenerator.cos');
                                 stepCount = Math.abs(stepCount) -1;
                                 var outputArray = [0];
                                 for(var a = 1; a < stepCount; a++){ 
@@ -103,6 +146,7 @@
                                 return outputArray;	
                             };
                             this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+                                library._control.logflow.log('math.curveGenerator.s');
                                 if(sharpness == 0){sharpness = 1/1000000;}
                         
                                 var curve = [];
@@ -122,6 +166,7 @@
                                 return outputArray;
                             };
                             this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+                                library._control.logflow.log('math.curveGenerator.exponential');
                                 var stepCount = stepCount-1;
                                 var outputArray = [];
                                 
@@ -141,15 +186,18 @@
                         };
                         this.curvePoint = new function(){
                             this.linear = function(x=0.5, start=0, end=1){
+                                library._control.logflow.log('math.curvePoint.linear');
                                 return x *(end-start)+start;
                             };
                             this.sin = function(x=0.5, start=0, end=1){
+                                library._control.logflow.log('math.curvePoint.sin');
                                 return Math.sin(Math.PI/2*x) *(end-start)+start;
                             };
                             this.cos = function(x=0.5, start=0, end=1){
                                 return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
                             };
                             this.s = function(x=0.5, start=0, end=1, sharpness=8){
+                                library._control.logflow.log('math.curvePoint.s');
                                 var temp = library.math.normalizeStretchArray([
                                     1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
                                     1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
@@ -158,6 +206,7 @@
                                 return temp[1] *(end-start)+start;
                             };
                             this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+                                library._control.logflow.log('math.curvePoint.exponential');
                                 var temp = library.math.normalizeStretchArray([
                                     (Math.exp(sharpness*0)-1)/(Math.E-1),
                                     (Math.exp(sharpness*x)-1)/(Math.E-1),
@@ -167,20 +216,24 @@
                             };
                         };
                         this.detectOverlap = new function(){
+                            var detectOverlap = this;
+                        
                             this.boundingBoxes = function(a, b){
-                                return !(
-                                    (a.bottomRight.y < b.topLeft.y) ||
-                                    (a.topLeft.y > b.bottomRight.y) ||
-                                    (a.bottomRight.x < b.topLeft.x) ||
-                                    (a.topLeft.x > b.bottomRight.x) );
+                                library._control.logflow.log('math.detectOverlap.boundingBoxes');
+                                return a.bottomRight.y >= b.topLeft.y && 
+                                    a.bottomRight.x >= b.topLeft.x && 
+                                    a.topLeft.y <= b.bottomRight.y && 
+                                    a.topLeft.x <= b.bottomRight.x;
                             };
                             this.pointWithinBoundingBox = function(point,box){
+                                library._control.logflow.log('math.detectOverlap.pointWithinBoundingBox');
                                 return !(
                                     point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
                                     point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
                                 );
                             };
                             this.pointWithinPoly = function(point,points){
+                                library._control.logflow.log('math.detectOverlap.pointWithinPoly');
                                 //Ray casting algorithm
                         
                                 var inside = false;
@@ -217,6 +270,7 @@
                                 return inside;
                             };
                             this.lineSegments = function(segment1, segment2){
+                                library._control.logflow.log('math.detectOverlap.lineSegments');
                                 var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
                                 if(denominator == 0){return null;}
                         
@@ -230,14 +284,15 @@
                                 };
                             };
                             this.overlappingPolygons = function(points_a,points_b){
+                                library._control.logflow.log('math.detectOverlap.overlappingPolygons');
                                 //a point from A is in B
                                     for(var a = 0; a < points_a.length; a++){
-                                        if(this.pointWithinPoly(points_a[a],points_b)){ return true; }
+                                        if(detectOverlap.pointWithinPoly(points_a[a],points_b)){ return true; }
                                     }
                         
                                 //a point from B is in A
                                     for(var a = 0; a < points_b.length; a++){
-                                        if(this.pointWithinPoly(points_b[a],points_a)){ return true; }
+                                        if(detectOverlap.pointWithinPoly(points_b[a],points_a)){ return true; }
                                     }
                         
                                 //side intersection
@@ -246,7 +301,7 @@
                         
                                     for(var a = 0; a < a_indexing.length-1; a++){
                                         for(var b = 0; b < b_indexing.length-1; b++){
-                                            var tmp = this.lineSegments( 
+                                            var tmp = detectOverlap.lineSegments( 
                                                 [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
                                                 [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
                                             );
@@ -257,9 +312,10 @@
                                 return false;
                             };
                             this.overlappingPolygonWithPolygons = function(poly,polys){ 
+                                library._control.logflow.log('math.detectOverlap.overlappingPolygonWithPolygons');
                                 for(var a = 0; a < polys.length; a++){
-                                    if(this.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
-                                        if(this.overlappingPolygons(poly.points, polys[a].points)){
+                                    if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
+                                        if(detectOverlap.overlappingPolygons(poly.points, polys[a].points)){
                                             return true;
                                         }
                                     }
@@ -286,6 +342,7 @@
                                 return false;
                             };
                             this.overlappingLineWithPolygons = function(line,polys){
+                                library._control.logflow.log('math.detectOverlap.overlappingLineWithPolygons');
                                 //generate a bounding box for the line
                                     var line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
                                     if(line.x1 > line.x2){
@@ -314,6 +371,7 @@
                             };
                         };
                         this.getAngleOfTwoPoints = function(point_1,point_2){
+                            library._control.logflow.log('math.getAngleOfTwoPoints');
                             if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
                         
                             var xDelta = point_2.x - point_1.x;
@@ -326,6 +384,7 @@
                             return angle;
                         };
                         this.getDifferenceOfArrays = function(array_a,array_b){
+                            library._control.logflow.log('math.getDifferenceOfArrays');
                             function arrayRemovals(a,b){
                                 a.forEach(item => {
                                     var i = b.indexOf(item);
@@ -340,6 +399,7 @@
                             };
                         };
                         this.getIndexOfSequence = function(array,sequence){ 
+                            library._control.logflow.log('math.getIndexOfSequence');
                             function comp(thing_A,thing_B){
                                 var keys = Object.keys(thing_A);
                                 if(keys.length == 0){ return thing_A == thing_B; }
@@ -376,6 +436,7 @@
                             });
                         };
                         this.normalizeStretchArray = function(array){
+                            library._control.logflow.log('math.normalizeStretchArray');
                             //discover the largest number
                                 var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
                         
@@ -392,15 +453,18 @@
                         };
                         
                         this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+                            library._control.logflow.log('math.relativeDistance');
                             var mux = (d - start)/(end - start);
                             if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
                             return mux*realLength;
                         };
                         this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+                            library._control.logflow.log('math.removeTheseElementsFromThatArray');
                             theseElements.forEach(a => thatArray.splice(thatArray.indexOf(a), 1) );
                             return thatArray;
                         };
                         this.seconds2time = function(seconds){
+                            library._control.logflow.log('math.seconds2time');
                             var result = {h:0, m:0, s:0};
                             
                             result.h = Math.floor(seconds/3600);
@@ -415,6 +479,7 @@
                         };
                         
                         this.cartesian2polar = function(x,y){
+                            library._control.logflow.log('math.cartesian2polar');
                             var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
                         
                             if(x === 0){
@@ -431,10 +496,12 @@
                             return {'dis':dis,'ang':ang};
                         };
                         this.polar2cartesian = function(angle,distance){
+                            library._control.logflow.log('math.polar2cartesian');
                             return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
                         };
                         
                         this.blendColours = function(rgba_1,rgba_2,ratio){
+                            library._control.logflow.log('math.blendColours');
                             return {
                                 r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
                                 g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
@@ -443,6 +510,7 @@
                             };           
                         };
                         this.multiBlendColours = function(rgbaList,ratio){//console.log(rgbaList,ratio);
+                            library._control.logflow.log('math.multiBlendColours');
                             //special cases
                                 if(ratio == 0){return rgbaList[0];}
                                 if(ratio == 1){return rgbaList[rgbaList.length-1];}
@@ -454,6 +522,7 @@
                         
                         
                         this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+                            library._control.logflow.log('math.polygonToSubTriangles');
                             if(inputFormat == 'flatArray'){
                                 var tmp = [];
                                 for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
@@ -467,6 +536,7 @@
                             return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
                         };
                         this.unionPolygons = function(polygon1,polygon2){
+                            library._control.logflow.log('math.unionPolygons');
                             //martinez (not working)
                             // for(var a = 0; a < polygon1.length; a++){
                             //     polygon1[a].push( polygon1[a][0] );
@@ -488,6 +558,7 @@
                             ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
                         }
                         this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
+                            library._control.logflow.log('math.pathExtrapolation');
                             function loopThisPath(path){
                                 var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
                                 var loopingPath = [];
@@ -728,6 +799,7 @@
                         
                         
                         this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},dev=false){
+                            library._control.logflow.log('math.fitPolyIn');
                             function applyOffsetToPoints(offset,points){
                                 return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
                             };
@@ -766,7 +838,7 @@
                                                 if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                             
                                             //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
-                                                if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                                if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                                     successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
                                                 }
                                         }
@@ -803,7 +875,7 @@
                                                     if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                                             
                                                 //if offsetting the shape in this way results in no collision; save this offset in 'tmpsuccessfulOffsets'
-                                                    if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                                         tmpsuccessfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                                         provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                                     }
@@ -840,7 +912,7 @@
                         
                                         //can you make a x movement? you can? then do it
                                             if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
-                                            if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
+                                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
                                                 max.x = midpoint.x; //too far
                                             }else{ 
                                                 min.x = midpoint.x; //too close
@@ -848,7 +920,7 @@
                         
                                         //can you make a y movement? you can? then do it
                                             if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
-                                            if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
+                                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
                                                 max.y = midpoint.y; //too far
                                             }else{
                                                 min.y = midpoint.y; //too close
@@ -895,6 +967,7 @@
                     };
                     this.structure = new function(){
                         this.functionListRunner = function(list,activeKeys){
+                            library._control.logflow.log('structure.functionListRunner');
                             //function builder for working with the 'functionList' format
                         
                             return function(event,data){
@@ -922,6 +995,7 @@
                         };
                         
                         this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
+                            library._control.logflow.log('structure.signalRegistry');
                             var signals = [];
                             var selectedSignals = [];
                             var events = [];
@@ -1136,6 +1210,7 @@
                             
                         //utility functions
                             this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+                                library._control.logflow.log('audio.changeAudioParam');
                                 if(target==null){return audioParam.value;}
                             
                                 if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
@@ -1169,6 +1244,7 @@
                                 }
                             };
                             this.loadAudioFile = function(callback,type='file',url=''){
+                                library._control.logflow.log('audio.loadAudioFile');
                                 switch(type){
                                     case 'url': 
                                         var request = new XMLHttpRequest();
@@ -1209,6 +1285,7 @@
                                 }
                             };
                             this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
+                                library._control.logflow.log('audio.waveformSegment');
                                 var waveform = audioBuffer.getChannelData(0);
                                 // var channelCount = audioBuffer.numberOfChannels;
                             
@@ -1230,6 +1307,7 @@
                                 return outputArray;
                             };
                             this.loadBuffer = function(context, data, destination, onended){
+                                library._control.logflow.log('audio.loadBuffer');
                                 var temp = context.createBufferSource();
                                 temp.buffer = data;
                                 temp.connect(destination);
@@ -1326,13 +1404,16 @@
                     };
                     this.font = new function(){
                         this.listAllAvailableGlyphs = function(fontFileData){
+                            library._control.logflow.log('font.listAllAvailableGlyphs');
                             var font = this.decodeFont(fontFileData);
                             return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                         };
                         this.decodeFont = function(fontFileData){
+                            library._control.logflow.log('font.decodeFont');
                             return _thirdparty.opentype.parse(fontFileData);
                         };
                         this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
+                            library._control.logflow.log('font.getAllAvailableGlyphDrawingPaths');
                             var glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
                             var paths = glyphs.map( a => font.getPath(a,0,0,1) );
                         
@@ -1344,6 +1425,7 @@
                             return outputData;
                         };
                         this.convertPathToPoints = function(path,detail=2){
+                            library._control.logflow.log('font.convertPathToPoints');
                             var output = [];
                             var currentPoints = [];
                         
@@ -1386,6 +1468,7 @@
                             return output;
                         };
                         this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
+                            library._control.logflow.log('font.getTrianglesFromGlyphPath');
                             //input checking
                                 if(glyphPath.length == 0){return [];}
                         
@@ -1438,6 +1521,7 @@
                                 return triangles;
                         };
                         this.extractGlyphs = function(fontFileData,reducedGlyphSet){
+                            library._control.logflow.log('font.extractGlyphs');
                             //decode font data
                                 var font = library.font.decodeFont(fontFileData);
                             //collect all glyph paths
@@ -1505,19 +1589,29 @@
                         };
                     };
                     this.misc = new function(){
-                        this.padString = function(string,length,padding=' '){
+                        this.padString = function(string,length,padding=' ',paddingSide='l'){
+                            library._control.logflow.log('misc.padString');
                             if(padding.length<1){return string;}
                             string = ''+string;
                         
-                            while(string.length < length){
-                                string = padding + string;
+                            if(paddingSide == 'l'){
+                                while(string.length < length){ string = padding + string; }
+                            }else{
+                                while(string.length < length){ string = string + padding; }
                             }
                         
                             return string;
                         };
-                        this.compressString = function(string){return _thirdparty.lzString.compress(string);};
-                        this.decompressString = function(string){return _thirdparty.lzString.decompress(string);};
+                        this.compressString = function(string){
+                            library._control.logflow.log('misc.compressString');
+                            return _thirdparty.lzString.compress(string);
+                        };
+                        this.decompressString = function(string){
+                            library._control.logflow.log('misc.decompressString');
+                            return _thirdparty.lzString.decompress(string);
+                        };
                         this.serialize = function(data,compress=true){
+                            library._control.logflow.log('misc.serialize');
                             function getType(obj){
                                 return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
                             }
@@ -1553,6 +1647,7 @@
                             return data;
                         };
                         this.unserialize = function(data,compressed=true){
+                            library._control.logflow.log('misc.unserialize');
                             if(data === undefined){return undefined;}
                         
                             if(compressed){ data = library.misc.decompressString(data); }
@@ -1594,6 +1689,7 @@
                             });
                         };
                         this.openFile = function(callback,readAsType='readAsBinaryString'){
+                            library._control.logflow.log('misc.openFile');
                             var i = document.createElement('input');
                             i.type = 'file';
                             i.onchange = function(){
@@ -1609,12 +1705,14 @@
                             i.click();
                         };
                         this.printFile = function(filename,data){
+                            library._control.logflow.log('misc.printFile');
                             var a = document.createElement('a');
                             a.href = URL.createObjectURL(new Blob([data]));
                             a.download = filename;
                             a.click();
                         };
                         this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
+                            library._control.logflow.log('misc.loadFileFromURL');
                             //responseType: text / arraybuffer / blob / document / json 
                         
                             var xhttp = new XMLHttpRequest();
@@ -19917,6 +20015,8 @@
                 _canvas_.getVersionInformation = function(){
                     return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
                 };
+                
+
                 _canvas_.core = new function(){
                     this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:26} };
                     var core = this;
@@ -52587,11 +52687,904 @@
                             humanInterfaceDevices:{ printingName:'Human Interface Devices',itemWidth:150},
                         };
                     };
+                    this.curvetech = new function(){
+                        this.button_panel_1 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:120, height:180 },
+                                            design: { width:2, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_1',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                            x:unitStyle.drawingValue.width/2-5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'1_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button.onpress = function(){ object.io.signal.out.set(true); };
+                                    object.elements.button_image.button.onrelease = function(){ object.io.signal.out.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image.button.press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image.button.release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(){ object.elements.button_image.button.press(); },
+                                    release:function(){ object.elements.button_image.button.release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_1.metadata = {
+                            name:'Button Panel - Type A',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_1/'
+                        };
+                        this.button_panel_8 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:610, height:180 },
+                                            design: { width:10+1/6, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_8',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                            x:5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                            x:5+(10+5/3), y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                            x:5+(10+5/3)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
+                                            x:5+(10+5/3)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_5', data:{ 
+                                            x:5+(10+5/3)*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_6', data:{ 
+                                            x:5+(10+5/3)*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_7', data:{ 
+                                            x:5+(10+5/3)*6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_8', data:{ 
+                                            x:5+(10+5/3)*7, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button_1', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_2', data:{
+                                            x:5+(10+5/3), y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_3', data:{
+                                            x:5+(10+5/3)*2, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_4', data:{
+                                            x:5+(10+5/3)*3, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_5', data:{
+                                            x:5+(10+5/3)*4, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_6', data:{
+                                            x:5+(10+5/3)*5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_7', data:{
+                                            x:5+(10+5/3)*6, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_8', data:{
+                                            x:5+(10+5/3)*7, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_1.onpress = function(){   object.io.signal.out_1.set(true);  };
+                                    object.elements.button_image.button_1.onrelease = function(){ object.io.signal.out_1.set(false); };
+                                    object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
+                                    object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
+                                    object.elements.button_image.button_3.onpress = function(){   object.io.signal.out_3.set(true);  };
+                                    object.elements.button_image.button_3.onrelease = function(){ object.io.signal.out_3.set(false); };
+                                    object.elements.button_image.button_4.onpress = function(){   object.io.signal.out_4.set(true);  };
+                                    object.elements.button_image.button_4.onrelease = function(){ object.io.signal.out_4.set(false); };
+                                    object.elements.button_image.button_5.onpress = function(){   object.io.signal.out_5.set(true);  };
+                                    object.elements.button_image.button_5.onrelease = function(){ object.io.signal.out_5.set(false); };
+                                    object.elements.button_image.button_6.onpress = function(){   object.io.signal.out_6.set(true);  };
+                                    object.elements.button_image.button_6.onrelease = function(){ object.io.signal.out_6.set(false); };
+                                    object.elements.button_image.button_7.onpress = function(){   object.io.signal.out_7.set(true);  };
+                                    object.elements.button_image.button_7.onrelease = function(){ object.io.signal.out_7.set(false); };
+                                    object.elements.button_image.button_8.onpress = function(){   object.io.signal.out_8.set(true);  };
+                                    object.elements.button_image.button_8.onrelease = function(){ object.io.signal.out_8.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1', '2', '3', '4', '5', '6', '7', '8' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(button){ object.elements.button_image['button_'+button].press(); },
+                                    release:function(button){ object.elements.button_image['button_'+button].release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_8.metadata = {
+                            name:'Button Panel - Type D',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_8/'
+                        };
+                        this.button_panel_4 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:330, height:180 },
+                                            design: { width:5.5, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_4',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                            x:5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                            x:5+(10+5/3), y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                            x:5+(10+5/3)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
+                                            x:5+(10+5/3)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button_1', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_2', data:{
+                                            x:5+(10+5/3), y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_3', data:{
+                                            x:5+(10+5/3)*2, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_4', data:{
+                                            x:5+(10+5/3)*3, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_1.onpress = function(){   object.io.signal.out_1.set(true);  };
+                                    object.elements.button_image.button_1.onrelease = function(){ object.io.signal.out_1.set(false); };
+                                    object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
+                                    object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
+                                    object.elements.button_image.button_3.onpress = function(){   object.io.signal.out_3.set(true);  };
+                                    object.elements.button_image.button_3.onrelease = function(){ object.io.signal.out_3.set(false); };
+                                    object.elements.button_image.button_4.onpress = function(){   object.io.signal.out_4.set(true);  };
+                                    object.elements.button_image.button_4.onrelease = function(){ object.io.signal.out_4.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1', '2', '3', '4' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(button){ object.elements.button_image['button_'+button].press(); },
+                                    release:function(button){ object.elements.button_image['button_'+button].release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_4.metadata = {
+                            name:'Button Panel - Type C',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_4/'
+                        };
+                        this.button_panel_2 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:190, height:180 },
+                                            design: { width:3+1/6, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_2',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                            x:5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                            x:15+5/3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button_1', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_2', data:{
+                                            x:15 +5/3, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_1.onpress = function(){   object.io.signal.out_1.set(true);  };
+                                    object.elements.button_image.button_1.onrelease = function(){ object.io.signal.out_1.set(false); };
+                                    object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
+                                    object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1', '2' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(button){ object.elements.button_image['button_'+button].press(); },
+                                    release:function(button){ object.elements.button_image['button_'+button].release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_2.metadata = {
+                            name:'Button Panel - Type B',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_2/'
+                        };
+                        var imageStoreURL = 'images/units/2 - curvetech/';
+                        var style = {
+                            connectionNode:{
+                                signal:{
+                                    dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                    cable_dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    cable_glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                },
+                                voltage:{
+                                    dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                    cable_dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    cable_glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                },
+                                data:{
+                                    dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                    cable_dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    cable_glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                },
+                                audio:{
+                                    dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                    cable_dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                },
+                            },
+                        };
+                        this.button_panel_1 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:120, height:180 },
+                                            design: { width:2, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_1',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                            x:unitStyle.drawingValue.width/2-5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'1_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button.onpress = function(){ object.io.signal.out.set(true); };
+                                    object.elements.button_image.button.onrelease = function(){ object.io.signal.out.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image.button.press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image.button.release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(){ object.elements.button_image.button.press(); },
+                                    release:function(){ object.elements.button_image.button.release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_1.metadata = {
+                            name:'Button Panel - Type A',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_1/'
+                        };
+                        this.button_panel_8 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:610, height:180 },
+                                            design: { width:10+1/6, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_8',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                            x:5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                            x:5+(10+5/3), y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                            x:5+(10+5/3)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
+                                            x:5+(10+5/3)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_5', data:{ 
+                                            x:5+(10+5/3)*4, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_6', data:{ 
+                                            x:5+(10+5/3)*5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_7', data:{ 
+                                            x:5+(10+5/3)*6, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_8', data:{ 
+                                            x:5+(10+5/3)*7, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button_1', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_2', data:{
+                                            x:5+(10+5/3), y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_3', data:{
+                                            x:5+(10+5/3)*2, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_4', data:{
+                                            x:5+(10+5/3)*3, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_5', data:{
+                                            x:5+(10+5/3)*4, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_6', data:{
+                                            x:5+(10+5/3)*5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_7', data:{
+                                            x:5+(10+5/3)*6, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_8', data:{
+                                            x:5+(10+5/3)*7, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_1.onpress = function(){   object.io.signal.out_1.set(true);  };
+                                    object.elements.button_image.button_1.onrelease = function(){ object.io.signal.out_1.set(false); };
+                                    object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
+                                    object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
+                                    object.elements.button_image.button_3.onpress = function(){   object.io.signal.out_3.set(true);  };
+                                    object.elements.button_image.button_3.onrelease = function(){ object.io.signal.out_3.set(false); };
+                                    object.elements.button_image.button_4.onpress = function(){   object.io.signal.out_4.set(true);  };
+                                    object.elements.button_image.button_4.onrelease = function(){ object.io.signal.out_4.set(false); };
+                                    object.elements.button_image.button_5.onpress = function(){   object.io.signal.out_5.set(true);  };
+                                    object.elements.button_image.button_5.onrelease = function(){ object.io.signal.out_5.set(false); };
+                                    object.elements.button_image.button_6.onpress = function(){   object.io.signal.out_6.set(true);  };
+                                    object.elements.button_image.button_6.onrelease = function(){ object.io.signal.out_6.set(false); };
+                                    object.elements.button_image.button_7.onpress = function(){   object.io.signal.out_7.set(true);  };
+                                    object.elements.button_image.button_7.onrelease = function(){ object.io.signal.out_7.set(false); };
+                                    object.elements.button_image.button_8.onpress = function(){   object.io.signal.out_8.set(true);  };
+                                    object.elements.button_image.button_8.onrelease = function(){ object.io.signal.out_8.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1', '2', '3', '4', '5', '6', '7', '8' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(button){ object.elements.button_image['button_'+button].press(); },
+                                    release:function(button){ object.elements.button_image['button_'+button].release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_8.metadata = {
+                            name:'Button Panel - Type D',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_8/'
+                        };
+                        this.button_panel_4 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:330, height:180 },
+                                            design: { width:5.5, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_4',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                            x:5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                            x:5+(10+5/3), y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                            x:5+(10+5/3)*2, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
+                                            x:5+(10+5/3)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button_1', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_2', data:{
+                                            x:5+(10+5/3), y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_3', data:{
+                                            x:5+(10+5/3)*2, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_4', data:{
+                                            x:5+(10+5/3)*3, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_1.onpress = function(){   object.io.signal.out_1.set(true);  };
+                                    object.elements.button_image.button_1.onrelease = function(){ object.io.signal.out_1.set(false); };
+                                    object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
+                                    object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
+                                    object.elements.button_image.button_3.onpress = function(){   object.io.signal.out_3.set(true);  };
+                                    object.elements.button_image.button_3.onrelease = function(){ object.io.signal.out_3.set(false); };
+                                    object.elements.button_image.button_4.onpress = function(){   object.io.signal.out_4.set(true);  };
+                                    object.elements.button_image.button_4.onrelease = function(){ object.io.signal.out_4.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1', '2', '3', '4' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(button){ object.elements.button_image['button_'+button].press(); },
+                                    release:function(button){ object.elements.button_image['button_'+button].release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_4.metadata = {
+                            name:'Button Panel - Type C',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_4/'
+                        };
+                        this.button_panel_2 = function(x,y,angle){
+                            //unitStyle
+                                var unitStyle = new function(){
+                                    //image store location URL
+                                        this.imageStoreURL_localPrefix = imageStoreURL+'button_panel/';
+                        
+                                    //calculation of measurements
+                                        var div = 6;
+                                        var measurement = { 
+                                            file: { width:190, height:180 },
+                                            design: { width:3+1/6, height:3 },
+                                        };
+                        
+                                        this.offset = 20/div;
+                                        this.drawingValue = { 
+                                            width: measurement.file.width/div, 
+                                            height: measurement.file.height/div
+                                        };
+                                };
+                        
+                            //main object creation
+                                var object = _canvas_.interface.unit.builder({
+                                    name:'button_panel_2',
+                                    x:x, y:y, angle:angle,
+                                    space:[
+                                        { x:0,                             y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:0                             },
+                                        { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                        { x:0,                             y:unitStyle.drawingValue.height },
+                                    ],
+                                    elements:[
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                            x:5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                            x:15+5/3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                        }},
+                                        {collection:'basic', type:'image', name:'backing', 
+                                            data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_guide.png' }
+                                        },
+                                        {collection:'control', type:'button_image', name:'button_1', data:{
+                                            x:5, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                        {collection:'control', type:'button_image', name:'button_2', data:{
+                                            x:15 +5/3, y:10, width:10, height:15, hoverable:false, 
+                                            backingURL__up:unitStyle.imageStoreURL_localPrefix+'key_up.png',
+                                            backingURL__press:unitStyle.imageStoreURL_localPrefix+'key_down.png',
+                                        }},
+                                    ]
+                                });
+                        
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_1.onpress = function(){   object.io.signal.out_1.set(true);  };
+                                    object.elements.button_image.button_1.onrelease = function(){ object.io.signal.out_1.set(false); };
+                                    object.elements.button_image.button_2.onpress = function(){   object.io.signal.out_2.set(true);  };
+                                    object.elements.button_image.button_2.onrelease = function(){ object.io.signal.out_2.set(false); };
+                                //keycapture
+                                    object.elements.image.backing.glyphs = [ '1', '2' ]; 
+                                    object.elements.image.backing.onkeydown = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].press();
+                                        }
+                                    };
+                                    object.elements.image.backing.onkeyup = function(x,y,event){
+                                        if( this.glyphs.includes(event.key) ){
+                                            object.elements.button_image['button_'+event.key].release();
+                                        }
+                                    };
+                        
+                            //interface
+                                object.i = {
+                                    press:function(button){ object.elements.button_image['button_'+button].press(); },
+                                    release:function(button){ object.elements.button_image['button_'+button].release(); },
+                                };
+                        
+                            return object;
+                        };
+                        this.button_panel_2.metadata = {
+                            name:'Button Panel - Type B',
+                            category:'interface',
+                            helpURL:'/help/units/beta/button_panel_2/'
+                        };
+                        var imageStoreURL = 'images/units/2 - curvetech/';
+                        var style = {
+                            connectionNode:{
+                                signal:{
+                                    dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                    cable_dim:{r:235/255,g:98/255,b:61/255,a:1},
+                                    cable_glow:{r:237/255,g:154/255,b:132/255,a:1},
+                                },
+                                voltage:{
+                                    dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                    cable_dim:{r:170/255,g:251/255,b:89/255,a:1},
+                                    cable_glow:{r:210/255,g:255/255,b:165/255,a:1},
+                                },
+                                data:{
+                                    dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                    cable_dim:{r:114/255,g:176/255,b:248/255,a:1},
+                                    cable_glow:{r:168/255,g:208/255,b:255/255,a:1},
+                                },
+                                audio:{
+                                    dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                    cable_dim:{r:243/255,g:173/255,b:61/255,a:1},
+                                    cable_glow:{r:247/255,g:203/255,b:133/255,a:1},
+                                },
+                            },
+                        };
+
+                        
+                        this._collectionData = {
+                            name:'curveTech',
+                            itemWidth:210,
+                            categoryOrder:[
+                                'interface',
+                            ],   
+                        };
+                        this._categoryData = {
+                            interface:{ printingName:'Interface',itemWidth:180},
+                        };
+                    };
                 };
                 
                 _canvas_.interface.unit.collection.metadata = {
                     mainList:[
                         'alpha',
+                        'curvetech',
                     ],
                     devList:[
                         'development',
@@ -52707,7 +53700,9 @@
                                     //if the collection has an order for it's categories; resort the item list to match
                                         if(collection._collectionData != undefined && collection._collectionData.categoryOrder != undefined){
                                             collectionItemList.list = collection._collectionData.categoryOrder.map(category => {
-                                                return collectionItemList.list.filter(item => item.categoryKey==category)[0];
+                                                var result = collectionItemList.list.filter(item => item.categoryKey==category)[0];
+                                                if(result == undefined){ console.error('Error::menubar generation::create: bad sorting for "'+collectionKey+'" for the category: "'+category+'"'); }
+                                                return result
                                             });
                                         }
                 

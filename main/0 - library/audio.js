@@ -7,6 +7,7 @@
     
 //utility functions
     this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
+        library._control.logflow.log('audio.changeAudioParam');
         if(target==null){return audioParam.value;}
     
         if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
@@ -40,6 +41,7 @@
         }
     };
     this.loadAudioFile = function(callback,type='file',url=''){
+        library._control.logflow.log('audio.loadAudioFile');
         switch(type){
             case 'url': 
                 var request = new XMLHttpRequest();
@@ -80,6 +82,7 @@
         }
     };
     this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
+        library._control.logflow.log('audio.waveformSegment');
         var waveform = audioBuffer.getChannelData(0);
         // var channelCount = audioBuffer.numberOfChannels;
     
@@ -101,6 +104,7 @@
         return outputArray;
     };
     this.loadBuffer = function(context, data, destination, onended){
+        library._control.logflow.log('audio.loadBuffer');
         var temp = context.createBufferSource();
         temp.buffer = data;
         temp.connect(destination);

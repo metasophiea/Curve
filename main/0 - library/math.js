@@ -1,9 +1,20 @@
-this.averageArray = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;
+this.averageArray = function(array){
+    library._control.logflow.log('math.averageArray');
+    // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
+
+    //this seems to be a little faster
+    var sum = array[0];
+    for(var a = 1; a < array.length; a++){ sum += array[a]; }
+    return sum/array.length;
+};
+
 this.averagePoint = function(points){
+    library._control.logflow.log('math.averagePoint');
     var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
     return {x:sum.x/points.length,y:sum.y/points.length};
 };
 this.boundingBoxFromPoints = function(points){
+    library._control.logflow.log('math.boundingBoxFromPoints');
     if(points.length == 0){
         return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
     }
@@ -25,14 +36,29 @@ this.boundingBoxFromPoints = function(points){
     };
 };
 this.cartesianAngleAdjust = function(x,y,angle){
-    if(angle == 0 || angle%(Math.PI*2) == 0){ return {x:x,y:y}; }
-    var polar = library.math.cartesian2polar( x, y );
-    polar.ang += angle;
-    return library.math.polar2cartesian( polar.ang, polar.dis );
+    library._control.logflow.log('math.cartesianAngleAdjust');
+
+    // //v1    
+    //     if(angle == 0){ return {x:x,y:y}; }
+    //     if(angle == Math.PI){ return {x:-x,y:-y}; }
+    //     if(angle == Math.PI*0.5){ return {x:-y,y:x}; }
+    //     if(angle == Math.PI*1.5){ return {x:y,y:-x}; }
+
+    //     var polar = library.math.cartesian2polar( x, y );
+    //     polar.ang += angle;
+    //     return library.math.polar2cartesian( polar.ang, polar.dis );
+    
+    //v2    
+        if(angle == 0){ return {x:x,y:y}; }
+        return { x:x*Math.cos(angle) - y*Math.sin(angle), y:y*Math.cos(angle) + x*Math.sin(angle) };
 };
 this.convertColour = new function(){
-    this.obj2rgba = obj => 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
+    this.obj2rgba = function(obj){
+        library._control.logflow.log('math.convertColour.obj2rgba');
+        return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
+    };
     this.rgba2obj = function(rgba){
+        library._control.logflow.log('math.convertColour.rgba2obj');
         rgba = rgba.split(',');
         rgba[0] = rgba[0].replace('rgba(', '');
         rgba[3] = rgba[3].replace(')', '');
@@ -42,6 +68,7 @@ this.convertColour = new function(){
 };
 this.curveGenerator = new function(){
     this.linear = function(stepCount=2, start=0, end=1){
+        library._control.logflow.log('math.curveGenerator.linear');
         stepCount = Math.abs(stepCount)-1; var outputArray = [0];
         for(var a = 1; a < stepCount; a++){ 
             outputArray.push(a/stepCount);
@@ -56,6 +83,7 @@ this.curveGenerator = new function(){
         return outputArray;
     };
     this.sin = function(stepCount=2, start=0, end=1){
+        library._control.logflow.log('math.curveGenerator.sin');
         stepCount = Math.abs(stepCount) -1;
         var outputArray = [0];
         for(var a = 1; a < stepCount; a++){ 
@@ -73,6 +101,7 @@ this.curveGenerator = new function(){
         return outputArray;		
     };
     this.cos = function(stepCount=2, start=0, end=1){
+        library._control.logflow.log('math.curveGenerator.cos');
         stepCount = Math.abs(stepCount) -1;
         var outputArray = [0];
         for(var a = 1; a < stepCount; a++){ 
@@ -90,6 +119,7 @@ this.curveGenerator = new function(){
         return outputArray;	
     };
     this.s = function(stepCount=2, start=0, end=1, sharpness=8){
+        library._control.logflow.log('math.curveGenerator.s');
         if(sharpness == 0){sharpness = 1/1000000;}
 
         var curve = [];
@@ -109,6 +139,7 @@ this.curveGenerator = new function(){
         return outputArray;
     };
     this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
+        library._control.logflow.log('math.curveGenerator.exponential');
         var stepCount = stepCount-1;
         var outputArray = [];
         
@@ -128,15 +159,18 @@ this.curveGenerator = new function(){
 };
 this.curvePoint = new function(){
     this.linear = function(x=0.5, start=0, end=1){
+        library._control.logflow.log('math.curvePoint.linear');
         return x *(end-start)+start;
     };
     this.sin = function(x=0.5, start=0, end=1){
+        library._control.logflow.log('math.curvePoint.sin');
         return Math.sin(Math.PI/2*x) *(end-start)+start;
     };
     this.cos = function(x=0.5, start=0, end=1){
         return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
     };
     this.s = function(x=0.5, start=0, end=1, sharpness=8){
+        library._control.logflow.log('math.curvePoint.s');
         var temp = library.math.normalizeStretchArray([
             1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
             1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
@@ -145,6 +179,7 @@ this.curvePoint = new function(){
         return temp[1] *(end-start)+start;
     };
     this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
+        library._control.logflow.log('math.curvePoint.exponential');
         var temp = library.math.normalizeStretchArray([
             (Math.exp(sharpness*0)-1)/(Math.E-1),
             (Math.exp(sharpness*x)-1)/(Math.E-1),
@@ -154,20 +189,24 @@ this.curvePoint = new function(){
     };
 };
 this.detectOverlap = new function(){
+    var detectOverlap = this;
+
     this.boundingBoxes = function(a, b){
-        return !(
-            (a.bottomRight.y < b.topLeft.y) ||
-            (a.topLeft.y > b.bottomRight.y) ||
-            (a.bottomRight.x < b.topLeft.x) ||
-            (a.topLeft.x > b.bottomRight.x) );
+        library._control.logflow.log('math.detectOverlap.boundingBoxes');
+        return a.bottomRight.y >= b.topLeft.y && 
+            a.bottomRight.x >= b.topLeft.x && 
+            a.topLeft.y <= b.bottomRight.y && 
+            a.topLeft.x <= b.bottomRight.x;
     };
     this.pointWithinBoundingBox = function(point,box){
+        library._control.logflow.log('math.detectOverlap.pointWithinBoundingBox');
         return !(
             point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
             point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
         );
     };
     this.pointWithinPoly = function(point,points){
+        library._control.logflow.log('math.detectOverlap.pointWithinPoly');
         //Ray casting algorithm
 
         var inside = false;
@@ -204,6 +243,7 @@ this.detectOverlap = new function(){
         return inside;
     };
     this.lineSegments = function(segment1, segment2){
+        library._control.logflow.log('math.detectOverlap.lineSegments');
         var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
         if(denominator == 0){return null;}
 
@@ -217,14 +257,15 @@ this.detectOverlap = new function(){
         };
     };
     this.overlappingPolygons = function(points_a,points_b){
+        library._control.logflow.log('math.detectOverlap.overlappingPolygons');
         //a point from A is in B
             for(var a = 0; a < points_a.length; a++){
-                if(this.pointWithinPoly(points_a[a],points_b)){ return true; }
+                if(detectOverlap.pointWithinPoly(points_a[a],points_b)){ return true; }
             }
 
         //a point from B is in A
             for(var a = 0; a < points_b.length; a++){
-                if(this.pointWithinPoly(points_b[a],points_a)){ return true; }
+                if(detectOverlap.pointWithinPoly(points_b[a],points_a)){ return true; }
             }
 
         //side intersection
@@ -233,7 +274,7 @@ this.detectOverlap = new function(){
 
             for(var a = 0; a < a_indexing.length-1; a++){
                 for(var b = 0; b < b_indexing.length-1; b++){
-                    var tmp = this.lineSegments( 
+                    var tmp = detectOverlap.lineSegments( 
                         [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
                         [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
                     );
@@ -244,9 +285,10 @@ this.detectOverlap = new function(){
         return false;
     };
     this.overlappingPolygonWithPolygons = function(poly,polys){ 
+        library._control.logflow.log('math.detectOverlap.overlappingPolygonWithPolygons');
         for(var a = 0; a < polys.length; a++){
-            if(this.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
-                if(this.overlappingPolygons(poly.points, polys[a].points)){
+            if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
+                if(detectOverlap.overlappingPolygons(poly.points, polys[a].points)){
                     return true;
                 }
             }
@@ -273,6 +315,7 @@ this.detectOverlap = new function(){
         return false;
     };
     this.overlappingLineWithPolygons = function(line,polys){
+        library._control.logflow.log('math.detectOverlap.overlappingLineWithPolygons');
         //generate a bounding box for the line
             var line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
             if(line.x1 > line.x2){
@@ -301,6 +344,7 @@ this.detectOverlap = new function(){
     };
 };
 this.getAngleOfTwoPoints = function(point_1,point_2){
+    library._control.logflow.log('math.getAngleOfTwoPoints');
     if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
 
     var xDelta = point_2.x - point_1.x;
@@ -313,6 +357,7 @@ this.getAngleOfTwoPoints = function(point_1,point_2){
     return angle;
 };
 this.getDifferenceOfArrays = function(array_a,array_b){
+    library._control.logflow.log('math.getDifferenceOfArrays');
     function arrayRemovals(a,b){
         a.forEach(item => {
             var i = b.indexOf(item);
@@ -327,6 +372,7 @@ this.getDifferenceOfArrays = function(array_a,array_b){
     };
 };
 this.getIndexOfSequence = function(array,sequence){ 
+    library._control.logflow.log('math.getIndexOfSequence');
     function comp(thing_A,thing_B){
         var keys = Object.keys(thing_A);
         if(keys.length == 0){ return thing_A == thing_B; }
@@ -363,6 +409,7 @@ this.largestValueFound = function(array){
     });
 };
 this.normalizeStretchArray = function(array){
+    library._control.logflow.log('math.normalizeStretchArray');
     //discover the largest number
         var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
 
@@ -379,15 +426,18 @@ this.normalizeStretchArray = function(array){
 };
 
 this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
+    library._control.logflow.log('math.relativeDistance');
     var mux = (d - start)/(end - start);
     if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
     return mux*realLength;
 };
 this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
+    library._control.logflow.log('math.removeTheseElementsFromThatArray');
     theseElements.forEach(a => thatArray.splice(thatArray.indexOf(a), 1) );
     return thatArray;
 };
 this.seconds2time = function(seconds){
+    library._control.logflow.log('math.seconds2time');
     var result = {h:0, m:0, s:0};
     
     result.h = Math.floor(seconds/3600);
@@ -402,6 +452,7 @@ this.seconds2time = function(seconds){
 };
 
 this.cartesian2polar = function(x,y){
+    library._control.logflow.log('math.cartesian2polar');
     var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
 
     if(x === 0){
@@ -418,10 +469,12 @@ this.cartesian2polar = function(x,y){
     return {'dis':dis,'ang':ang};
 };
 this.polar2cartesian = function(angle,distance){
+    library._control.logflow.log('math.polar2cartesian');
     return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
 };
 
 this.blendColours = function(rgba_1,rgba_2,ratio){
+    library._control.logflow.log('math.blendColours');
     return {
         r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
         g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
@@ -430,6 +483,7 @@ this.blendColours = function(rgba_1,rgba_2,ratio){
     };           
 };
 this.multiBlendColours = function(rgbaList,ratio){//console.log(rgbaList,ratio);
+    library._control.logflow.log('math.multiBlendColours');
     //special cases
         if(ratio == 0){return rgbaList[0];}
         if(ratio == 1){return rgbaList[rgbaList.length-1];}
@@ -441,6 +495,7 @@ this.multiBlendColours = function(rgbaList,ratio){//console.log(rgbaList,ratio);
 
 
 this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
+    library._control.logflow.log('math.polygonToSubTriangles');
     if(inputFormat == 'flatArray'){
         var tmp = [];
         for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
@@ -454,6 +509,7 @@ this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
     return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
 };
 this.unionPolygons = function(polygon1,polygon2){
+    library._control.logflow.log('math.unionPolygons');
     //martinez (not working)
     // for(var a = 0; a < polygon1.length; a++){
     //     polygon1[a].push( polygon1[a][0] );
@@ -475,6 +531,7 @@ this.unionPolygons = function(polygon1,polygon2){
     ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
 }
 this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
+    library._control.logflow.log('math.pathExtrapolation');
     function loopThisPath(path){
         var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
         var loopingPath = [];
@@ -715,6 +772,7 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
 
 
 this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},dev=false){
+    library._control.logflow.log('math.fitPolyIn');
     function applyOffsetToPoints(offset,points){
         return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
     };
@@ -753,7 +811,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
                         if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                     
                     //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
-                        if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                        if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                             successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
                         }
                 }
@@ -790,7 +848,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
                             if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
                                     
                         //if offsetting the shape in this way results in no collision; save this offset in 'tmpsuccessfulOffsets'
-                            if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
                                 tmpsuccessfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                                 provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
                             }
@@ -827,7 +885,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
 
                 //can you make a x movement? you can? then do it
                     if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
-                    if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
+                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
                         max.x = midpoint.x; //too far
                     }else{ 
                         min.x = midpoint.x; //too close
@@ -835,7 +893,7 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
 
                 //can you make a y movement? you can? then do it
                     if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
-                    if(!this.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
+                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
                         max.y = midpoint.y; //too far
                     }else{
                         min.y = midpoint.y; //too close

@@ -1,4 +1,73 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-05
+  - drew up 10 new units for the new collection "curveTech" (15+ still to draw)
+  - added button_panel_1, button_panel_2, button_panel_4 and button_panel_8
+    (called types A, B, C and D respectivly)
+
+
+2019-10-04
+  - wrote up performance test for the functions in library.math
+  - some of the functions in library.math use "this" objects that don't seem to
+    refer to the correct thing. I've changed them to be more explicit
+  - added argument to library.misc.padString, so you can select what side to pad
+    on. Default is the left
+
+  what the performance output looks like (on the desktop):
+                                    library.math.averageArray: 100000 cycles took 0.335 seconds    - average cycle time:0.00000335 seconds
+                                    library.math.averagePoint: 100000 cycles took 0.843 seconds    - average cycle time:0.000008429999999999999 seconds
+                           library.math.boundingBoxFromPoints: 100000 cycles took 0.402 seconds    - average cycle time:0.0000040200000000000005 seconds
+                            library.math.cartesianAngleAdjust: 100000 cycles took 0.01 seconds     - average cycle time:1e-7 seconds
+                          library.math.convertColour.obj2rgba: 100000 cycles took 0.087 seconds    - average cycle time:8.699999999999999e-7 seconds
+                          library.math.convertColour.rgba2obj: 100000 cycles took 0.241 seconds    - average cycle time:0.00000241 seconds
+                           library.math.curveGenerator.linear: 100000 cycles took 0.035 seconds    - average cycle time:3.5000000000000004e-7 seconds
+                              library.math.curveGenerator.sin: 100000 cycles took 0.08 seconds     - average cycle time:8e-7 seconds
+                              library.math.curveGenerator.cos: 100000 cycles took 0.081 seconds    - average cycle time:8.1e-7 seconds
+                                library.math.curveGenerator.s: 100000 cycles took 0.32 seconds     - average cycle time:0.0000032 seconds
+                      library.math.curveGenerator.exponential: 100000 cycles took 0.215 seconds    - average cycle time:0.00000215 seconds
+                               library.math.curvePoint.linear: 100000 cycles took 0.008 seconds    - average cycle time:8e-8 seconds
+                                  library.math.curvePoint.sin: 100000 cycles took 0.009 seconds    - average cycle time:9e-8 seconds
+                                  library.math.curvePoint.cos: 100000 cycles took 0.008 seconds    - average cycle time:8e-8 seconds
+                                    library.math.curvePoint.s: 100000 cycles took 0.037 seconds    - average cycle time:3.7e-7 seconds
+                          library.math.curvePoint.exponential: 100000 cycles took 0.028 seconds    - average cycle time:2.8e-7 seconds
+                     library.math.detectOverlap.boundingBoxes: 100000 cycles took 0.012 seconds    - average cycle time:1.2e-7 seconds
+            library.math.detectOverlap.pointWithinBoundingBox: 100000 cycles took 0.011 seconds    - average cycle time:1.0999999999999999e-7 seconds
+                   library.math.detectOverlap.pointWithinPoly: 100000 cycles took 0.498 seconds    - average cycle time:0.00000498 seconds
+                      library.math.detectOverlap.lineSegments: 100000 cycles took 0.013 seconds    - average cycle time:1.3e-7 seconds
+               library.math.detectOverlap.overlappingPolygons: 100000 cycles took 0.207 seconds    - average cycle time:0.00000207 seconds
+    library.math.detectOverlap.overlappingPolygonWithPolygons: 100000 cycles took 1.323 seconds    - average cycle time:0.000013229999999999999 seconds
+       library.math.detectOverlap.overlappingLineWithPolygons: 100000 cycles took 1.03 seconds     - average cycle time:0.0000103 seconds
+                             library.math.getAngleOfTwoPoints: 100000 cycles took 0.009 seconds    - average cycle time:9e-8 seconds
+                           library.math.getDifferenceOfArrays: 500 cycles took 0.708 seconds       - average cycle time:0.001416 seconds
+                                                               (projected time to perform 100000 cycles: 141.6 seconds)
+                              library.math.getIndexOfSequence: 100000 cycles took 1.11 seconds     - average cycle time:0.0000111 seconds
+                               library.math.largestValueFound: 100000 cycles took 0.343 seconds    - average cycle time:0.00000343 seconds
+                           library.math.normalizeStretchArray: 100000 cycles took 3.678 seconds    - average cycle time:0.00003678 seconds
+                                library.math.relativeDistance: 100000 cycles took 0.008 seconds    - average cycle time:8e-8 seconds
+                library.math.removeTheseElementsFromThatArray: 100000 cycles took 1.11 seconds     - average cycle time:0.0000111 seconds
+                                    library.math.seconds2time: 100000 cycles took 0.006 seconds    - average cycle time:6e-8 seconds
+                                 library.math.cartesian2polar: 100000 cycles took 0.009 seconds    - average cycle time:9e-8 seconds
+                                 library.math.polar2cartesian: 100000 cycles took 0.008 seconds    - average cycle time:8e-8 seconds
+                                    library.math.blendColours: 100000 cycles took 0.012 seconds    - average cycle time:1.2e-7 seconds
+                               library.math.multiBlendColours: 100000 cycles took 0.204 seconds    - average cycle time:0.00000204 seconds
+                               library.math.pathExtrapolation: 100 cycles took 0.88 seconds        - average cycle time:0.0088 seconds
+                                                               (projected time to perform 100000 cycles: 880 seconds)
+                                       library.math.fitPolyIn: 1000 cycles took 1.238 seconds      - average cycle time:0.001238 seconds
+                                                               (projected time to perform 100000 cycles: 123.8 seconds)
+
+
+2019-10-03
+  - found a new method for calculating library.math.cartesianAngleAdjust. It's
+    much shorter and a little faster
+  - simplified the logic for library.math.detectOverlap.boundingBoxes
+
+
+2019-10-02
+  - added a way of counting what library functions are being used, and printing
+    those results: library._control.logflow.active, .printResults and .log
+  - tryed to speed up library.math.cartesianAngleAdjust by handling common
+    arguments with less code
+
+
 2019-09-29
   - added another attribute to the menubar settings for dark mode (to account
     for the new 'text' item)(I should probably redo that little section so that

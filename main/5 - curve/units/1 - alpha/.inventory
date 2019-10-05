@@ -1,39 +1,40 @@
-_/ - ruler
-
-_/ - pulse generator (signal)
-_/ - musical keyboard (velocity dial, sustain button/connection)(signal inputs for each note?)(data out:midi)
-
-_/ - launchpad (1 signal in, 8 signals out)
-_/ - analogue sequencer (8 step)
-
-_/ - signal switch
-_/ - voltage dial
-   
-_/ - signal duplicator
-_/ - voltage duplicator
-_/ - data duplicator
-_/ - audio duplicator
-_/ - signal combiner
-_/ - voltage combiner
-_/ - data combiner
-
+Monitors
+_/ - audio sink (stereo audio connections)(looks like a speaker or amp)
+_/ - audio recorder
+_/ - audio scope readout (audio readout)
+_/ - data logger readout (data readout)
 _/ - LED board readout (signal readout)
 _/ - voltmeter readout (voltage readout)
-_/ - data logger readout (data readout)
-_/ - audio scope readout (audio readout)
 
+Human Interface Devices
 _/ - audio in (microphone)
-_/ - audio sink (stereo audio connections)(looks like a speaker or amp)
+_/ - musical keyboard (velocity dial, sustain button/connection)(signal inputs for each note?)(data out:midi)
+_/ - signal switch
+_/ - voltage dial
 
+Sequencers
+_/ - analogue sequencer (8 step)
+_/ - launchpad (1 signal in, 8 signals out)
+_/ - pulse generator (signal)
+
+Synthesizers
+_/ - audio file player (with area selection and signal-shot input)
 _/ - basic synthesizer
 
+Effect Units
 _/ - distortion unit (mono)
 \/ - filter unit (mono)(high-med-low) (filtration is a bit off)
 _/ - reverb unit (mono)
 
+Tools
+_/ - ruler
+
+Miscellaneous
+_/ - audio duplicator
+_/ - data combiner
+_/ - data duplicator
 _/ - basic 8 track mixer (8 mono to 1 stereo)(panning and volume)
-
-_/ - audio file player (with area selection and signal-shot input)
-
-_/ - audio recorder
-
+_/ - signal combiner
+_/ - signal duplicator
+_/ - voltage combiner
+_/ - voltage duplicator

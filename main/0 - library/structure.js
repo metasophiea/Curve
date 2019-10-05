@@ -1,4 +1,5 @@
 this.functionListRunner = function(list,activeKeys){
+    library._control.logflow.log('structure.functionListRunner');
     //function builder for working with the 'functionList' format
 
     return function(event,data){
@@ -26,6 +27,7 @@ this.functionListRunner = function(list,activeKeys){
 };
 
 this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
+    library._control.logflow.log('structure.signalRegistry');
     var signals = [];
     var selectedSignals = [];
     var events = [];
