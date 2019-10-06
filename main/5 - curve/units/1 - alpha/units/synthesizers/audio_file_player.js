@@ -172,7 +172,7 @@ this.audio_file_player = function(x,y,angle){
             object.elements.button_image.button_stop.onpress = function(){ playerCircuit.stop(); };
             object.elements.dial_colourWithIndent_continuous.dial_playbackSpeed.onchange = function(data){ playerCircuit.rate( 2*data ); };
             object.elements.checkbox_image.checkbox_loop.onchange = function(bool){ return playerCircuit.loop(bool); };
-            object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return playerCircuit.concurrentPlayCountLimit(value); };
+            object.elements.checkbox_image.checkbox_singleOrInfini.onchange = function(value){ return playerCircuit.concurrentPlayCountLimit(value ? -1 : 1); };
             object.elements.grapher_waveWorkspace.grapher_waveWorkspace.onchange = function(needle,value){
                 if( !isNaN(parseInt(needle)) ){
                     if( playerCircuit.progress(needle) == -1 ){

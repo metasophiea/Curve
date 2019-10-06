@@ -1,8 +1,19 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-06
+  - added multi_option_signal_sender_2, multi_option_signal_sender_4 and
+    multi_option_signal_sender_8 (called types A, B and C respectively)
+  - added light_panel_2, light_panel_4 and light_panel_8 (called types A, B and
+    C respectively)
+  - apparently the audio_file_player unit was broken and I just never noticed
+    (the multiPlay/singlePlay button was broken. It interacted with the player
+    circuit incorrectly. It's all working now)
+  - added the 'Logic Gates': NOT, AND, OR, XOR, NAND, NOR and XNOR
+
+
 2019-10-05
   - drew up 10 new units for the new collection "curveTech" (15+ still to draw)
   - added button_panel_1, button_panel_2, button_panel_4 and button_panel_8
-    (called types A, B, C and D respectivly)
+    (called types A, B, C and D respectively)
 
 
 2019-10-04

@@ -42,7 +42,7 @@ this.button_panel_4 = function(x,y,angle){
                     x:5+(10+5/3)*3, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                 }},
                 {collection:'basic', type:'image', name:'backing', 
-                    data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_guide.png' }
+                    data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
                 },
                 {collection:'control', type:'button_image', name:'button_1', data:{
                     x:5, y:10, width:10, height:15, hoverable:false, 

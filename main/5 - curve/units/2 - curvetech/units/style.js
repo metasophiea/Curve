@@ -1,5 +1,9 @@
 var imageStoreURL = 'images/units/2 - curvetech/';
 var style = {
+    primeColour:{
+        lightGrey:{r:0.77,g:0.77,b:0.77,a:1},
+    },
+
     connectionNode:{
         signal:{
             dim:{r:235/255,g:98/255,b:61/255,a:1},

@@ -33,7 +33,7 @@ this.button_panel_1 = function(x,y,angle){
                     x:unitStyle.drawingValue.width/2-5, y:0, width:5, height:10, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
                 }},
                 {collection:'basic', type:'image', name:'backing', 
-                    data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'1_guide.png' }
+                    data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'1_backing.png' }
                 },
                 {collection:'control', type:'button_image', name:'button', data:{
                     x:5, y:10, width:10, height:15, hoverable:false, 
