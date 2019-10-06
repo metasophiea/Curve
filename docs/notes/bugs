@@ -3,7 +3,7 @@
 [2019-09-01:2] if a connection node's callback doesn't work when doing a manual connection; everything falls apart
     added try/catch code around all the callback callings
 [2019-09-17:1] launchpad doesn't need to be sending out so many off signals
-    just changed how the changeToColumn function works, so that it only clears the sigals that are changing, or are repeat 'on' signals. Also made similar changes to how the columns are lit/dimmed
+    just changed how the changeToColumn function works, so that it only clears the signals that are changing, or are repeat 'on' signals. Also made similar changes to how the columns are lit/dimmed
 [2019-09-07:1] 8 track mixer panning is wrong
     I just had the math backwards
 [2019-08-16:1] control.scene.load(1) there should be some protection for bad URLs
@@ -25,3 +25,4 @@
 [2019-09-01:1] snapping and unit collision don't play well together
 [2019-09-15:1] something is up with webGl on windows, that isn't present on mac or linux..I think only with clipping
 [2019-09-26:2] sometimes the camera panning gets stuck on
+[2019-10-06:2] sometimes the scene loader doesn't do anything
