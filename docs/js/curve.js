@@ -39404,7 +39404,7 @@
                 window.onresize = _canvas_.control.viewport.refresh; 
                 _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
                 _canvas_.curve = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:5} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:6} };
                 };
                 
                 _canvas_.interface.unit.collection = new function(){
