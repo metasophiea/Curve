@@ -180,15 +180,15 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                 spaceHeight: 1,
                 itemList:[
                     {type:'item', text_left:'Release All Keyboard Keys', function:function(){ _canvas_.system.keyboard.releaseAll(); } },
-                    {type:'textbreak',text:'last date layer was modified'}
+                    {type:'break'}
                 ].concat(
                     _canvas_.getVersionInformation().map(
                             item => {
                                 if(item.name[0] == '_'){ item.name = item.name.substr(1); }
-                                return item.name+': '+item.data.lastDateModified.y+'/'+item.data.lastDateModified.m+'/'+item.data.lastDateModified.d;
+                                return {name:item.name,date:item.data.lastDateModified.y+'/'+item.data.lastDateModified.m+'/'+item.data.lastDateModified.d}
                             }
                         ).map(
-                            item => ({type:'text',text:item})
+                            item => ({type:'text', text_left:item.name, text_centre:'-', text_right:item.date})
                         ).reverse()
                 )
             }

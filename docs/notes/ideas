@@ -170,11 +170,12 @@
             restorgrid
             sequencer
 
-- ability to change background and menubar colour to 'nightmode' or other modes
 - LAZERS DOING LAZER THINGS (shooter/receiver/mirror/splitter/etc)
 - expansion of connectionNode clickable area, so that things stay the same graphically, but mouse interaction is easier
+  - connection nodes expand when mousing over them
 - advanced (easier) unit placement (like stamping or/and click-n-plop)
 - rotate unit around point other than their origin (maybe it's 'centre')
 - dev output text console thing. Maybe activate with F3 or something (maybe just the url which adds an option in the menubar dropdown)
 - auto-generated "blotchy" background (maybe other background types too)
-- connection nodes expand when mousing over them
+- redo Alpha collection to be in the 100x100 pixel-per-cm resolution
+- connection nodes reveal text when moused over (to say what they're named or if they are an input or output)

@@ -6,6 +6,7 @@ this.button_ = function(
     onenter = function(event){},
     onleave = function(event){},
     onpress = function(event){},
+    onpressrelease = function(event){},
     ondblpress = function(event){},
     onrelease = function(event){},
     onselect = function(event){},
@@ -39,7 +40,7 @@ this.button_ = function(
                 if(this.onpress){this.onpress(this, event);}
             }
             
-            this.select( !this.select(), event );
+            this.select( !this.state.selected, event );
 
             object.activateGraphicalState(object.state);
         };
@@ -53,7 +54,7 @@ this.button_ = function(
         };
         object.active = function(bool){ if(bool == undefined){return active;} active = bool; object.activateGraphicalState(object.state); };
         object.glow = function(bool){   if(bool == undefined){return this.state.glowing;}  this.state.glowing = bool;  object.activateGraphicalState(object.state); };
-        object.select = function(bool,event,callback=true){ 
+        object.select = function(bool,event,callback=true){
             if(!active){return;}
 
             if(bool == undefined){return this.state.selected;}
@@ -61,6 +62,14 @@ this.button_ = function(
             if(this.state.selected == bool){return;}
             this.state.selected = bool; object.activateGraphicalState(object.state);
             if(callback){ if( this.state.selected ){ this.onselect(this,event); }else{ this.ondeselect(this,event); } }
+        };
+        object.hoverable = function(bool){
+            if(bool==undefined){return hoverable;}
+            hoverable = bool;
+            if(!hoverable){
+                object.state.hovering = false;
+                object.activateGraphicalState(object.state); 
+            }
         };
         object.interactable = function(bool){
             if(bool==undefined){return interactable;}
@@ -78,19 +87,20 @@ this.button_ = function(
 
     //interactivity
         subject.cover.onmouseenter = function(x,y,event){
-            object.state.hovering = true;  
+            if(hoverable){ object.state.hovering = true; }
             object.activateGraphicalState(object.state);
             if(object.onenter){object.onenter(event);}
             if(event.buttons == 1){subject.cover.onmousedown(x,y,event);} 
         };
         subject.cover.onmouseleave = function(x,y,event){ 
-            object.state.hovering = false; 
+            if(hoverable){ object.state.hovering = false; }
             object.release(event); 
             object.activateGraphicalState(object.state); 
             if(object.onleave){object.onleave(event);}
         };
         subject.cover.onmouseup = function(x,y,event){   if(!interactable){return;} object.release(event); };
         subject.cover.onmousedown = function(x,y,event){ if(!interactable){return;} object.press(event); };
+        subject.cover.onclick = function(x,y,event){ if(!interactable){return;} object.onpressrelease(event); };
         subject.cover.ondblclick = function(x,y,event){ if(!active){return;} if(!interactable){return;} if(object.ondblpress){object.ondblpress(event);} };
         
 
@@ -100,6 +110,7 @@ this.button_ = function(
         object.onenter = onenter;
         object.onleave = onleave;
         object.onpress = onpress;
+        object.onpressrelease = onpressrelease;
         object.ondblpress = ondblpress;
         object.onrelease = onrelease;
         object.onselect = onselect;
@@ -115,6 +126,7 @@ interfacePart.partLibrary.control.button_ = function(name,data){ return interfac
     data.onenter,
     data.onleave,
     data.onpress,
+    data.onpressrelease,
     data.ondblpress,
     data.onrelease,
     data.onselect,

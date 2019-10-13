@@ -1,25 +1,21 @@
 Interface
-__ - button panel (1, 2, 4, 8)
-__ - multi option signal sender (discrete dial) (2, 4, 8)
-__ - light panel (2, 4, 8)
+_/ - button panel (1, 2, 4, 8)
+_/ - multi option signal sender (discrete dial) (2, 4, 8)
+_/ - light panel (2, 4, 8)
 
 Logic Gates
-__ - NOT
-__ - AND
-__ - OR
-__ - XOR
-__ - NAND
-__ - NOR
-__ - XNOR
+_/ - REP
+_/ - DUB
+_/ - NOT
+_/ - AND
+_/ - OR
+_/ - XOR
+_/ - NAND
+_/ - NOR
+_/ - XNOR
 
-Reason Gates
-__ - NOT
-__ - ALL
-__ - ANY
-__ - ONLY
-
-Constructions
+Devices
 __ - single bit memory (in, out, write, read)
 __ - multiplexer (1-2, 1-4, 1-8)(pulse to switch)
 __ - demultiplexer (2-1, 4-1, 8-1)(pulse to switch)
-__ - adder (in-1, in-2, carry-in, carry-out, sum)
+_/ - adder (in-1, in-2, carry-in, carry-out, sum)

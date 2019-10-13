@@ -7,9 +7,26 @@ this.button_polygon = function(
 
     text_font = 'Arial',
     text_size=2.5,
-    text_colour = {r:0/255,g:0/255,b:0/255,a:1},
     text_spacing=0.1,
     text_interCharacterSpacing=0,
+
+    text__off__colour={r:0,g:0,b:0,a:1},
+    text__up__colour={r:0,g:0,b:0,a:1},
+    text__press__colour={r:0,g:0,b:0,a:1},
+    text__select__colour={r:0,g:0,b:0,a:1},
+    text__select_press__colour={r:0,g:0,b:0,a:1},
+    text__glow__colour={r:0,g:0,b:0,a:1},
+    text__glow_press__colour={r:0,g:0,b:0,a:1},
+    text__glow_select__colour={r:0,g:0,b:0,a:1},
+    text__glow_select_press__colour={r:0,g:0,b:0,a:1},
+    text__hover__colour={r:0,g:0,b:0,a:1},
+    text__hover_press__colour={r:0,g:0,b:0,a:1},
+    text__hover_select__colour={r:0,g:0,b:0,a:1},
+    text__hover_select_press__colour={r:0,g:0,b:0,a:1},
+    text__hover_glow__colour={r:0,g:0,b:0,a:1},
+    text__hover_glow_press__colour={r:0,g:0,b:0,a:1},
+    text__hover_glow_select__colour={r:0,g:0,b:0,a:1},
+    text__hover_glow_select_press__colour={r:0,g:0,b:0,a:1},
 
     backing__off__colour=                            {r:180/255,g:180/255,b:180/255,a:1},
     backing__off__lineColour=                        {r:0/255,g:0/255,b:0/255,a:0},
@@ -66,6 +83,7 @@ this.button_polygon = function(
     onenter = function(event){},
     onleave = function(event){},
     onpress = function(event){},
+    onpressrelease = function(event){},
     ondblpress = function(event){},
     onrelease = function(event){},
     onselect = function(event){},
@@ -87,7 +105,7 @@ this.button_polygon = function(
                 text:text_centre, 
                 width:text_size,
                 height:text_size,
-                colour:text_colour,
+                colour:text__up__colour,
                 font:text_font,
                 printingMode:{widthCalculation:'absolute',horizontal:'middle',vertical:'middle'},
                 spacing:text_spacing,
@@ -107,6 +125,7 @@ this.button_polygon = function(
                 onenter:onenter,
                 onleave:onleave,
                 onpress:onpress,
+                onpressrelease:onpressrelease,
                 ondblpress:ondblpress,
                 onrelease:onrelease,
                 onselect:onselect,
@@ -119,6 +138,9 @@ this.button_polygon = function(
     //graphical state adjust
         object.activateGraphicalState = function(state){
             if(!active){ 
+                text_centre.colour(text__off__colour);
+                text_left.colour(text__off__colour);
+                text_right.colour(text__off__colour);
                 backing.colour = backing__off__colour;
                 backing.lineColour = backing__off__lineColour;
                 backing.thickness( backing__off__lineThickness );
@@ -126,28 +148,29 @@ this.button_polygon = function(
             }
 
             var styles = [
-                { colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
-                { colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
-                { colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
-                { colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
-                { colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
-                { colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
-                { colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
-                { colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
-                { colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
-                { colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
-                { colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
-                { colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
-                { colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
-                { colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
-                { colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
-                { colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
+                { text_colour:text__up__colour,                      colour:backing__up__colour,                      lineColour:backing__up__lineColour,                      lineThickness:backing__up__lineThickness                      },
+                { text_colour:text__press__colour,                   colour:backing__press__colour,                   lineColour:backing__press__lineColour,                   lineThickness:backing__press__lineThickness                   },
+                { text_colour:text__select__colour,                  colour:backing__select__colour,                  lineColour:backing__select__lineColour,                  lineThickness:backing__select__lineThickness                  },
+                { text_colour:text__select_press__colour,            colour:backing__select_press__colour,            lineColour:backing__select_press__lineColour,            lineThickness:backing__select_press__lineThickness            },
+                { text_colour:text__glow__colour,                    colour:backing__glow__colour,                    lineColour:backing__glow__lineColour,                    lineThickness:backing__glow__lineThickness                    },
+                { text_colour:text__glow_press__colour,              colour:backing__glow_press__colour,              lineColour:backing__glow_press__lineColour,              lineThickness:backing__glow_press__lineThickness              },
+                { text_colour:text__glow_select__colour,             colour:backing__glow_select__colour,             lineColour:backing__glow_select__lineColour,             lineThickness:backing__glow_select__lineThickness             },
+                { text_colour:text__glow_select_press__colour,       colour:backing__glow_select_press__colour,       lineColour:backing__glow_select_press__lineColour,       lineThickness:backing__glow_select_press__lineThickness       },
+                { text_colour:text__hover__colour,                   colour:backing__hover__colour,                   lineColour:backing__hover__lineColour,                   lineThickness:backing__hover__lineThickness                   },
+                { text_colour:text__hover_press__colour,             colour:backing__hover_press__colour,             lineColour:backing__hover_press__lineColour,             lineThickness:backing__hover_press__lineThickness             },
+                { text_colour:text__hover_select__colour,            colour:backing__hover_select__colour,            lineColour:backing__hover_select__lineColour,            lineThickness:backing__hover_select__lineThickness            },
+                { text_colour:text__hover_select_press__colour,      colour:backing__hover_select_press__colour,      lineColour:backing__hover_select_press__lineColour,      lineThickness:backing__hover_select_press__lineThickness      },
+                { text_colour:text__hover_glow__colour,              colour:backing__hover_glow__colour,              lineColour:backing__hover_glow__lineColour,              lineThickness:backing__hover_glow__lineThickness              },
+                { text_colour:text__hover_glow_press__colour,        colour:backing__hover_glow_press__colour,        lineColour:backing__hover_glow_press__lineColour,        lineThickness:backing__hover_glow_press__lineThickness        },
+                { text_colour:text__hover_glow_select__colour,       colour:backing__hover_glow_select__colour,       lineColour:backing__hover_glow_select__lineColour,       lineThickness:backing__hover_glow_select__lineThickness       },
+                { text_colour:text__hover_glow_select_press__colour, colour:backing__hover_glow_select_press__colour, lineColour:backing__hover_glow_select_press__lineColour, lineThickness:backing__hover_glow_select_press__lineThickness },
             ];
 
             if(!hoverable && state.hovering ){ state.hovering = false; }
             if(!selectable && state.selected ){ state.selected = false; }
 
             var i = state.hovering*8 + state.glowing*4 + state.selected*2 + (pressable && state.pressed)*1;
+            text_centre.colour(styles[i].text_colour);
             backing.colour = styles[i].colour;
             backing.lineColour = styles[i].lineColour;
             backing.thickness( styles[i].lineThickness );
@@ -162,7 +185,28 @@ interfacePart.partLibrary.control.button_polygon = function(name,data){ return i
     data.text_centre,
     data.active, data.hoverable, data.selectable, data.pressable,
 
-    data.style.text_font, data.style.text_size, data.style.text_colour, data.style.text_spacing, data.style.text_interCharacterSpacing,
+    data.style.text_font, 
+    data.style.text_size, 
+    data.style.text_spacing, 
+    data.style.text_interCharacterSpacing,
+
+    data.style.text__off__colour == undefined ? data.style.text_colour : data.style.text__off__colour,
+    data.style.text__up__colour == undefined ? data.style.text_colour : data.style.text__up__colour,
+    data.style.text__press__colour == undefined ? data.style.text_colour : data.style.text__press__colour,
+    data.style.text__select__colour == undefined ? data.style.text_colour : data.style.text__select__colour,
+    data.style.text__select_press__colour == undefined ? data.style.text_colour : data.style.text__select_press__colour,
+    data.style.text__glow__colour == undefined ? data.style.text_colour : data.style.text__glow__colour,
+    data.style.text__glow_press__colour == undefined ? data.style.text_colour : data.style.text__glow_press__colour,
+    data.style.text__glow_select__colour == undefined ? data.style.text_colour : data.style.text__glow_select__colour,
+    data.style.text__glow_select_press__colour == undefined ? data.style.text_colour : data.style.text__glow_select_press__colour,
+    data.style.text__hover__colour == undefined ? data.style.text_colour : data.style.text__hover__colour,
+    data.style.text__hover_press__colour == undefined ? data.style.text_colour : data.style.text__hover_press__colour,
+    data.style.text__hover_select__colour == undefined ? data.style.text_colour : data.style.text__hover_select__colour,
+    data.style.text__hover_select_press__colour == undefined ? data.style.text_colour : data.style.text__hover_select_press__colour,
+    data.style.text__hover_glow__colour == undefined ? data.style.text_colour : data.style.text__hover_glow__colour,
+    data.style.text__hover_glow_press__colour == undefined ? data.style.text_colour : data.style.text__hover_glow_press__colour,
+    data.style.text__hover_glow_select__colour == undefined ? data.style.text_colour : data.style.text__hover_glow_select__colour,
+    data.style.text__hover_glow_select_press__colour == undefined ? data.style.text_colour : data.style.text__hover_glow_select_press__colour,
 
     data.style.background__off__colour,                     data.style.background__off__lineColour,                     data.style.background__off__lineThickness,
     data.style.background__up__colour,                      data.style.background__up__lineColour,                      data.style.background__up__lineThickness,
@@ -185,6 +229,7 @@ interfacePart.partLibrary.control.button_polygon = function(name,data){ return i
     data.onenter,
     data.onleave,
     data.onpress,
+    data.onpressrelease,
     data.ondblpress,
     data.onrelease,
     data.onselect,

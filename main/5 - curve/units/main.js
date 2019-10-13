@@ -6,7 +6,7 @@ _canvas_.interface.unit.collection = new function(){
         {{include:1 - alpha/main.js}}
     };
     this.curvetech = new function(){
-        {{include:2 - curveTech/main.js}}
+        {{include:2 - curvetech/main.js}}
     };
 };
 

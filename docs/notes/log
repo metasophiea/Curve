@@ -1,4 +1,43 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-13
+  - updated all the curveTech units to have the new artwork
+  - added the REP and DUP logic gates to curveTech
+  - added the adder to curveTech
+
+
+2019-10-12
+  - made the new menubar (with the new list part) the default menubar, and
+    removed the old one
+  - fixed list2's checkbox item to update the tick shape's colour correctly on
+    creation
+  - removed list part, and renamed 'list2' to 'list'
+  - modified list part to allow one to set the item width of a sublist
+  - redrew all the curveTech artwork
+
+
+2019-10-11
+  - still on the new list part
+  - added a new callback to the button part (all of them) "onpressrelease" which
+    only activates when the press and release were on the same shape (based on
+    'click')
+  - added hoverable option code to the basic button part (because apparently it
+    wasn't in there)
+  - redid the control/menubar to use the new list part
+
+
+2019-10-09
+  - rewrote the list part (needs a little work still, to fill out all the
+    functionality)
+  - expanded the button part to have styling options for the text (for when the
+    button changes state) You can still use text_colour, and the system will
+    default to that value if a more specific argument is not found
+
+
+2019-10-07
+  - curveTech's "Multi Option Signal Sender Type B"'s right connection node was
+    the wrong way around
+    
+
 2019-10-06
   - added multi_option_signal_sender_2, multi_option_signal_sender_4 and
     multi_option_signal_sender_8 (called types A, B and C respectively)

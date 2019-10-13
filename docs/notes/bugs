@@ -25,4 +25,4 @@
 [2019-09-01:1] snapping and unit collision don't play well together
 [2019-09-15:1] something is up with webGl on windows, that isn't present on mac or linux..I think only with clipping
 [2019-09-26:2] sometimes the camera panning gets stuck on
-[2019-10-06:2] sometimes the scene loader doesn't do anything
+[2019-10-06:1] sometimes the scene loader doesn't do anything

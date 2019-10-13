@@ -36,7 +36,40 @@ _canvas_.control.gui.elements.menubar.dropdowns = [
         spaceHeight: 1,
         itemList:Array.apply(null, {length:22}).map(Number.call, Number).map(function(a){
             return {type:'item', text_left:'Item '+a, text_right:''+a, function:function(){ console.log(''+a); }};
+            
         }),
+    },
+    {
+        text:'tools',
+        width:50,
+        listWidth:150,
+        listItemHeight:22.5,
+        breakHeight: 0.5,
+        spaceHeight: 1,
+        itemList:[
+            {type:'item', text_left:'A' },
+            { type:'list', text:'sublist', itemWidth:30,limitWidthTo:32.5, list:[
+                { type:'space' },
+                { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist item1 function');} },
+                { type:'break' },
+                { type:'text', text:'text entry' },
+                { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist item2 function');} },
+                { type:'textbreak', text:'break 1'},
+                { type:'list', text:'sublist', list:[
+                    { type:'space' },
+                    { type:'break' },
+                    { type:'item', text_left:'item1', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item1 function');} },
+                    { type:'break' },
+                    { type:'item', text_left:'item2', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item2 function');} },
+                    { type:'textbreak', text:'break 1'},
+                    { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist/sublist item3 function');} },
+                    { type:'space' },
+                ] },
+                { type:'checkbox', text:'checkable', onclickFunction:function(val){console.log('checkbox:',val);} },
+                { type:'item', text_left:'item3', text_centre:'', text_right:'', function:function(){console.log('sublist item3 function');} },
+                { type:'space' },
+            ] },
+        ]
     },
     {
         text:'help',

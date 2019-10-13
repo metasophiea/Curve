@@ -11,12 +11,16 @@ _canvas_.control.scene.addUnit(0,0,0,'ruler','alpha');
 // _canvas_.control.scene.addUnit(60,10,0,'light_panel_4','curvetech');
 // _canvas_.control.scene.addUnit(60,10,0,'light_panel_8','curvetech');
 
+// _canvas_.control.scene.addUnit(60,10,0,'REP','curvetech');
+// _canvas_.control.scene.addUnit(60,10,0,'DUP','curvetech');
 // _canvas_.control.scene.addUnit(60,10,0,'NOT','curvetech');
 // _canvas_.control.scene.addUnit(60,10,0,'AND','curvetech');
 // _canvas_.control.scene.addUnit(60,10,0,'OR','curvetech');
 // _canvas_.control.scene.addUnit(60,10,0,'XOR','curvetech');
 // _canvas_.control.scene.addUnit(60,10,0,'NAND','curvetech');
 // _canvas_.control.scene.addUnit(60,10,0,'NOR','curvetech');
-_canvas_.control.scene.addUnit(60,10,0,'XNOR','curvetech');
+// _canvas_.control.scene.addUnit(60,10,0,'XNOR','curvetech');
+
+_canvas_.control.scene.addUnit(60,10,0,'adder','curvetech');
 
 _canvas_.control.viewport.scale(6);
