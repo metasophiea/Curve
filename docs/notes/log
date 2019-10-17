@@ -1,4 +1,28 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-15
+  - added the single_bit_memory unit to curveTech
+  - added the multiplexer units to curveTech (1-2, 1-4, 1-8)
+  - added the demultiplexer units to curveTech (2-1, 4-1, 8-1)
+
+  compilation results
+    -> core
+            core.js 1585kb
+            core.min.js 417kb
+            reduced to 26.34% of original size
+    -> coreSystem
+            coreSystem.js 1596kb
+            coreSystem.min.js 422kb
+            reduced to 26.44% of original size
+    -> workspace
+            workspace.js 2832kb
+            workspace.min.js 746kb
+            reduced to 26.35% of original size
+    -> curve
+            curve.js 4319kb
+            curve.min.js 1304kb
+            reduced to 30.20% of original size
+
+
 2019-10-13
   - updated all the curveTech units to have the new artwork
   - added the REP and DUP logic gates to curveTech

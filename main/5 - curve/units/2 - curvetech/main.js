@@ -12,5 +12,5 @@ this._collectionData = {
 this._categoryData = {
     interface:{ printingName:'Interface',itemWidth:265},
     logic_gates:{ printingName:'Logic Gates',itemWidth:100},
-    devices:{ printingName:'Devices',itemWidth:100},
+    devices:{ printingName:'Devices',itemWidth:175},
 };

@@ -40903,7 +40903,7 @@
             _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
             _canvas_.control.misc.lightMode();
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:13} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:15} };
             };
             
             _canvas_.interface.unit.collection = new function(){
@@ -57745,6 +57745,262 @@
                         category:'logic_gates',
                         helpURL:'/help/units/beta/XOR/'
                     };
+                    this.demultiplexer_4 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'demultiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:400 },
+                                        design: { width:2, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'demultiplexer_4',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*1/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*3/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*4/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*1/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*2/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*3/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*4/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:4,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                for(var a = 0; a < state.channelCount; a++){
+                                    object.io.signal['in_'+a].onchange = (function(a){
+                                        return function(value){
+                                            if(state.position == a){ object.io.signal.out.set(value); }
+                                        };
+                                    })(a);
+                                }
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.demultiplexer_4.metadata = {
+                        name:'Demultiplexer - Type B',
+                        category:'devices',
+                        helpURL:'/help/units/beta/demultiplexer_4/'
+                    };
+                    this.multiplexer_4 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'multiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:400 },
+                                        design: { width:2, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'multiplexer_4',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*3/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*4/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*1/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*2/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*3/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*4/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:4,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal['out_'+state.previousPosition].set(false);
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.multiplexer_4.metadata = {
+                        name:'Multiplexer - Type B',
+                        category:'devices',
+                        helpURL:'/help/units/beta/multiplexer_4/'
+                    };
                     this.adder = function(x,y,angle){
                         //unitStyle
                             var unitStyle = new function(){
@@ -57801,17 +58057,8 @@
                             var currentInputValues = {in_1:false, in_2:false, carry_in:false};
                             function update(){
                                 var v = currentInputValues;
-                                object.io.signal.out.set(
-                                    v.in_1 != v.in_2 != v.carry_in
-                                );
-                                object.io.signal.carry_out.set(
-                                    (v.in_1 && v.in_2) || (v.carry_in && v.in_1) || (v.carry_in && v.in_2)
-                                );
-                    
-                    
-                    
-                                // S <= A XOR B XOR Cin ;
-                                // Cout <= (A AND B) OR (Cin AND A) OR (Cin AND B) ;
+                                object.io.signal.out.set( v.in_1 != v.in_2 != v.carry_in );
+                                object.io.signal.carry_out.set( (v.in_1 && v.in_2) || (v.carry_in && v.in_1) || (v.carry_in && v.in_2) );
                             };
                     
                         //wiring
@@ -57835,11 +58082,916 @@
                         return object;
                     };
                     this.adder.metadata = {
-                        name:'adder',
+                        name:'Adder',
                         category:'devices',
                         helpURL:'/help/units/beta/adder/'
+                    };
+                    this.demultiplexer_8 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'demultiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:500 },
+                                        design: { width:2, height:5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'demultiplexer_8',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*0, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*1, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*2, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*3, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_4', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*4, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_5', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_6', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*6, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_7', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*7, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*0, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*1, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*2, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*3, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_4',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*4, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_5',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*5, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_6',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*6, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_7',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*7, width:0.5, height:4, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:8,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                for(var a = 0; a < state.channelCount; a++){
+                                    object.io.signal['in_'+a].onchange = (function(a){
+                                        return function(value){
+                                            if(state.position == a){ object.io.signal.out.set(value); }
+                                        };
+                                    })(a);
+                                }
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.demultiplexer_8.metadata = {
+                        name:'Demultiplexer - Type C',
+                        category:'devices',
+                        helpURL:'/help/units/beta/demultiplexer_8/'
+                    };
+                    this.multiplexer_2 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'multiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:300 },
+                                        design: { width:2, height:3 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'multiplexer_2',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:7.5,    width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:7.5+10, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:2,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal['out_'+state.previousPosition].set(false);
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.multiplexer_2.metadata = {
+                        name:'Multiplexer - Type A',
+                        category:'devices',
+                        helpURL:'/help/units/beta/multiplexer_2/'
+                    };
+                    this.single_bit_memory = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'single_bit_memory/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:250, height:250 },
+                                        design: { width:2.5, height:2.5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'single_bit_memory',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width*0.4-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'read', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'write', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:unitStyle.drawingValue.width*0.4+2.5, y:unitStyle.drawingValue.height, width:2.5, height:5, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_image', name:'lamp', 
+                                        data:{ 
+                                            x:4-0.2, y:9-0.2, width:12 + 0.4, height:12 + 0.4,
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_off.png',
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_on.png',
+                                        },
+                                    },
+                                    {collection:'control', type:'button_image', name:'button_set', data:{
+                                        x:11, y:3, width:5, height:5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_set_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_set_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_read', data:{
+                                        x:17, y:3, width:5, height:5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_read_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_read_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_clear', data:{
+                                        x:17, y:9, width:5, height:5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_clear_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_clear_down.png',
+                                    }},
+                                ]
+                            });
+                            
+                            //circuitry
+                                var state = {
+                                    memory:false,
+                                    read:false,
+                                    write:false,
+                                };
+                                function update(){
+                                    if(state.write){ state.memory = object.io.signal.in.read(); }
+                                    if(state.memory){ object.elements.glowbox_image.lamp.on(); }else{ object.elements.glowbox_image.lamp.off(); }
+                                    object.io.signal.out.set(state.read && state.memory);
+                                }
+                    
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_set.onpress = function(value){ if(!value){return;} state.memory = true; update(); };
+                                    object.elements.button_image.button_read.onpress = function(){ state.read = true; update(); };
+                                    object.elements.button_image.button_read.onrelease = function(){ state.read = false; update(); };
+                                    object.elements.button_image.button_clear.onpress = function(value){ if(!value){return;} state.memory = false; update(); };
+                    
+                                //io
+                                    object.io.signal.read.onchange = function(value){
+                                        if(value){ object.elements.button_image.button_read.press(); }else{ object.elements.button_image.button_read.release(); }
+                                    };
+                                    object.io.signal.write.onchange = function(value){ state.write = value; update(); };
+                                    object.io.signal.in.onchange = function(value){ update(); };
+                    
+                            //interface
+                                    object.i = {
+                                        memory:function(value){ if(value==undefined){return state.memory;} state.memory = value; update(); },
+                                        read:function(value){ if(value==undefined){return state.read;} state.read = value; update(); },
+                                        write:function(value){ if(value==undefined){return state.write;} state.write = value; update(); },
+                                        info:function(){ return Object.assign({},state); },
+                                    };
+                    
+                            //import/export
+                                object.importData = function(data){
+                                    state.memory = data.memory;
+                                    update();
+                                };
+                                object.exportData = function(){
+                                    return { memory: state.memory };
+                                };
+                    
+                        return object;
+                    };
+                    this.single_bit_memory.metadata = {
+                        name:'Single Bit Memory',
+                        category:'devices',
+                        helpURL:'/help/units/beta/single_bit_memory/'
+                    };
+                    this.multiplexer_8 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'multiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:500 },
+                                        design: { width:2, height:5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'multiplexer_8',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*0.6 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*0, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*1, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*2, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*3, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*4, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_5', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_6', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*6, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_7', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*7, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*0, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*1, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*2, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*3, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_4',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*4, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_5',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*5, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_6',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*6, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_7',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*7, width:0.5, height:4, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:8,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal['out_'+state.previousPosition].set(false);
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.multiplexer_8.metadata = {
+                        name:'Multiplexer - Type C',
+                        category:'devices',
+                        helpURL:'/help/units/beta/multiplexer_8/'
+                    };
+                    this.demultiplexer_2 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'demultiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:300 },
+                                        design: { width:2, height:3 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'demultiplexer_2',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*1/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:7.5,    width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:7.5+10, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:2,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                for(var a = 0; a < state.channelCount; a++){
+                                    object.io.signal['in_'+a].onchange = (function(a){
+                                        return function(value){
+                                            if(state.position == a){ object.io.signal.out.set(value); }
+                                        };
+                                    })(a);
+                                }
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.demultiplexer_2.metadata = {
+                        name:'Demultiplexer - Type A',
+                        category:'devices',
+                        helpURL:'/help/units/beta/demultiplexer_2/'
                     };
 
+                    this.demultiplexer_4 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'demultiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:400 },
+                                        design: { width:2, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'demultiplexer_4',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*1/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*3/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*4/5 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*1/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*2/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*3/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*4/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:4,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                for(var a = 0; a < state.channelCount; a++){
+                                    object.io.signal['in_'+a].onchange = (function(a){
+                                        return function(value){
+                                            if(state.position == a){ object.io.signal.out.set(value); }
+                                        };
+                                    })(a);
+                                }
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.demultiplexer_4.metadata = {
+                        name:'Demultiplexer - Type B',
+                        category:'devices',
+                        helpURL:'/help/units/beta/demultiplexer_4/'
+                    };
+                    this.multiplexer_4 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'multiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:400 },
+                                        design: { width:2, height:4 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'multiplexer_4',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*3/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*4/5 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'4_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*1/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*2/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*3/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:unitStyle.drawingValue.height*4/5 - 2.5, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:4,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal['out_'+state.previousPosition].set(false);
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.multiplexer_4.metadata = {
+                        name:'Multiplexer - Type B',
+                        category:'devices',
+                        helpURL:'/help/units/beta/multiplexer_4/'
+                    };
                     this.adder = function(x,y,angle){
                         //unitStyle
                             var unitStyle = new function(){
@@ -57896,17 +59048,8 @@
                             var currentInputValues = {in_1:false, in_2:false, carry_in:false};
                             function update(){
                                 var v = currentInputValues;
-                                object.io.signal.out.set(
-                                    v.in_1 != v.in_2 != v.carry_in
-                                );
-                                object.io.signal.carry_out.set(
-                                    (v.in_1 && v.in_2) || (v.carry_in && v.in_1) || (v.carry_in && v.in_2)
-                                );
-                    
-                    
-                    
-                                // S <= A XOR B XOR Cin ;
-                                // Cout <= (A AND B) OR (Cin AND A) OR (Cin AND B) ;
+                                object.io.signal.out.set( v.in_1 != v.in_2 != v.carry_in );
+                                object.io.signal.carry_out.set( (v.in_1 && v.in_2) || (v.carry_in && v.in_1) || (v.carry_in && v.in_2) );
                             };
                     
                         //wiring
@@ -57930,9 +59073,658 @@
                         return object;
                     };
                     this.adder.metadata = {
-                        name:'adder',
+                        name:'Adder',
                         category:'devices',
                         helpURL:'/help/units/beta/adder/'
+                    };
+                    this.demultiplexer_8 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'demultiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:500 },
+                                        design: { width:2, height:5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'demultiplexer_8',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*0, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*1, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_2', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*2, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_3', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*3, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_4', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*4, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_5', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_6', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*6, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_7', data:{ 
+                                        x:0, y:6 + 2.5 + 5.5*7, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*0, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*1, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*2, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*3, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_4',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*4, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_5',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*5, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_6',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*6, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_7',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*7, width:0.5, height:4, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:8,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                for(var a = 0; a < state.channelCount; a++){
+                                    object.io.signal['in_'+a].onchange = (function(a){
+                                        return function(value){
+                                            if(state.position == a){ object.io.signal.out.set(value); }
+                                        };
+                                    })(a);
+                                }
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.demultiplexer_8.metadata = {
+                        name:'Demultiplexer - Type C',
+                        category:'devices',
+                        helpURL:'/help/units/beta/demultiplexer_8/'
+                    };
+                    this.multiplexer_2 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'multiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:300 },
+                                        design: { width:2, height:3 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'multiplexer_2',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:7.5,    width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:7.5+10, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:2,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal['out_'+state.previousPosition].set(false);
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.multiplexer_2.metadata = {
+                        name:'Multiplexer - Type A',
+                        category:'devices',
+                        helpURL:'/help/units/beta/multiplexer_2/'
+                    };
+                    this.single_bit_memory = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'single_bit_memory/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:250, height:250 },
+                                        design: { width:2.5, height:2.5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'single_bit_memory',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width*0.4-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'read', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'write', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*2/3 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:unitStyle.drawingValue.width*0.4+2.5, y:unitStyle.drawingValue.height, width:2.5, height:5, angle:Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_image', name:'lamp', 
+                                        data:{ 
+                                            x:4-0.2, y:9-0.2, width:12 + 0.4, height:12 + 0.4,
+                                            dimURL:unitStyle.imageStoreURL_localPrefix+'light_off.png',
+                                            glowURL:unitStyle.imageStoreURL_localPrefix+'light_on.png',
+                                        },
+                                    },
+                                    {collection:'control', type:'button_image', name:'button_set', data:{
+                                        x:11, y:3, width:5, height:5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_set_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_set_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_read', data:{
+                                        x:17, y:3, width:5, height:5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_read_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_read_down.png',
+                                    }},
+                                    {collection:'control', type:'button_image', name:'button_clear', data:{
+                                        x:17, y:9, width:5, height:5, hoverable:false, 
+                                        backingURL__up:unitStyle.imageStoreURL_localPrefix+'button_clear_up.png',
+                                        backingURL__press:unitStyle.imageStoreURL_localPrefix+'button_clear_down.png',
+                                    }},
+                                ]
+                            });
+                            
+                            //circuitry
+                                var state = {
+                                    memory:false,
+                                    read:false,
+                                    write:false,
+                                };
+                                function update(){
+                                    if(state.write){ state.memory = object.io.signal.in.read(); }
+                                    if(state.memory){ object.elements.glowbox_image.lamp.on(); }else{ object.elements.glowbox_image.lamp.off(); }
+                                    object.io.signal.out.set(state.read && state.memory);
+                                }
+                    
+                            //wiring
+                                //hid
+                                    object.elements.button_image.button_set.onpress = function(value){ if(!value){return;} state.memory = true; update(); };
+                                    object.elements.button_image.button_read.onpress = function(){ state.read = true; update(); };
+                                    object.elements.button_image.button_read.onrelease = function(){ state.read = false; update(); };
+                                    object.elements.button_image.button_clear.onpress = function(value){ if(!value){return;} state.memory = false; update(); };
+                    
+                                //io
+                                    object.io.signal.read.onchange = function(value){
+                                        if(value){ object.elements.button_image.button_read.press(); }else{ object.elements.button_image.button_read.release(); }
+                                    };
+                                    object.io.signal.write.onchange = function(value){ state.write = value; update(); };
+                                    object.io.signal.in.onchange = function(value){ update(); };
+                    
+                            //interface
+                                    object.i = {
+                                        memory:function(value){ if(value==undefined){return state.memory;} state.memory = value; update(); },
+                                        read:function(value){ if(value==undefined){return state.read;} state.read = value; update(); },
+                                        write:function(value){ if(value==undefined){return state.write;} state.write = value; update(); },
+                                        info:function(){ return Object.assign({},state); },
+                                    };
+                    
+                            //import/export
+                                object.importData = function(data){
+                                    state.memory = data.memory;
+                                    update();
+                                };
+                                object.exportData = function(){
+                                    return { memory: state.memory };
+                                };
+                    
+                        return object;
+                    };
+                    this.single_bit_memory.metadata = {
+                        name:'Single Bit Memory',
+                        category:'devices',
+                        helpURL:'/help/units/beta/single_bit_memory/'
+                    };
+                    this.multiplexer_8 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'multiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:500 },
+                                        design: { width:2, height:5 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'multiplexer_8',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*0.6 - 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_0', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*0, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_1', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*1, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_2', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*2, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_3', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*3, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_4', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*4, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_5', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_6', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*6, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out_7', data:{ 
+                                        x:unitStyle.drawingValue.width, y:6 - 2.5 + 5.5*7, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'8_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*0, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*1, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_2',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*2, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_3',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*3, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_4',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*4, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_5',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*5, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_6',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*6, width:0.5, height:4, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_7',data:{ x:10 - 0.5/2, y:8 - 2.5 + 5*7, width:0.5, height:4, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:8,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal['out_'+state.previousPosition].set(false);
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal['out_'+state.position].set( object.io.signal.in.read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                object.io.signal.in.onchange = function(value){ object.io.signal['out_'+state.position].set(value); };
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.multiplexer_8.metadata = {
+                        name:'Multiplexer - Type C',
+                        category:'devices',
+                        helpURL:'/help/units/beta/multiplexer_8/'
+                    };
+                    this.demultiplexer_2 = function(x,y,angle){
+                        //unitStyle
+                            var unitStyle = new function(){
+                                //image store location URL
+                                    this.imageStoreURL_localPrefix = imageStoreURL+'demultiplexer/';
+                    
+                                //calculation of measurements
+                                    var div = 10;
+                                    var measurement = {
+                                        file: { width:200, height:300 },
+                                        design: { width:2, height:3 },
+                                    };
+                    
+                                    this.offset = 20/div;
+                                    this.drawingValue = { 
+                                        width: measurement.file.width/div, 
+                                        height: measurement.file.height/div
+                                    };
+                    
+                                //styling values
+                                    this.LEDs = {
+                                        glow:{r:232/255, g:160/255, b:111/255, a:1}, 
+                                        dim:{r:164/255, g:80/255, b:61/255, a:1},
+                                    };
+                            };
+                    
+                        //main object creation
+                            var object = _canvas_.interface.unit.builder({
+                                name:'demultiplexer_2',
+                                x:x, y:y, angle:angle,
+                                space:[
+                                    { x:0,                             y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:0                             },
+                                    { x:unitStyle.drawingValue.width , y:unitStyle.drawingValue.height },
+                                    { x:0,                             y:unitStyle.drawingValue.height },
+                                ],
+                                elements:[
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'switch', data:{ 
+                                        x:unitStyle.drawingValue.width*0.5-2.5, y:0, width:2.5, height:5, angle:-Math.PI/2, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'out', data:{ 
+                                        x:unitStyle.drawingValue.width, y:unitStyle.drawingValue.height*1/2 - 2.5, width:2.5, height:5, angle:0, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_0', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*1/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'dynamic', type:'connectionNode_signal', name:'in_1', data:{ 
+                                        x:0, y:unitStyle.drawingValue.height*2/3 + 2.5, width:2.5, height:5, angle:-Math.PI, cableVersion:2, style:style.connectionNode.signal,
+                                    }},
+                                    {collection:'basic', type:'image', name:'backing', 
+                                        data:{ x:0, y:0, width:unitStyle.drawingValue.width, height:unitStyle.drawingValue.height, url:unitStyle.imageStoreURL_localPrefix+'2_backing.png' }
+                                    },
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_0',data:{ x:10 - 0.5/2, y:7.5,    width:0.5, height:5, style:unitStyle.LEDs }},
+                                    {collection:'display', type:'glowbox_rectangle',name:'LED_1',data:{ x:10 - 0.5/2, y:7.5+10, width:0.5, height:5, style:unitStyle.LEDs }},
+                                ]
+                            });
+                    
+                        //circuitry
+                            var state = {
+                                channelCount:2,
+                                previousPosition:-1,
+                                position:0,
+                            };
+                            function gotoPosition(value){
+                                state.previousPosition = state.position;
+                                state.position = value;
+                            }
+                            function step(){
+                                if( state.channelCount <= state.position+1 ){ gotoPosition(0); }else{ gotoPosition(state.position+1); }
+                            }
+                            function update(){
+                                if(state.previousPosition != -1){
+                                    object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                                    object.elements.glowbox_rectangle['LED_'+state.previousPosition].off();
+                                }
+                                object.elements.glowbox_rectangle['LED_'+state.position].on();
+                                object.io.signal.out.set( object.io.signal['in_'+state.position].read() );
+                            }
+                    
+                        //wiring
+                            //io
+                                for(var a = 0; a < state.channelCount; a++){
+                                    object.io.signal['in_'+a].onchange = (function(a){
+                                        return function(value){
+                                            if(state.position == a){ object.io.signal.out.set(value); }
+                                        };
+                                    })(a);
+                                }
+                                object.io.signal.switch.onchange = function(value){
+                                    if(!value){return;}
+                                    step();
+                                    update();
+                                };
+                    
+                        //interface
+                            object.i = {
+                                step:function(){step();update();},
+                                position:function(value){
+                                    if(value==undefined){return state.position;}
+                                    gotoPosition(value);
+                                    update();
+                                },
+                            };
+                    
+                        //import/export
+                            object.importData = function(data){
+                                gotoPosition(data.position);
+                                update();
+                            };
+                            object.exportData = function(){
+                                return { position: state.position };
+                            };
+                    
+                        //setup
+                            update();
+                    
+                        return object;
+                    };
+                    this.demultiplexer_2.metadata = {
+                        name:'Demultiplexer - Type A',
+                        category:'devices',
+                        helpURL:'/help/units/beta/demultiplexer_2/'
                     };
                     _canvas_.interface.part.collection.control.dial_colourWithIndent_continuous = function(
                         name='dial_colourWithIndent_continuous',
@@ -58201,7 +59993,7 @@
                     this._categoryData = {
                         interface:{ printingName:'Interface',itemWidth:265},
                         logic_gates:{ printingName:'Logic Gates',itemWidth:100},
-                        devices:{ printingName:'Devices',itemWidth:100},
+                        devices:{ printingName:'Devices',itemWidth:175},
                     };
                 };
             };
@@ -58480,29 +60272,36 @@
             _canvas_.core.render.activeLimitToFrameRate(true);
             if( (new URL(window.location.href)).searchParams.get("darkmode") != null ){ _canvas_.control.misc.darkMode(); }
             
-            _canvas_.control.scene.addUnit(0,0,0,'ruler','alpha');
+            // _canvas_.control.scene.addUnit(0,0,0,'ruler','alpha');
             
-            // _canvas_.control.scene.addUnit(60,10,0,'button_panel_1','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'button_panel_2','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'button_panel_4','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'button_panel_8','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'multi_option_signal_sender_2','curvetech');
-            // _canvas_.control.scene.addUnit(100,10,0,'multi_option_signal_sender_4','curvetech');
-            // _canvas_.control.scene.addUnit(150,10,0,'multi_option_signal_sender_8','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'light_panel_2','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'light_panel_4','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'light_panel_8','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'button_panel_1','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'button_panel_2','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'button_panel_4','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'button_panel_8','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'multi_option_signal_sender_2','curvetech');
+            _canvas_.control.scene.addUnit(100,10,0,'multi_option_signal_sender_4','curvetech');
+            _canvas_.control.scene.addUnit(150,10,0,'multi_option_signal_sender_8','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'light_panel_2','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'light_panel_4','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'light_panel_8','curvetech');
             
-            // _canvas_.control.scene.addUnit(60,10,0,'REP','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'DUP','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'NOT','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'AND','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'OR','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'XOR','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'NAND','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'NOR','curvetech');
-            // _canvas_.control.scene.addUnit(60,10,0,'XNOR','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'REP','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'DUP','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'NOT','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'AND','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'OR','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'XOR','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'NAND','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'NOR','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'XNOR','curvetech');
             
+            _canvas_.control.scene.addUnit(60,10,0,'single_bit_memory','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'multiplexer_2','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'multiplexer_4','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'multiplexer_8','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'demultiplexer_2','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'demultiplexer_4','curvetech');
+            _canvas_.control.scene.addUnit(60,10,0,'demultiplexer_8','curvetech');
             _canvas_.control.scene.addUnit(60,10,0,'adder','curvetech');
             
             _canvas_.control.viewport.scale(6);

@@ -54,17 +54,8 @@ this.adder = function(x,y,angle){
         var currentInputValues = {in_1:false, in_2:false, carry_in:false};
         function update(){
             var v = currentInputValues;
-            object.io.signal.out.set(
-                v.in_1 != v.in_2 != v.carry_in
-            );
-            object.io.signal.carry_out.set(
-                (v.in_1 && v.in_2) || (v.carry_in && v.in_1) || (v.carry_in && v.in_2)
-            );
-
-
-
-            // S <= A XOR B XOR Cin ;
-            // Cout <= (A AND B) OR (Cin AND A) OR (Cin AND B) ;
+            object.io.signal.out.set( v.in_1 != v.in_2 != v.carry_in );
+            object.io.signal.carry_out.set( (v.in_1 && v.in_2) || (v.carry_in && v.in_1) || (v.carry_in && v.in_2) );
         };
 
     //wiring
@@ -88,7 +79,7 @@ this.adder = function(x,y,angle){
     return object;
 };
 this.adder.metadata = {
-    name:'adder',
+    name:'Adder',
     category:'devices',
     helpURL:'/help/units/beta/adder/'
 };

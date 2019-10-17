@@ -171,8 +171,7 @@
             sequencer
 
 - LAZERS DOING LAZER THINGS (shooter/receiver/mirror/splitter/etc)
-- expansion of connectionNode clickable area, so that things stay the same graphically, but mouse interaction is easier
-  - connection nodes expand when mousing over them
+- connection node proximity snapping
 - advanced (easier) unit placement (like stamping or/and click-n-plop)
 - rotate unit around point other than their origin (maybe it's 'centre')
 - dev output text console thing. Maybe activate with F3 or something (maybe just the url which adds an option in the menubar dropdown)
