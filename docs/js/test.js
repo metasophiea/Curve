@@ -20069,7 +20069,7 @@
             
 
             _canvas_.core = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:8,d:26} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:17} };
                 var core = this;
                 
                 _canvas_.setAttribute('tabIndex',1);
@@ -20141,6 +20141,7 @@
                                     augmentExtremities_add(shape);
                         
                                     childRegistry[shape.name] = shape;
+                                    if(shape.onadd != undefined){shape.onadd(false);}
                                 };
                                 this.prepend = function(shape){
                                     if( !isValidShape(shape) ){ return; }
@@ -20150,9 +20151,11 @@
                                     augmentExtremities_add(shape);
                         
                                     childRegistry[shape.name] = shape;
+                                    if(shape.onadd != undefined){shape.onadd(true);}
                                 };
                                 this.remove = function(shape){
                                     if(shape == undefined){return;}
+                                    if(shape.onremove != undefined){shape.onremove();}
                                     children.splice(children.indexOf(shape), 1);
                                     augmentExtremities_remove(shape);
                         
@@ -20333,9 +20336,9 @@
                                 function augmentExtremities_remove(shape){
                                     //this function assumes that the shape has already been removed from the 'children' variable)
                                     if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_remove');}
-                                    //is the shape's bouding box within the bouding box of the group; if so, no recalculation need be done
-                                    //otherwise the shape is touching the boundry, in which case search through the children for another 
-                                    //shape that also touches the boundry, or find the closeset shape and adjust the boundry to touch that
+                                    //is the shape's bounding box within the bounding box of the group; if so, no recalculation need be done
+                                    //otherwise the shape is touching the boundary, in which case search through the children for another 
+                                    //shape that also touches the boundary, or find the closest shape and adjust the boundary to touch that
                         
                                     var data = {
                                         topLeft:{
@@ -20348,27 +20351,27 @@
                                         }
                                     };
                                     if( data.topLeft.x != 0 && data.topLeft.y != 0 && data.bottomRight.x != 0 && data.bottomRight.y != 0 ){
-                                        if(self.devMode){console.log(self.getAddress()+'::'+'-> easy remove: no changes to the group\'s bouding box required');}
+                                        if(self.devMode){console.log(self.getAddress()+'::'+'-> easy remove: no changes to the group\'s bounding box required');}
                                         return;
                                     }else{
                                         ['topLeft','bottomRight'].forEach(cornerName => {
                                             ['x','y'].forEach(axisName => {
                                                 if(data[cornerName][axisName] == 0){
-                                                    if(self.devMode){console.log(self.getAddress()+'::'+'-> '+cornerName+'_'+axisName+' is at boundry');}
+                                                    if(self.devMode){console.log(self.getAddress()+'::'+'-> '+cornerName+'_'+axisName+' is at boundary');}
                         
-                                                    var boundryToucherFound = false;
-                                                    var closesetToBoundry = {distance:undefined, position:undefined};
+                                                    var boundaryToucherFound = false;
+                                                    var closestToBoundary = {distance:undefined, position:undefined};
                                                     for(var a = 0; a < children.length; a++){
                                                         var tmp = Math.abs(children[a].extremities.boundingBox[cornerName][axisName] - self.extremities.boundingBox[cornerName][axisName]);
-                                                        if(closesetToBoundry.distance == undefined || closesetToBoundry.distance > tmp){
-                                                            closesetToBoundry = { distance:tmp, position:children[a].extremities.boundingBox[cornerName][axisName] };
-                                                            if(closesetToBoundry.distance == 0){ boundryToucherFound = true; break; }
+                                                        if(closestToBoundary.distance == undefined || closestToBoundary.distance > tmp){
+                                                            closestToBoundary = { distance:tmp, position:children[a].extremities.boundingBox[cornerName][axisName] };
+                                                            if(closestToBoundary.distance == 0){ boundaryToucherFound = true; break; }
                                                         }
                                                     }
                         
-                                                    if(!boundryToucherFound){
-                                                        if(self.devMode){console.log(self.getAddress()+'::'+'-> need to adjust the bouding box');}
-                                                        self.extremities.boundingBox[cornerName][axisName] = closesetToBoundry.position;
+                                                    if(!boundaryToucherFound){
+                                                        if(self.devMode){console.log(self.getAddress()+'::'+'-> need to adjust the bounding box');}
+                                                        self.extremities.boundingBox[cornerName][axisName] = closestToBoundary.position;
                                                     }
                                                 }
                                             });
@@ -24727,7 +24730,7 @@
                 };
 
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:1, lastDateModified:{y:2019,m:10,d:12} };
+                this.versionInformation = { tick:1, lastDateModified:{y:2019,m:10,d:18} };
                 var interface = this;
             
                 this.circuit = new function(){
@@ -38190,6 +38193,7 @@
                                         if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
                                         if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
                                         if( new_foreignNode == foreignNode ){ return; }
+                                        if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
                             
                                         this.disconnect();
                             
@@ -38222,46 +38226,6 @@
                                     };
                                     object.getForeignNode = function(){ return foreignNode; };
                             
-                                //mouse interaction
-                                    rectangle.onmousedown = function(x,y,event){
-                                        var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
-                                        var pointA = object.getCablePoint();
-                                        var tmpCable = interfacePart.builder(
-                                            'dynamic',tempCableType,'tmpCable-'+object.getAddress().replace(/\//g, '_'),
-                                            { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
-                                        );
-                            
-                                        _canvas_.system.pane.getMiddlegroundPane(object).append(tmpCable);
-                            
-                                        _canvas_.system.mouse.mouseInteractionHandler(
-                                            function(event){
-                                                var pointA = object.getCablePoint();
-                                                var pointB = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
-                                                pointB.angle = _canvas_.library.math.getAngleOfTwoPoints(pointB,pointA)
-                            
-                                                tmpCable.draw( pointA.x,pointA.y, pointB.x,pointB.y, pointA.angle,pointB.angle );
-                                            },
-                                            function(event){
-                                                tmpCable.parent.remove(tmpCable);
-                                                tmpCable = undefined;
-                            
-                                                var element = _canvas_.core.arrangement.getElementsUnderPoint(event.X,event.Y)[0];
-                                                if(element == undefined){return;}
-                                                
-                                                var node = element.parent;
-                                                if( node._connectionNode ){ 
-                                                    if( node.isConnected() && !node.canDisconnect() ){return;}
-                                                    if( object.isConnected() && !object.canDisconnect() ){return;}
-                                                    if( allowConnections && node.allowConnections() ){ object.connectTo(node); }
-                                                }
-                                            }
-                                        );
-                                    };
-                                    rectangle.ondblclick = function(x,y,event){
-                                        if(foreignNode == undefined || !(allowDisconnections && foreignNode.allowDisconnections()) ){return;}
-                                        object.disconnect();
-                                    };
-                            
                                 //cabling
                                     var cable;
                             
@@ -38284,7 +38248,7 @@
                                     object._loseCable = function(){
                                         cable = undefined;
                                     };
-                                    object.getCablePoint = function(){
+                                    object.getAttachmentPoint = function(){
                                         var offset = object.getOffset();
                             
                                         var diagonalLength = Math.sqrt( Math.pow((height),2)/4 + Math.pow((width),2)/4 ) * offset.scale;
@@ -38300,10 +38264,102 @@
                                     object.draw = function(){
                                         if( cable == undefined ){return;}
                             
-                                        var pointA = this.getCablePoint();
-                                        var pointB = foreignNode.getCablePoint();
+                                        var pointA = this.getAttachmentPoint();
+                                        var pointB = foreignNode.getAttachmentPoint();
                             
                                         cable.draw(pointA.x,pointA.y,pointB.x,pointB.y,pointA.angle,pointB.angle);
+                                    };
+                            
+                                //mouse interaction
+                                    rectangle.onmousedown = function(x,y,event){
+                                        var proximityThreshold = {distance:15, hysteresisDistance:1};
+                                        var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
+                                        var displacedNode = undefined;
+                            
+                                        var liveCable;
+                                        function createLiveCable(){
+                                            var pointA = object.getAttachmentPoint();
+                                            var liveCable = interfacePart.builder(
+                                                'dynamic',tempCableType,'liveCable-'+object.getAddress().replace(/\//g, '_'),
+                                                { x1:pointA.x,y1:pointA.y,x2:x,y2:y, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}}
+                                            );
+                                            _canvas_.system.pane.getMiddlegroundPane(object).append(liveCable);
+                                            return liveCable;
+                                        }
+                            
+                                        _canvas_.system.mouse.mouseInteractionHandler(
+                                            function(event){
+                                                if( !object.allowConnections() ){return;}
+                                                if( object.isConnected() && !object.canDisconnect() ){return;}
+                                                if( object.getForeignNode() != undefined && object.getForeignNode().isConnected() && !object.getForeignNode().canDisconnect() ){return;}
+                            
+                                                var mousePoint = _canvas_.core.viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                            
+                                                //gather connection nodes within proximity
+                                                    var nodesWithinProximity = interfacePart.collection.dynamic.connectionNode.registry.map(node => {
+                                                        if(node === object){return;}
+                                                        var point = node.getAttachmentPoint();
+                                                        var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                        if(distance < proximityThreshold.distance){ return {node:node,distance:distance}; }
+                                                    }).filter(item => item!=undefined).sort((a, b) => {return a.distance-b.distance});
+                            
+                                                //select node to snap to
+                                                    var snapToNode = undefined;
+                                                    if(nodesWithinProximity.length == 0){
+                                                        if( object.isConnected() ){
+                                                            var point = object.getForeignNode().getAttachmentPoint();
+                                                            var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                            snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? undefined : object.getForeignNode();
+                                                        }
+                                                    }else if( nodesWithinProximity.length == 1 ){
+                                                        if( object.isConnected() ){
+                                                            var point = object.getForeignNode().getAttachmentPoint();
+                                                            var distance = Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2);
+                                                            snapToNode = distance > proximityThreshold.distance + proximityThreshold.hysteresisDistance ? nodesWithinProximity[0].node : object.getForeignNode();
+                                                        }else{
+                                                            snapToNode = nodesWithinProximity[0].node;
+                                                        }
+                                                    }else{
+                                                        if(!object.isConnected()){
+                                                            snapToNode = nodesWithinProximity[0].node;
+                                                        }else{
+                                                            var point = object.getForeignNode().getAttachmentPoint();
+                                                            var currentlyConnectedNode = { node:object.getForeignNode(), distance:Math.pow((Math.pow((point.x-mousePoint.x),2) + Math.pow((point.y-mousePoint.y),2)),1/2) };
+                                                            var relevantNodes = nodesWithinProximity.filter(node => node.node != object.getForeignNode() );
+                            
+                                                            snapToNode = currentlyConnectedNode.distance > relevantNodes[0].distance + proximityThreshold.hysteresisDistance ? relevantNodes[0].node : currentlyConnectedNode.node;
+                                                        }
+                                                    }
+                                                
+                                                //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
+                                                    if( snapToNode == undefined || !snapToNode.allowConnections() ){
+                                                        if( liveCable == undefined ){
+                                                            if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }else{ object.disconnect(); }
+                                                            liveCable = createLiveCable();
+                                                        }
+                            
+                                                        var thisNode_point = object.getAttachmentPoint();
+                                                        mousePoint.angle = _canvas_.library.math.getAngleOfTwoPoints(mousePoint,thisNode_point);
+                                                        liveCable.draw( thisNode_point.x,thisNode_point.y, mousePoint.x,mousePoint.y, thisNode_point.angle,mousePoint.angle );
+                                                    }else{
+                                                        if(liveCable != undefined){ liveCable.parent.remove(liveCable); liveCable = undefined; }
+                            
+                                                        if( object.getForeignNode() != snapToNode ){
+                                                            if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }
+                                                            if( snapToNode.isConnected() ){ displacedNode = snapToNode.getForeignNode(); }
+                                                            
+                                                            object.connectTo(snapToNode);
+                                                        }
+                                                    }
+                                            },
+                                            function(event){
+                                                if(liveCable != undefined){ liveCable.parent.remove(liveCable); liveCable = undefined; }
+                                            }
+                                        );
+                                    };
+                                    rectangle.ondblclick = function(x,y,event){
+                                        if(foreignNode == undefined || !(allowDisconnections && foreignNode.allowDisconnections()) ){return;}
+                                        object.disconnect();
                                     };
                             
                                 //graphical
@@ -38320,9 +38376,20 @@
                                     object.onconnect = onconnect;
                                     object.ondisconnect = ondisconnect;
                             
+                                //register self
+                                    object.onadd = function(){
+                                        interfacePart.collection.dynamic.connectionNode.registry.push(this);
+                                    };
+                                    object.onremove = function(){
+                                        interfacePart.collection.dynamic.connectionNode.registry.splice(
+                                            interfacePart.collection.dynamic.connectionNode.registry.indexOf(this), 
+                                            1
+                                        );
+                                    };
+                            
                                 return object;
                             };
-                            
+                            this.connectionNode.registry = [];
                             interfacePart.partLibrary.dynamic.connectionNode = function(name,data){ 
                                 return interfacePart.collection.dynamic.connectionNode(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
@@ -40903,7 +40970,7 @@
             _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
             _canvas_.control.misc.lightMode();
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:15} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:18} };
             };
             
             _canvas_.interface.unit.collection = new function(){
@@ -60173,6 +60240,7 @@
                             {type:'item', text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
                             {type:'item', text_left:'Development Log', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/log');}},
                             {type:'item', text_left:'Github', function:function(){window.open('https://github.com/metasophiea/curve');}},
+                            {type:'item', text_left:'Ideas List', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/ideas');}},
                         ]
                     },
                 );
@@ -60274,35 +60342,35 @@
             
             // _canvas_.control.scene.addUnit(0,0,0,'ruler','alpha');
             
-            _canvas_.control.scene.addUnit(60,10,0,'button_panel_1','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'button_panel_2','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'button_panel_4','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'button_panel_8','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'multi_option_signal_sender_2','curvetech');
-            _canvas_.control.scene.addUnit(100,10,0,'multi_option_signal_sender_4','curvetech');
-            _canvas_.control.scene.addUnit(150,10,0,'multi_option_signal_sender_8','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'light_panel_2','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'light_panel_4','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'light_panel_8','curvetech');
+            _canvas_.control.scene.addUnit(10, 10,0,'button_panel_1','curvetech');
+            _canvas_.control.scene.addUnit(35, 10,0,'button_panel_2','curvetech');
+            _canvas_.control.scene.addUnit(70, 10,0,'button_panel_4','curvetech');
+            _canvas_.control.scene.addUnit(125, 10,0,'button_panel_8','curvetech');
+            _canvas_.control.scene.addUnit(10, 45,0,'light_panel_2','curvetech');
+            _canvas_.control.scene.addUnit(45, 45,0,'light_panel_4','curvetech');
+            _canvas_.control.scene.addUnit(105, 45,0,'light_panel_8','curvetech');
+            _canvas_.control.scene.addUnit(10, 70,0,'multi_option_signal_sender_2','curvetech');
+            _canvas_.control.scene.addUnit(50, 70,0,'multi_option_signal_sender_4','curvetech');
+            _canvas_.control.scene.addUnit(95, 70,0,'multi_option_signal_sender_8','curvetech');
             
-            _canvas_.control.scene.addUnit(60,10,0,'REP','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'DUP','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'NOT','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'AND','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'OR','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'XOR','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'NAND','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'NOR','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'XNOR','curvetech');
+            _canvas_.control.scene.addUnit(135, 70,0,'REP','curvetech');
+            _canvas_.control.scene.addUnit(150, 70,0,'DUP','curvetech');
+            _canvas_.control.scene.addUnit(135, 90,0,'NOT','curvetech');
+            _canvas_.control.scene.addUnit(165, 70,0,'AND','curvetech');
+            _canvas_.control.scene.addUnit(180, 70,0,'OR','curvetech');
+            _canvas_.control.scene.addUnit(195, 70,0,'XOR','curvetech');
+            _canvas_.control.scene.addUnit(165, 90,0,'NAND','curvetech');
+            _canvas_.control.scene.addUnit(180, 90,0,'NOR','curvetech');
+            _canvas_.control.scene.addUnit(195, 90,0,'XNOR','curvetech');
             
-            _canvas_.control.scene.addUnit(60,10,0,'single_bit_memory','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'multiplexer_2','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'multiplexer_4','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'multiplexer_8','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'demultiplexer_2','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'demultiplexer_4','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'demultiplexer_8','curvetech');
-            _canvas_.control.scene.addUnit(60,10,0,'adder','curvetech');
+            _canvas_.control.scene.addUnit(10, 110,0,'adder','curvetech');
+            _canvas_.control.scene.addUnit(35, 110,0,'multiplexer_2','curvetech');
+            _canvas_.control.scene.addUnit(65, 110,0,'multiplexer_4','curvetech');
+            _canvas_.control.scene.addUnit(95, 110,0,'multiplexer_8','curvetech');
+            _canvas_.control.scene.addUnit(125, 110,0,'demultiplexer_2','curvetech');
+            _canvas_.control.scene.addUnit(155, 110,0,'demultiplexer_4','curvetech');
+            _canvas_.control.scene.addUnit(185, 110,0,'demultiplexer_8','curvetech');
+            _canvas_.control.scene.addUnit(215, 110,0,'single_bit_memory','curvetech');
             
             _canvas_.control.viewport.scale(6);
 

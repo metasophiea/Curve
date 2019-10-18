@@ -1,4 +1,20 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-18
+  - updated the connection node to use proximity snapping in mouse connecting
+    (it's soooo much smoother)
+  - added link to the ideas page in the menubar (under help)
+
+
+2019-10-17
+  - added a callback for 'onremove' to the group shape in core. It's called when
+    a shape is being removed from the group
+  - added a callback for 'onadd' to the group shape in core. It's called when a
+    shape is being added to the group. There's a boolean argument to indicate 
+    that the shape is being added to the front of the group or not (true for
+    prepend, false for append)
+    (core test 15 checks this functionality)
+
+
 2019-10-15
   - added the single_bit_memory unit to curveTech
   - added the multiplexer units to curveTech (1-2, 1-4, 1-8)

@@ -60,6 +60,7 @@ this.group = function(){
             augmentExtremities_add(shape);
 
             childRegistry[shape.name] = shape;
+            if(shape.onadd != undefined){shape.onadd(false);}
         };
         this.prepend = function(shape){
             if( !isValidShape(shape) ){ return; }
@@ -69,9 +70,11 @@ this.group = function(){
             augmentExtremities_add(shape);
 
             childRegistry[shape.name] = shape;
+            if(shape.onadd != undefined){shape.onadd(true);}
         };
         this.remove = function(shape){
             if(shape == undefined){return;}
+            if(shape.onremove != undefined){shape.onremove();}
             children.splice(children.indexOf(shape), 1);
             augmentExtremities_remove(shape);
 
@@ -252,9 +255,9 @@ this.group = function(){
         function augmentExtremities_remove(shape){
             //this function assumes that the shape has already been removed from the 'children' variable)
             if(self.devMode){console.log(self.getAddress()+'::augmentExtremities_remove');}
-            //is the shape's bouding box within the bouding box of the group; if so, no recalculation need be done
-            //otherwise the shape is touching the boundry, in which case search through the children for another 
-            //shape that also touches the boundry, or find the closeset shape and adjust the boundry to touch that
+            //is the shape's bounding box within the bounding box of the group; if so, no recalculation need be done
+            //otherwise the shape is touching the boundary, in which case search through the children for another 
+            //shape that also touches the boundary, or find the closest shape and adjust the boundary to touch that
 
             var data = {
                 topLeft:{
@@ -267,27 +270,27 @@ this.group = function(){
                 }
             };
             if( data.topLeft.x != 0 && data.topLeft.y != 0 && data.bottomRight.x != 0 && data.bottomRight.y != 0 ){
-                if(self.devMode){console.log(self.getAddress()+'::'+'-> easy remove: no changes to the group\'s bouding box required');}
+                if(self.devMode){console.log(self.getAddress()+'::'+'-> easy remove: no changes to the group\'s bounding box required');}
                 return;
             }else{
                 ['topLeft','bottomRight'].forEach(cornerName => {
                     ['x','y'].forEach(axisName => {
                         if(data[cornerName][axisName] == 0){
-                            if(self.devMode){console.log(self.getAddress()+'::'+'-> '+cornerName+'_'+axisName+' is at boundry');}
+                            if(self.devMode){console.log(self.getAddress()+'::'+'-> '+cornerName+'_'+axisName+' is at boundary');}
 
-                            var boundryToucherFound = false;
-                            var closesetToBoundry = {distance:undefined, position:undefined};
+                            var boundaryToucherFound = false;
+                            var closestToBoundary = {distance:undefined, position:undefined};
                             for(var a = 0; a < children.length; a++){
                                 var tmp = Math.abs(children[a].extremities.boundingBox[cornerName][axisName] - self.extremities.boundingBox[cornerName][axisName]);
-                                if(closesetToBoundry.distance == undefined || closesetToBoundry.distance > tmp){
-                                    closesetToBoundry = { distance:tmp, position:children[a].extremities.boundingBox[cornerName][axisName] };
-                                    if(closesetToBoundry.distance == 0){ boundryToucherFound = true; break; }
+                                if(closestToBoundary.distance == undefined || closestToBoundary.distance > tmp){
+                                    closestToBoundary = { distance:tmp, position:children[a].extremities.boundingBox[cornerName][axisName] };
+                                    if(closestToBoundary.distance == 0){ boundaryToucherFound = true; break; }
                                 }
                             }
 
-                            if(!boundryToucherFound){
-                                if(self.devMode){console.log(self.getAddress()+'::'+'-> need to adjust the bouding box');}
-                                self.extremities.boundingBox[cornerName][axisName] = closesetToBoundry.position;
+                            if(!boundaryToucherFound){
+                                if(self.devMode){console.log(self.getAddress()+'::'+'-> need to adjust the bounding box');}
+                                self.extremities.boundingBox[cornerName][axisName] = closestToBoundary.position;
                             }
                         }
                     });

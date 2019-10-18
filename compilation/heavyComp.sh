@@ -9,7 +9,7 @@ echo "running Closure"
     #actual compilation
         for name in ${nameArray[@]}; do 
 
-                echo -e "-> "$name".js"
+                echo "-> "$name".js"
                 #create temp .js file with the following changes:
                 #   static => _static
                 #   interface => _interface
@@ -33,8 +33,8 @@ echo "running Closure"
         for name in ${nameArray[@]}; do 
             fileSize=$(ls -l docs/js/$name.js | awk '{ print $5}')
             closureFileSize=$(ls -l docs/js/$name.min.js | awk '{ print $5}')
-            echo -e "-> $name"
-            echo -e "\t$name.js" $(( fileSize / 1000 ))"kb";
-            echo -e "\t$name.min.js" $(( closureFileSize / 1000 ))"kb";
-            echo -e "\treduced to" $(echo "print(\"{0:.2f}\".format(100*("$closureFileSize"/"$fileSize")))" | python3)"% of original size"
+            echo "-> $name"
+            echo "\t$name.js" $(( fileSize / 1000 ))"kb";
+            echo "\t$name.min.js" $(( closureFileSize / 1000 ))"kb";
+            echo "\treduced to" $(echo "print(\"{0:.2f}\".format(100*("$closureFileSize"/"$fileSize")))" | python3)"% of original size"
         done

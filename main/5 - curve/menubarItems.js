@@ -164,6 +164,7 @@ _canvas_.control.gui.elements.menubar.dropdowns = [];
                 {type:'item', text_left:'Help Docs', text_right:'(empty)', function:function(){ console.log('go to help site'); } },
                 {type:'item', text_left:'Development Log', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/log');}},
                 {type:'item', text_left:'Github', function:function(){window.open('https://github.com/metasophiea/curve');}},
+                {type:'item', text_left:'Ideas List', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/ideas');}},
             ]
         },
     );

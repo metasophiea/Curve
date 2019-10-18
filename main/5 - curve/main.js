@@ -1,5 +1,5 @@
 _canvas_.curve = new function(){
-    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:15} };
+    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:18} };
 };
 
 {{include:units/main.js}}
