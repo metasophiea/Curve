@@ -43,28 +43,39 @@ this.NOT = function(x,y,angle){
     
     //circuitry
         var currentInputValue = false;
-        var loopProtection = {
-            maxChangesPerSecond:100,
-            changeCount:0,
-            interval:setInterval(function(){ 
-                loopProtection.changeCount = 0;
-                object.io.signal.out.set(!object.io.signal.in.read());
-            },1000),
-        };
+        // var loopProtection = {
+        //     maxChangesPerSecond:100,
+        //     changeCount:0,
+        //     interval:setInterval(function(){ 
+        //         loopProtection.changeCount = 0;
+        //         object.io.signal.out.set(!object.io.signal.in.read());
+        //     },1000),
+        // };
+        var delay = 1;
+        function updateOutput(A){
+            if(delay > 0){ 
+                setTimeout(function(){
+                    object.io.signal.out.set(!A);
+                },delay);
+            }else{
+                object.io.signal.out.set(!A);
+            }
+        }
 
     //wiring
         //io
             object.io.signal.in.onchange = function(value){
                 if(value == currentInputValue){return;}
                 currentInputValue = value;
+                updateOutput(currentInputValue);
 
-                if(loopProtection.changeCount > loopProtection.maxChangesPerSecond ){return;}
-                loopProtection.changeCount++;
-                object.io.signal.out.set(!value);
+                // if(loopProtection.changeCount > loopProtection.maxChangesPerSecond ){return;}
+                // loopProtection.changeCount++;
+                // updateOutput();
             };
 
     //setup
-        object.io.signal.out.set(!object.io.signal.in.read());   
+        updateOutput(currentInputValue);
 
     return object;
 };

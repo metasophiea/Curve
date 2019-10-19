@@ -10,13 +10,15 @@
     this.functionList.onclick = [];
     this.functionList.ondblclick = [];
 
+//save the listener functions of the canvas
+    this.original = {
+        onmousemove: _canvas_.onmousemove,
+        onmouseleave: _canvas_.onmouseleave,
+        onmouseup: _canvas_.onmouseup,
+    };
+
 //utility functions
     this.mouseInteractionHandler = function(moveCode, stopCode){
-        //save the old listener functions of the canvas
-            _canvas_.system.mouse.tmp.onmousemove_old = _canvas_.onmousemove;
-            _canvas_.system.mouse.tmp.onmouseleave_old = _canvas_.onmouseleave;
-            _canvas_.system.mouse.tmp.onmouseup_old = _canvas_.onmouseup;
-
         //replace listener code
             //movement code
                 _canvas_.onmousemove = function(event){ 
@@ -31,9 +33,10 @@
                         event.X = event.offsetX; event.Y = event.offsetY;
                         stopCode(event);
                     }
-                    _canvas_.onmousemove = _canvas_.system.mouse.tmp.onmousemove_old;
-                    _canvas_.onmouseleave = _canvas_.system.mouse.tmp.onmouseleave_old;
-                    _canvas_.onmouseup = _canvas_.system.mouse.tmp.onmouseup_old;
+
+                    _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
+                    _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
+                    _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
                 };
                 _canvas_.onmouseleave = _canvas_.onmouseup;
     };

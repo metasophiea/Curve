@@ -46,19 +46,29 @@ this.DUP = function(x,y,angle){
     
     //circuitry
         var currentInputValue = false;
+        var delay = 1;
+        function updateOutput(A){
+            if(delay > 0){ 
+                setTimeout(function(){
+                    object.io.signal.out_1.set(A);
+                    object.io.signal.out_2.set(A);
+                },delay);
+            }else{
+                object.io.signal.out_1.set(A);
+                object.io.signal.out_2.set(A);
+            }
+        }
 
     //wiring
         //io
             object.io.signal.in.onchange = function(value){
                 if(value == currentInputValue){return;}
                 currentInputValue = value;
-                object.io.signal.out_1.set(value);
-                object.io.signal.out_2.set(value);
+                updateOutput(currentInputValue);
             };
 
     //setup
-        object.io.signal.out_1.set(object.io.signal.in.read());   
-        object.io.signal.out_2.set(object.io.signal.in.read());  
+        updateOutput(currentInputValue);
 
     return object;
 };

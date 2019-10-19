@@ -7,7 +7,7 @@ this.connectionNode = function(
     cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
     cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
     cableConnectionPosition={x:1/2,y:1/2},
-    cableVersion=0,
+    cableVersion=0, proximityThreshold={distance:15, hysteresisDistance:1},
     onconnect=function(instigator){},
     ondisconnect=function(instigator){},
 ){
@@ -37,7 +37,7 @@ this.connectionNode = function(
             if(bool == undefined){return allowDisconnections;}
             allowDisconnections = bool;
         };
-        object.connectTo = function(new_foreignNode){ 
+        object.connectTo = function(new_foreignNode){
             if( new_foreignNode == undefined){ return; }
             if( new_foreignNode == this ){ return; }
             if( new_foreignNode._type != this._type ){ return; }
@@ -81,12 +81,14 @@ this.connectionNode = function(
         var cable;
 
         object._addCable = function(){
-            var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+            var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
             cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
             
             foreignNode._receiveCable(cable);
             _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
             this.draw();
+
+            if(isActive){ cable.activate(); }
         }
         object._receiveCable = function(new_cable){
             cable = new_cable;
@@ -123,7 +125,6 @@ this.connectionNode = function(
 
     //mouse interaction
         rectangle.onmousedown = function(x,y,event){
-            var proximityThreshold = {distance:15, hysteresisDistance:1};
             var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
             var displacedNode = undefined;
 
@@ -214,13 +215,16 @@ this.connectionNode = function(
         };
 
     //graphical
+        var isActive = false;
         object.activate = function(){ 
             rectangle.colour = glowStyle;
             if(cable!=undefined){ cable.activate(); }
+            isActive = true;
         }
         object.deactivate = function(){ 
             rectangle.colour = dimStyle;
             if(cable!=undefined){ cable.deactivate(); }
+            isActive = false;
         }
 
     //callbacks
@@ -244,7 +248,7 @@ this.connectionNode.registry = [];
 interfacePart.partLibrary.dynamic.connectionNode = function(name,data){ 
     return interfacePart.collection.dynamic.connectionNode(
         name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
+        data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion, data.proximityThreshold,
         data.onconnect, data.ondisconnect,
     ); 
 };

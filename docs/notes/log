@@ -1,4 +1,13 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-19
+  - added proximityThreshold argument to connectionNode
+  - changed connectionNode's '_addCable' method to check to see if the node is
+    active, and if so to activate the cable (there's a new internal value that
+    keeps track of whether the node is active or not)
+  - the Esc key grows more powerful (now it runs "system.keyboard.releaseAll")
+  - added 1 millisecond delay to all curveTech's logic units
+
+
 2019-10-18
   - updated the connection node to use proximity snapping in mouse connecting
     (it's soooo much smoother)

@@ -46,22 +46,32 @@ this.NAND = function(x,y,angle){
 
     //circuitry
         var currentInputValues = [false,false];
+        var delay = 1;
+        function updateOutput(A,B){
+            if(delay > 0){ 
+                setTimeout(function(){
+                    object.io.signal.out.set(!(A && B));
+                },delay);
+            }else{
+                object.io.signal.out.set(!(A && B));
+            }
+        }
 
     //wiring
         //io
             object.io.signal.in_1.onchange = function(value){
                 if(value == currentInputValues[0]){return;}
                 currentInputValues[0] = value;
-                object.io.signal.out.set(!(value && object.io.signal.in_2.read()));
+                updateOutput(currentInputValues[0],currentInputValues[1]);
             };
             object.io.signal.in_2.onchange = function(value){
                 if(value == currentInputValues[1]){return;}
                 currentInputValues[1] = value;
-                object.io.signal.out.set(!(value && object.io.signal.in_1.read()));
+                updateOutput(currentInputValues[0],currentInputValues[1]);
             };
 
     //setup
-        object.io.signal.out.set(!(object.io.signal.in_1.read() && object.io.signal.in_2.read()));
+        updateOutput(currentInputValues[0],currentInputValues[1]);
 
     return object;
 };

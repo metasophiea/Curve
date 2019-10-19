@@ -43,17 +43,27 @@ this.REP = function(x,y,angle){
     
     //circuitry
         var currentInputValue = false;
+        var delay = 1;
+        function updateOutput(A){
+            if(delay > 0){ 
+                setTimeout(function(){
+                    object.io.signal.out.set(A);
+                },delay);
+            }else{
+                object.io.signal.out.set(A);
+            }
+        }
 
     //wiring
         //io
             object.io.signal.in.onchange = function(value){
                 if(value == currentInputValue){return;}
                 currentInputValue = value;
-                object.io.signal.out.set(value);
+                updateOutput(currentInputValue);
             };
 
     //setup
-        object.io.signal.out.set(object.io.signal.in.read());   
+        updateOutput(currentInputValue);
 
     return object;
 };

@@ -38,7 +38,12 @@
             customKeyInterpreter(event,true);
 
         //ESCAPE operation code
-            if(event.key == 'Escape'){ console.log('%cEscape key pressed', 'color:White; background-color: Black;'); _canvas_.system.mouse.setUpCallbacks(); }
+            if(event.key == 'Escape'){ 
+                console.log('%cEscape key pressed', 'color:White; background-color: Black;'); 
+                _canvas_.system.keyboard.releaseAll();
+                _canvas_.onmouseup({offsetX:0,offsetY:0});
+                _canvas_.system.mouse.setUpCallbacks();
+            }
         
         //perform action
             for(var a = 0; a < shapes.length; a++){

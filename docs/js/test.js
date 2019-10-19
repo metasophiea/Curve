@@ -24550,7 +24550,7 @@
             
             
             _canvas_.system = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:27} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:19} };
             };
             _canvas_.system.mouse = new function(){
                 //setup
@@ -24565,13 +24565,15 @@
                     this.functionList.onclick = [];
                     this.functionList.ondblclick = [];
                 
+                //save the listener functions of the canvas
+                    this.original = {
+                        onmousemove: _canvas_.onmousemove,
+                        onmouseleave: _canvas_.onmouseleave,
+                        onmouseup: _canvas_.onmouseup,
+                    };
+                
                 //utility functions
                     this.mouseInteractionHandler = function(moveCode, stopCode){
-                        //save the old listener functions of the canvas
-                            _canvas_.system.mouse.tmp.onmousemove_old = _canvas_.onmousemove;
-                            _canvas_.system.mouse.tmp.onmouseleave_old = _canvas_.onmouseleave;
-                            _canvas_.system.mouse.tmp.onmouseup_old = _canvas_.onmouseup;
-                
                         //replace listener code
                             //movement code
                                 _canvas_.onmousemove = function(event){ 
@@ -24586,9 +24588,10 @@
                                         event.X = event.offsetX; event.Y = event.offsetY;
                                         stopCode(event);
                                     }
-                                    _canvas_.onmousemove = _canvas_.system.mouse.tmp.onmousemove_old;
-                                    _canvas_.onmouseleave = _canvas_.system.mouse.tmp.onmouseleave_old;
-                                    _canvas_.onmouseup = _canvas_.system.mouse.tmp.onmouseup_old;
+                
+                                    _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
+                                    _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
+                                    _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
                                 };
                                 _canvas_.onmouseleave = _canvas_.onmouseup;
                     };
@@ -24645,7 +24648,12 @@
                             customKeyInterpreter(event,true);
                 
                         //ESCAPE operation code
-                            if(event.key == 'Escape'){ console.log('%cEscape key pressed', 'color:White; background-color: Black;'); _canvas_.system.mouse.setUpCallbacks(); }
+                            if(event.key == 'Escape'){ 
+                                console.log('%cEscape key pressed', 'color:White; background-color: Black;'); 
+                                _canvas_.system.keyboard.releaseAll();
+                                _canvas_.onmouseup({offsetX:0,offsetY:0});
+                                _canvas_.system.mouse.setUpCallbacks();
+                            }
                         
                         //perform action
                             for(var a = 0; a < shapes.length; a++){
@@ -24730,7 +24738,7 @@
                 };
 
             _canvas_.interface = new function(){
-                this.versionInformation = { tick:1, lastDateModified:{y:2019,m:10,d:18} };
+                this.versionInformation = { tick:1, lastDateModified:{y:2019,m:10,d:19} };
                 var interface = this;
             
                 this.circuit = new function(){
@@ -38156,7 +38164,7 @@
                                 cable_dimStyle={r:0.57,g:0.57,b:0.57,a:1},
                                 cable_glowStyle={r:0.84,g:0.84,b:0.84,a:1},
                                 cableConnectionPosition={x:1/2,y:1/2},
-                                cableVersion=0,
+                                cableVersion=0, proximityThreshold={distance:15, hysteresisDistance:1},
                                 onconnect=function(instigator){},
                                 ondisconnect=function(instigator){},
                             ){
@@ -38186,7 +38194,7 @@
                                         if(bool == undefined){return allowDisconnections;}
                                         allowDisconnections = bool;
                                     };
-                                    object.connectTo = function(new_foreignNode){ 
+                                    object.connectTo = function(new_foreignNode){
                                         if( new_foreignNode == undefined){ return; }
                                         if( new_foreignNode == this ){ return; }
                                         if( new_foreignNode._type != this._type ){ return; }
@@ -38230,12 +38238,14 @@
                                     var cable;
                             
                                     object._addCable = function(){
-                                        var tempCableType = cableVersion == 2 ? 'cable2' : 'cable';
+                                        var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
                                         cable = interfacePart.builder('dynamic',tempCableType, tempCableType+'-'+object.getAddress().replace(/\//g, '_'),{ x1:0,y1:0,x2:100,y2:100, angle:angle, style:{dim:cable_dimStyle, glow:cable_glowStyle}});
                                         
                                         foreignNode._receiveCable(cable);
                                         _canvas_.system.pane.getMiddlegroundPane(this).append(cable);
                                         this.draw();
+                            
+                                        if(isActive){ cable.activate(); }
                                     }
                                     object._receiveCable = function(new_cable){
                                         cable = new_cable;
@@ -38272,7 +38282,6 @@
                             
                                 //mouse interaction
                                     rectangle.onmousedown = function(x,y,event){
-                                        var proximityThreshold = {distance:15, hysteresisDistance:1};
                                         var tempCableType = cableVersion != 0 ? 'cable'+cableVersion : 'cable';
                                         var displacedNode = undefined;
                             
@@ -38363,13 +38372,16 @@
                                     };
                             
                                 //graphical
+                                    var isActive = false;
                                     object.activate = function(){ 
                                         rectangle.colour = glowStyle;
                                         if(cable!=undefined){ cable.activate(); }
+                                        isActive = true;
                                     }
                                     object.deactivate = function(){ 
                                         rectangle.colour = dimStyle;
                                         if(cable!=undefined){ cable.deactivate(); }
+                                        isActive = false;
                                     }
                             
                                 //callbacks
@@ -38393,7 +38405,7 @@
                             interfacePart.partLibrary.dynamic.connectionNode = function(name,data){ 
                                 return interfacePart.collection.dynamic.connectionNode(
                                     name, data.x, data.y, data.angle, data.width, data.height, data.type, data.direction, data.allowConnections, data.allowDisconnections,
-                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion,
+                                    data.style.dim, data.style.glow, data.style.cable_dim, data.style.cable_glow, data.cableConnectionPosition, data.cableVersion, data.proximityThreshold,
                                     data.onconnect, data.ondisconnect,
                                 ); 
                             };
@@ -40757,7 +40769,7 @@
                                             unit.ioRedraw();
                                     }
                                 },
-                                function(event){ _canvas_.system.mouse.tmp.onmouseup_old(event); }
+                                function(event){}
                             );
             
                         return true;
@@ -40970,7 +40982,7 @@
             _canvas_.control.interaction.devMode( (new URL(window.location.href)).searchParams.get("dev") != null );
             _canvas_.control.misc.lightMode();
             _canvas_.curve = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:18} };
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:19} };
             };
             
             _canvas_.interface.unit.collection = new function(){
@@ -55565,22 +55577,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A || B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A || B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(value || object.io.signal.in_2.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(value || object.io.signal.in_1.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in_1.read() || object.io.signal.in_2.read());     
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -55637,22 +55659,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(!(A || B));
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(!(A || B));
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(!(value || object.io.signal.in_2.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(!(value || object.io.signal.in_1.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!(object.io.signal.in_1.read() || object.io.signal.in_2.read()));
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -55709,19 +55741,29 @@
                         
                         //circuitry
                             var currentInputValue = false;
+                            var delay = 1;
+                            function updateOutput(A){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out_1.set(A);
+                                        object.io.signal.out_2.set(A);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out_1.set(A);
+                                    object.io.signal.out_2.set(A);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in.onchange = function(value){
                                     if(value == currentInputValue){return;}
                                     currentInputValue = value;
-                                    object.io.signal.out_1.set(value);
-                                    object.io.signal.out_2.set(value);
+                                    updateOutput(currentInputValue);
                                 };
                     
                         //setup
-                            object.io.signal.out_1.set(object.io.signal.in.read());   
-                            object.io.signal.out_2.set(object.io.signal.in.read());  
+                            updateOutput(currentInputValue);
                     
                         return object;
                     };
@@ -55778,22 +55820,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A && B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A && B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(value && object.io.signal.in_2.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(value && object.io.signal.in_1.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in_1.read() && object.io.signal.in_2.read());     
+                            updateOutput(currentInputValues[0],currentInputValues[1]); 
                     
                         return object;
                     };
@@ -55847,17 +55899,27 @@
                         
                         //circuitry
                             var currentInputValue = false;
+                            var delay = 1;
+                            function updateOutput(A){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in.onchange = function(value){
                                     if(value == currentInputValue){return;}
                                     currentInputValue = value;
-                                    object.io.signal.out.set(value);
+                                    updateOutput(currentInputValue);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in.read());   
+                            updateOutput(currentInputValue);
                     
                         return object;
                     };
@@ -55914,22 +55976,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(!(A && B));
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(!(A && B));
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(!(value && object.io.signal.in_2.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(!(value && object.io.signal.in_1.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!(object.io.signal.in_1.read() && object.io.signal.in_2.read()));
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -55986,22 +56058,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1000;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A || B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A || B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(!(value != object.io.signal.in_2.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(!(value != object.io.signal.in_1.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!(object.io.signal.in_1.read() != object.io.signal.in_2.read()));
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -56055,28 +56137,39 @@
                         
                         //circuitry
                             var currentInputValue = false;
-                            var loopProtection = {
-                                maxChangesPerSecond:100,
-                                changeCount:0,
-                                interval:setInterval(function(){ 
-                                    loopProtection.changeCount = 0;
-                                    object.io.signal.out.set(!object.io.signal.in.read());
-                                },1000),
-                            };
+                            // var loopProtection = {
+                            //     maxChangesPerSecond:100,
+                            //     changeCount:0,
+                            //     interval:setInterval(function(){ 
+                            //         loopProtection.changeCount = 0;
+                            //         object.io.signal.out.set(!object.io.signal.in.read());
+                            //     },1000),
+                            // };
+                            var delay = 1;
+                            function updateOutput(A){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(!A);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(!A);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in.onchange = function(value){
                                     if(value == currentInputValue){return;}
                                     currentInputValue = value;
+                                    updateOutput(currentInputValue);
                     
-                                    if(loopProtection.changeCount > loopProtection.maxChangesPerSecond ){return;}
-                                    loopProtection.changeCount++;
-                                    object.io.signal.out.set(!value);
+                                    // if(loopProtection.changeCount > loopProtection.maxChangesPerSecond ){return;}
+                                    // loopProtection.changeCount++;
+                                    // updateOutput();
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!object.io.signal.in.read());   
+                            updateOutput(currentInputValue);
                     
                         return object;
                     };
@@ -56133,22 +56226,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A != B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A != B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(value != object.io.signal.in_2.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(value != object.io.signal.in_1.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in_1.read() != object.io.signal.in_2.read());     
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -57220,22 +57323,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A || B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A || B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(value || object.io.signal.in_2.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(value || object.io.signal.in_1.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in_1.read() || object.io.signal.in_2.read());     
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -57292,22 +57405,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(!(A || B));
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(!(A || B));
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(!(value || object.io.signal.in_2.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(!(value || object.io.signal.in_1.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!(object.io.signal.in_1.read() || object.io.signal.in_2.read()));
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -57364,19 +57487,29 @@
                         
                         //circuitry
                             var currentInputValue = false;
+                            var delay = 1;
+                            function updateOutput(A){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out_1.set(A);
+                                        object.io.signal.out_2.set(A);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out_1.set(A);
+                                    object.io.signal.out_2.set(A);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in.onchange = function(value){
                                     if(value == currentInputValue){return;}
                                     currentInputValue = value;
-                                    object.io.signal.out_1.set(value);
-                                    object.io.signal.out_2.set(value);
+                                    updateOutput(currentInputValue);
                                 };
                     
                         //setup
-                            object.io.signal.out_1.set(object.io.signal.in.read());   
-                            object.io.signal.out_2.set(object.io.signal.in.read());  
+                            updateOutput(currentInputValue);
                     
                         return object;
                     };
@@ -57433,22 +57566,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A && B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A && B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(value && object.io.signal.in_2.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(value && object.io.signal.in_1.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in_1.read() && object.io.signal.in_2.read());     
+                            updateOutput(currentInputValues[0],currentInputValues[1]); 
                     
                         return object;
                     };
@@ -57502,17 +57645,27 @@
                         
                         //circuitry
                             var currentInputValue = false;
+                            var delay = 1;
+                            function updateOutput(A){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in.onchange = function(value){
                                     if(value == currentInputValue){return;}
                                     currentInputValue = value;
-                                    object.io.signal.out.set(value);
+                                    updateOutput(currentInputValue);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in.read());   
+                            updateOutput(currentInputValue);
                     
                         return object;
                     };
@@ -57569,22 +57722,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(!(A && B));
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(!(A && B));
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(!(value && object.io.signal.in_2.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(!(value && object.io.signal.in_1.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!(object.io.signal.in_1.read() && object.io.signal.in_2.read()));
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -57641,22 +57804,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1000;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A || B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A || B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(!(value != object.io.signal.in_2.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(!(value != object.io.signal.in_1.read()));
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!(object.io.signal.in_1.read() != object.io.signal.in_2.read()));
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -57710,28 +57883,39 @@
                         
                         //circuitry
                             var currentInputValue = false;
-                            var loopProtection = {
-                                maxChangesPerSecond:100,
-                                changeCount:0,
-                                interval:setInterval(function(){ 
-                                    loopProtection.changeCount = 0;
-                                    object.io.signal.out.set(!object.io.signal.in.read());
-                                },1000),
-                            };
+                            // var loopProtection = {
+                            //     maxChangesPerSecond:100,
+                            //     changeCount:0,
+                            //     interval:setInterval(function(){ 
+                            //         loopProtection.changeCount = 0;
+                            //         object.io.signal.out.set(!object.io.signal.in.read());
+                            //     },1000),
+                            // };
+                            var delay = 1;
+                            function updateOutput(A){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(!A);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(!A);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in.onchange = function(value){
                                     if(value == currentInputValue){return;}
                                     currentInputValue = value;
+                                    updateOutput(currentInputValue);
                     
-                                    if(loopProtection.changeCount > loopProtection.maxChangesPerSecond ){return;}
-                                    loopProtection.changeCount++;
-                                    object.io.signal.out.set(!value);
+                                    // if(loopProtection.changeCount > loopProtection.maxChangesPerSecond ){return;}
+                                    // loopProtection.changeCount++;
+                                    // updateOutput();
                                 };
                     
                         //setup
-                            object.io.signal.out.set(!object.io.signal.in.read());   
+                            updateOutput(currentInputValue);
                     
                         return object;
                     };
@@ -57788,22 +57972,32 @@
                     
                         //circuitry
                             var currentInputValues = [false,false];
+                            var delay = 1;
+                            function updateOutput(A,B){
+                                if(delay > 0){ 
+                                    setTimeout(function(){
+                                        object.io.signal.out.set(A != B);
+                                    },delay);
+                                }else{
+                                    object.io.signal.out.set(A != B);
+                                }
+                            }
                     
                         //wiring
                             //io
                                 object.io.signal.in_1.onchange = function(value){
                                     if(value == currentInputValues[0]){return;}
                                     currentInputValues[0] = value;
-                                    object.io.signal.out.set(value != object.io.signal.in_2.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                                 object.io.signal.in_2.onchange = function(value){
                                     if(value == currentInputValues[1]){return;}
                                     currentInputValues[1] = value;
-                                    object.io.signal.out.set(value != object.io.signal.in_1.read());
+                                    updateOutput(currentInputValues[0],currentInputValues[1]);
                                 };
                     
                         //setup
-                            object.io.signal.out.set(object.io.signal.in_1.read() != object.io.signal.in_2.read());     
+                            updateOutput(currentInputValues[0],currentInputValues[1]);
                     
                         return object;
                     };
@@ -60241,6 +60435,7 @@
                             {type:'item', text_left:'Development Log', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/log');}},
                             {type:'item', text_left:'Github', function:function(){window.open('https://github.com/metasophiea/curve');}},
                             {type:'item', text_left:'Ideas List', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/ideas');}},
+                            {type:'item', text_left:'Bug Tracker', function:function(){window.open('https://raw.githubusercontent.com/metasophiea/curve/master/docs/notes/bugs');}},
                         ]
                     },
                 );

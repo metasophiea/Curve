@@ -164,7 +164,7 @@ _canvas_.control.grapple.functionList.onmousedown.push(
                                 unit.ioRedraw();
                         }
                     },
-                    function(event){ _canvas_.system.mouse.tmp.onmouseup_old(event); }
+                    function(event){}
                 );
 
             return true;

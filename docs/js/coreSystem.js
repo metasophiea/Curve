@@ -24499,7 +24499,7 @@
                 
                 
                 _canvas_.system = new function(){
-                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:9,d:27} };
+                    this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:19} };
                 };
                 _canvas_.system.mouse = new function(){
                     //setup
@@ -24514,13 +24514,15 @@
                         this.functionList.onclick = [];
                         this.functionList.ondblclick = [];
                     
+                    //save the listener functions of the canvas
+                        this.original = {
+                            onmousemove: _canvas_.onmousemove,
+                            onmouseleave: _canvas_.onmouseleave,
+                            onmouseup: _canvas_.onmouseup,
+                        };
+                    
                     //utility functions
                         this.mouseInteractionHandler = function(moveCode, stopCode){
-                            //save the old listener functions of the canvas
-                                _canvas_.system.mouse.tmp.onmousemove_old = _canvas_.onmousemove;
-                                _canvas_.system.mouse.tmp.onmouseleave_old = _canvas_.onmouseleave;
-                                _canvas_.system.mouse.tmp.onmouseup_old = _canvas_.onmouseup;
-                    
                             //replace listener code
                                 //movement code
                                     _canvas_.onmousemove = function(event){ 
@@ -24535,9 +24537,10 @@
                                             event.X = event.offsetX; event.Y = event.offsetY;
                                             stopCode(event);
                                         }
-                                        _canvas_.onmousemove = _canvas_.system.mouse.tmp.onmousemove_old;
-                                        _canvas_.onmouseleave = _canvas_.system.mouse.tmp.onmouseleave_old;
-                                        _canvas_.onmouseup = _canvas_.system.mouse.tmp.onmouseup_old;
+                    
+                                        _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
+                                        _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
+                                        _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
                                     };
                                     _canvas_.onmouseleave = _canvas_.onmouseup;
                         };
@@ -24594,7 +24597,12 @@
                                 customKeyInterpreter(event,true);
                     
                             //ESCAPE operation code
-                                if(event.key == 'Escape'){ console.log('%cEscape key pressed', 'color:White; background-color: Black;'); _canvas_.system.mouse.setUpCallbacks(); }
+                                if(event.key == 'Escape'){ 
+                                    console.log('%cEscape key pressed', 'color:White; background-color: Black;'); 
+                                    _canvas_.system.keyboard.releaseAll();
+                                    _canvas_.onmouseup({offsetX:0,offsetY:0});
+                                    _canvas_.system.mouse.setUpCallbacks();
+                                }
                             
                             //perform action
                                 for(var a = 0; a < shapes.length; a++){
