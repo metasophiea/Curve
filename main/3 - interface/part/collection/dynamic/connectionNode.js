@@ -43,6 +43,7 @@ this.connectionNode = function(
             if( new_foreignNode._type != this._type ){ return; }
             if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
             if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
+
             if( new_foreignNode == foreignNode ){ return; }
             if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
 
@@ -184,7 +185,7 @@ this.connectionNode = function(
                         }
                     
                     //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
-                        if( snapToNode == undefined || !snapToNode.allowConnections() ){
+                        if( snapToNode == undefined || !snapToNode.allowConnections() || (object._direction != '' && object._direction == snapToNode._direction) ){
                             if( liveCable == undefined ){
                                 if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }else{ object.disconnect(); }
                                 liveCable = createLiveCable();

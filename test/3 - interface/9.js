@@ -45,6 +45,16 @@ _canvas_.system.pane.mm.append( cn_dat_2 );
 _canvas_.system.pane.mm.append( cn_dat_3 );
 _canvas_.system.pane.mm.append( cn_dat_4 );
 
+var cn_aud_0 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode_audio', 'test_connectionNode_audio_1', { x:10,  y:410 } );
+var cn_aud_1 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode_audio', 'test_connectionNode_audio_2', { x:110, y:410 } );
+var cn_aud_2 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode_audio', 'test_connectionNode_audio_3', { x:110, y:430 } );
+var cn_aud_3 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode_audio', 'test_connectionNode_audio_4', { x:130, y:415 } );
+var cn_aud_4 = _canvas_.interface.part.builder( 'dynamic', 'connectionNode_audio', 'test_connectionNode_audio_5', { x:130, y:440, isAudioOutput:true } );
+_canvas_.system.pane.mm.append( cn_aud_0 );
+_canvas_.system.pane.mm.append( cn_aud_1 );
+_canvas_.system.pane.mm.append( cn_aud_2 );
+_canvas_.system.pane.mm.append( cn_aud_3 );
+_canvas_.system.pane.mm.append( cn_aud_4 );
 
 
 // cn_reg_0.allowConnections(false);

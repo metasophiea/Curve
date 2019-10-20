@@ -1,11 +1,25 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-20
+  - expanded the connection node logic a little to be aware of node direction,
+    this fixes the bug of cables vanishing when two connection nodes of the same
+    type were being connected (bug:[2019-10-19:1])
+  - data_combiner was internally named voltage_combiner for some reason.. tis
+    fixed now
+  - added a new demo
+
+
 2019-10-19
   - added proximityThreshold argument to connectionNode
   - changed connectionNode's '_addCable' method to check to see if the node is
     active, and if so to activate the cable (there's a new internal value that
     keeps track of whether the node is active or not)
   - the Esc key grows more powerful (now it runs "system.keyboard.releaseAll")
+  - modified system.mouse and system.mouse.mouseInteractionHandler to change
+    the way callback code was being saved and restored. This fixes issues that
+    would arise when mousedown/mouseup events weren't being executed correctly
   - added 1 millisecond delay to all curveTech's logic units
+  - added a new links in the help menubar dropdown, which show the idea list
+    and bug tracker
 
 
 2019-10-18

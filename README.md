@@ -36,3 +36,4 @@ There also seems to be an issue with webGL rendering on windows. I usually devel
 - [Curve Demo 1](https://curve.metasophiea.com?demo=1)
 - [Curve Demo 2](https://curve.metasophiea.com?demo=2)
 - [Curve Demo 3](https://curve.metasophiea.com?demo=3)
+- [Curve Demo 4](https://curve.metasophiea.com?demo=4)

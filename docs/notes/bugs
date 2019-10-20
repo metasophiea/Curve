@@ -11,6 +11,7 @@
 [2019-07-31:1] control.interaction.mouseGripPanningEnabled when disabled doesn't allow for "click anywhere else" unit deselection
     /main/4 - control/mouse.js:://panning moved "_canvas_.control.selection.deselectEverything();" to before the switch, so it always run
 [2019-09-26:1] ending a note too quickly on the basicSynthesizer results in a snap sound
+    it was something to do with overlapping gain adjustments
 [2019-08-25:1] synthesizer circuit: Regarding the wobble features, seems you can set them too high and collisions can occur
     changed library.audio.changeAudioParam's "cancelScheduledValues" call from
         if(cancelScheduledValues){ audioParam.cancelScheduledValues(context.currentTime); }
@@ -20,7 +21,8 @@
 [2019-10-19:2] you're supposed to use the alt key and click-n-drag to quickly copy things, but if you use the control key, a OS dropdown turns up and this causes the last mousemove code to become stuck on. Esc doesn't help
     seems that when it would occur, you could actually hit the Esc button and things would be fine. But if you clicked again (in a frustrated attempt to rid your mouse of this stuck unit) that would cause the 'mouseInteractionHandler' to activate again, which would in turn overwrite the original stored callbacks. Thus when you attempted to go back to the old ones, you'd actually just be setting things to the way they already were, and the original 'core' callbacks would be long gone.
     It's fix now, as I've created a new area to store the 'core' callbacks, and 'mouseInteractionHandler' doesn't do any writing of callbacks to be replaced anymore. Thus Esc works fine and clicking in frustration also fixes everything
-
+[2019-10-19:1] attempting to connect two audio nodes of similar type causes the cable to disappear
+    expanded the connection node logic a little to be aware of node direction
 
 [2019-08-03:1] buttons atop buttons don't hover right, nor click right
 [2019-08-16:2] sink unit is somehow still connected to audio when cables are removed (at least, according to the levels)
@@ -30,5 +32,4 @@
     it's something to do with GUI scaling, where the user has theirs set to something that isn't 100%
 [2019-09-26:2] sometimes the camera panning gets stuck on
 [2019-10-06:1] sometimes the scene loader doesn't do anything
-[2019-10-19:1] attempting to connect two audio nodes of similar type causes the cable to disappear
 [2019-10-19:3] sometimes the alt key gets stuck on (you can recreate it by pressing the key then clicking a different window in the OS)

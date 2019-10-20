@@ -24687,7 +24687,7 @@
                     };
 
                 _canvas_.interface = new function(){
-                    this.versionInformation = { tick:1, lastDateModified:{y:2019,m:10,d:19} };
+                    this.versionInformation = { tick:1, lastDateModified:{y:2019,m:10,d:20} };
                     var interface = this;
                 
                     this.circuit = new function(){
@@ -38149,6 +38149,7 @@
                                             if( new_foreignNode._type != this._type ){ return; }
                                             if( (this._direction == '' || new_foreignNode._direction == '') && this._direction != new_foreignNode._direction){ return; }
                                             if( this._direction != '' && (new_foreignNode._direction == this._direction) ){ return; }
+                                
                                             if( new_foreignNode == foreignNode ){ return; }
                                             if( new_foreignNode.isConnected() && !new_foreignNode.canDisconnect() ){ return; }
                                 
@@ -38290,7 +38291,7 @@
                                                         }
                                                     
                                                     //if no node is to be snapped to; use the liveCable, otherwise remove the live cable and attempt a connection
-                                                        if( snapToNode == undefined || !snapToNode.allowConnections() ){
+                                                        if( snapToNode == undefined || !snapToNode.allowConnections() || (object._direction != '' && object._direction == snapToNode._direction) ){
                                                             if( liveCable == undefined ){
                                                                 if( object.isConnected() && displacedNode!=undefined ){ object.getForeignNode().connectTo(displacedNode); displacedNode = undefined; }else{ object.disconnect(); }
                                                                 liveCable = createLiveCable();

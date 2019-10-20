@@ -20,7 +20,7 @@ this.data_combiner = function(x,y,angle){
 
     //main object creation
         var object = _canvas_.interface.unit.builder({
-            name:'voltage_combiner',
+            name:'data_combiner',
             x:x, y:y, angle:angle,
             space:[
                 { x:0,                                                      y:(unitStyle.drawingValue.height -unitStyle.offset)*(1/5) },
