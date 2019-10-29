@@ -345,8 +345,8 @@ const core = new function(){
                     this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
         
                 //group functions
-                    const children = []; 
-                    const childRegistry = {};
+                    let children = []; 
+                    let childRegistry = {};
         
                     function getChildByName(name){ return childRegistry[name]; }
                     function checkForName(name){ return childRegistry[name] != undefined; }
@@ -366,7 +366,8 @@ const core = new function(){
                     }
         
                     this.children = function(){return children;};
-                    this.getChildByName = getChildByName; this._childRegistry = function(){return childRegistry;};
+                    this.getChildByName = getChildByName; 
+                    this._childRegistry = function(){return childRegistry;};
                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                     this.contains = checkForShape;
                     this.append = function(shape){
@@ -907,7 +908,7 @@ const core = new function(){
         };
         this.create = function(type){
             self.log('.create('+JSON.stringify(type)+')');
-            try{ return new this.library[type](); }
+            try{ return new self.library[type](); }
             catch(e){
                 console.warn('the shape type: "'+type+'" could not be found');
                 console.error(e);
@@ -951,24 +952,18 @@ const core = new function(){
         this.getElementsUnderPoint = function(x,y){ self.log('.getElementsUnderPoint('+x+','+y+')'); return design.getElementsUnderPoint(x,y); };
         this.getElementsUnderArea = function(points){ self.log('.getElementsUnderArea('+JSON.stringify(points)+')'); return design.getElementsUnderArea(points); };
         this.printTree = function(mode='spaced'){//modes: spaced / tabular / address
-            if(mode == 'spaced'){
-                console.log('- '+design.getType() +': '+ design.name);
-            }else if(mode == 'tabular'){
-                console.log('- \t'+design.getType() +': '+ design.name);
-            }else if(mode == 'address'){
-                console.log('/'+design.getType() +':'+ design.name);
-            }
-
             function recursivePrint(grouping,prefix=''){
-                grouping.children.forEach((a) => {
-                    let newPrefix = prefix;
-                    if(mode == 'spaced'){        newPrefix += '- ';
-                    }else if(mode == 'tabular'){ newPrefix += '- \t';
-                    }else if(mode == 'address'){ newPrefix += '/';
+                grouping.children.forEach(function(a){
+                    if(mode == 'spaced'){
+                        console.log(prefix+'- '+a.type +': '+ a.name);
+                        if(a.type == 'group'){ recursivePrint(a, prefix+'- ') }
+                    }else if(mode == 'tabular'){
+                        console.log(prefix+'- \t'+a.type +': '+ a.name);
+                        if(a.type == 'group'){ recursivePrint(a, prefix+'-\t') }
+                    }else if(mode == 'address'){
+                        console.log(prefix+'/'+a.type +':'+ a.name);
+                        if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                     }
-
-                    console.log(newPrefix+a.type +':'+ a.name);
-                    if(a.type == 'group'){ recursivePrint(a, newPrefix+a.name) }
                 });
             }
     
@@ -1328,7 +1323,7 @@ const core = new function(){
             this.getWidth= function(){ self.log('.getWidth()'); return viewbox.points.br.x - viewbox.points.tl.x; };
 
         //callback
-            this.onCameraAdjust = function(){};
+            this.onCameraAdjust = function(state){};
 
         this.selfTest = function(){
             self.log('.selfTest()');
@@ -1376,18 +1371,74 @@ const core = new function(){
     core.viewport.refresh();
 
 //attach communicationModule to core
-    communicationModule.function['viewport.position'] = core.viewport.position;
-    communicationModule.function['viewport.scale'] = core.viewport.scale;
-    communicationModule.function['viewport.angle'] = core.viewport.angle;
-    communicationModule.function['viewport.getElementUnderCanvasPoint'] = core.viewport.getElementUnderCanvasPoint;
-    communicationModule.function['viewport.getElementsUnderCanvasArea'] = core.viewport.getElementsUnderCanvasArea;
-    communicationModule.function['viewport.calculateViewportExtremities'] = core.viewport.calculateViewportExtremities;
-    communicationModule.function['viewport.refresh'] = core.viewport.refresh;
-    communicationModule.function['viewport.getBoundingBox'] = core.viewport.getBoundingBox;
-    communicationModule.function['viewport.mousePosition'] = core.viewport.mousePosition;
-    communicationModule.function['viewport.clickVisibility'] = core.viewport.clickVisibility;
-    communicationModule.function['viewport.getHeight'] = core.viewport.getHeight;
-    communicationModule.function['viewport.getWidth'] = core.viewport.getWidth;
+    //shape
+        communicationModule.function['shape'] = {storedShapes: {}};
+        communicationModule.function['shape.create'] = function(type){
+            const shape = core.shape.create(type);
+            const id = communicationModule.function['shape.create'].generateShapeID();
+            communicationModule.function['shape'].storedShapes[id] = shape;
+
+            const proxyShape = {_id:id};
+            Object.keys(shape).forEach((name) => {
+                if(typeof shape[name] == 'function' && name[0] != '_'){
+                    proxyShape[name] = undefined;
+                }
+            });
+
+            return proxyShape;
+        }
+        communicationModule.function['shape.create'].shapeId = 0;
+        communicationModule.function['shape.create'].generateShapeID = function(){ return this.shapeId++; }
+        communicationModule.function['shape_method'] = function(shapeId,methodName){
+            communicationModule.function['shape'].storedShapes[shapeId][methodName](...(new Array(...arguments).slice(2)));
+        };
+
+    //arrangement
+        communicationModule.function['arrangement.new'] = core.arrangement.new;
+        // communicationModule.function['arrangement.get'] = core.arrangement.get;
+        // communicationModule.function['arrangement.set'] = core.arrangement.set;
+        // communicationModule.function['arrangement.prepend'] = core.arrangement.prepend;
+        // communicationModule.function['arrangement.append'] = core.arrangement.append;
+        // communicationModule.function['arrangement.remove'] = core.arrangement.remove;
+        communicationModule.function['arrangement.clear'] = core.arrangement.clear;
+        // communicationModule.function['arrangement.getElementByAddress'] = core.arrangement.getElementByAddress;
+        // communicationModule.function['arrangement.getElementsUnderPoint'] = core.arrangement.getElementsUnderPoint;
+        // communicationModule.function['arrangement.getElementsUnderArea'] = core.arrangement.getElementsUnderArea;
+        communicationModule.function['arrangement.printTree'] = core.arrangement.printTree;
+
+    //render
+        communicationModule.function['render.clearColour'] = core.render.clearColour;
+        communicationModule.function['render.adjustCanvasSize'] = core.render.adjustCanvasSize;
+        communicationModule.function['render.refreshCoordinates'] = core.render.refreshCoordinates;
+        communicationModule.function['render.refresh'] = core.render.refresh;
+        communicationModule.function['render.activeLimitToFrameRate'] = core.render.activeLimitToFrameRate;
+        communicationModule.function['render.frameRateLimit'] = core.render.frameRateLimit;
+        communicationModule.function['render.frame'] = core.render.frame;
+        communicationModule.function['render.active'] = core.render.active;
+        communicationModule.function['render.getCanvasDimensions'] = core.render.getCanvasDimensions;
+        communicationModule.function['render.drawDot'] = core.render.drawDot;
+
+    //viewport
+        communicationModule.function['viewport.position'] = core.viewport.position;
+        communicationModule.function['viewport.scale'] = core.viewport.scale;
+        communicationModule.function['viewport.angle'] = core.viewport.angle;
+        communicationModule.function['viewport.getElementUnderCanvasPoint'] = core.viewport.getElementUnderCanvasPoint;
+        communicationModule.function['viewport.getElementsUnderCanvasArea'] = core.viewport.getElementsUnderCanvasArea;
+        communicationModule.function['viewport.calculateViewportExtremities'] = core.viewport.calculateViewportExtremities;
+        communicationModule.function['viewport.refresh'] = core.viewport.refresh;
+        communicationModule.function['viewport.getBoundingBox'] = core.viewport.getBoundingBox;
+        communicationModule.function['viewport.mousePosition'] = core.viewport.mousePosition;
+        communicationModule.function['viewport.clickVisibility'] = core.viewport.clickVisibility;
+        communicationModule.function['viewport.getHeight'] = core.viewport.getHeight;
+        communicationModule.function['viewport.getWidth'] = core.viewport.getWidth;
+        core.viewport.onCameraAdjust = function(state){communicationModule.run( {function:'viewport.onCameraAdjust', arguments:[state]} );}
+
+    //stats
+        communicationModule.function['stats.collect'] = core.stats.collect;
+        communicationModule.function['stats.active'] = core.stats.active;
+        communicationModule.function['stats.getReport'] = core.stats.getReport;
+
+    
 
 
 
@@ -1420,10 +1471,10 @@ const core = new function(){
     main.append(tmp);
     console.log('');
 
-    console.log('-> adjust camera position');
-    core.viewport.position(10,10);
-    console.log('');
+    // console.log('-> adjust camera position');
+    // core.viewport.position(10,10);
+    // console.log('');
 
-    console.log('-> render frame');
-    core.render.frame();
-    console.log('');
+    // console.log('-> render frame');
+    // core.render.frame();
+    // console.log('');

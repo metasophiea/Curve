@@ -64,11 +64,91 @@ const core_console = new function(){
     function printToScreen(imageData){ canvasElement.getContext("bitmaprenderer").transferFromImageBitmap(imageData); };
     communicationModule.function.printToScreen = printToScreen;
 
-    // this.shape
-    // this.arrangment
-    // this.render
+    this.shape = new function(){
+        this.create = function(type, callback){
+            communicationModule.run( {function:'shape.create', arguments:[type]}, (proxyShape) => {
+                Object.keys(proxyShape).forEach((name) => {
+                    if(name[0] == '_'){return;}
+                    proxyShape[name] = function(){
+                        communicationModule.run( {
+                            function:'shape_method', 
+                            arguments:[proxyShape._id,name].concat(...arguments)
+                        } );
+                    };
+                });
+                callback(proxyShape);
+            } );
+        };
+    };
+    this.arrangement= new function(){
+        this.new = function(){
+            communicationModule.run( {function:'arrangement.new', arguments:[]} );
+        };
+        this.get = function(callback){
+            communicationModule.run( {function:'arrangement.get', arguments:[]}, callback );
+        };
+        this.set = function(){
+            communicationModule.run( {function:'arrangement.set', arguments:[]} );
+        };
+        this.prepend = function(){
+            communicationModule.run( {function:'arrangement.prepend', arguments:[]}, );
+        };
+        this.append = function(){
+            communicationModule.run( {function:'arrangement.append', arguments:[]} );
+        };
+        this.remove = function(){
+            communicationModule.run( {function:'arrangement.remove', arguments:[]} );
+        };
+        this.clear = function(){
+            communicationModule.run( {function:'arrangement.clear', arguments:[]} );
+        };
+        this.getElementByAddress = function(){
+            communicationModule.run( {function:'arrangement.getElementByAddress', arguments:[]}, callback );
+        };
+        this.getElementsUnderPoint = function(){
+            communicationModule.run( {function:'arrangement.getElementsUnderPoint', arguments:[]}, callback );
+        };
+        this.getElementsUnderArea = function(){
+            communicationModule.run( {function:'arrangement.getElementsUnderArea', arguments:[]}, callback );
+        };
+        this.printTree = function(){
+            communicationModule.run( {function:'arrangement.printTree', arguments:[]} );
+        };
+    };
+    this.render = new function(){
+        this.clearColour = function(colour, callback){
+            communicationModule.run( {function:'render.clearColour', arguments:[colour], callback} );
+        };
+        this.adjustCanvasSize = function(newWidth, newHeight, callback){
+            communicationModule.run( {function:'render.adjustCanvasSize', arguments:[newWidth, newHeight], callback} );
+        };
+        this.refreshCoordinates = function(){
+            communicationModule.run( {function:'render.refreshCoordinates', arguments:[]} );
+        };
+        this.refresh = function(){
+            communicationModule.run( {function:'render.refresh', arguments:[],} );
+        };
+        this.activeLimitToFrameRate = function(a, callback){
+            communicationModule.run( {function:'render.activeLimitToFrameRate', arguments:[a], callback} );
+        };
+        this.frameRateLimit = function(a, callback){
+            communicationModule.run( {function:'render.frameRateLimit', arguments:[a], callback} );
+        };
+        this.frame = function(noClear){
+            communicationModule.run( {function:'render.frame', arguments:[noClear],} );
+        };
+        this.active = function(bool, callback){
+            communicationModule.run( {function:'render.active', arguments:[bool], callback} );
+        };
+        this.getCanvasDimensions = function(callback){
+            communicationModule.run( {function:'render.getCanvasDimensions', arguments:[], callback} );
+        };
+        this.drawDot = function(x,y,r,colour){
+            communicationModule.run( {function:'render.drawDot', arguments:[x,y,r,colour]} );
+        };
+    };
     this.viewport = new function(){
-        this.position = function(x,y,callback){ 
+        this.position = function(x,y,callback){
             communicationModule.run( {function:'viewport.position', arguments:[x,y]}, callback);
         };
         this.scale = function(s,callback){ 
@@ -104,12 +184,26 @@ const core_console = new function(){
         this.getWidth = function(callback){ 
             communicationModule.run( {function:'viewport.getWidth', arguments:[]}, callback );
         };
+        this.onCameraAdjust = function(state){};
     };
-    // this.stats
+    communicationModule.function['viewport.onCameraAdjust'] = function(state){ core_console.viewport.onCameraAdjust(state); }
+    this.stats = new function(){
+        this.collect = function(timestamp){ 
+            communicationModule.run( {function:'stats.collect', arguments:[timestamp]} );
+        };
+        this.active = function(bool, callback){ 
+            communicationModule.run( {function:'stats.active', arguments:[bool]}, callback );
+        };
+        this.getReport = function(callback){ 
+            communicationModule.run( {function:'stats.getReport', arguments:[]}, callback );
+        };
+    };
 };
 
 
 //test
+    core_console.viewport.onCameraAdjust = function(state){console.log('onCameraAdjust:',state);};
+
     setTimeout(() => {
         console.log('');
         core_console.viewport.position(20,20);
@@ -129,3 +223,17 @@ const core_console = new function(){
         console.log('');
         core_console.viewport.getHeight((response) => {console.log('height:', response);});
     },400);
+
+    setTimeout(() => {
+        console.log('');
+        core_console.render.frame();
+    },500);
+
+    setTimeout(() => {
+        console.log('');
+        core_console.shape.create('group',(a)=>{
+            console.log(a);
+            a.x(10);
+            console.log(a.children());
+        })
+    },600);
