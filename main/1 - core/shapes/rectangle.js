@@ -35,9 +35,9 @@ this.rectangle = function(){
             1,1,
             0,1,
         ];
-        var vertexShaderSource = `
+        var vertexShaderSource = `#version 300 es
             //constants
-                attribute vec2 point;
+                in vec2 point;
 
             //variables
                 struct location{
@@ -60,12 +60,13 @@ this.rectangle = function(){
                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
             }
         `;
-        var fragmentShaderSource = `  
+        var fragmentShaderSource = `#version 300 es
             precision mediump float;
+            out vec4 outputColor;
             uniform vec4 colour;
                                                                         
             void main(){
-                gl_FragColor = colour;
+                outputColor = colour;
             }
         `;
         var point = { buffer:undefined, attributeLocation:undefined };

@@ -252,4 +252,4 @@ var clippingGroup_2 = _canvas_.core.shape.create('group');
 
 
 _canvas_.core.render.frame();
-// setTimeout(_canvas_.core.render.frame,1000);
+setTimeout(_canvas_.core.render.frame,1000);

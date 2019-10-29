@@ -7,7 +7,6 @@ this.averageArray = function(array){
     for(var a = 1; a < array.length; a++){ sum += array[a]; }
     return sum/array.length;
 };
-
 this.averagePoint = function(points){
     library._control.logflow.log('math.averagePoint');
     var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );

@@ -67,12 +67,12 @@ this.rectangleWithOutline = function(){
             1,1,
             0,1,
         ];
-        var vertexShaderSource = `
+        var vertexShaderSource = `#version 300 es
             //index
-                attribute lowp float index;
+                in lowp float index;
                 
             //constants
-                attribute vec2 point;
+                in vec2 point;
 
             //variables
                 struct location{
@@ -91,7 +91,7 @@ this.rectangleWithOutline = function(){
                 uniform vec4 lineColour;
             
             //varyings
-                varying vec4 activeColour;
+                out vec4 activeColour;
 
             void main(){
                 //create triangle
@@ -119,12 +119,13 @@ this.rectangleWithOutline = function(){
                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
             }
         `;
-        var fragmentShaderSource = `  
+        var fragmentShaderSource = `#version 300 es
             precision mediump float;
-            varying vec4 activeColour;
+            out vec4 outputColor;
+            in vec4 activeColour;
                                                                         
             void main(){
-                gl_FragColor = activeColour;
+                outputColor = activeColour;
             }
         `;
         var index = { buffer:undefined, attributeLocation:undefined };

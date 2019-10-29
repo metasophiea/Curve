@@ -34,7 +34,6 @@
                             for(var a = 1; a < array.length; a++){ sum += array[a]; }
                             return sum/array.length;
                         };
-                        
                         this.averagePoint = function(points){
                             library._control.logflow.log('math.averagePoint');
                             var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
@@ -957,11 +956,16 @@
                                 return vec2( ad[1]*cos(ad[0]), ad[1]*sin(ad[0]) );
                             }
                             vec2 cartesianAngleAdjust(vec2 xy, float angle){
-                                if(angle == 0.0 || mod(angle,PI*2.0) == 0.0){ return xy; }
+                                // //v1
+                                // if(angle == 0.0 || mod(angle,PI*2.0) == 0.0){ return xy; }
+                                //
+                                // vec2 polar = cartesian2polar( xy );
+                                // polar[0] += angle;
+                                // return polar2cartesian( polar );
                         
-                                vec2 polar = cartesian2polar( xy );
-                                polar[0] += angle;
-                                return polar2cartesian( polar );
+                                //v2
+                                if(angle == 0.0 || mod(angle,PI*2.0) == 0.0){ return xy; }
+                                return vec2( xy.x*cos(angle) - xy.y*sin(angle), xy.y*cos(angle) + xy.x*sin(angle) ); 
                             }
                         `;
                     };
@@ -20015,8 +20019,6 @@
                 _canvas_.getVersionInformation = function(){
                     return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
                 };
-                
-
                 _canvas_.core = new function(){
                     this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:17} };
                     var core = this;
@@ -20433,9 +20435,9 @@
                                         1,1,
                                         0,1,
                                     ];
-                                    var vertexShaderSource = `
+                                    var vertexShaderSource = `#version 300 es
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -20458,12 +20460,13 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
+                                        out vec4 outputColor;
                                         uniform vec4 colour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = colour;
+                                            outputColor = colour;
                                         }
                                     `;
                                     var point = { buffer:undefined, attributeLocation:undefined };
@@ -20642,12 +20645,12 @@
                                         1,1,
                                         0,1,
                                     ];
-                                    var vertexShaderSource = `
+                                    var vertexShaderSource = `#version 300 es
                                         //index
-                                            attribute lowp float index;
+                                            in lowp float index;
                                             
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -20666,7 +20669,7 @@
                                             uniform vec4 lineColour;
                                         
                                         //varyings
-                                            varying vec4 activeColour;
+                                            out vec4 activeColour;
                             
                                         void main(){
                                             //create triangle
@@ -20694,12 +20697,13 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
-                                        varying vec4 activeColour;
+                                        out vec4 outputColor;
+                                        in vec4 activeColour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = activeColour;
+                                            outputColor = activeColour;
                                         }
                                     `;
                                     var index = { buffer:undefined, attributeLocation:undefined };
@@ -20875,9 +20879,9 @@
                                     var pointsChanged = true;
                                     this.detail(detail);
                                     var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
+                                        '#version 300 es' + _canvas_.library.gsls.geometry + `
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -20899,12 +20903,13 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
+                                        out vec4 outputColour;
                                         uniform vec4 colour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = colour;
+                                            outputColour = colour;
                                         }
                                     `;
                                     var point = { buffer:undefined, attributeLocation:undefined };
@@ -21068,12 +21073,12 @@
                                     }
                                     this.detail(detail);
                                     var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
+                                        '#version 300 es' + _canvas_.library.gsls.geometry + `
                                         //index
-                                            attribute lowp float index;
+                                            in lowp float index;
                                         
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -21091,7 +21096,7 @@
                                             uniform lowp float indexParting;
                                     
                                         //varyings
-                                            varying vec4 activeColour;
+                                            out vec4 activeColour;
                             
                                         void main(){    
                                             //adjust points by radius and xy offset
@@ -21105,12 +21110,13 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
-                                        varying vec4 activeColour;
+                                        out vec4 outputColour;
+                                        in vec4 activeColour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = activeColour;
+                                            outputColour = activeColour;
                                         }
                                     `;
                                     var index = { buffer:undefined, attributeLocation:undefined };
@@ -21276,7 +21282,7 @@
                                 //webGL rendering functions
                                     var points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
                                     var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
+                                        '#version 300 es' + _canvas_.library.gsls.geometry + `
                                         //variables
                                             struct location{
                                                 vec2 xy;
@@ -21285,7 +21291,7 @@
                                             };
                                             uniform location offset;
                             
-                                            attribute vec2 point;
+                                            in vec2 point;
                                             uniform vec2 resolution;
                             
                                         void main(){    
@@ -21296,12 +21302,13 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
+                                        out vec4 outputColour;
                                         uniform vec4 colour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = colour;
+                                            outputColour = colour;
                                         }
                                     `;
                                     var point = { buffer:undefined, attributeLocation:undefined };
@@ -21440,12 +21447,12 @@
                             
                                 //webGL rendering functions
                                     var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
+                                        '#version 300 es' + _canvas_.library.gsls.geometry + `
                                         //index
-                                            attribute lowp float index;
+                                            in lowp float index;
                                         
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -21460,7 +21467,7 @@
                                             uniform lowp float indexParting;
                                     
                                         //varyings
-                                            varying vec4 activeColour;
+                                            out vec4 activeColour;
                             
                                         void main(){    
                                             //adjust point by offset
@@ -21473,12 +21480,13 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
-                                        varying vec4 activeColour;
+                                        out vec4 outputColour;
+                                        in vec4 activeColour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = activeColour;
+                                            outputColour = activeColour;
                                         }
                                     `;
                                     var index = { buffer:undefined, attributeLocation:undefined };
@@ -21636,7 +21644,7 @@
                             
                                 //webGL rendering functions
                                     var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
+                                        '#version 300 es' + _canvas_.library.gsls.geometry + `
                                             //variables
                                                 struct location{
                                                     vec2 xy;
@@ -21645,7 +21653,7 @@
                                                 };
                                                 uniform location offset;
                             
-                                                attribute vec2 point;
+                                                in vec2 point;
                                                 uniform vec2 resolution;
                             
                                             void main(){    
@@ -21656,12 +21664,13 @@
                                                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                             }
                                         `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
+                                        out vec4 outputColour;
                                         uniform vec4 colour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = colour;
+                                            outputColour = colour;
                                         }
                                     `;
                                     var point = { buffer:undefined, attributeLocation:undefined };
@@ -21799,9 +21808,9 @@
                                         1,1,
                                         0,1,
                                     ];
-                                    var vertexShaderSource = `
+                                    var vertexShaderSource = `#version 300 es
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -21816,7 +21825,7 @@
                                             uniform vec2 anchor;
                             
                                         //vertex/fragment shader transfer variables
-                                            varying vec2 textureCoordinates;
+                                            out vec2 textureCoordinates;
                             
                                         void main(){
                                             //transfer point to fragment shader
@@ -21830,14 +21839,15 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
+                                        out vec4 outputColour;
                             
                                         uniform sampler2D textureImage;
-                                        varying vec2 textureCoordinates;
+                                        in vec2 textureCoordinates;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = texture2D(textureImage, textureCoordinates);
+                                            outputColour = texture(textureImage, textureCoordinates);
                                         }
                                     `;
                                     var point = { buffer:undefined, attributeLocation:undefined };
@@ -22016,9 +22026,9 @@
                                         1,1,
                                         0,1,
                                     ];
-                                    var vertexShaderSource = `
+                                    var vertexShaderSource = `#version 300 es
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -22033,7 +22043,7 @@
                                             uniform vec2 anchor;
                             
                                         //vertex/fragment shader transfer variables
-                                            varying vec2 textureCoordinates;
+                                            out vec2 textureCoordinates;
                             
                                         void main(){
                                             //transfer point to fragment shader
@@ -22053,14 +22063,15 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
+                                        out vec4 outputColour;
                             
                                         uniform sampler2D textureImage;
-                                        varying vec2 textureCoordinates;
+                                        in vec2 textureCoordinates;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = texture2D(textureImage, textureCoordinates);
+                                            outputColour = texture(textureImage, textureCoordinates);
                                         }
                                     `;
                                     var point = { buffer:undefined, attributeLocation:undefined };
@@ -22296,9 +22307,9 @@
                                     var pointsChanged = true;
                                     var points = [ 0,0, 1,0, 1,1,  0,0, 1,1, 0,1 ];
                                     var vertexShaderSource = 
-                                        _canvas_.library.gsls.geometry + `
+                                        '#version 300 es' + _canvas_.library.gsls.geometry + `
                                         //constants
-                                            attribute vec2 point;
+                                            in vec2 point;
                             
                                         //variables
                                             struct location{
@@ -22321,12 +22332,13 @@
                                                 gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                                         }
                                     `;
-                                    var fragmentShaderSource = `  
+                                    var fragmentShaderSource = `#version 300 es
                                         precision mediump float;
+                                        out vec4 outputColour;
                                         uniform vec4 colour;
                                                                                                     
                                         void main(){
-                                            gl_FragColor = colour;
+                                            outputColour = colour;
                                         }
                                     `;
                                     var point = { buffer:undefined, attributeLocation:undefined };
@@ -23916,7 +23928,7 @@
                             selectedWidth:0, selectedHeight:0,
                             width:0, height:0,
                         };
-                        var context = _canvas_.getContext("webgl", {alpha:false, preserveDrawingBuffer:true, stencil:true});
+                        var context = _canvas_.getContext("webgl2", {alpha:false, preserveDrawingBuffer:true, stencil:true});
                         var animationRequestId = undefined;
                         var clearColour = {r:1,g:1,b:1,a:1};
                     

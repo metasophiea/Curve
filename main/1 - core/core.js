@@ -84,7 +84,7 @@ this.render = new function(){
         selectedWidth:0, selectedHeight:0,
         width:0, height:0,
     };
-    var context = _canvas_.getContext("webgl", {alpha:false, preserveDrawingBuffer:true, stencil:true});
+    var context = _canvas_.getContext("webgl2", {alpha:false, preserveDrawingBuffer:true, stencil:true});
     var animationRequestId = undefined;
     var clearColour = {r:1,g:1,b:1,a:1};
 

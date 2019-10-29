@@ -1,4 +1,89 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-10-26
+  - changed the names of some things
+  - fixed a issue with one of the core shapes (I'd put the version number thing
+    in the wrong part of the glsl code)
+
+
+2019-10-23
+  - switched to webgl2 (nothing really changes, though the glsl needs a little
+    rewording as the syntax has changed a little, but oy have to sort of opt-in
+    to the new terms, so it can be done gradually) I've reworded;
+    - rectangle
+    - rectangleWithOutline
+    - polygon
+    - polygonWithOutline
+    - path
+    - image
+    - circleWithOutline
+    - circle
+    - character
+    - canvas
+
+
+2019-10-22
+  - fixed up the "heavy load" library function tests, after I discovered that
+    the data generators weren't running properly. Things are quite different
+
+                                      library.math.averageArray: 100000 cycles took 3.615 seconds    - average cycle time:0.000036150000000000005 seconds
+                                      library.math.averagePoint: 10000 cycles took 0.829 seconds     - average cycle time:0.0000829 seconds
+                                                                 (projected time to perform 100000 cycles: 8.29 seconds)
+                             library.math.boundingBoxFromPoints: 100000 cycles took 6.209 seconds    - average cycle time:0.00006209 seconds
+                              library.math.cartesianAngleAdjust: 100000 cycles took 0.018 seconds    - average cycle time:1.8e-7 seconds
+                            library.math.convertColour.obj2rgba: 100000 cycles took 0.211 seconds    - average cycle time:0.00000211 seconds
+                            library.math.convertColour.rgba2obj: 100000 cycles took 0.854 seconds    - average cycle time:0.00000854 seconds
+                             library.math.curveGenerator.linear: 100000 cycles took 0.09 seconds     - average cycle time:9e-7 seconds
+                                library.math.curveGenerator.sin: 100000 cycles took 0.199 seconds    - average cycle time:0.00000199 seconds
+                                library.math.curveGenerator.cos: 100000 cycles took 0.107 seconds    - average cycle time:0.00000107 seconds
+                                  library.math.curveGenerator.s: 100000 cycles took 0.56 seconds     - average cycle time:0.000005600000000000001 seconds
+                        library.math.curveGenerator.exponential: 100000 cycles took 0.445 seconds    - average cycle time:0.00000445 seconds
+                                 library.math.curvePoint.linear: 100000 cycles took 0.012 seconds    - average cycle time:1.2e-7 seconds
+                                    library.math.curvePoint.sin: 100000 cycles took 0.014 seconds    - average cycle time:1.4e-7 seconds
+                                    library.math.curvePoint.cos: 100000 cycles took 0.014 seconds    - average cycle time:1.4e-7 seconds
+                                      library.math.curvePoint.s: 100000 cycles took 0.14 seconds     - average cycle time:0.0000014000000000000001 seconds
+                            library.math.curvePoint.exponential: 100000 cycles took 0.061 seconds    - average cycle time:6.1e-7 seconds
+                       library.math.detectOverlap.boundingBoxes: 100000 cycles took 0.042 seconds    - average cycle time:4.2e-7 seconds
+              library.math.detectOverlap.pointWithinBoundingBox: 100000 cycles took 0.069 seconds    - average cycle time:6.900000000000001e-7 seconds
+                     library.math.detectOverlap.pointWithinPoly: 100000 cycles took 1.43 seconds     - average cycle time:0.000014299999999999999 seconds
+                        library.math.detectOverlap.lineSegments: 100000 cycles took 0.039 seconds    - average cycle time:3.9e-7 seconds
+                 library.math.detectOverlap.overlappingPolygons: 20 cycles took 1.052 seconds        - average cycle time:0.0526 seconds
+                                                                 (projected time to perform 100000 cycles: 5260 seconds)
+      library.math.detectOverlap.overlappingPolygonWithPolygons: 10 cycles took 1.353 seconds        - average cycle time:0.1353 seconds
+                                                                 (projected time to perform 100000 cycles: 13530 seconds)
+         library.math.detectOverlap.overlappingLineWithPolygons: 10 cycles took 2.404 seconds        - average cycle time:0.2404 seconds
+                                                                 (projected time to perform 100000 cycles: 24040 seconds)
+                               library.math.getAngleOfTwoPoints: 100000 cycles took 0.045 seconds    - average cycle time:4.5e-7 seconds
+                             library.math.getDifferenceOfArrays: 500 cycles took 1.06 seconds        - average cycle time:0.00212 seconds
+                                                                 (projected time to perform 100000 cycles: 212 seconds)
+                                library.math.getIndexOfSequence: 100000 cycles took 6.6 seconds      - average cycle time:0.00006599999999999999 seconds
+                                 library.math.largestValueFound: 100000 cycles took 4.99 seconds     - average cycle time:0.0000499 seconds
+                             library.math.normalizeStretchArray: 100000 cycles took 8.021 seconds    - average cycle time:0.00008021 seconds
+                                  library.math.relativeDistance: 100000 cycles took 0.016 seconds    - average cycle time:1.6e-7 seconds
+                  library.math.removeTheseElementsFromThatArray: 100000 cycles took 7.205 seconds    - average cycle time:0.00007205 seconds
+                                      library.math.seconds2time: 100000 cycles took 0.011 seconds    - average cycle time:1.0999999999999999e-7 seconds
+                                   library.math.cartesian2polar: 100000 cycles took 0.015 seconds    - average cycle time:1.5e-7 seconds
+                                   library.math.polar2cartesian: 100000 cycles took 0.034 seconds    - average cycle time:3.4000000000000003e-7 seconds
+                                      library.math.blendColours: 100000 cycles took 0.061 seconds    - average cycle time:6.1e-7 seconds
+                                 library.math.multiBlendColours: 100000 cycles took 10.866 seconds   - average cycle time:0.00010865999999999999 seconds
+                                 library.math.pathExtrapolation: 2 cycles took 2.04 seconds          - average cycle time:1.02 seconds
+                                                                 (projected time to perform 100000 cycles: 102000 seconds)
+                                         library.math.fitPolyIn: 1 cycles took 1.206 seconds         - average cycle time:1.206 seconds
+                                                                 (projected time to perform 100000 cycles: 120600 seconds)
+
+  notes
+  - I discovered this issue while playing around with webWorkers. I've since set
+    up a workshop test area (webWorkers/2) with a copy of the library (minus the
+    audio bit) to see what improvements could be made. I had the idea of
+    creating multiple instances of the library-worker to perform parallel
+    processesing. So far it works. I can perform 25 loops of
+    library.math.pathExtrapolation in ~7.506seconds or ~3.662seconds when using
+    the parallel method. It's certianly something to research. It is asynchronous
+    however, so, that complicates things.
+    By limiting the webWorker count to 10; I can do 100 cycles in ~11.7seconds
+    (cycles could reuse workers) With 100 workers it took ~20seconds, so,
+    there's certianly some sweet spot. 5 => ~10.2 seconds. 2 => ~18.5 seconds
+
+
 2019-10-20
   - expanded the connection node logic a little to be aware of node direction,
     this fixes the bug of cables vanishing when two connection nodes of the same

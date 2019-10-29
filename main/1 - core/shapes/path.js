@@ -53,7 +53,7 @@ this.path = function(){
 
     //webGL rendering functions
         var vertexShaderSource = 
-            _canvas_.library.gsls.geometry + `
+            '#version 300 es' + _canvas_.library.gsls.geometry + `
                 //variables
                     struct location{
                         vec2 xy;
@@ -62,7 +62,7 @@ this.path = function(){
                     };
                     uniform location offset;
 
-                    attribute vec2 point;
+                    in vec2 point;
                     uniform vec2 resolution;
 
                 void main(){    
@@ -73,12 +73,13 @@ this.path = function(){
                         gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
                 }
             `;
-        var fragmentShaderSource = `  
+        var fragmentShaderSource = `#version 300 es
             precision mediump float;
+            out vec4 outputColour;
             uniform vec4 colour;
                                                                         
             void main(){
-                gl_FragColor = colour;
+                outputColour = colour;
             }
         `;
         var point = { buffer:undefined, attributeLocation:undefined };

@@ -55,9 +55,9 @@ this.image = function(){
             1,1,
             0,1,
         ];
-        var vertexShaderSource = `
+        var vertexShaderSource = `#version 300 es
             //constants
-                attribute vec2 point;
+                in vec2 point;
 
             //variables
                 struct location{
@@ -72,7 +72,7 @@ this.image = function(){
                 uniform vec2 anchor;
 
             //vertex/fragment shader transfer variables
-                varying vec2 textureCoordinates;
+                out vec2 textureCoordinates;
 
             void main(){
                 //transfer point to fragment shader
@@ -86,14 +86,15 @@ this.image = function(){
                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
             }
         `;
-        var fragmentShaderSource = `  
+        var fragmentShaderSource = `#version 300 es
             precision mediump float;
+            out vec4 outputColour;
 
             uniform sampler2D textureImage;
-            varying vec2 textureCoordinates;
+            in vec2 textureCoordinates;
                                                                         
             void main(){
-                gl_FragColor = texture2D(textureImage, textureCoordinates);
+                outputColour = texture(textureImage, textureCoordinates);
             }
         `;
         var point = { buffer:undefined, attributeLocation:undefined };

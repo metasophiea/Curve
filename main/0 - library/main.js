@@ -43,4 +43,3 @@ _canvas_.library = new function(){
 _canvas_.getVersionInformation = function(){
     return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
 };
-

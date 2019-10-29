@@ -60,12 +60,12 @@ this.circleWithOutline = function(){
         }
         this.detail(detail);
         var vertexShaderSource = 
-            _canvas_.library.gsls.geometry + `
+            '#version 300 es' + _canvas_.library.gsls.geometry + `
             //index
-                attribute lowp float index;
+                in lowp float index;
             
             //constants
-                attribute vec2 point;
+                in vec2 point;
 
             //variables
                 struct location{
@@ -83,7 +83,7 @@ this.circleWithOutline = function(){
                 uniform lowp float indexParting;
         
             //varyings
-                varying vec4 activeColour;
+                out vec4 activeColour;
 
             void main(){    
                 //adjust points by radius and xy offset
@@ -97,12 +97,13 @@ this.circleWithOutline = function(){
                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
             }
         `;
-        var fragmentShaderSource = `  
+        var fragmentShaderSource = `#version 300 es
             precision mediump float;
-            varying vec4 activeColour;
+            out vec4 outputColour;
+            in vec4 activeColour;
                                                                         
             void main(){
-                gl_FragColor = activeColour;
+                outputColour = activeColour;
             }
         `;
         var index = { buffer:undefined, attributeLocation:undefined };

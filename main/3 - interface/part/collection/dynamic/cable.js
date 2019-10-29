@@ -74,7 +74,7 @@ this.cable2 = function(
             var push = 20;
             var path = [];
 
-            //generate inital basic line 
+            //generate initial basic line 
                 path.push(x1,y1);
 
                 var offset = _canvas_.library.math.cartesianAngleAdjust(push,0,a1);

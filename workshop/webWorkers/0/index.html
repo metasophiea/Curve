@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+  <p>Count numbers: <output id="result"></output></p>
+  <button onclick="startWorker()">Start Worker</button>
+  <button onclick="stopWorker()">Stop Worker</button>
+
+  <script>
+    if(typeof(Worker) == undefined){ console.log("webWorkers not supported"); }
+
+    var w;
+
+    function startWorker() {
+      w = new Worker("demo_workers.js");
+      w.onmessage = function(event) {
+        document.getElementById("result").innerHTML = event.data;
+      };
+    }
+    function stopWorker() {
+      w.terminate();
+      w = undefined;
+    }
+
+  </script>
+</body>
+</html>

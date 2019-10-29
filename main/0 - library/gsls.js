@@ -22,10 +22,15 @@ this.geometry = `
         return vec2( ad[1]*cos(ad[0]), ad[1]*sin(ad[0]) );
     }
     vec2 cartesianAngleAdjust(vec2 xy, float angle){
-        if(angle == 0.0 || mod(angle,PI*2.0) == 0.0){ return xy; }
+        // //v1
+        // if(angle == 0.0 || mod(angle,PI*2.0) == 0.0){ return xy; }
+        //
+        // vec2 polar = cartesian2polar( xy );
+        // polar[0] += angle;
+        // return polar2cartesian( polar );
 
-        vec2 polar = cartesian2polar( xy );
-        polar[0] += angle;
-        return polar2cartesian( polar );
+        //v2
+        if(angle == 0.0 || mod(angle,PI*2.0) == 0.0){ return xy; }
+        return vec2( xy.x*cos(angle) - xy.y*sin(angle), xy.y*cos(angle) + xy.x*sin(angle) ); 
     }
 `;

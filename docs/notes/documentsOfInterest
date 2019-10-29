@@ -7,3 +7,13 @@ webASM
 
     Emscripting a C library to Wasm
         https://developers.google.com/web/updates/2018/03/emscripting-a-c-library
+
+webWorkers
+    Web Workers Overview
+        https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers
+
+    Transferable Objects
+        https://developer.mozilla.org/en-US/docs/Web/API/Transferable
+
+    Audio Worklet
+        https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API#Audio_processing_in_JavaScript
