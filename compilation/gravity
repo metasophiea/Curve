@@ -69,10 +69,10 @@ def includer(location, parentFile, inputfileName, outputObject, spacer=''):
             inputFile.close()
 
 
-
-rootLocation = sys.argv[1]
-inputfileName = sys.argv[2]
-outputfileName = sys.argv[3]
+tmp = sys.argv[1].rsplit('/', 1)
+rootLocation = tmp[0]
+inputfileName = tmp[1]
+outputfileName = sys.argv[2]
 outputFile = open(outputfileName,"w")
 
 includer( rootLocation, None, inputfileName, outputFile )

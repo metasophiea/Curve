@@ -1,0 +1,13 @@
+- communicationModule
+
+- console
+    - interface
+- engine
+    - arrangement
+        - shape library
+            - group
+            - rectangle
+            - ...
+        - controls
+        - primary shape selection and retrieval (paging)
+        - communicationModule mapping code

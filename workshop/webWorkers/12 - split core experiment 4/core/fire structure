@@ -1,0 +1,20 @@
+- communicationModule
+
+- main
+    - console
+
+    - engine
+        - library
+        - shape
+            - shape library
+                - group
+                - rectangle
+                - ...
+            - control
+            - mapping
+        - arrangement
+            - control
+            - mapping
+        - render
+        - viewport
+        - stats

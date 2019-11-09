@@ -1,4 +1,80 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-11-09
+  CoreV3
+    - updated the rendering section to allow for high-density-pixel screens.
+      Also added in the code for selecting the canvas' size (which is a little
+      messy, honestly. But it doesn't move much, I guess)
+      ...this new system of having to callback and forth between the processes
+      is causing issues. I'm working them out, but hardly in the most beautiful
+      ways. The 'render' section has become a bit of a mess with regards to
+      setting the canvases up correctly, and can make a number of different 
+      requests to the main thread for information, which take time and require
+      the viewport re recalculate itself to discover the viewable extremities
+      correctly...I've upt together a sort of 'this-section-is-busy' value
+      within 'render' which the main system checks lots of times on startup to
+      determine when the system is actually ready to be used (which in turn
+      triggers a callback to the main thread called 'ready') I need to clean
+      all this up... I guess like always, I'll just get it working for now,
+      then come back to it some day in the future, when something eventually
+      breaks and I'm become annoyed at now-me for not doing things the proper
+      way like future-me thinks its obvious. Good luck future-me!
+    - made a little space for core3 demo's (over in /docs/core3/) Just a cool
+      little spot for putting pretty things
+
+
+2019-11-08
+  CoreV3
+    all the main sections are in, with a litte more work left on callbacks for
+    individual elements (which is what shapes are called now). There's a new
+    wavy boxes demo, with changing colours, which is rather beautiful. 
+    - I also need to look into the run-time importing of new elements, as the
+      main thread doesn't have access to Core's internals anymore. I think I
+      could use the serializer from the library and just import them..
+    - I tell you what though; I've had to turn off the framerate limiter, as it
+      looks soooo smooth running at full speed (60fps) over what I thought
+      would be enough (40fps). Like you can really see the jagged nature at 
+      40fps, while 60fps is silky smooth. Again, like falling in love.
+    - boatload messages are epansions on the standard commands; expect you can
+      bundle together many similar commands together. They exist soley in the
+      interface, so are nicely seperated from the main core code. (should
+      perhaps make it a seperate section of the interface)
+    - three spinning boxes demo is in and working (3.js)
+    - ...there can be subtle changes in this new version that causes things to
+      break; for example the .static value has become a method. This of course
+      means that ".static" always evaluates as true
+    - added that 'viewport adjustment' demo (4.js)
+
+    ideas
+    - a boatload method for making elements, that also sets attributes and adds
+      it to a group (I've got a feeling that reducing the number of messages
+      between the threads is a great idea)
+
+
+2019-11-06
+  - for the past few days I've been working on a new version of Core. This one
+    uses a webWorker to offload the render process to a different thread; thus
+    removing the resource contention issue we've been experiencing up until now.
+    I haven't spoken must about (or probably at all) in these notes, but you can
+    notice speed issues when loading realitivly complex scenes relatively, which
+    usually appear as musical timing being off. Hopefully this new system will
+    greatly improve this.
+    I can't find any notes on FPS testing, but currently I have 5000 squares 
+    being rendered at about 45fps on the work computer.
+    Other speed notes: I've developed a rather advanced method of logging events
+    for development purposes, with each section having is own logging colours
+    and prefix and all sorts of cool stuff. Unfortunately, this does cost alot
+    of time even when the logging is set to "false". So, I've developed the
+    postfix "//#developmentLogger" which goes after every logging line. The
+    heavyComp.sh has a new line that will remove every line that includes this
+    tag. The improvement in speed is noticable, and I think it's alright to
+    have logging removed like this for what is the "production" version
+
+
+2019-11-02
+  - updated gravity so that it needs less input arguments (updated comp.sh and
+    heavyComp.sh accordingly, simplifying them along the way)
+
+
 2019-10-26
   - changed the names of some things
   - fixed a issue with one of the core shapes (I'd put the version number thing

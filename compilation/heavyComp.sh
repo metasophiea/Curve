@@ -1,7 +1,7 @@
-dir=$(dirname "$(cd "$(dirname "$0")" && pwd)")
+dir=$(cd "$(dirname "$0")" && pwd)
 
 echo "running Gravity"
-"$dir"/compilation/comp.sh
+"$dir"/comp.sh
 
 echo "running Closure"
     nameArray=('core' 'coreSystem' 'workspace' 'curve')
@@ -13,12 +13,12 @@ echo "running Closure"
                 #create temp .js file with the following changes:
                 #   static => _static
                 #   interface => _interface
-                    cp "$dir"/docs/js/$name.js "$dir"/docs/js/$name-pre.js
-                    cat "$dir"/docs/js/$name-pre.js | sed -e "s/static/_static/g" -e "s/interface/_interface/g" > "$dir"/docs/js/$name-tmp.js
-                    rm -f "$dir"/docs/js/$name-pre.js
+                    cp "$dir"/../docs/js/$name.js "$dir"/../docs/js/$name-pre.js
+                    cat "$dir"/../docs/js/$name-pre.js | sed -e "s/static/_static/g" -e "s/interface/_interface/g" > "$dir"/../docs/js/$name-tmp.js
+                    rm -f "$dir"/../docs/js/$name-pre.js
                 #push temp file through closure then delete
-                    java -jar "$dir"/compilation/closure-compiler* --js_output_file="$dir"/docs/js/$name.min.js "$dir"/docs/js/$name-tmp.js
-                    rm -f "$dir"/docs/js/$name-tmp.js
+                    java -jar "$dir"/closure-compiler* --js_output_file="$dir"/../docs/js/$name.min.js "$dir"/../docs/js/$name-tmp.js
+                    rm -f "$dir"/../docs/js/$name-tmp.js
                     if [ $? -ne 0 ]; then
                         echo "";
                         echo "Closure has encountered an error; bailing";
@@ -31,8 +31,8 @@ echo "running Closure"
         echo; echo;
         echo "- results -";
         for name in ${nameArray[@]}; do 
-            fileSize=$(ls -l docs/js/$name.js | awk '{ print $5}')
-            closureFileSize=$(ls -l docs/js/$name.min.js | awk '{ print $5}')
+            fileSize=$(ls -l "$dir"/../docs/js/$name.js | awk '{ print $5}')
+            closureFileSize=$(ls -l "$dir"/../docs/js/$name.min.js | awk '{ print $5}')
             echo "-> $name"
             echo "\t$name.js" $(( fileSize / 1000 ))"kb";
             echo "\t$name.min.js" $(( closureFileSize / 1000 ))"kb";
