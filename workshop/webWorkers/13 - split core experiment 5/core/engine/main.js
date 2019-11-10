@@ -63,12 +63,7 @@ const report = {
 
 {{include:interface.js}}
 
-render.refresh();
-
-var startUp_interval = setInterval(function(){
-    if(!render.isBusy()){
-        viewport.refresh();
-        clearInterval(startUp_interval);
-        communicationModule.run('ready');
-    }
-},1);
+render.refresh(() => {
+    viewport.refresh();
+    interface.sendReadySignal();
+});

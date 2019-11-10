@@ -1,4 +1,26 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-11-10
+  CoreV3
+    - communicationModuleMaker has a new function type that gives the attached
+      function a callback to call when it's ready to respond (as opposed to the
+      regular way, where the returned value of the function is just sent back)
+    - calling render.refresh returns a promise that only resolves when the 
+      refresh process is complete
+      
+    A lot of the big differences between this system and the old one are to do
+    with timing. Things aren't sequential anymore, so you have to be careful
+    about asking for something to get done then waiting for it to be finished
+
+    - working on adding callback functionality to the elements (in some ways
+      removing the need for the "System" layer by having core run the callbacks
+      for those elements itself, and giving the option of whether to call all
+      the elements callbacks or just the frontmost one) Also, going to change
+      the behaviour of the global callbacks to return all elements under the
+      mouse point, instead of those with a similar callback
+    - added new callbacks "onmouseenterelement" and "onmouseleaveelement",
+      which will only return relevant elements
+
+
 2019-11-09
   CoreV3
     - updated the rendering section to allow for high-density-pixel screens.
@@ -24,7 +46,7 @@
 
 2019-11-08
   CoreV3
-    all the main sections are in, with a litte more work left on callbacks for
+    all the main sections are in, with a little more work left on callbacks for
     individual elements (which is what shapes are called now). There's a new
     wavy boxes demo, with changing colours, which is rather beautiful. 
     - I also need to look into the run-time importing of new elements, as the

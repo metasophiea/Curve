@@ -68,10 +68,9 @@ const render = new function(){
         };
         this.adjustCanvasSize = function(newWidth, newHeight){
             dev.log.render('.adjustCanvasSize('+newWidth+','+newHeight+')'); //#development
-            let adjustCanvasSize_isBusy = {width:true,height:true};
+            let adjustCanvasSize_isBusy = {width:false,height:false};
+            isBusy = true;
 
-            //request canvas data from the console, if none is provided in arguments
-            // -> argument data > requested data > default data
             function updateInternalCanvasSize(direction,newValue){
                 dev.log.render('.adjustCanvasSize::updateInternalCanvasSize('+direction+','+newValue+')'); //#development
                 newValue *= pageData.devicePixelRatio;
@@ -91,9 +90,13 @@ const render = new function(){
                 adjustCanvasSize_isBusy[direction] = false;
                 isBusy = adjustCanvasSize_isBusy['width'] || adjustCanvasSize_isBusy['height'];
             }
-
+            
+            //request canvas data from the console, if none is provided in arguments
+            // -> argument data > requested data > default data
             function updateSize_arguments(){
                 dev.log.render('.adjustCanvasSize::updateSize_arguments()'); //#development
+                adjustCanvasSize_isBusy = {width:true,height:true};
+
                 if(newWidth != undefined){
                     updateInternalCanvasSize('width',newWidth*pageData.devicePixelRatio);
                 }else{
@@ -109,49 +112,40 @@ const render = new function(){
             }
             function updateSize_dataRequest(direction){
                 dev.log.render('.adjustCanvasSize::updateSize_dataRequest('+direction+')'); //#development
-                let capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
+                const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
 
                 interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
                     pageData.selectedCanvasSize[direction] = sizes[0];
                     dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> '+capitalizedDirection+':'+pageData.selectedCanvasSize[direction]); //#development
                     const attribute = pageData.selectedCanvasSize[direction];
 
-                    if( attribute.indexOf('%') == (attribute.length-1) ){
+                    function unparseableErrorMessage(direction,attribute){
+                        report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
+                        updateSize_usingDefault(direction);
+                    }
+
+                    if( attribute.indexOf('%') == (attribute.length-1) ){ //percentage
                         dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a percentage'); //#development
                         interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
                             dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parent'+capitalizedDirection+':'+sizes[0]); //#development
-                            var parentSize = sizes[0];
-                            var percent = parseFloat(attribute.slice(0,-1)) / 100;
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parsed percent: '+percent); //#development
-                            if( isNaN(percent) ){ 
-                                report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
-                                dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
-                                updateSize_usingDefault(direction);
-                                return;
-                            }
+                            const parentSize = sizes[0];
+                            const percent = parseFloat(attribute.slice(0,-1)) / 100;
+                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parsed percent: '+percent*100); //#development
+                            if( isNaN(percent) ){ unparseableErrorMessage(direction,attribute); return; }
                             dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+parentSize*percent); //#development
                             updateInternalCanvasSize(direction,parentSize*percent);
                         });
-                    }else if( attribute.indexOf('px') != -1 ){
+                    }else if( attribute.indexOf('px') != -1 ){ //px value
                         dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a pixel number'); //#development
-                        var val = parseFloat(attribute.slice(0,-2));
-                        if( isNaN(percent) ){ 
-                            report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
-                            updateSize_usingDefault(direction);
-                            return;
-                        }
+                        const val = parseFloat(attribute.slice(0,-2));
+                        if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
                         dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
-                    }else{
+                    }else{ //flat value
                         dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a flat number'); //#development
-                        let val = parseFloat(attribute);
-                        if( isNaN(val) ){ 
-                            report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
-                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
-                            updateSize_usingDefault(direction);
-                            return;
-                        }
+                        const val = parseFloat(attribute);
+                        if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
                         dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
                     }
@@ -162,7 +156,10 @@ const render = new function(){
                 updateInternalCanvasSize(direction,pageData.defaultCanvasSize[direction]);
             }
 
-            updateSize_arguments();
+            interface['window.devicePixelRatio']().then(value => {
+                pageData.devicePixelRatio = value;
+                updateSize_arguments();
+            });
         };
         this.refreshCoordinates = function(){
             dev.log.render('.refreshCoordinates()'); //#development
@@ -189,14 +186,18 @@ const render = new function(){
 
             interface.setCanvasAttributes([{name:'width',value:w/pageData.devicePixelRatio},{name:'height',value:h/pageData.devicePixelRatio}]);
         };
-        this.refresh = function(){
+        this.refresh = function(allDoneCallback){
             dev.log.render('.refresh()'); //#development
             this.clearColour(clearColour);
             this.frameRateLimit(this.frameRateLimit());
-            interface['window.devicePixelRatio']().then(value => {
-                pageData.devicePixelRatio = value;
-                this.adjustCanvasSize();
-            });
+            this.adjustCanvasSize();
+
+            const refresh_interval = setInterval(function(){
+                if(!render.isBusy()){
+                    clearInterval(refresh_interval);
+                    if(allDoneCallback){allDoneCallback()};
+                }
+            },1);
         };
 
     //frame rate control

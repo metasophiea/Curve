@@ -115,6 +115,7 @@ const viewport = new function(){
                 viewbox.points.br = {x:canvasDimensions.width, y:canvasDimensions.height};
             //calculate a bounding box for the viewport from these points
                 viewbox.boundingBox = library.math.boundingBoxFromPoints([viewbox.points.tl, viewbox.points.tr, viewbox.points.br, viewbox.points.bl]);
+                dev.log.viewport('::calculateViewportExtremities -> viewbox.boundingBox: '+JSON.stringify(viewbox.boundingBox)); //#development
         }
         this.calculateViewportExtremities = calculateViewportExtremities;
         this.refresh = function(){

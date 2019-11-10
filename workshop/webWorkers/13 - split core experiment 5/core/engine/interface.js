@@ -26,7 +26,18 @@ const interface = new function(){
             communicationModule.run('getCanvasParentAttributes',[attributeNames,prefixActiveArray],resolve);
         });
     };
+    this.sendReadySignal = function(){
+        communicationModule.run('ready');
+    };
 };
+
+//overarch
+    communicationModule.delayedFunction['refresh'] = function(responseFunction){
+        render.refresh(() => {
+            viewport.refresh();
+            responseFunction();
+        });
+    };
 
 //element
     communicationModule.function['element.getAvailableElements'] = function(){
@@ -99,8 +110,8 @@ const interface = new function(){
     communicationModule.function['render.refreshCoordinates'] = function(){
         render.refreshCoordinates();
     };
-    communicationModule.function['render.refresh'] = function(){
-        render.refresh();
+    communicationModule.delayedFunction['render.refresh'] = function(responseFunction){
+        render.refresh(responseFunction);
     };
     communicationModule.function['render.activeLimitToFrameRate'] = function(active){
         return render.activeLimitToFrameRate(active);
@@ -197,6 +208,13 @@ const interface = new function(){
     };
     communicationModule.function['callback.disactivateAllShapeCallbacks'] = function(){
         callback.disactivateAllShapeCallbacks();
+    };
+
+    communicationModule.function['callback.attachCallback'] = function(id,callbackType){
+        callback.attachCallback(element.getElementFromId(id),callbackType);
+    };
+    communicationModule.function['callback.removeCallback'] = function(id,callbackType){
+        callback.removeCallback(element.getElementFromId(id),callbackType);
     };
 
     callback.listCallbackTypes().forEach(callbackName => {

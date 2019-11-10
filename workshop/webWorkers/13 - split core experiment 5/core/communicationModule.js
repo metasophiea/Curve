@@ -7,6 +7,7 @@ const communicationModuleMaker = function(communicationObject,callerName){
         console.log('%c'+prefix+(new Array(...arguments).join(' ')),'color:rgb(235, 52, 131); font-style:italic;' );
     };
     this.function = {};
+    this.delayedFunction = {};
 
     let messageId = 0;
     const messagingCallbacks = {};
@@ -36,6 +37,19 @@ const communicationModuleMaker = function(communicationObject,callerName){
                         outgoing:false,
                         cargo:self.function[message.cargo.function](...message.cargo.arguments),
                     });
+                }
+            }else if(message.cargo.function in self.delayedFunction){
+                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
+                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
+                if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
+                if(message.id == null){
+                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
+                    self.delayedFunction[message.cargo.function](...message.cargo.arguments);
+                }else{
+                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
+                    cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
+                        communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
+                    }].concat(message.cargo.arguments));
                 }
             }else{
                 self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
