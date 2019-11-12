@@ -13,18 +13,25 @@ const communicationModuleMaker = function(communicationObject,callerName){
     const messagingCallbacks = {};
 
     function generateMessageID(){
+        self.log('::generateMessageID()'); //#development
         return messageId++;
     }
 
     communicationObject.onmessage = function(encodedPacket){
+        self.log('::communicationObject.onmessage('+JSON.stringify(encodedPacket)+')'); //#development
         let message = encodedPacket.data;
 
         if(message.outgoing){
+            self.log('::communicationObject.onmessage -> message is an outgoing one'); //#development
             if(message.cargo.function in self.function){
+                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" found'); //#development
+                self.log('::communicationObject.onmessage -> function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                 if(message.id == null){
+                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                     self.function[message.cargo.function](...message.cargo.arguments);
                 }else{
+                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                     communicationObject.postMessage({
                         id:message.id,
                         outgoing:false,
@@ -32,25 +39,35 @@ const communicationModuleMaker = function(communicationObject,callerName){
                     });
                 }
             }else if(message.cargo.function in self.delayedFunction){
+                self.log('::communicationObject.onmessage -> delayed function "'+message.cargo.function+'" found'); //#development
+                self.log('::communicationObject.onmessage -> delayed function arguments: '+JSON.stringify(message.cargo.arguments)); //#development
                 if(message.cargo.arguments == undefined){message.cargo.arguments = [];}
                 if(message.id == null){
+                    self.log('::communicationObject.onmessage -> message ID missing; will not return any data'); //#development
                     self.delayedFunction[message.cargo.function](...message.cargo.arguments);
                 }else{
+                    self.log('::communicationObject.onmessage -> message ID found; "'+message.id+'", will return any data'); //#development
                     cargo:self.delayedFunction[message.cargo.function](...[function(returnedData){
                         communicationObject.postMessage({ id:message.id, outgoing:false, cargo:returnedData });
                     }].concat(message.cargo.arguments));
                 }
             }else{
+                self.log('::communicationObject.onmessage -> function "'+message.cargo.function+'" not found'); //#development
             }
         }else{
+            self.log('::communicationObject.onmessage -> message is an incoming one'); //#development
+            self.log('::communicationObject.onmessage -> message ID: '+message.id+' cargo: '+JSON.stringify(message.cargo)); //#development
             messagingCallbacks[message.id](message.cargo);
             delete messagingCallbacks[message.id];
         }
     };
     this.run = function(functionName,argumentList=[],callback,transferables){
+        self.log('.run('+functionName+','+JSON.stringify(argumentList)+','+callback+','+JSON.stringify(transferables)+')'); //#development
         let id = null;
         if(callback != undefined){
+            self.log('.run -> callback was defined; generating message ID'); //#development
             id = generateMessageID();
+            self.log('.run -> message ID:',id); //#development
             messagingCallbacks[id] = callback;
         }
         communicationObject.postMessage({ id:id, outgoing:true, cargo:{function:functionName,arguments:argumentList} },transferables);
@@ -61,6 +78,7 @@ const communicationModule = new communicationModuleMaker(this,'core_engine');
 const library = {
     math:{
         averageArray: function(array){
+            dev.log.library('math','.averageArray('+JSON.stringify(array)+')'); //#development
             // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
         
             //this seems to be a little faster
@@ -69,10 +87,12 @@ const library = {
             return sum/array.length;
         },
         cartesianAngleAdjust: function(x,y,angle){
+            dev.log.library('math','.cartesianAngleAdjust('+x+','+y+','+angle+')'); //#development
             if(angle == 0){ return {x:x,y:y}; }
             return { x:x*Math.cos(angle) - y*Math.sin(angle), y:y*Math.cos(angle) + x*Math.sin(angle) };
         },
         boundingBoxFromPoints: function(points){
+            dev.log.library('math','.boundingBoxFromPoints('+JSON.stringify(points)+')'); //#development
             if(points.length == 0){
                 return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
             }
@@ -97,18 +117,21 @@ const library = {
             const detectOverlap = this;
         
             this.boundingBoxes = function(a, b){
+                dev.log.library('math','.detectOverlap.boundingBoxes('+JSON.stringify(a)+','+JSON.stringify(b)+')'); //#development
                 return a.bottomRight.y >= b.topLeft.y && 
                     a.bottomRight.x >= b.topLeft.x && 
                     a.topLeft.y <= b.bottomRight.y && 
                     a.topLeft.x <= b.bottomRight.x;
             };
             this.pointWithinBoundingBox = function(point,box){
+                dev.log.library('math','.detectOverlap.pointWithinBoundingBox('+JSON.stringify(point)+','+JSON.stringify(box)+')'); //#development
                 return !(
                     point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
                     point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
                 );
             };
             this.pointWithinPoly = function(point,points){
+                dev.log.library('math','.detectOverlap.pointWithinPoly('+JSON.stringify(point)+','+JSON.stringify(points)+')'); //#development
                 //Ray casting algorithm
         
                 let inside = false;
@@ -146,6 +169,7 @@ const library = {
                 return inside;
             };
             this.lineSegments = function(segment1, segment2){
+                dev.log.library('math','.detectOverlap.lineSegments('+JSON.stringify(segment1)+','+JSON.stringify(segment2)+')'); //#development
                 const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
                 if(denominator == 0){return null;}
         
@@ -159,6 +183,7 @@ const library = {
                 };
             };
             this.overlappingPolygons = function(points_a,points_b){
+                dev.log.library('math','.detectOverlap.overlappingPolygons('+JSON.stringify(points_a)+','+JSON.stringify(points_b)+')'); //#development
                 //a point from A is in B
                     for(let a = 0; a < points_a.length; a++){
                         if(detectOverlap.pointWithinPoly(points_a[a],points_b)){ return true; }
@@ -186,6 +211,7 @@ const library = {
                 return false;
             };
             this.overlappingPolygonWithPolygons = function(poly,polys){ 
+                dev.log.library('math','.detectOverlap.overlappingPolygonWithPolygons('+JSON.stringify(poly)+','+JSON.stringify(polys)+')'); //#development
                 for(let a = 0; a < polys.length; a++){
                     if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
                         if(detectOverlap.overlappingPolygons(poly.points, polys[a].points)){
@@ -197,6 +223,7 @@ const library = {
             };
         
             function overlappingLineWithPolygon(line,poly){
+                dev.log.library('math','.detectOverlap::overlappingLineWithPolygon('+JSON.stringify(line)+','+JSON.stringify(poly)+')'); //#development
                 //go through every side of the poly, and if one of them collides with the line, return true
                 for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
                     const tmp = library.math.detectOverlap.lineSegments(
@@ -215,6 +242,7 @@ const library = {
                 return false;
             };
             this.overlappingLineWithPolygons = function(line,polys){
+                dev.log.library('math','.detectOverlap.overlappingLineWithPolygons('+JSON.stringify(line)+','+JSON.stringify(polys)+')'); //#development
                 //generate a bounding box for the line
                     const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
                     if(line.x1 > line.x2){
@@ -243,6 +271,7 @@ const library = {
             };
         },
         getDifferenceOfArrays: function(array_a,array_b){
+            dev.log.library('math','.getDifferenceOfArrays('+array_a+','+array_b+')'); //#development
             function arrayRemovals(a,b){
                 a.forEach(item => {
                     var i = b.indexOf(item);
@@ -343,309 +372,6 @@ const report = {
 const element = new function(){
     //element library
         const elementLibrary = new function(){
-            this.rectangle = function(name,_id){
-                const self = this;
-            
-                //attributes 
-                    //protected attributes
-                        const type = 'rectangle'; 
-                        this.getType = function(){return type;}
-                        const id = _id; 
-                        this.getId = function(){return id;}
-            
-                    //simple attributes
-                        this.name = name;
-                        this.parent = undefined;
-                        this.dotFrame = false;
-                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
-                        let ignored = false;
-                        this.ignored = function(a){
-                            if(a==undefined){return ignored;}     
-                            ignored = a;
-                            computeExtremities();
-                        };
-                        let colour = {r:1,g:0,b:0,a:1};
-                        this.colour = function(a){
-                            if(a==undefined){return colour;}     
-                            colour = a;
-                            computeExtremities();
-                        };
-                    
-                    //attributes pertinent to extremity calculation
-                        let x = 0;
-                        let y = 0; 
-                        let angle = 0;
-                        let anchor = {x:0,y:0};
-                        let width = 10;
-                        let height = 10;
-                        let scale = 1;
-                        let static = false;
-                        this.x = function(a){ 
-                            if(a==undefined){return x;}     
-                            x = a;     
-                            computeExtremities();
-                        };
-                        this.y = function(a){ 
-                            if(a==undefined){return y;}     
-                            y = a;
-                            computeExtremities();
-                        };
-                        this.angle = function(a){ 
-                            if(a==undefined){return angle;} 
-                            angle = a;
-                            computeExtremities();
-                        };
-                        this.anchor = function(a){
-                            if(a==undefined){return anchor;} 
-                            anchor = a; 
-                            computeExtremities();
-                        };
-                        this.width = function(a){
-                            if(a==undefined){return width;}  
-                            width = a;  
-                            computeExtremities();
-                        };
-                        this.height = function(a){
-                            if(a==undefined){return height;} 
-                            height = a; 
-                            computeExtremities();
-                        };
-                        this.scale = function(a){ 
-                            if(a==undefined){return scale;} 
-                            scale = a;
-                            computeExtremities();
-                        };
-                        this.static = function(a){
-                            if(a==undefined){return static;}  
-                            static = a;  
-                            computeExtremities();
-                        };
-                        this.unifiedAttribute = function(attributes){
-                            if(attributes==undefined){ return {x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, ignored:ignored, colour:colour, static:static}; } 
-            
-                            if('ignored' in attributes){ 
-                                ignored = attributes.ignored;
-                            }
-                            if('colour' in attributes){
-                                colour = attributes.colour;
-                            }
-            
-                            if('x' in attributes){ 
-                                x = attributes.x;
-                            }
-                            if('y' in attributes){ 
-                                y = attributes.y;
-                            }
-                            if('angle' in attributes){ 
-                                angle = attributes.angle;
-                            }
-                            if('anchor' in attributes){
-                                anchor = attributes.anchor;
-                            }
-                            if('width' in attributes){
-                                width = attributes.width;
-                            }
-                            if('height' in attributes){
-                                height = attributes.height;
-                            }
-                            if('scale' in attributes){ 
-                                scale = attributes.scale;
-                            }
-                            if('static' in attributes){ 
-                                scale = attributes.static;
-                            }
-            
-                            computeExtremities();
-                        };
-            
-                //addressing
-                    this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
-            
-                //webGL rendering functions
-                    let points = [
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,1,
-                    ];
-                    let vertexShaderSource = `#version 300 es
-                        //constants
-                            in vec2 point;
-            
-                        //variables
-                            struct location{
-                                vec2 xy;
-                                float scale;
-                                float angle;
-                            };
-                            uniform location adjust;
-            
-                            uniform vec2 resolution;
-                            uniform vec2 dimensions;
-                            uniform vec2 anchor;
-            
-                        void main(){
-                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
-                                vec2 P = dimensions * adjust.scale * (point - anchor);
-                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
-            
-                            //convert from unit space to clipspace
-                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
-                        }
-                    `;
-                    let fragmentShaderSource = `#version 300 es
-                        precision mediump float;
-                        out vec4 outputColor;
-                        uniform vec4 colour;
-                                                                                    
-                        void main(){
-                            outputColor = colour;
-                        }
-                    `;
-                    let point = { buffer:undefined, attributeLocation:undefined };
-                    let uniformLocations;
-                    function updateGLAttributes(context,adjust){
-            
-                        //buffers
-                            //points
-                                if(point.buffer == undefined){
-                                    point.attributeLocation = context.getAttribLocation(program, "point");
-                                    point.buffer = context.createBuffer();
-                                    context.enableVertexAttribArray(point.attributeLocation);
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
-                                }else{
-                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
-                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                                }
-                        
-                        //uniforms
-                            if( uniformLocations == undefined ){
-                                uniformLocations = {
-                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
-                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
-                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
-                                    "resolution": context.getUniformLocation(program, "resolution"),
-                                    "dimensions": context.getUniformLocation(program, "dimensions"),
-                                    "anchor": context.getUniformLocation(program, "anchor"),
-                                    "colour": context.getUniformLocation(program, "colour"),
-                                };
-                            }
-            
-                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
-                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
-                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
-                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                            context.uniform2f(uniformLocations["dimensions"], width, height);
-                            context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
-                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
-                    }
-                    let program;
-                    function activateGLRender(context,adjust){
-                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
-                
-                        context.useProgram(program);
-                        updateGLAttributes(context,adjust);
-                        context.drawArrays(context.TRIANGLE_FAN, 0, 4);
-                    }
-            
-                //extremities
-                    function computeExtremities(informParent=true,offset){
-                        
-                        //get offset from parent, if one isn't provided
-                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-                        //calculate adjusted offset based on the offset
-                            let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            let adjusted = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-                        //calculate points based on the adjusted offset
-                            self.extremities.points = [];
-                            for(let a = 0; a < points.length; a+=2){
-                                let P = {
-                                    x: adjusted.scale * width * (points[a] - anchor.x), 
-                                    y: adjusted.scale * height * (points[a+1] - anchor.y), 
-                                };
-            
-                                self.extremities.points.push({ 
-                                    x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
-                                    y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
-                                });
-                            }
-                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
-                    
-                        //if told to do so, inform parent (if there is one) that extremities have changed
-                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
-                    }
-                    this.computeExtremities = computeExtremities;
-            
-                //lead render
-                    function drawDotFrame(){
-                        //draw shape extremity points
-                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
-                        //draw bounding box top left and bottom right points
-                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
-                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
-                    };
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-                        //combine offset with shape's position, angle and scale to produce adjust value for render
-                            let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            let adjust = { 
-                                x: point.x*offset.scale + offset.x,
-                                y: point.y*offset.scale + offset.y,
-                                scale: offset.scale*scale,
-                                angle: -(offset.angle + angle),
-                            };
-            
-                        //activate shape render code
-                            activateGLRender(context,adjust);
-            
-                        //if requested; draw dot frame
-                            if(self.dotFrame){drawDotFrame();}
-                    };
-            
-                //info dump
-                    this._dump = function(){
-                        report.info(self.getAddress(),'._dump()');
-                        report.info(self.getAddress(),'._dump -> id: '+id);
-                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-                        report.info(self.getAddress(),'._dump -> x: '+x);
-                        report.info(self.getAddress(),'._dump -> y: '+y);
-                        report.info(self.getAddress(),'._dump -> angle: '+angle);
-                        report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
-                        report.info(self.getAddress(),'._dump -> width: '+width);
-                        report.info(self.getAddress(),'._dump -> height: '+height);
-                        report.info(self.getAddress(),'._dump -> scale: '+scale);
-                        report.info(self.getAddress(),'._dump -> static: '+static);
-                    };
-                
-                //interface
-                    this.interface = new function(){
-                        this.ignored = self.ignored;
-                        this.colour = self.colour;
-                        this.x = self.x;
-                        this.y = self.y;
-                        this.angle = self.angle;
-                        this.angle = self.angle;
-                        this.anchor = self.anchor;
-                        this.width = self.width;
-                        this.scale = self.scale;
-                        this.static = self.static;
-                        this.unifiedAttribute = self.unifiedAttribute;
-            
-                        this.getAddress = self.getAddress;
-            
-                        this._dump = self._dump;
-                    };
-            };
             this.group = function(name,_id){
                 const self = this;
             
@@ -665,6 +391,7 @@ const element = new function(){
                         this.ignored = function(a){
                             if(a==undefined){return ignored;}     
                             ignored = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
                             computeExtremities();
                         };
                     
@@ -678,56 +405,70 @@ const element = new function(){
                         this.x = function(a){ 
                             if(a==undefined){return x;}     
                             x = a;     
+                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                             computeExtremities();
                         };
                         this.y = function(a){ 
                             if(a==undefined){return y;}     
                             y = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                             computeExtremities();
                         };
                         this.angle = function(a){ 
                             if(a==undefined){return angle;} 
                             angle = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                             computeExtremities();
                         };
                         this.scale = function(a){ 
                             if(a==undefined){return scale;} 
                             scale = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                             computeExtremities();
                         };
                         this.heedCamera = function(a){
                             if(a==undefined){return heedCamera;}     
                             heedCamera = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.heedCamera('+a+')'); //#development
                             computeExtremities();
                         };
                         this.static = function(a){
                             if(a==undefined){return static;}  
                             static = a;  
+                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
                             computeExtremities();
                         };
                         this.unifiedAttribute = function(attributes){
                             if(attributes==undefined){ return {x:x, y:y, angle:angle, scale:scale, ignored:ignored, heedCamera:heedCamera, static:static}; } 
+                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
             
                             if('ignored' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "ignored" to '+attributes.ignored); //#development
                                 ignored = attributes.ignored;
                             }
             
                             if('x' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "x" to '+attributes.x); //#development
                                 x = attributes.x;
                             }
                             if('y' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "y" to '+attributes.y); //#development
                                 y = attributes.y;
                             }
                             if('angle' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "angle" to '+attributes.angle); //#development
                                 angle = attributes.angle;
                             }
                             if('scale' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "scale" to '+attributes.scale); //#development
                                 scale = attributes.scale;
                             }
                             if('heedCamera' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "heedCamera" to '+attributes.heedCamera); //#development
                                 scale = attributes.heedCamera;
                             }
                             if('static' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "static" to '+attributes.static); //#development
                                 scale = attributes.static;
                             }
             
@@ -765,6 +506,7 @@ const element = new function(){
                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                     this.contains = checkForElement;
                     this.append = function(element){
+                        dev.log.elementLibrary(type,self.getAddress(),'.append('+JSON.stringify(element)+')'); //#development
             
                         if( !isValidElement(element) ){ return; }
             
@@ -776,6 +518,7 @@ const element = new function(){
                         if(element.onadd != undefined){element.onadd(false);}
                     };
                     this.prepend = function(element){
+                        dev.log.elementLibrary(type,self.getAddress(),'.prepend('+JSON.stringify(element)+')'); //#development
             
                         if( !isValidElement(element) ){ return; }
             
@@ -787,6 +530,7 @@ const element = new function(){
                         if(element.onadd != undefined){element.onadd(true);}
                     };
                     this.remove = function(element){
+                        dev.log.elementLibrary(type,self.getAddress(),'.remove('+JSON.stringify(element)+')'); //#development
                         if(element == undefined){return;}
                         if(element.onremove != undefined){element.onremove();}
                         children.splice(children.indexOf(element), 1);
@@ -797,6 +541,7 @@ const element = new function(){
                     };
                     this.clear = function(){ children = []; childRegistry = {} };
                     this.getElementsUnderPoint = function(x,y){
+                        dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderPoint('+x+','+y+')'); //#development
             
                         var returnList = [];
             
@@ -818,6 +563,7 @@ const element = new function(){
                         return returnList;
                     };
                     this.getElementsUnderArea = function(points){
+                        dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderArea('+points+')'); //#development
             
                         var returnList = [];
             
@@ -853,18 +599,21 @@ const element = new function(){
                     var clipping = { stencil:undefined, active:false };
                     this.stencil = function(element){
                         if(element == undefined){return clipping.stencil;}
+                        dev.log.elementLibrary(type,self.getAddress(),'.stencil('+JSON.stringify(element)+')'); //#development
                         clipping.stencil = element;
                         clipping.stencil.parent = this;
                         if(clipping.active){ computeExtremities(); }
                     };
                     this.clipActive = function(bool){
                         if(bool == undefined){return clipping.active;}
+                        dev.log.elementLibrary(type,self.getAddress(),'.clipActive('+bool+')'); //#development
                         clipping.active = bool;
                         computeExtremities();
                     };
             
                 //extremities
                     function calculateExtremitiesBox(){
+                        dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox()'); //#development
                         var limits = {left:0,right:0,top:0,bottom:0};
                         children.forEach(child => {
                             var tmp = library.math.boundingBoxFromPoints(child.extremities.points);
@@ -887,6 +636,7 @@ const element = new function(){
                             }else{
                                 calculateExtremitiesBox();
                             }
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
             
                         //generate bounding box from points
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
@@ -895,6 +645,7 @@ const element = new function(){
                             if(informParent){ if(self.parent){self.parent.updateExtremities();} }
                     }
                     function augmentExtremities(element){
+                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities('+JSON.stringify(element)+')'); //#development
             
                         //get offset from parent
                             var offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
@@ -910,12 +661,14 @@ const element = new function(){
                             element.computeExtremities(false,newOffset);
                         //augment points list
                             calculateExtremitiesBox();
+                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
                         //recalculate bounding box
                             self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
                         //inform parent of change
                             if(self.parent){self.parent.updateExtremities();}
                     }
                     function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
                         
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
@@ -935,6 +688,7 @@ const element = new function(){
                             updateExtremities(informParent,offset);
                     }
                     function augmentExtremities_add(element){
+                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add('+JSON.stringify(element)+')'); //#development
             
                         //get offset from parent
                             var offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
@@ -958,10 +712,12 @@ const element = new function(){
                                 { x:self.extremities.boundingBox.topLeft.x, y:self.extremities.boundingBox.bottomRight.y },
                             ];
             
+                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add -> extremities.points.length: '+self.extremities.points.length); //#development
                         //inform parent of change
                             if(self.parent){self.parent.updateExtremities();}
                     }
                     function augmentExtremities_remove(element){
+                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove('+JSON.stringify(element)+')'); //#development
                         //this function assumes that the element has already been removed from the 'children' variable)
                         //is the element's bounding box within the bounding box of the group; if so, no recalculation need be done
                         //otherwise the element is touching the boundary, in which case search through the children for another 
@@ -978,11 +734,13 @@ const element = new function(){
                             }
                         };
                         if( data.topLeft.x != 0 && data.topLeft.y != 0 && data.bottomRight.x != 0 && data.bottomRight.y != 0 ){
+                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> easy remove: no changes to the group\'s bounding box required'); //#development
                             return;
                         }else{
                             ['topLeft','bottomRight'].forEach(cornerName => {
                                 ['x','y'].forEach(axisName => {
                                     if(data[cornerName][axisName] == 0){
+                                        dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> '+cornerName+'_'+axisName+' is at boundary'); //#development
             
                                         var boundaryToucherFound = false;
                                         var closestToBoundary = {distance:undefined, position:undefined};
@@ -995,6 +753,7 @@ const element = new function(){
                                         }
             
                                         if(!boundaryToucherFound){
+                                            dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> need to adjust the bounding box'); //#development
                                             self.extremities.boundingBox[cornerName][axisName] = closestToBoundary.position;
                                         }
                                     }
@@ -1026,6 +785,7 @@ const element = new function(){
                         render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:0,b:0,a:0.75});
                     }
                     this.render = function(context, offset){
+                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
                         //combine offset with group's position, angle and scale to produce new offset for children
                             var point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             var newOffset = { 
@@ -1052,14 +812,17 @@ const element = new function(){
                         
                         //render children
                             children.forEach(function(a){
+                                dev.log.elementLibrary(type,self.getAddress(),'.render -> '+JSON.stringify(clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox())+' / '+JSON.stringify(a.extremities.boundingBox)); //#development
                                 if(
                                     library.math.detectOverlap.boundingBoxes(
                                         clipping.active ? self.extremities.boundingBox : viewport.getBoundingBox(),
                                         a.extremities.boundingBox
                                     )
                                 ){ 
+                                    dev.log.elementLibrary(type,self.getAddress(),'.render -> rendering shape: '+a.name); //#development
                                     a.render(context,newOffset);
                                 }else{
+                                    dev.log.elementLibrary(type,self.getAddress(),'.render -> not rendering shape: '+a.name); //#development
                                 }
                             });
             
@@ -1122,8 +885,348 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
+            this.rectangle = function(name,_id){
+                const self = this;
+            
+                //attributes 
+                    //protected attributes
+                        const type = 'rectangle'; 
+                        this.getType = function(){return type;}
+                        const id = _id; 
+                        this.getId = function(){return id;}
+            
+                    //simple attributes
+                        this.name = name;
+                        this.parent = undefined;
+                        this.dotFrame = false;
+                        this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
+                        let ignored = false;
+                        this.ignored = function(a){
+                            if(a==undefined){return ignored;}     
+                            ignored = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        let colour = {r:1,g:0,b:0,a:1};
+                        this.colour = function(a){
+                            if(a==undefined){return colour;}     
+                            colour = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
+                            computeExtremities();
+                        };
+                    
+                    //attributes pertinent to extremity calculation
+                        let x = 0;
+                        let y = 0; 
+                        let angle = 0;
+                        let anchor = {x:0,y:0};
+                        let width = 10;
+                        let height = 10;
+                        let scale = 1;
+                        let static = false;
+                        this.x = function(a){ 
+                            if(a==undefined){return x;}     
+                            x = a;     
+                            dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        this.y = function(a){ 
+                            if(a==undefined){return y;}     
+                            y = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        this.angle = function(a){ 
+                            if(a==undefined){return angle;} 
+                            angle = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        this.anchor = function(a){
+                            if(a==undefined){return anchor;} 
+                            anchor = a; 
+                            dev.log.elementLibrary(type,self.getAddress(),'.anchor('+JSON.stringify(a)+')'); //#development
+                            computeExtremities();
+                        };
+                        this.width = function(a){
+                            if(a==undefined){return width;}  
+                            width = a;  
+                            dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        this.height = function(a){
+                            if(a==undefined){return height;} 
+                            height = a; 
+                            dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        this.scale = function(a){ 
+                            if(a==undefined){return scale;} 
+                            scale = a;
+                            dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        this.static = function(a){
+                            if(a==undefined){return static;}  
+                            static = a;  
+                            dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
+                            computeExtremities();
+                        };
+                        this.unifiedAttribute = function(attributes){
+                            if(attributes==undefined){ return {x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, ignored:ignored, colour:colour, static:static}; } 
+                            dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
+            
+                            if('ignored' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "ignored" to '+attributes.ignored); //#development
+                                ignored = attributes.ignored;
+                            }
+                            if('colour' in attributes){
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "colour" to '+attributes.colour); //#development
+                                colour = attributes.colour;
+                            }
+            
+                            if('x' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "x" to '+attributes.x); //#development
+                                x = attributes.x;
+                            }
+                            if('y' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "y" to '+attributes.y); //#development
+                                y = attributes.y;
+                            }
+                            if('angle' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "angle" to '+attributes.angle); //#development
+                                angle = attributes.angle;
+                            }
+                            if('anchor' in attributes){
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "anchor" to '+attributes.anchor); //#development
+                                anchor = attributes.anchor;
+                            }
+                            if('width' in attributes){
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "width" to '+attributes.width); //#development
+                                width = attributes.width;
+                            }
+                            if('height' in attributes){
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "height" to '+attributes.height); //#development
+                                height = attributes.height;
+                            }
+                            if('scale' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "scale" to '+attributes.scale); //#development
+                                scale = attributes.scale;
+                            }
+                            if('static' in attributes){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "static" to '+attributes.static); //#development
+                                scale = attributes.static;
+                            }
+            
+                            computeExtremities();
+                        };
+            
+                //addressing
+                    this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
+            
+                //webGL rendering functions
+                    let points = [
+                        0,0,
+                        1,0,
+                        1,1,
+                        0,1,
+                    ];
+                    let vertexShaderSource = `#version 300 es
+                        //constants
+                            in vec2 point;
+            
+                        //variables
+                            struct location{
+                                vec2 xy;
+                                float scale;
+                                float angle;
+                            };
+                            uniform location adjust;
+            
+                            uniform vec2 resolution;
+                            uniform vec2 dimensions;
+                            uniform vec2 anchor;
+            
+                        void main(){
+                            //using the 'adjust' values; perform anchored rotation, and leave shape with it's anchor over the chosen point
+                                vec2 P = dimensions * adjust.scale * (point - anchor);
+                                P = vec2( P.x*cos(adjust.angle) + P.y*sin(adjust.angle), P.y*cos(adjust.angle) - P.x*sin(adjust.angle) ) + adjust.xy;
+            
+                            //convert from unit space to clipspace
+                                gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
+                        }
+                    `;
+                    let fragmentShaderSource = `#version 300 es
+                        precision mediump float;
+                        out vec4 outputColor;
+                        uniform vec4 colour;
+                                                                                    
+                        void main(){
+                            outputColor = colour;
+                        }
+                    `;
+                    let point = { buffer:undefined, attributeLocation:undefined };
+                    let uniformLocations;
+                    function updateGLAttributes(context,adjust){
+                        dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
+            
+                        //buffers
+                            //points
+                                if(point.buffer == undefined){
+                                    point.attributeLocation = context.getAttribLocation(program, "point");
+                                    point.buffer = context.createBuffer();
+                                    context.enableVertexAttribArray(point.attributeLocation);
+                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                    context.bufferData(context.ARRAY_BUFFER, new Float32Array(points), context.STATIC_DRAW);
+                                }else{
+                                    context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
+                                    context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
+                                }
+                        
+                        //uniforms
+                            if( uniformLocations == undefined ){
+                                uniformLocations = {
+                                    "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
+                                    "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
+                                    "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
+                                    "resolution": context.getUniformLocation(program, "resolution"),
+                                    "dimensions": context.getUniformLocation(program, "dimensions"),
+                                    "anchor": context.getUniformLocation(program, "anchor"),
+                                    "colour": context.getUniformLocation(program, "colour"),
+                                };
+                            }
+            
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.x:'+adjust.x+' adjust.y:'+adjust.y); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> '+context.canvas.width+' '+context.canvas.height); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> width:'+width+' height:'+height); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> anchor.x:'+anchor.x+' anchor.y:'+anchor.y); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
+                            context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
+                            context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
+                            context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
+                            context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
+                            context.uniform2f(uniformLocations["dimensions"], width, height);
+                            context.uniform2f(uniformLocations["anchor"], anchor.x, anchor.y);
+                            context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
+                    }
+                    let program;
+                    function activateGLRender(context,adjust){
+                        dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
+                        if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+                
+                        context.useProgram(program);
+                        updateGLAttributes(context,adjust);
+                        context.drawArrays(context.TRIANGLE_FAN, 0, 4);
+                    }
+            
+                //extremities
+                    function computeExtremities(informParent=true,offset){
+                        dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
+                        
+                        //get offset from parent, if one isn't provided
+                            if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                        //calculate adjusted offset based on the offset
+                            let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> point'+JSON.stringify(point)); //#development
+                            let adjusted = { 
+                                x: point.x*offset.scale + offset.x,
+                                y: point.y*offset.scale + offset.y,
+                                scale: offset.scale*scale,
+                                angle: -(offset.angle + angle),
+                            };
+                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> adjusted'+JSON.stringify(adjusted)); //#development
+                        //calculate points based on the adjusted offset
+                            self.extremities.points = [];
+                            for(let a = 0; a < points.length; a+=2){
+                                let P = {
+                                    x: adjusted.scale * width * (points[a] - anchor.x), 
+                                    y: adjusted.scale * height * (points[a+1] - anchor.y), 
+                                };
+            
+                                self.extremities.points.push({ 
+                                    x: P.x*Math.cos(adjusted.angle) + P.y*Math.sin(adjusted.angle) + adjusted.x,
+                                    y: P.y*Math.cos(adjusted.angle) - P.x*Math.sin(adjusted.angle) + adjusted.y,
+                                });
+                            }
+                            self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.points:'+JSON.stringify(self.extremities.points)); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> self.extremities.boundingBox:'+JSON.stringify(self.extremities.boundingBox)); //#development
+                    
+                        //if told to do so, inform parent (if there is one) that extremities have changed
+                            if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+                    }
+                    this.computeExtremities = computeExtremities;
+            
+                //lead render
+                    function drawDotFrame(){
+                        //draw shape extremity points
+                            self.extremities.points.forEach(a => render.drawDot(a.x,a.y));
+                        //draw bounding box top left and bottom right points
+                            render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,3,{r:0,g:1,b:1,a:0.5});
+                            render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,3,{r:0,g:1,b:1,a:0.5});
+                    };
+                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
+                        dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
+                        //combine offset with shape's position, angle and scale to produce adjust value for render
+                            let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            let adjust = { 
+                                x: point.x*offset.scale + offset.x,
+                                y: point.y*offset.scale + offset.y,
+                                scale: offset.scale*scale,
+                                angle: -(offset.angle + angle),
+                            };
+            
+                        //activate shape render code
+                            activateGLRender(context,adjust);
+            
+                        //if requested; draw dot frame
+                            if(self.dotFrame){drawDotFrame();}
+                    };
+            
+                //info dump
+                    this._dump = function(){
+                        report.info(self.getAddress(),'._dump()');
+                        report.info(self.getAddress(),'._dump -> id: '+id);
+                        report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
+                        report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
+                        report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
+                        report.info(self.getAddress(),'._dump -> ignored: '+ignored);
+                        report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
+                        report.info(self.getAddress(),'._dump -> x: '+x);
+                        report.info(self.getAddress(),'._dump -> y: '+y);
+                        report.info(self.getAddress(),'._dump -> angle: '+angle);
+                        report.info(self.getAddress(),'._dump -> anchor: '+JSON.stringify(anchor));
+                        report.info(self.getAddress(),'._dump -> width: '+width);
+                        report.info(self.getAddress(),'._dump -> height: '+height);
+                        report.info(self.getAddress(),'._dump -> scale: '+scale);
+                        report.info(self.getAddress(),'._dump -> static: '+static);
+                    };
+                
+                //interface
+                    this.interface = new function(){
+                        this.ignored = self.ignored;
+                        this.colour = self.colour;
+                        this.x = self.x;
+                        this.y = self.y;
+                        this.angle = self.angle;
+                        this.angle = self.angle;
+                        this.anchor = self.anchor;
+                        this.width = self.width;
+                        this.scale = self.scale;
+                        this.static = self.static;
+                        this.unifiedAttribute = self.unifiedAttribute;
+            
+                        this.getAddress = self.getAddress;
+            
+                        this._dump = self._dump;
+                    };
+            };
         };
         this.getAvailableElements = function(){ 
+            dev.log.element('.getAvailableElements()');  //#development
             return Object.keys(elementLibrary);
         };
 
@@ -1140,14 +1243,17 @@ const element = new function(){
             this.getElementFromId = getElementFromId;
             this.getIdFromElement = getIdFromElement;
             this.getCreatedElements = function(){ 
+                dev.log.element('.getCreatedElements()');  //#development
                 return createdElements;
             };
 
         //creation
             this.create_skipDatabase = function(type,name){
+                dev.log.element('.create_skipDatabase('+type+','+name+')');  //#development
                 return new elementLibrary[type](name,-1);
             };
             this.create = function(type,name){
+                dev.log.element('.create('+type+','+name+')');  //#development
 
                 if(type == undefined){ report.error('elememt.createElement: type argument not provided - element will not be produced'); return; }
                 if(name == undefined){ report.error('elememt.createElement: name argument not provided - element will not be produced'); return; }
@@ -1160,14 +1266,17 @@ const element = new function(){
 
         //deletion
             this.delete = function(element){ 
+                dev.log.element('.delete('+element+')');  //#development
                 createdElements[getIdFromElement(element)] = undefined;
             };
             this.deleteAllCreated = function(){ 
+                dev.log.element('.deleteAllCreated()');  //#development
                 for(let a = 0; a < createdElements.length; a++){this.delete(getElementFromId(a));}
             };
 
         //other
             this.getTypeById = function(element){ 
+                dev.log.element('.getTypeById('+element+')'); //#development
                 return element.getType();
             };
             this._dump = function(){
@@ -1180,28 +1289,36 @@ const arrangement = new function(){
     let design = element.create_skipDatabase('group','root');
 
     this.new = function(){ 
+        dev.log.arrangement('.new()');  //#development
         design = core.shape.create('group');
     };
     this.get = function(){
+        dev.log.arrangement('.get()');  //#development
         return design; 
     };
     this.set = function(arrangement){ 
+        dev.log.arrangement('.set('+JSON.stringify(arrangement)+')');  //#development
         design = arrangement;
     };
     this.prepend = function(element){
+        dev.log.arrangement('.prepend('+JSON.stringify(element)+')');  //#development
         design.prepend(element);
     };
     this.append = function(element){
+        dev.log.arrangement('.append('+JSON.stringify(element)+')');  //#development
         design.append(element);
     };
     this.remove = function(element){ 
+        dev.log.arrangement('.remove('+JSON.stringify(element)+')');  //#development
         design.remove(element); 
     };
     this.clear = function(){ 
+        dev.log.arrangement('.clear()');  //#development
         design.clear(); 
     };
 
     this.getElementByAddress = function(address){
+        dev.log.arrangement('.getElementByAddress('+JSON.stringify(address)+')'); //#development
 
         var route = address.split('/'); 
         route.shift(); 
@@ -1215,9 +1332,11 @@ const arrangement = new function(){
         return currentObject;
     };
     this.getElementsUnderPoint = function(x,y){
+        dev.log.arrangement('.getElementsUnderPoint('+x+','+y+')'); //#development
         return design.getElementsUnderPoint(x,y);
     };
     this.getElementsUnderArea = function(points){ 
+        dev.log.arrangement('.getElementByAddress('+JSON.stringify(points)+')'); //#development
         return design.getElementsUnderArea(points); 
     };
         
@@ -1266,6 +1385,7 @@ const render = new function(){
     //webGL program production
         let storedPrograms = {};
         this.produceProgram = function(name, vertexShaderSource, fragmentShaderSource){
+            dev.log.render('.produceProgram('+name+','+vertexShaderSource+','+fragmentShaderSource+')'); //#development
             function compileProgram(vertexShaderSource, fragmentShaderSource){
                 function createShader(type, source){
                     let shader = context.createShader(type);
@@ -1292,9 +1412,11 @@ const render = new function(){
             };
 
             if( !(name in storedPrograms) ){
+                dev.log.render('.produceProgram -> program not found; will be compiled and stored as "'+name+'"'); //#development
                 storedPrograms[name] = compileProgram(vertexShaderSource, fragmentShaderSource);
                 context.useProgram(storedPrograms[name]);
             }else{
+                dev.log.render('.produceProgram -> program found; using stored program'); //#development
             }
 
             return storedPrograms[name];
@@ -1302,15 +1424,18 @@ const render = new function(){
 
     //canvas and webGL context adjustment
         this.clearColour = function(colour){
+            dev.log.render('.clearColour('+JSON.stringify(colour)+')'); //#development
             if(colour == undefined){ return clearColour; }
             clearColour = colour;
             context.clearColor(clearColour.r, clearColour.g, clearColour.b, 1);
         };
         this.adjustCanvasSize = function(newWidth, newHeight){
+            dev.log.render('.adjustCanvasSize('+newWidth+','+newHeight+')'); //#development
             let adjustCanvasSize_isBusy = {width:false,height:false};
             isBusy = true;
 
             function updateInternalCanvasSize(direction,newValue){
+                dev.log.render('.adjustCanvasSize::updateInternalCanvasSize('+direction+','+newValue+')'); //#development
                 newValue *= pageData.devicePixelRatio;
                 if(newValue != undefined){
                     if(pageData.currentCanvasSize[direction] != newValue){
@@ -1332,50 +1457,65 @@ const render = new function(){
             //request canvas data from the console, if none is provided in arguments
             // -> argument data > requested data > default data
             function updateSize_arguments(){
+                dev.log.render('.adjustCanvasSize::updateSize_arguments()'); //#development
                 adjustCanvasSize_isBusy = {width:true,height:true};
 
                 if(newWidth != undefined){
                     updateInternalCanvasSize('width',newWidth*pageData.devicePixelRatio);
                 }else{
+                    dev.log.render('.adjustCanvasSize -> argument "newWidth" undefined; trying request...'); //#development
                     updateSize_dataRequest('width');
                 }
                 if(newHeight != undefined){
                     updateInternalCanvasSize('height',newHeight*pageData.devicePixelRatio);
                 }else{
+                    dev.log.render('.adjustCanvasSize -> argument "newHeight" undefined; trying request...'); //#development
                     updateSize_dataRequest('height');
                 }
             }
             function updateSize_dataRequest(direction){
+                dev.log.render('.adjustCanvasSize::updateSize_dataRequest('+direction+')'); //#development
                 const capitalizedDirection = direction[0].toUpperCase() + direction.slice(1);
 
                 interface.getCanvasAttributes([capitalizedDirection],[true]).then(sizes => {
                     pageData.selectedCanvasSize[direction] = sizes[0];
+                    dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> '+capitalizedDirection+':'+pageData.selectedCanvasSize[direction]); //#development
                     const attribute = pageData.selectedCanvasSize[direction];
 
                     function unparseableErrorMessage(direction,attribute){
                         report.error( 'Canvas element '+direction+' is of an unparseable format: '+attribute );
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> unparseable format: '+attribute+', will use default instead'); //#development
                         updateSize_usingDefault(direction);
                     }
 
                     if( attribute.indexOf('%') == (attribute.length-1) ){ //percentage
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a percentage'); //#development
                         interface.getCanvasParentAttributes(['offset'+capitalizedDirection]).then(sizes => {
+                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parent'+capitalizedDirection+':'+sizes[0]); //#development
                             const parentSize = sizes[0];
                             const percent = parseFloat(attribute.slice(0,-1)) / 100;
+                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> parsed percent: '+percent*100); //#development
                             if( isNaN(percent) ){ unparseableErrorMessage(direction,attribute); return; }
+                            dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+parentSize*percent); //#development
                             updateInternalCanvasSize(direction,parentSize*percent);
                         });
                     }else if( attribute.indexOf('px') != -1 ){ //px value
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a pixel number'); //#development
                         const val = parseFloat(attribute.slice(0,-2));
                         if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
                     }else{ //flat value
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> its a flat number'); //#development
                         const val = parseFloat(attribute);
                         if( isNaN(val) ){ unparseableErrorMessage(direction,attribute); return; }
+                        dev.log.render('.adjustCanvasSize::updateSize_dataRequest -> calculated size: '+val); //#development
                         updateInternalCanvasSize(direction,val);
                     }
                 });
             }
             function updateSize_usingDefault(direction){
+                dev.log.render('.adjustCanvasSize::updateSize_usingDefault('+direction+')'); //#development
                 updateInternalCanvasSize(direction,pageData.defaultCanvasSize[direction]);
             }
 
@@ -1385,8 +1525,11 @@ const render = new function(){
             });
         };
         this.refreshCoordinates = function(){
+            dev.log.render('.refreshCoordinates()'); //#development
+            dev.log.render('.refreshCoordinates: -> pageData.devicePixelRatio: '+pageData.devicePixelRatio); //#development
             let w = context.canvas.width;
             let h = context.canvas.height;
+            dev.log.render('.refreshCoordinates: -> w:'+w+' h:'+h); //#development
 
             let x, y, width, height = 0;
             if(pageData.devicePixelRatio == 1){
@@ -1401,11 +1544,13 @@ const render = new function(){
                 height = h*2;
             }
 
+            dev.log.render('.refreshCoordinates: -> context.viewport('+x+', '+y+', '+width+', '+height+')'); //#development
             context.viewport(x, y, width, height);
 
             interface.setCanvasAttributes([{name:'width',value:w/pageData.devicePixelRatio},{name:'height',value:h/pageData.devicePixelRatio}]);
         };
         this.refresh = function(allDoneCallback){
+            dev.log.render('.refresh()'); //#development
             this.clearColour(clearColour);
             this.frameRateLimit(this.frameRateLimit());
             this.adjustCanvasSize();
@@ -1421,10 +1566,12 @@ const render = new function(){
     //frame rate control
         const frameRateControl = {active:false, previousRenderTime:Date.now(), limit:30, interval:0};
         this.activeLimitToFrameRate = function(a){
+            dev.log.render('.activeLimitToFrameRate('+a+')'); //#development
             if(a==undefined){return frameRateControl.active;}
             frameRateControl.active=a
         };
         this.frameRateLimit = function(a){
+            dev.log.render('.frameRateLimit('+a+')'); //#development
             if(a==undefined){ return frameRateControl.limit; }
             frameRateControl.limit=a;
             frameRateControl.interval=1000/frameRateControl.limit;
@@ -1432,12 +1579,14 @@ const render = new function(){
 
     //actual render
         function renderFrame(noClear=false){
+            dev.log.render('::renderFrame('+noClear+')'); //#development
             if(!noClear){context.clear(context.COLOR_BUFFER_BIT | context.STENCIL_BUFFER_BIT);}
             arrangement.get().render(context,{x:0,y:0,scale:1,angle:0});
             const transferableImage = canvas.transferToImageBitmap();
             communicationModule.run('printToScreen',[transferableImage],undefined,[transferableImage]);
         }
         function animate(timestamp){
+            dev.log.render('::animate('+timestamp+')'); //#development
             animationRequestId = requestAnimationFrame(animate);
 
             //limit frame rate
@@ -1461,9 +1610,11 @@ const render = new function(){
                 stats.collect(timestamp);
         }
         this.frame = function(noClear=false){
+            dev.log.render('.frame('+noClear+')'); //#development
             renderFrame(noClear);
         };
         this.active = function(bool){
+            dev.log.render('.active('+bool+')'); //#development
             if(bool == undefined){return animationRequestId!=undefined;}
 
             if(bool){
@@ -1518,6 +1669,7 @@ const viewport = new function(){
     //adapter
         this.adapter = new function(){
             this.windowPoint2workspacePoint = function(x,y){
+                dev.log.viewport('.adapter.windowPoint2workspacePoint('+x+','+y+')'); //#development
                 const position = viewport.position();
                 const scale = viewport.scale();
                 const angle = viewport.angle();
@@ -1545,12 +1697,14 @@ const viewport = new function(){
 
     //camera position
         this.position = function(x,y){
+            dev.log.viewport('.position('+x+','+y+')'); //#development
             if(x == undefined || y == undefined){return {x:state.position.x,y:state.position.y};}
             state.position.x = x;
             state.position.y = y;
 
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera){
+                    dev.log.viewport('.position -> adjusting: '+JSON.stringify(item)); //#development
                     item.unifiedAttribute({x:state.position.x,y:state.position.y});
                 }
             });
@@ -1560,10 +1714,12 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.scale = function(s){
+            dev.log.viewport('.scale('+s+')'); //#development
             if(s == undefined){return state.scale;}
             state.scale = s <= 0 ? 1 : s;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera){ 
+                    dev.log.viewport('.scale -> adjusting: '+JSON.stringify(item)); //#development
                     item.scale(state.scale);
                 }
             });
@@ -1572,10 +1728,12 @@ const viewport = new function(){
             self.onCameraAdjust( Object.assign({},state) );
         };
         this.angle = function(a){
+            dev.log.viewport('.angle('+a+')'); //#development
             if(a == undefined){return state.angle;}
             state.angle = a;
             arrangement.get().children().forEach(function(item){
                 if(item.heedCamera){ 
+                    dev.log.viewport('.angle -> adjusting: '+JSON.stringify(item)); //#development
                     item.angle(state.angle);
                 }
             });
@@ -1586,15 +1744,18 @@ const viewport = new function(){
 
     //mouse interaction
         this.getElementUnderCanvasPoint = function(x,y){
+            dev.log.viewport('.getElementUnderCanvasPoint('+x+','+y+')'); //#development
             let xy = this.adapter.windowPoint2canvasPoint(x,y);
             return arrangement.getElementUnderPoint(xy.x,xy.y);
         };
         this.getElementsUnderCanvasArea = function(points){
+            dev.log.viewport('.getElementsUnderCanvasArea('+JSON.stringify(points)+')'); //#development
             return arrangement.getElementsUnderArea(points.map(a => this.adapter.windowPoint2canvasPoint(a.x,a.y)));
         };
  
     //misc
         function calculateViewportExtremities(){
+            dev.log.viewport('::calculateViewportExtremities()'); //#development
             const canvasDimensions = render.getCanvasDimensions();
 
             //for each corner of the viewport; find out where they lie on the canvas
@@ -1604,20 +1765,25 @@ const viewport = new function(){
                 viewbox.points.br = {x:canvasDimensions.width, y:canvasDimensions.height};
             //calculate a bounding box for the viewport from these points
                 viewbox.boundingBox = library.math.boundingBoxFromPoints([viewbox.points.tl, viewbox.points.tr, viewbox.points.br, viewbox.points.bl]);
+                dev.log.viewport('::calculateViewportExtremities -> viewbox.boundingBox: '+JSON.stringify(viewbox.boundingBox)); //#development
         }
         this.calculateViewportExtremities = calculateViewportExtremities;
         this.refresh = function(){
+            dev.log.viewport('.refresh()'); //#development
             calculateViewportExtremities();
         };
         this.getBoundingBox = function(){ 
+            dev.log.viewport('.getBoundingBox()'); //#development
             return viewbox.boundingBox;
         };
         this.mousePosition = function(x,y){
+            dev.log.viewport('.mousePosition('+x+','+y+')'); //#development
             if(x == undefined || y == undefined){return {x:mouseData.x, y:mouseData.y};}
             mouseData.x = x;
             mouseData.y = y;
         };
         this.stopMouseScroll = function(bool){
+            dev.log.viewport('.stopMouseScroll('+bool+')'); //#development
             if(bool == undefined){return mouseData.stopScrollActive;}
             mouseData.stopScrollActive = bool;
     
@@ -1625,13 +1791,16 @@ const viewport = new function(){
             if(!bool){ interface['document.body.style.overflow'](''); }
         };
         this.clickVisibility = function(a){ 
+            dev.log.viewport('.clickVisibility('+a+')'); //#development
             if(a==undefined){return mouseData.clickVisibility;} 
             mouseData.clickVisibility=a; 
         };
         this.getHeight = function(){ 
+            dev.log.viewport('.getHeight()'); //#development
             return viewbox.points.br.y - viewbox.points.tl.y; 
         };
         this.getWidth= function(){ 
+            dev.log.viewport('.getWidth()'); //#development
             return viewbox.points.br.x - viewbox.points.tl.x; 
         };
         this._dump = function(){
@@ -1651,6 +1820,7 @@ const stats = new function(){
 
     const framesPerSecond = {
         compute:function(timestamp){
+            dev.log.stats('::framesPerSecond.compute('+timestamp+')'); //#development
 
             this.frameTimeArray.push( 1000/(timestamp-lastTimestamp) );
             if( this.frameTimeArray.length >= average){ this.frameTimeArray.shift(); }
@@ -1665,16 +1835,19 @@ const stats = new function(){
     };
 
     this.collect = function(timestamp){
+        dev.log.stats('.collect('+timestamp+')'); //#development
         //if stats are turned off, just bail
             if(!active){return;}
 
         framesPerSecond.compute(timestamp);
     };
     this.active = function(bool){
+        dev.log.stats('.active('+bool+')'); //#development
         if(bool==undefined){return active;} 
         active=bool;
     };
     this.getReport = function(){
+        dev.log.stats('.getReport()'); //#development
         return {
             framesPerSecond: framesPerSecond.rate,
         };
@@ -1695,31 +1868,39 @@ const callback = new function(){
     var elementCallbackStates = {}; 
     callbacks.forEach(callbackType => elementCallbackStates[callbackType] = true);
     this.getElementCallbackState = function(type){
+        dev.log.callback('.getElementCallbackState('+type+')'); //#development
         return elementCallbackStates[type];
     };
     this.activateElementCallback = function(type){
+        dev.log.callback('.activateElementCallback('+type+')'); //#development
         elementCallbackStates[type] = true;
     };
     this.disactivateElementCallback = function(type){
+        dev.log.callback('.disactivateElementCallback('+type+')'); //#development
         elementCallbackStates[type] = false;
     };
     this.activateAllElementCallbacks = function(){ 
+        dev.log.callback('.activateAllElementCallbacks()'); //#development
         callbacks.forEach(callback => this.activateElementCallback(callback)); 
     };
     this.disactivateAllElementCallbacks = function(){ 
+        dev.log.callback('.disactivateAllElementCallbacks()'); //#development
         callbacks.forEach(callback => this.disactivateElementCallback(callback)); 
     };
     this.activateAllElementCallbacks();
 
     this.attachCallback = function(element,callbackType){
+        dev.log.callback('.attachCallback('+JSON.stringify(element)+','+callbackType+')'); //#development
         element[callbackType] = function(){};
     };
     this.removeCallback = function(element,callbackType){
+        dev.log.callback('.removeCallback('+JSON.stringify(element)+','+callbackType+')'); //#development
         element[callbackType] = undefined;
         delete element[callbackType];
     };
 
     function gatherDetails(event,callback,count){
+        dev.log.callback('::gatherDetails('+JSON.stringify(event)+','+callback+','+count+')'); //#development
         //only calculate enough data for what will be needed
         return {
             point: count > 0 ? viewport.adapter.windowPoint2workspacePoint(event.X,event.Y) : undefined,
@@ -1735,6 +1916,7 @@ const callback = new function(){
         for(var a = 0; a < callbacks.length; a++){
             this.coupling[callbacks[a]] = function(callbackName){
                 return function(event){
+                    dev.log.callback('.coupling.'+callbackName+'('+JSON.stringify(event)+')'); //#development
                     var data = gatherDetails(event,callbackName,self.functions[callbackName].length);
                     self.functions[callbackName]( data.point.x, data.point.y, event, data.elements );
                 }
@@ -1759,9 +1941,12 @@ const callback = new function(){
         //onmousemove / onmouseenter / onmouseleave
             var elementMouseoverList = [];
             this.coupling.onmousemove = function(event){
+                dev.log.callback('.coupling.onmousemove('+JSON.stringify(event)+')'); //#development
                 viewport.mousePosition(event.X,event.Y);
                 var elementsUnderPoint = arrangement.getElementsUnderPoint(event.X,event.Y);
+                dev.log.callback('.coupling.onmousemove -> elementsUnderPoint.length: '+elementsUnderPoint.length); //#development
                 var point = viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                dev.log.callback('.coupling.onmousemove -> workspace point: '+JSON.stringify(point)); //#development
 
                 //check for onmouseenter / onmouseleave
                     //go through the elementsUnderPoint list, comparing to the element transition list
@@ -1785,6 +1970,7 @@ const callback = new function(){
 
         //onwheel
             this.coupling.onwheel = function(event){
+                dev.log.callback('.coupling.onwheel('+JSON.stringify(event)+')'); //#development
 
                 if(self.functions.onwheel){
                     var data = gatherDetails(event,'onwheel',self.functions.onwheel.length);
@@ -1796,8 +1982,10 @@ const callback = new function(){
             ['onkeydown', 'onkeyup'].forEach(callbackName => {
                 this.coupling[callbackName] = function(callback){
                     return function(event){
+                        dev.log.callback('.coupling.'+callbackName+'('+JSON.stringify(event)+')'); //#development
                         var p = viewport.mousePosition(); event.X = p.x; event.Y = p.y;
                         var point = viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
+                        dev.log.callback('.coupling.'+callbackName+' -> guessed mouse point: '+JSON.stringify(point)); //#development
                 
                         if(self.functions[callback]){
                             var data = gatherDetails(event,callback,self.functions[callback].length);
@@ -1810,6 +1998,7 @@ const callback = new function(){
         //onmousedown / onmouseup / onclick / ondblclick
             var elementMouseclickList = [];
             this.coupling.onmousedown = function(event){
+                dev.log.callback('.coupling.onmousedown('+JSON.stringify(event)+')'); //#development
                 if(viewport.clickVisibility()){ render.drawDot(event.offsetX,event.offsetY); }
 
                 var elementsUnderPoint = arrangement.getElementsUnderPoint(event.X,event.Y);
@@ -1824,6 +2013,7 @@ const callback = new function(){
                     }
             };
             this.coupling.onmouseup = function(event){
+                dev.log.callback('.coupling.onmouseup('+JSON.stringify(event)+')'); //#development
                     
                 //perform global function
                     if(self.functions.onmouseup){
@@ -1833,6 +2023,7 @@ const callback = new function(){
             };
             var recentlyClickedDoubleClickableElementList = [];
             this.coupling.onclick = function(event){
+                dev.log.callback('.coupling.onclick('+JSON.stringify(event)+')'); //#development
                 if(self.functions.onclick){
                     var data = gatherDetails(event,'onclick',self.functions.onclick.length);
                     data.elements = data.elements.filter( element => elementMouseclickList.includes(element) );
@@ -1841,6 +2032,7 @@ const callback = new function(){
                 }
             };
             this.coupling.ondblclick = function(event){
+                dev.log.callback('.coupling.ondblclick('+JSON.stringify(event)+')'); //#development
                 if(self.functions.ondblclick){
                     var data = gatherDetails(event,'ondblclick',self.functions.ondblclick.length);
                     data.elements = data.elements.filter( element => recentlyClickedDoubleClickableElementList.includes(element) );

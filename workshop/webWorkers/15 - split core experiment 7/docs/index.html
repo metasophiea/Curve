@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <title>curve</title>
+        <meta charset="utf-8"></meta>
+        <style>
+            html, body{
+                margin:0px;
+                width:100%; height:100%;
+                background-color: black;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id='curveCanvas' curve curveElementWidth='100%' curveElementHeight='100%' style='display: block; margin: auto;'></canvas>
+    </body>
+
+</html>
+
+<!-- <script type='text/javascript' src='js/curve.js'></script> -->
+<script type='text/javascript' src='js/curve.min.js'></script>
+
+<script>
+    document.getElementById('curveCanvas').control.viewport.scale(4);
+</script>

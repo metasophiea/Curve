@@ -1,4 +1,18 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-11-12
+  CoreV3
+    - began on draft 15, which is constructed more like how the actual system is
+      There's also a more advanced comp.sh and heavyComp.sh scripts that have a 
+      switch for removing all the development logging lines
+    - added the meta method "createSetAppend" which can be used to create an
+      element, set its attributes and append it to a group all in one message
+
+
+2019-11-11
+  CoreV3
+    - began on draft 14, which uses a better designed API for Core
+
+
 2019-11-10
   CoreV3
     - communicationModuleMaker has a new function type that gives the attached

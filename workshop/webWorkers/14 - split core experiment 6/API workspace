@@ -1,0 +1,105 @@
+dialing in
+    go()
+    printToScreen(imageData)
+    onViewportAdjust(state) //callback
+
+    getCanvasAttributes(attributeNames=[],prefixActiveArray=[])
+    setCanvasAttributes(attributeNames=[],values=[],prefixActiveArray=[])
+    getCanvasParentAttributes(attributeNames=[],prefixActiveArray=[])
+
+    getDocumentAttributes(attributeNames=[])
+    setDocumentAttributes(attributeNames=[],values=[])
+    getWindowAttributes(attributeNames=[])
+    setWindowAttributes(attributeNames=[],values=[])
+
+dialing out
+    meta
+        areYouReady()
+        refresh()
+
+    _dump
+        elememt
+        arrangement
+        render
+        viewport
+        callback
+
+    boatload
+        element
+            executeMethod
+                load(container)
+                ship()
+
+    element
+        getAvailableElements()
+        getCreatedElements()
+        create(type,name)
+        delete(id)
+        deleteAllCreated()
+        getTypeById(id)
+        executeMethod(id,method,argumentList=[])
+
+    arrangement
+        new()
+        prepend(id)
+        append(id)
+        remove(id)
+        clear()
+        getElementAddress(id)
+        getElementByAddress(address)
+        getElementsUnderPoint(x,y)
+        getElementsUnderArea(points)
+        printTree(mode)
+
+    render
+        refresh()
+        clearColour(colour)
+        adjustCanvasSize(newWidth, newHeight)
+        getCanvasSize()
+        activeLimitToFrameRate(active)
+        frameRateLimit(rate)
+        frame()
+        active(active)
+
+    viewport
+        refresh()
+        position(x,y)
+        scale(s)
+        angle(a)
+        getElementsUnderPoint(x,y)
+        getElementsUnderArea(points)
+        getMousePosition()
+        getBoundingBox()
+        stopMouseScroll(bool)
+
+    stats
+        active(active)
+        getReport()
+
+    callback
+        listCallbackTypes()
+
+        getCallbackTypeState(type)
+        activateCallbackType(type)
+        disactivateCallbackType(type)
+        activateAllCallbackTypes()
+        disactivateAllCallbackTypes()
+
+        attachCallback(id, callbackType, callback)
+        removeCallback(id, callbackType)
+
+        allowDeepElementCallback(bool)
+
+        function
+            onmousedown //callback
+            onmouseup //callback
+            onmousemove //callback
+            onmouseenter //callback
+            onmouseleave //callback
+            onwheel //callback
+            onclick //callback
+            ondblclick //callback
+            onmouseenterelement //callback
+            onmouseleaveelement //callback
+            onkeydown //callback
+            onkeyup //callback
