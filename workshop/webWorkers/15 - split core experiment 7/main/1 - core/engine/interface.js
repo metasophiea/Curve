@@ -57,6 +57,10 @@
             dev.log.interface('.element.getAvailableElements()'); //#development
             return element.getAvailableElements();
         };
+        communicationModule.function['element.installElement'] = function(elementName,serializedCreatorMethod){
+            dev.log.interface('.element.installElement()'); //#development
+            return element.installElement(elementName,library.misc.unserialize(serializedCreatorMethod));
+        };
         communicationModule.function['element.getCreatedElements'] = function(){
             dev.log.interface('.element.getCreatedElements()'); //#development
             return element.getCreatedElements().map(ele => element.getIdFromElement(ele));
@@ -122,6 +126,10 @@
         communicationModule.function['arrangement.printTree'] = function(mode){
             dev.log.interface('.arrangement.printTree('+mode+')'); //#development
             arrangement.printTree(mode);
+        };
+        communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
+            dev.log.interface('.arrangement.areParents('+elementId+','+potentialParents+')'); //#development
+            return arrangement.areParents(elementId,potentialParents);
         };
 
     //render

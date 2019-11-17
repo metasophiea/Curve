@@ -207,7 +207,7 @@ this.circle = function(name,_id){
             //get offset from parent, if one isn't provided
                 if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
-                let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 let adjusted = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
@@ -236,10 +236,12 @@ this.circle = function(name,_id){
                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
         };
-        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){    
+            dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development     
+        
             //combine offset with shape's position, angle and scale to produce adjust value for render
-                let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                let adjust = { 
+                const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                const adjust = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale*scale,
@@ -268,6 +270,7 @@ this.circle = function(name,_id){
             report.info(self.getAddress(),'._dump -> x: '+x);
             report.info(self.getAddress(),'._dump -> y: '+y);
             report.info(self.getAddress(),'._dump -> radius: '+radius);
+            report.info(self.getAddress(),'._dump -> detail: '+detail);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
             report.info(self.getAddress(),'._dump -> static: '+static);
         };

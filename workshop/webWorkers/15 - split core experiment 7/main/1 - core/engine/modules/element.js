@@ -9,6 +9,16 @@ const element = new function(){
             dev.log.element('.getAvailableElements()'); //#development
             return Object.keys(elementLibrary);
         };
+        this.installElement = function(elementName, creatorMethod, allowOverwrite=false){
+            dev.log.element('.installElement('+elementName+','+(typeof creatorMethod == 'function' ? '-creatorMethod-' : undefined)+','+allowOverwrite+')'); //#development
+
+            if(!allowOverwrite && elementName in elementLibrary){
+                dev.log.element('.installElement -> element "'+elementName+'" is already in the elementLibrary'); //#development
+                return false
+            }
+            elementLibrary[elementName] = creatorMethod;
+            return true;
+        };
 
     //element control
         //database

@@ -20070,586 +20070,6 @@
             _canvas_.getVersionInformation = function(){
                 return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
             };
-            
-            _canvas_.library._control.logflow.active(true);
-            
-            console.log('%cTesting - library.math', 'font-size:15px; font-weight:bold;');
-            
-            //averageArray
-                console.log('%c- averageArray', 'font-weight: bold;');
-                    tester(_canvas_.library.math.averageArray([1]),1);
-                    tester(_canvas_.library.math.averageArray([1,1,1,1,1,1,1,1]),1);
-                    tester(_canvas_.library.math.averageArray([0,1,2,3,4,5,6,7,8,9]),4.5);
-                console.log('');
-            
-            //averagePoint
-                console.log('%c- averagePoint', 'font-weight: bold;');
-                    tester(_canvas_.library.math.averagePoint([{x:0,y:0}]),{x:0,y:0});
-                    tester(_canvas_.library.math.averagePoint([{x:0,y:0},{x:10,y:0}]),{x:5,y:0});
-                    tester(_canvas_.library.math.averagePoint([{x:-10,y:0},{x:10,y:0}]),{x:0,y:0});
-                    tester(_canvas_.library.math.averagePoint([{x:0,y:0}, {x:10,y:0}, {x:10,y:10}, {x:0,y:10}]),{x:5,y:5});
-                console.log('');
-            
-            //boundingBoxFromPoints
-                console.log('%c- boundingBoxFromPoints', 'font-weight: bold;');
-                    console.log('%c-- simple box', 'font-weight: bold;');
-                        var poly = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                        tester(_canvas_.library.math.boundingBoxFromPoints(poly),{topLeft:{x: 0, y: 0}, bottomRight:{x: 10, y: 10}});
-                    console.log('%c-- triangle', 'font-weight: bold;');
-                        var poly = [{x:0,y:0},{x:10,y:0},{x:5,y:10}];
-                        tester(_canvas_.library.math.boundingBoxFromPoints(poly),{topLeft:{x: 0, y: 0}, bottomRight:{x: 10, y: 10}});
-                console.log('');
-                
-            //cartesianAngleAdjust
-                console.log('%c- cartesianAngleAdjust', 'font-weight: bold;');
-                tester(_canvas_.library.math.cartesianAngleAdjust(0,0,0),{x:0,y:0});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI),{x:-10,y:0});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI*2),{x:10,y:0});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI/2),{x:0,y:10});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,-Math.PI/2),{x:0,y:-10});
-                tester(_canvas_.library.math.cartesianAngleAdjust(10,0,Math.PI/4),{x:7.0710678118654755,y:7.0710678118654755});
-                console.log('');
-            
-            //convertColour
-                console.log('%c- convertColour', 'font-weight: bold;');
-                //obj2rgba
-                    console.log('%c-- obj2rgba', 'font-weight: bold;');
-                    tester(_canvas_.library.math.convertColour.obj2rgba({r:0,g:0,b:0,a:0}),"rgba(0,0,0,0)");
-                    tester(_canvas_.library.math.convertColour.obj2rgba({r:1,g:0,b:0,a:0}),"rgba(255,0,0,0)");
-                    tester(_canvas_.library.math.convertColour.obj2rgba({r:0.5,g:0.5,b:0.5,a:0.5}),"rgba(127.5,127.5,127.5,0.5)");
-                //rgba2obj
-                    console.log('%c-- rgba2obj', 'font-weight: bold;');
-                    tester(_canvas_.library.math.convertColour.rgba2obj("rgba(0,0,0,0)"),{r:0,g:0,b:0,a:0});
-                    tester(_canvas_.library.math.convertColour.rgba2obj("rgba(255,0,0,0)"),{r:1,g:0,b:0,a:0});
-                    tester(_canvas_.library.math.convertColour.rgba2obj("rgba(127.5,127.5,127.5,0.5)"),{r:0.5,g:0.5,b:0.5,a:0.5});
-                console.log('');
-            
-            //curveGenerator
-                console.log('%c- curveGenerator', 'font-weight: bold;');
-                //linear
-                    console.log('%c-- linear', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.linear(),       [0, 1]);
-                    tester(_canvas_.library.math.curveGenerator.linear(10),     [0, 0.1111111111111111, 0.2222222222222222, 0.3333333333333333, 0.4444444444444444, 0.5555555555555556, 0.6666666666666666, 0.7777777777777778, 0.8888888888888888, 1]);
-                    tester(_canvas_.library.math.curveGenerator.linear(10,5,10),[5, 5.555555555555555, 6.111111111111111, 6.666666666666666, 7.222222222222222, 7.777777777777778, 8.333333333333332, 8.88888888888889, 9.444444444444445, 10]);
-                    tester(_canvas_.library.math.curveGenerator.linear(10,8),   [8, 7.222222222222222, 6.444444444444445, 5.666666666666667, 4.888888888888889, 4.111111111111111, 3.333333333333334, 2.5555555555555554, 1.7777777777777786, 1]);
-                //sin
-                    console.log('%c-- sin', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.sin(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.sin(10),      [0, 0.17364817766693033, 0.3420201433256687, 0.49999999999999994, 0.6427876096865393, 0.766044443118978, 0.8660254037844386, 0.9396926207859083, 0.984807753012208, 1] );
-                    tester(_canvas_.library.math.curveGenerator.sin(10,5,10), [5, 5.868240888334651, 6.710100716628343, 7.5, 8.213938048432697, 8.83022221559489, 9.330127018922193, 9.69846310392954, 9.92403876506104, 10] );
-                    tester(_canvas_.library.math.curveGenerator.sin(10,8),    [8, 6.784462756331488, 5.605858996720319, 4.5, 3.5004867321942257, 2.637688898167154, 1.9378221735089296, 1.4221516544986414, 1.106345728914544, 1] );
-                //cos
-                    console.log('%c-- cos', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.cos(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.cos(10),      [0, 0.01519224698779198, 0.06030737921409157, 0.1339745962155613, 0.233955556881022, 0.35721239031346064, 0.4999999999999999, 0.6579798566743311, 0.8263518223330696, 1] );
-                    tester(_canvas_.library.math.curveGenerator.cos(10,5,10), [5, 5.07596123493896, 5.301536896070457, 5.669872981077806, 6.16977778440511, 6.786061951567303, 7.5, 8.289899283371655, 9.131759111665348, 10]);
-                    tester(_canvas_.library.math.curveGenerator.cos(10,8),    [8, 7.893654271085456, 7.5778483455013586, 7.062177826491071, 6.362311101832846, 5.499513267805776, 4.500000000000001, 3.3941410032796817, 2.2155372436685132, 1] );
-                //s
-                    console.log('%c-- s', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.s(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.s(10),      [0, 0.022463335897421843, 0.06913784818223383, 0.15908756682599312, 0.309741642431138, 0.5112316679487109, 0.712721693466284, 0.8633757690714288, 0.953325487715188, 1] );
-                    tester(_canvas_.library.math.curveGenerator.s(10,5,10), [5, 5.112316679487109, 5.345689240911169, 5.795437834129966, 6.54870821215569, 7.556158339743554, 8.56360846733142, 9.316878845357143, 9.76662743857594, 10] );
-                    tester(_canvas_.library.math.curveGenerator.s(10,8),    [8, 7.842756648718047, 7.516035062724363, 6.886387032218048, 5.8318085029820335, 4.421378324359024, 3.0109481457360117, 1.9563696164999982, 1.3267215859936838, 1] );
-                //exponential
-                    console.log('%c-- exponential', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curveGenerator.exponential(),        [0, 1] );
-                    tester(_canvas_.library.math.curveGenerator.exponential(10),      [0, 0.03894923837706363, 0.08759095067273646, 0.1483370980594927, 0.2241998555196527, 0.3189409743731226, 0.4372583135012321, 0.5850187886546604, 0.7695492909331704, 1] );
-                    tester(_canvas_.library.math.curveGenerator.exponential(10,5,10), [5, 5.194746191885318, 5.437954753363682, 5.7416854902974634, 6.120999277598264, 6.594704871865613, 7.18629156750616, 7.925093943273302, 8.847746454665852, 10] );
-                    tester(_canvas_.library.math.curveGenerator.exponential(10,8),    [8, 7.727355331360554, 7.386863345290845, 6.961640313583551, 6.430601011362431, 5.767413179388142, 4.939191805491375, 3.9048684794173774, 2.6131549634678075, 1] );
-                console.log('');
-            
-            //curvePoint
-                console.log('%c- curvePoint', 'font-weight: bold;');
-                //linear
-                    console.log('%c-- linear', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.linear(),0.5);
-                    tester(_canvas_.library.math.curvePoint.linear(0.1,0,1),.1);
-                    tester(_canvas_.library.math.curvePoint.linear(0.1,0,2),0.2);
-                    tester(_canvas_.library.math.curvePoint.linear(0.5,-1,1),0);
-                    tester(_canvas_.library.math.curvePoint.linear(0.99,-5,10),9.85);
-                    for(var a = 0; a <= 10; a++){
-                        tester(_canvas_.library.math.curvePoint.linear(a/10),a/10);
-                    }
-                    var answers = [0.025,0.1225,0.22,0.3175,0.41500000000000004,0.5125,0.61,0.7075,0.805,0.9025,1];
-                    for(var a = 0; a <= 10; a++){
-                        tester(_canvas_.library.math.curvePoint.linear(a/10,0.025,1),answers[a] );
-                    }
-                //sin
-                    console.log('%c-- sin', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.sin(),           0.7071067811865475);
-                    tester(_canvas_.library.math.curvePoint.sin(0.1,0,1),    0.15643446504023087);
-                    tester(_canvas_.library.math.curvePoint.sin(0.1,0,2),    0.31286893008046174);
-                    tester(_canvas_.library.math.curvePoint.sin(0.5,-1,1),   0.4142135623730949);
-                    tester(_canvas_.library.math.curvePoint.sin(1/3,-1,1),   -1.1102230246251565e-16);
-                    tester(_canvas_.library.math.curvePoint.sin(0.99,-5,10), 9.998149487224909);
-                //cos
-                    console.log('%c-- cos', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.cos(),             0.2928932188134524);
-                    tester(_canvas_.library.math.curvePoint.cos(0.1,0,1),      0.01231165940486223);
-                    tester(_canvas_.library.math.curvePoint.cos(0.1,0,2),      0.02462331880972446);
-                    tester(_canvas_.library.math.curvePoint.cos(0.5,-1,1),     -0.41421356237309515);
-                    tester(_canvas_.library.math.curvePoint.cos(2/3,-1,1),     -2.220446049250313e-16);
-                    tester(_canvas_.library.math.curvePoint.cos(0.0001,-5,10), -4.999999814944917);
-                    tester(_canvas_.library.math.curvePoint.cos(0.9999,-5,10), 9.997643805519496);
-                //s
-                    console.log('%c-- s', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.s()   , 0.5000000000000001 );
-                    tester(_canvas_.library.math.curvePoint.s(0.0), 0 );
-                    tester(_canvas_.library.math.curvePoint.s(0.1), 0.021969820441244133 );
-                    tester(_canvas_.library.math.curvePoint.s(0.2), 0.06761890207197617 );
-                    tester(_canvas_.library.math.curvePoint.s(0.3), 0.15559244154839164 );
-                    tester(_canvas_.library.math.curvePoint.s(0.4), 0.30293667416374986 );
-                    tester(_canvas_.library.math.curvePoint.s(0.5), 0.5000000000000001 );
-                    tester(_canvas_.library.math.curvePoint.s(0.6), 0.6970633258362502 );
-                    tester(_canvas_.library.math.curvePoint.s(0.7), 0.8444075584516083 );
-                    tester(_canvas_.library.math.curvePoint.s(0.8), 0.9323810979280239 );
-                    tester(_canvas_.library.math.curvePoint.s(0.9), 0.9780301795587558 );
-                    tester(_canvas_.library.math.curvePoint.s(1)  , 1 );
-                //exponential
-                    console.log('%c-- exponential', 'font-weight: bold;');
-                    tester(_canvas_.library.math.curvePoint.exponential(),     0.26894142136999516 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.0),  0 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.1),  0.03465343780550409 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.2),  0.07697924232087867 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.3),  0.12867609669730537 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.4),  0.19181877722087765 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.5),  0.26894142136999516 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.6),  0.3631392316503325 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.7),  0.47819269693938515 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.8),  0.6187193167793194 );
-                    tester(_canvas_.library.math.curvePoint.exponential(0.9),  0.7903589178467405 );
-                    tester(_canvas_.library.math.curvePoint.exponential(1),    1 );
-                console.log('');
-            
-            //detectOverlap
-                console.log('%c- detectOverlap', 'font-weight: bold;');
-                //boundingBoxes
-                    console.log('%c-- boundingBoxes', 'font-weight: bold;');
-                    tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:5,y:5},bottomRight:{x:15,y:15}}),true);
-                    tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:15,y:15},bottomRight:{x:25,y:25}}),false);
-                    tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
-                    tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:10,y:0},bottomRight:{x:20,y:10}}),true);
-                    tester(_canvas_.library.math.detectOverlap.boundingBoxes({topLeft:{x:0,y:0},bottomRight:{x:10,y:10}},{topLeft:{x:11,y:0},bottomRight:{x:20,y:10}}),false);
-                //pointWithinBoundingBox
-                    console.log('%c-- pointWithinBoundingBox', 'font-weight: bold;');
-                    tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:5,y:5},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:50,y:5},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),false);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:0,y:0},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:10,y:0},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:10,y:10},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:0,y:10},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinBoundingBox({x:-0.000000000000001,y:0},{topLeft:{x:0,y:0},bottomRight:{x:10,y:10}}),false);
-                //pointWithinPoly
-                    console.log('%c-- pointWithinPoly', 'font-weight: bold;');
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:0,y:0},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:-0.000000000000001,y:0},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),false);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:1,y:1},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:2.5,y:0},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:4.9999,y:4.9999},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:5,y:5},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),true);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:5.0001,y:5.0001},[{x:0,y:0},{x:10,y:0},{x:0,y:10}]),false);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:115,y:30},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),false);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:400,y:0},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),false);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:200,y:0},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),false);
-                    tester(_canvas_.library.math.detectOverlap.pointWithinPoly({x:10,y:20},[{x:0,y:0},{x:400,y:200},{x:400,y:400},{x:0,y:400}]),true);
-            
-                //lineSegments
-                    console.log('%c-- lineSegments', 'font-weight: bold;');
-                        //the function tells where the lines would intersect if they were infinitely long in both directions,
-                        //the next two bools reveal if this point if within the segment given (you need two 'true's for an intersectionOfTwoLineSegments)
-                        console.log('%c--- simple crossing', 'font-weight: bold;');
-                            var segment1 = [{x:0,y:0},{x:5,y:5}];
-                            var segment2 = [{x:5,y:0},{x:0,y:5}];
-                            tester(_canvas_.library.math.detectOverlap.lineSegments(segment1, segment2), {x: 2.5, y: 2.5, inSeg1: true, inSeg2: true});
-                        console.log('%c--- no crossing', 'font-weight: bold;');
-                            var segment1 = [{x:0,y:0},{x:5,y:5}];
-                            var segment2 = [{x:0,y:2},{x:0,y:5}];
-                            tester(_canvas_.library.math.detectOverlap.lineSegments(segment1, segment2),{x: 0, y: 0, inSeg1: true, inSeg2: false} );
-                        console.log('%c--- one segment touches the other', 'font-weight: bold;');
-                            var segment1 = [{x:0,y:0},{x:5,y:5}];
-                            var segment2 = [{x:2.5,y:2.5},{x:0,y:5}];
-                            tester(_canvas_.library.math.detectOverlap.lineSegments(segment1, segment2),{x: 2.5, y: 2.5, inSeg1: true, inSeg2: true} );
-                //overlappingPolygons
-                    console.log('%c-- overlappingPolygons', 'font-weight: bold;');
-                        console.log('%c--- totally separate shapes', 'font-weight: bold;');
-                            var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                            var poly_b = [{x:15,y:15},{x:25,y:15},{x:25,y:25},{x:15,y:25}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b,), false);
-                        console.log('%c--- simple overlap -> true', 'font-weight: bold;');
-                            var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                            var poly_b = [{x:5,y:5},{x:15,y:5},{x:15,y:15},{x:5,y:15}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                        console.log('%c--- the same shape twice, with bounding boxes -> true', 'font-weight: bold;');
-                            var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                            var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                        console.log('%c--- the same shape twice, no bounding boxes -> true', 'font-weight: bold;');
-                            var poly_a = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                            var poly_b = [{x:0,y:0},{x:10,y:0},{x:10,y:10},{x:0,y:10}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                        console.log('%c--- overlapping sides (like a cross shape)', 'font-weight: bold;');
-                            var poly_a = [{x:0,y:0},{x:100,y:0},{x:100,y:10},{x:0,y:10}];
-                            var poly_b = [{x:50,y:-50},{x:60,y:-50},{x:60,y:50},{x:50,y:50}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-            
-                        console.log('%c--- live examples (should all be \'true\')', 'font-weight: bold;');
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":50,"y":50},{"x":105,"y":50},{"x":105,"y":105},{"x":50,"y":105}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":875,"y":50},{"x":930,"y":50},{"x":930,"y":105},{"x":875,"y":105}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":150,"y":50},{"x":345,"y":50},{"x":345,"y":160},{"x":150,"y":160}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":400,"y":50},{"x":500,"y":50},{"x":500,"y":105},{"x":400,"y":105}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":550,"y":50},{"x":790,"y":50},{"x":790,"y":90},{"x":740,"y":140},{"x":550,"y":140}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":25,"y":130},{"x":35,"y":120},{"x":59.166666666666664,"y":120},{"x":71.125,"y":130},{"x":81.375,"y":130},{"x":93.33333333333333,"y":120},{"x":117.5,"y":120},{"x":127.5,"y":130},{"x":127.5,"y":205},{"x":117.5,"y":215},{"x":93.33333333333333,"y":215},{"x":81.375,"y":205},{"x":71.125,"y":205},{"x":59.166666666666664,"y":215},{"x":35,"y":215},{"x":25,"y":205}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":160,"y":175},{"x":242.5,"y":175},{"x":252.5,"y":245},{"x":201.25,"y":275},{"x":150,"y":245}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":280,"y":180},{"x":331.25,"y":170},{"x":382.5,"y":180},{"x":382.5,"y":210},{"x":331.25,"y":220},{"x":280,"y":210}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":425,"y":160},{"x":645,"y":160},{"x":645,"y":215},{"x":425,"y":215}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                        
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":425,"y":220},{"x":645,"y":220},{"x":645,"y":275},{"x":425,"y":275}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":425,"y":280},{"x":645,"y":280},{"x":645,"y":335},{"x":425,"y":335}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":425,"y":340},{"x":645,"y":340},{"x":645,"y":420},{"x":425,"y":420}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":675,"y":160},{"x":895,"y":160},{"x":895,"y":545},{"x":675,"y":545}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":355,"y":110},{"x":530,"y":110},{"x":530,"y":150},{"x":355,"y":150}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":15,"y":285},{"x":25,"y":285},{"x":37.5,"y":275},{"x":52.5,"y":275},{"x":65,"y":285},{"x":260,"y":285},{"x":260,"y":315},{"x":65,"y":315},{"x":52.5,"y":325},{"x":37.5,"y":325},{"x":25,"y":315},{"x":15,"y":315}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":270,"y":225},{"x":395,"y":225},{"x":395,"y":275},{"x":370,"y":285},{"x":370,"y":325},{"x":270,"y":325}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":830,"y":50},{"x":820,"y":52.67949192431122},{"x":812.6794919243113,"y":60},{"x":810,"y":70},{"x":812.6794919243113,"y":80},{"x":820,"y":87.32050807568876},{"x":830,"y":90},{"x":840,"y":87.32050807568878},{"x":847.3205080756887,"y":80},{"x":850,"y":70},{"x":847.3205080756887,"y":60.000000000000014},{"x":840,"y":52.679491924311236}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":790,"y":120},{"x":800,"y":110},{"x":890,"y":110},{"x":905,"y":120},{"x":905,"y":140},{"x":890,"y":150},{"x":800,"y":150},{"x":790,"y":140}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                            
-                            var poly_a = [{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}]; 
-                            var poly_b = [{"x":80,"y":330},{"x":400,"y":330},{"x":400,"y":392.5},{"x":80,"y":392.5}];
-                            tester(_canvas_.library.math.detectOverlap.overlappingPolygons(poly_a, poly_b), true);
-                //overlappingPolygonWithPolygons
-                    console.log('%c-- overlappingPolygonWithPolygons', 'font-weight: bold;');
-                    var polygon = { points:[{"x":1027,"y":34},{"x":1027,"y":355},{"x":68,"y":355},{"x":68,"y":34}] };
-                    polygon.boundingBox = _canvas_.library.math.boundingBoxFromPoints(polygon.points);
-                    var polygons = [
-                        {points:[{"x":50,"y":50},{"x":105,"y":50},{"x":105,"y":105},{"x":50,"y":105}]},
-                        {points:[{"x":875,"y":50},{"x":930,"y":50},{"x":930,"y":105},{"x":875,"y":105}]},
-                    ];
-                    polygons.forEach(polygon => { polygon.boundingBox = _canvas_.library.math.boundingBoxFromPoints(polygon.points); });
-                    tester( _canvas_.library.math.detectOverlap.overlappingPolygonWithPolygons(polygon,polygons),true );
-                console.log('');
-            
-            //getAngleOfTwoPoints
-                console.log('%c- getAngleOfTwoPoints', 'font-weight: bold;');
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:0}),0);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:10,y:0}),0);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:10}),Math.PI/2);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:-10,y:0}),Math.PI);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:0,y:0},{x:0,y:-10}),Math.PI*1.5);
-                    tester(_canvas_.library.math.getAngleOfTwoPoints({x:52,y:-13.5},{x:10,y:650}),1.6340126596091948);
-                console.log('');
-            
-            //getDifferenceOfArrays
-                console.log('%c- getDifferenceOfArrays', 'font-weight: bold;');
-                    tester( _canvas_.library.math.getDifferenceOfArrays([1,2,3,4],[3,4,5,6]),{a:[1,2],b:[5,6]} );
-                    tester( _canvas_.library.math.getDifferenceOfArrays([],[3,4,5,6]),{a:[],b:[3,4,5,6]} );
-                    tester( _canvas_.library.math.getDifferenceOfArrays([1,2,3,4],[]),{a:[1,2,3,4],b:[]} );
-                    tester( _canvas_.library.math.getDifferenceOfArrays([],[]),{a:[],b:[]} );
-                    tester( _canvas_.library.math.getDifferenceOfArrays([5,9,4,1,8,0,4,0,65],[14,85,960,1,8,40,0,0,0,0]),{a:[5,9,4,4,65],b:[14,85,960,40,0,0]} );
-                console.log('');
-            
-            //getIndexOfSequence
-                console.log('%c- getIndexOfSequence', 'font-weight: bold;');
-                    tester( _canvas_.library.math.getIndexOfSequence([],[]),undefined );
-                    tester( _canvas_.library.math.getIndexOfSequence([],[1,2,3,4,5,6]),undefined );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6],[]),undefined );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6],[3,4,5,6]),2 );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],[5,6]),4 );
-                    tester( _canvas_.library.math.getIndexOfSequence([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],[6,18]),undefined );
-                console.log('');
-            
-            //largestValueFound
-                console.log('%c- largestValueFound', 'font-weight: bold;');
-                    tester(_canvas_.library.math.largestValueFound([1,2,3,4,5,6,10,0,9]),10);
-                    tester(_canvas_.library.math.largestValueFound([1]),1);
-                    tester(_canvas_.library.math.largestValueFound([]),undefined);
-                    tester(_canvas_.library.math.largestValueFound([-1,-2,-3,-4,-5,-6,-10,-0,-9]),-10);
-                console.log('');
-            
-            //normalizeStretchArray
-                console.log('%c- normalizeStretchArray', 'font-weight: bold;');
-                tester( _canvas_.library.math.normalizeStretchArray([0, 1]),[0, 1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0, 0.5, 1]),[0, 0.5, 1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0,1,2,3,4,5,6,7,8,9,10]),[0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0, 11523.140939388142, 23046.27759202532]),[0, 0.5000000930031097, 1] );
-                tester( _canvas_.library.math.normalizeStretchArray([0,1]),[0,1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0,0.5,1]),[0,0.5,1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0,0.9,1]),[0,0.9,1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0.9,0.99,0.999]),[0, 0.9090909090909088, 1]);
-                tester( _canvas_.library.math.normalizeStretchArray([0,0.0001,1.9]),[0, 0.000052631578947368424, 1]);
-                tester( _canvas_.library.math.normalizeStretchArray([-1,-0.9999,0.9]),[0, 0.000052631578947397684, 1]);
-                console.log('');
-            
-            //relativeDistance
-                console.log('%c- relativeDistance', 'font-weight: bold;');
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 0),0 );
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 1),100 );
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 0.1),10 );
-                tester( _canvas_.library.math.relativeDistance(100, 0,1, 0.5),50 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,1, 0),50 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,0, 0),100 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,0, 0.5),100 );
-                tester( _canvas_.library.math.relativeDistance(100, -1,0, 0.5, true),150 );
-                tester( _canvas_.library.math.relativeDistance(120, -1, 1, 0, false), 60 );
-                tester( _canvas_.library.math.relativeDistance(60, -1, 1, 1, false), 60 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, 1, false), 57.272727272727266 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, 0.75, false), 50.45454545454545 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, 0.5, false), 43.63636363636364 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7096312918194273, true), 10.64641931401562 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7610384342079204, true), 9.24440633978399 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7528039816331866, true), 9.468982319094911 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7746699074885954, true), 8.872638886674672 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.8054839748931785, true), 8.032255230186044 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.8168779246382837, true), 7.721511146228629 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7989772731353805, true), 8.209710732671443 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7687872823270903, true), 9.033074118352085 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7542679542679545, true), 9.429055792692154 );
-                tester( _canvas_.library.math.relativeDistance(60, -1.1, 1.1, -0.7687872823270891, true), 9.033074118352115 );
-                console.log('');
-            
-            //removeTheseElementsFromThatArray
-                console.log('%c- removeTheseElementsFromThatArray', 'font-weight: bold;');
-                tester( _canvas_.library.math.removeTheseElementsFromThatArray([],[]),[] );
-                tester( _canvas_.library.math.removeTheseElementsFromThatArray([1,2,3,4],[1,2,3,4]),[] );
-                tester( _canvas_.library.math.removeTheseElementsFromThatArray([1,2],[1,2,3,4]),[3,4] );
-                tester( _canvas_.library.math.removeTheseElementsFromThatArray([],[1,2,3,4]),[1,2,3,4] );
-                tester( _canvas_.library.math.removeTheseElementsFromThatArray([1,2,3,4],[]),[] );
-                console.log('');
-            
-            //seconds2time
-                console.log('%c- seconds2time', 'font-weight: bold;');
-                tester( _canvas_.library.math.seconds2time(10),{h:0, m:0, s:10} );
-                tester( _canvas_.library.math.seconds2time(100),{h:0, m:1, s:40} )
-                tester( _canvas_.library.math.seconds2time(900),{h:0, m:15, s:0} )
-                tester( _canvas_.library.math.seconds2time(1000),{h:0, m:16, s:40} );
-                console.log('');
-            
-            //cartesian2polar
-                console.log('%c- cartesian2polar', 'font-weight: bold;');
-                    var x = 10;
-                    var y = 0;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 10, ang: 0});
-                    var x = -10;
-                    var y = 0;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 10, ang: 3.141592653589793});
-                    var x = 0;
-                    var y = 10;
-                    tester( _canvas_.library.math.cartesian2polar(x,y),{dis: 10, ang: 1.5707963267948966});
-                    var x = 10;
-                    var y = 40;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 41.23105625617661, ang: 1.3258176636680326});
-                    var x = 2.5;
-                    var y = 2.5;
-                    tester(_canvas_.library.math.cartesian2polar(x,y),{dis: 3.5355339059327378, ang: 0.7853981633974483});
-                console.log('');
-            
-            //polar2cartesian
-                console.log('%c- polar2cartesian', 'font-weight: bold;');
-                    var distance = 10;
-                    var angle = 0;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 10, y: 0});
-                    var distance = -10;
-                    var angle = 0;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: -10, y: -0});
-                    var distance = 10;
-                    var angle = Math.PI/2;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 6.123233995736766e-16, y: 10});
-                    var distance = -10;
-                    var angle = Math.PI;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 10, y: -1.2246467991473533e-15});
-                    var distance = 3.5355339059327378;
-                    var angle = Math.PI/4;
-                    tester(_canvas_.library.math.polar2cartesian(angle,distance),{x: 2.5000000000000004, y: 2.5});
-                console.log('');
-            
-            //blendColours
-                console.log('%c- blendColours', 'font-weight: bold;');
-                tester( _canvas_.library.math.blendColours({r:0,g:0,b:0,a:0},{r:0,g:0,b:0,a:0},0.5), {r:0,g:0,b:0,a:0} );
-                tester( _canvas_.library.math.blendColours({r:1,g:0,b:0,a:0},{r:0,g:0,b:0,a:0},0.0), {r:1,g:0,b:0,a:0} );
-                tester( _canvas_.library.math.blendColours({r:1,g:0,b:0,a:0},{r:0,g:0,b:0,a:0},1.0), {r:0,g:0,b:0,a:0} );
-                tester( _canvas_.library.math.blendColours({r:0.35,g:0.55,b:0.1,a:1},{r:0.2,g:1,b:0.01,a:0.99},0.25), {r:0.31249999999999994, g:0.6625000000000001, b:0.07750000000000001, a:0.9975} );
-                console.log('');
-            
-            //multiBlendColours
-                console.log('%c- multiBlendColours', 'font-weight: bold;');
-                tester(_canvas_.library.math.multiBlendColours([
-                    {r:0.5411,g:0.5411,b:0.5411,a:0.6},
-                    {r:0.5098,g:0.7803,b:0.8156,a:0.6},
-                    {r:0.5058,g:0.8196,b:0.6784,a:0.6},
-                    {r:0.9176,g:0.9333,b:0.4313,a:0.6},
-                    {r:0.9764,g:0.6980,b:0.4039,a:0.6},
-                    {r:1.0000,g:0.2705,b:0.2705,a:0.6}
-                ],0.88),{r:0.98584,g:0.5269999999999998,b:0.35053999999999996,a:0.6} );
-                tester(_canvas_.library.math.multiBlendColours([
-                    {r:0.5411,g:0.5411,b:0.6980,a:0.9333},
-                    {r:0.7803,g:0.5098,b:1.0000,a:0.6980},
-                    {r:0.8196,g:0.5058,b:0.6784,a:0.8196},
-                    {r:0.9333,g:0.9176,b:0.5411,a:0.5058},
-                    {r:0.6980,g:0.9764,b:0.4039,a:0.9176},
-                    {r:0.2705,g:1.0000,b:0.2705,a:0.9764}
-                ],0.11),{r:0.67266,g:0.523885,b:0.8641,a:0.803885} );
-                console.log('');
-            console.log('%cTesting - library.math.pathExtrapolation', 'font-size:15px; font-weight:bold;');
-            // var drawDotCounter = 0;
-            // function drawDot(x,y){
-            //     var temp = _canvas_.core.shape.create('circle');
-            //     temp.x(x);
-            //     temp.y(y);
-            //     temp.radius(1);
-            //     temp.name = 'circle_'+(drawDotCounter++);
-            //     _canvas_.core.arrangement.append(temp);
-            //     _canvas_.core.render.frame();
-            // }
-            // var drawLineCounter = 0;
-            // function drawLine(points){
-            //     var temp = _canvas_.core.shape.create('path');
-            //     temp.points(points);
-            //     temp.jointType(false);
-            //     temp.looping(true);
-            //     temp.thickness(0.75);
-            //     temp.name = 'path_'+(drawLineCounter++);
-            //     _canvas_.core.arrangement.append(temp);
-            //     _canvas_.core.render.frame();
-            // }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10,100,10]);
-                tester(points,[100,0, 100,20, 0,20, 0,20, 0,0, 100,0]);
-                // for(var a = 0; a < points.length-2; a+=2){ drawLine({ x:points[a],y:points[a+1] },{ x:points[a+2],y:points[a+3] }); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100]);
-                tester(points,[110,10, 110,100, 90,100, 90,20, 0,20, 0,0, 0,0, 100,0, 100,10, 100,10, 110,10, 90,100, 90,20, 0,0, 100,10, 100,10, 90,100, 90,20]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-                // drawLine(points);
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 50,100, 200,0]);
-                tester(points,[
-                    194.4529980377477,-8.320502943378434,
-                    205.5470019622523,8.320502943378434,
-                    55.547001962252295,108.32050294337843,
-                    50,100,
-                    41.25842723878462,95.14357068821369,
-                    83.00485539890335,20,
-                    83.00485539890335,20,
-                    0,20,
-                    0,0,
-                    0,0,
-                    100,0,
-                    100,10,
-                    100,10,
-                    108.74157276121538,14.856429311786318,
-                    78.77332164722408,68.79928131697065,
-                    78.77332164722408,68.79928131697065, 
-                    194.4529980377477,-8.320502943378434,
-                    55.547001962252295,108.32050294337843,
-                    55.547001962252295,108.32050294337843,
-                    50,100,
-                    83.00485539890335,20,
-                    83.00485539890335,20,
-                    0,0,
-                    100,10,
-                    100,10,
-                    78.77332164722408,68.79928131697065,
-                    55.547001962252295,108.32050294337843,
-                    55.547001962252295,108.32050294337843,
-                    83.00485539890335,20,
-                    100,10]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'sharp');
-                tester(points,[105,5, 105,100, 95,100, 95,15, 0,15, 0,5, 105,5, 95,100, 95,15, 95,15, 0,5, 105,5]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'round');
-                tester(points,[
-                    105,10, 105,100, 95,100, 95,15, 0,15, 0,5, 0,5, 100,5,
-                    102.5,5.669872981077806, 102.5,5.669872981077806, 104.3301270189222,7.5,
-                    105,10, 105,10, 95,100, 95,15, 95,15, 0,5,
-                    102.5,5.669872981077806, 102.5,5.669872981077806,
-                    105,10, 95,15]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'flat');
-                tester(points,[105,10, 105,100, 95,100, 95,15, 0,15, 0,5, 0,5, 100,5, 105,10, 105,10, 95,100, 95,15, 95,15, 0,5, 105,10]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-                var points = _canvas_.library.math.pathExtrapolation([0,10, 100,10, 100,100],5,undefined,'sharp',true);
-                tester(points,[
-                    105,111.22681202353685, 
-                    -13.029791137263166,5.000000000000007, 
-                    13.029791137263171,15, 
-                    95,15, 
-                    13.029791137263171,15,
-                    -13.029791137263166,5.000000000000007,
-                    105,111.22681202353685,
-                    13.029791137263171,15,
-                    95,88.77318797646315,
-                    95,15,
-                    -13.029791137263166,5.000000000000007,
-                    105,4.999999999999994,
-                    105,4.999999999999994,
-                    105,111.22681202353685,
-                    95,88.77318797646315,
-                    95,88.77318797646315,
-                    95,15,
-                    105,4.999999999999994
-                ]);
-                // for(var a = 0; a < points.length; a+=2){ drawDot( points[a],points[a+1] ); }
-            
-            
-                
-                console.log('');
-            console.log('%cTesting - library.math.fitPolyIn', 'font-size:15px; font-weight:bold;');
             _canvas_.core = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:17} };
                 var core = this;
@@ -25136,455 +24556,230 @@
                             };
                 };
             };
+            _canvas_.core.callback.disactivateAllShapeCallbacks();
+            _canvas_.core.callback.activateShapeCallback('onmouseenter');
+            _canvas_.core.callback.activateShapeCallback('onmouseleave');
             
             
-            
-            
-            var sceneValues = {
-                environment: 1,
-                testPoly: 0,
+            _canvas_.system = new function(){
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:19} };
+            };
+            _canvas_.system.mouse = new function(){
+                //setup
+                    this.tmp = {};
+                    this.functionList = {};
+                    this.functionList.onmousedown = [];
+                    this.functionList.onmousemove = [];
+                    this.functionList.onmouseup = [];
+                    this.functionList.onmouseleave = [];
+                    this.functionList.onmouseenter = [];
+                    this.functionList.onwheel = [];
+                    this.functionList.onclick = [];
+                    this.functionList.ondblclick = [];
+                
+                //save the listener functions of the canvas
+                    this.original = {
+                        onmousemove: _canvas_.onmousemove,
+                        onmouseleave: _canvas_.onmouseleave,
+                        onmouseup: _canvas_.onmouseup,
+                    };
+                
+                //utility functions
+                    this.mouseInteractionHandler = function(moveCode, stopCode){
+                        //replace listener code
+                            //movement code
+                                _canvas_.onmousemove = function(event){ 
+                                    if(moveCode!=undefined){
+                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                        moveCode(event);
+                                    }
+                                };
+                            //stopping code
+                                _canvas_.onmouseup = function(event){
+                                    if(stopCode != undefined){ 
+                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                        stopCode(event);
+                                    }
+                
+                                    _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
+                                    _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
+                                    _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
+                                };
+                                _canvas_.onmouseleave = _canvas_.onmouseup;
+                    };
+                
+                //connect callbacks to mouse function lists
+                    this.setUpCallbacks = function(){
+                        [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick' ].forEach(callback => {
+                            _canvas_.core.callback.functions[callback] = function(x,y,event,shapes){
+                                if(shapes.length > 0){ shapes[0][callback](x,y,event,shapes); }
+                                else{ _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); }
+                            }
+                        });
+                    }
+                    this.setUpCallbacks();
+            };
+            _canvas_.system.keyboard = new function(){
+                //setup
+                    var keyboard = this;
+                    this.pressedKeys = {
+                        control:false,
+                        alt:false,
+                        meta:false,
+                    };
+                    this.functionList = {};
+                    this.functionList.onkeydown = [];
+                    this.functionList.onkeyup = [];
+                
+                //utility functions
+                    function customKeyInterpreter(event,press){
+                        var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                        if(event.code == 'ControlLeft' || event.code == 'ControlRight'){  pressedKeys.control = press; }
+                        else if(event.code == 'AltLeft' || event.code == 'AltRight'){     pressedKeys.alt = press;     }
+                        else if(event.code == 'MetaLeft' || event.code == 'MetaRight'){   pressedKeys.meta = press;    }
+                        else if(event.code == 'ShiftLeft' || event.code == 'ShiftRight'){ pressedKeys.shift = press;   }
+                
+                        //adjustment for mac keyboards
+                            if( window.navigator.platform.indexOf('Mac') != -1 ){
+                                pressedKeys.option = pressedKeys.alt;
+                                pressedKeys.command = pressedKeys.meta;
+                            }
+                    }
+                    this.releaseAll = function(){
+                        Object.keys(this.pressedKeys).forEach(a => keyboard.releaseKey(a))
+                    };
+                    this.releaseKey = function(code){
+                        _canvas_.onkeyup( new KeyboardEvent('keyup',{code:code}) );
+                    }
+                
+                //connect callbacks to keyboard function lists
+                    _canvas_.core.callback.functions.onkeydown = function(x,y,event,shapes){
+                        //if key is already pressed, don't press it again
+                            if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
+                            _canvas_.system.keyboard.pressedKeys[event.code] = true;
+                            customKeyInterpreter(event,true);
+                
+                        //ESCAPE operation code
+                            if(event.key == 'Escape'){ 
+                                console.log('%cEscape key pressed', 'color:White; background-color: Black;'); 
+                                _canvas_.system.keyboard.releaseAll();
+                                _canvas_.onmouseup({offsetX:0,offsetY:0});
+                                _canvas_.system.mouse.setUpCallbacks();
+                            }
+                        
+                        //perform action
+                            for(var a = 0; a < shapes.length; a++){
+                                if(shapes[a].glyphs.includes(event.key)){
+                                    shapes[a].onkeydown(x,y,event);
+                                    return;
+                                }
+                            }
+                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                    };
+                
+                    _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
+                        //if key isn't pressed, don't release it
+                            if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
+                            delete _canvas_.system.keyboard.pressedKeys[event.code];
+                            customKeyInterpreter(event,false);
+                        
+                        //perform action
+                            for(var a = 0; a < shapes.length; a++){
+                                if(shapes[a].glyphs.includes(event.key)){
+                                    shapes[a].onkeyup(x,y,event);
+                                    return;
+                                }
+                            }
+                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                    };
             };
             
+            //add main panes to arrangement
+            _canvas_.system.pane = {};
+            
+            //background
+                _canvas_.system.pane.background = _canvas_.core.shape.create('group');
+                _canvas_.system.pane.background.name = 'background'
+                _canvas_.system.pane.background.ignored = true;
+                _canvas_.core.arrangement.append( _canvas_.system.pane.background );
+            
+            //middleground
+                _canvas_.system.pane.middleground = _canvas_.core.shape.create('group');
+                _canvas_.system.pane.middleground.name = 'middleground'
+                _canvas_.system.pane.middleground.heedCamera = true;
+                _canvas_.core.arrangement.append( _canvas_.system.pane.middleground );
+            
+                    //back
+                        _canvas_.system.pane.middleground.back = _canvas_.core.shape.create('group');
+                        _canvas_.system.pane.middleground.back.name = 'back'
+                        _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground.back );
+            
+                    //middle
+                        _canvas_.system.pane.middleground.middle = _canvas_.core.shape.create('group');
+                        _canvas_.system.pane.middleground.middle.name = 'middle'
+                        _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground.middle );
+            
+                    //front
+                        _canvas_.system.pane.middleground.front = _canvas_.core.shape.create('group');
+                        _canvas_.system.pane.middleground.front.name = 'front'
+                        _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground.front );
+            
+            //foreground
+                _canvas_.system.pane.foreground = _canvas_.core.shape.create('group');
+                _canvas_.system.pane.foreground.name = 'foreground'
+                _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
             
             
+                
+            //shortcuts
+                _canvas_.system.pane.b = _canvas_.system.pane.background;
+                _canvas_.system.pane.mb = _canvas_.system.pane.middleground.back;
+                _canvas_.system.pane.mm = _canvas_.system.pane.middleground.middle;
+                _canvas_.system.pane.mf = _canvas_.system.pane.middleground.front;
+                _canvas_.system.pane.f = _canvas_.system.pane.foreground;
             
-            
-            //generate environment 
-                var environmentPolys = [
-                    [
-                        [{x:10,y:10},{x:110,y:10},{x:110,y:110},{x:10,y:110}],
-                        [{x:120,y:10},{x:220,y:10},{x:220,y:110},{x:120,y:110}],
-                        [{x:170,y:110},{x:270,y:110},{x:270,y:210},{x:170,y:210}],
-                    ],
-                    [
-                        [{x:10,y:10},{x:110,y:10},{x:110,y:110},{x:10,y:110}], //the one to the left
-                        [{x:150,y:30},{x:250,y:30},{x:250,y:130},{x:150,y:130}], //the one to the right
-                    ],
-                ][sceneValues.environment];
-            
-                environmentPolys.forEach(a => {
-                    var temp = _canvas_.core.shape.create('polygon');
-                    temp.name = JSON.stringify(a);
-                    temp.pointsAsXYArray(a);
-                    temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
-                    _canvas_.core.arrangement.append(temp);
-                });
-            
-                environmentPolys = environmentPolys.map(a => {
-                    return { points: a, boundingBox: _canvas_.library.math.boundingBoxFromPoints(a) };
-                });
-            
-            
-            //test poly
-                var testPoly = [
-                    [
-                        {x:70,y:60},{x:170,y:60},{x:170,y:160},{x:70,y:160}
-                    ],
-                    [
-                        {x:184.97070312499994, y:84.00439687354094},
-                        {x:184.97070312499994+100, y:84.00439687354094},
-                        {x:184.97070312499994+100, y:84.00439687354094+100},
-                        {x:184.97070312499994, y:84.00439687354094+100},
-                    ],
-                    [
-                        {x:110.07110595703125,y:21.0598977691692},
-                        {x:210.0711059570313,y:21.0598977691692},
-                        {x:210.0711059570313,y:121.05989776916923},
-                        {x:110.07110595703125,y:121.05989776916923},
-                    ],
-                ][sceneValues.testPoly];
-                var temp = _canvas_.core.shape.create('polygonWithOutline');
-                    temp.name = 'testPoly';
-                    temp.pointsAsXYArray(testPoly.map(a => a));
-                    temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.5};
-                    temp.lineColour = {r:0,g:0,b:0,a:1};
-                    temp.thickness(2);
-                    _canvas_.core.arrangement.append(temp);
-            
-                testPoly = {
-                    points: testPoly,
-                    boundingBox: _canvas_.library.math.boundingBoxFromPoints(testPoly),
+            //utility
+                _canvas_.system.pane.getMiddlegroundPane = function(element){
+                    var tmp = element;
+                    do{
+                        if(tmp == _canvas_.system.pane.mb){return _canvas_.system.pane.mb;}
+                        else if(tmp == _canvas_.system.pane.mm){return _canvas_.system.pane.mm;}
+                        else if(tmp == _canvas_.system.pane.mf){return _canvas_.system.pane.mf;}
+                    }while((tmp=tmp.parent) != undefined);
+                    return null;
                 };
+
             
-            
-            
-            
-            
-            
-            
-            
-            //correct polygon location
-                //perform calculation
-                    console.time('_canvas_.library.math.fitPolyIn');
-                    var data = _canvas_.library.math.fitPolyIn(testPoly,environmentPolys,undefined,true);
-                    console.timeEnd('_canvas_.library.math.fitPolyIn');
-                //adjust
-                    testPoly.points = testPoly.points.map(a => { return{x:a.x+data.offset.x,y:a.y+data.offset.y} } );
-                    testPoly.boundingBox = _canvas_.library.math.boundingBoxFromPoints(testPoly.points);
-            
-            
-            
-            
-            
-            
-            
-            //draw new position
-                var temp = _canvas_.core.shape.create('polygonWithOutline');
-                temp.name = 'testPoly_adjusted';
-                temp.pointsAsXYArray(testPoly.points.map(a => a));
-                temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:0.2};
-                temp.lineColour = {r:0,g:0,b:0,a:1};
-                temp.thickness(2);
-                _canvas_.core.arrangement.append(temp);
-            
-            //draw in calculation paths
-                for(var a = 0; a < data.paths.length; a++){
-                    if(data.paths[a].length == 0){continue;}
-            
-                    var temp = _canvas_.core.shape.create('path');
-                    temp.name = 'testPath_'+a;
-                    temp.pointsAsXYArray(data.paths[a]);
-                    temp.colour = {r:Math.random(),g:Math.random(),b:Math.random(),a:1};
-                    temp.thickness(2);
-                    _canvas_.core.arrangement.append(temp);
-            
-                }
-            
-            
-            
-            
-            
-            
-            
-            
-            //actual render
-                _canvas_.core.render.frame();
-            
-            console.log('');
-            console.log('%cTesting - library.structure.signalRegistry', 'font-size:15px; font-weight:bold;');
-                console.log('%c- regular use', 'font-weight: bold;');
-                    console.log('%c-- adding a signal', 'font-weight: bold;');
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10, 10);
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 0, strength: 1},{signalID: 0, line: 0, position: 5, strength: 0}]);
-            
-                    console.log('%c--removing it', 'font-weight: bold;');
-                        signalRegistry.remove(0);
-                        tester(signalRegistry.getAllSignals(), [null]);
-                        tester(signalRegistry.getAllEvents(), [null,null]);
-            
-                    console.log('%c- adding three signals', 'font-weight: bold;');
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.add({ line:1, position:1, length:1, strength:0.5 });
-                        signalRegistry.add({ line:2, position:2, length:10, strength:0.25 });
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:0,position:0,length:5,strength:1},
-                            {line:1,position:1,length:1,strength:0.5},
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:0,position:0,strength:1},{signalID:0,line:0,position:5,strength:0},
-                            {signalID:1,line:1,position:1,strength:0.5},{signalID:1,line:1,position:2,strength:0},
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c- removing the middle one', 'font-weight: bold;');
-                        signalRegistry.remove(1);
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:0,position:0,length:5,strength:1},
-                            null,
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:0,position:0,strength:1},{signalID:0,line:0,position:5,strength:0},
-                            null,null,
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c-- adding a signal (to be automatically inserted in the middle position)', 'font-weight: bold;');
-                        signalRegistry.add({ line:4, position:4, length:6, strength:0.75 });
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:0,position:0,length:5,strength:1},
-                            {line:4,position:4,length:6,strength:0.75},
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:0,position:0,strength:1},{signalID:0,line:0,position:5,strength:0},
-                            {signalID:1,line:4,position:4,strength:0.75},{signalID:1,line:4,position:10,strength:0},
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c-- updating a signal', 'font-weight: bold;');
-                        signalRegistry.update(0,{ line:9, position:50, length:2, strength:0.1 });
-                        tester(signalRegistry.getAllSignals(), [
-                            {line:9,position:50,length:2,strength:0.1},
-                            {line:4,position:4,length:6,strength:0.75},
-                            {line:2,position:2,length:10,strength:0.25}
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID:0,line:9,position:50,strength:0.1},{signalID:0,line:9,position:52,strength:0},
-                            {signalID:1,line:4,position:4,strength:0.75},{signalID:1,line:4,position:10,strength:0},
-                            {signalID:2,line:2,position:2,strength:0.25},{signalID:2,line:2,position:12,strength:0}
-                        ]);
-            
-                    console.log('%c-- full reset', 'font-weight: bold;');
-                        signalRegistry.reset();
-                        tester(signalRegistry.getAllSignals(), []);
-                        tester(signalRegistry.getAllEvents(), []);
-            
-                    console.log('%c-- getting events', 'font-weight: bold;');
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.add({ line:1, position:1, length:1, strength:0.5 });
-                        signalRegistry.add({ line:2, position:6, length:10, strength:0.25 });
-                        tester( signalRegistry.eventsBetween(0,3), [
-                            {signalID: 0, line: 0, position: 0, strength: 1},
-                            {signalID: 1, line: 1, position: 1, strength: 0.5},
-                            {signalID: 1, line: 1, position: 2, strength: 0}
-                        ]);
-                        tester( signalRegistry.eventsBetween(16), [
-                            {signalID: 2, line: 2, position: 16, strength: 0}
-                        ]);
-            
-                    console.log('%c-- import/export', 'font-weight: bold;');
-                        signalRegistry.import({
-                            "signals":[
-                                {"line":9,"position":50,"length":2,"strength":0.1},
-                                {"line":4,"position":4,"length":6,"strength":0.75},
-                                {"line":2,"position":2,"length":10,"strength":0.25}
-                            ],
-                            "selectedSignals":[],
-                            "events":[
-                                {"signalID":0,"line":9,"position":50,"strength":0.1},
-                                {"signalID":0,"line":9,"position":52,"strength":0},
-                                {"signalID":1,"line":4,"position":4,"strength":0.75},
-                                {"signalID":1,"line":4,"position":10,"strength":0},
-                                {"signalID":2,"line":2,"position":2,"strength":0.25},
-                                {"signalID":2,"line":2,"position":12,"strength":0}
-                            ],
-                            "events_byID":[[0,1],[2,3],[4,5]],
-                            "events_byPosition":{"2":[4],"4":[2],"10":[3],"12":[5],"50":[0],"52":[1]},
-                            "positions":[2,12,4,10,50,52]
-                        });
-                        tester( signalRegistry.export(), {
-                            "signals":[
-                                {"line":9,"position":50,"length":2,"strength":0.1},
-                                {"line":4,"position":4,"length":6,"strength":0.75},
-                                {"line":2,"position":2,"length":10,"strength":0.25}
-                            ],
-                            "selectedSignals":[],
-                            "events":[
-                                {"signalID":0,"line":9,"position":50,"strength":0.1},
-                                {"signalID":0,"line":9,"position":52,"strength":0},
-                                {"signalID":1,"line":4,"position":4,"strength":0.75},
-                                {"signalID":1,"line":4,"position":10,"strength":0},
-                                {"signalID":2,"line":2,"position":2,"strength":0.25},
-                                {"signalID":2,"line":2,"position":12,"strength":0}
-                            ],
-                            "events_byID":[[0,1],[2,3],[4,5]],
-                            "events_byPosition":{"2":[4],"4":[2],"10":[3],"12":[5],"50":[0],"52":[1]},
-                            "positions":[2,12,4,10,50,52]
-                        });
-            
-                console.log('%c- irregular use', 'font-weight: bold;');
-                    signalRegistry.reset();
-                        
-                    console.log('%c-- adding a signal (bad line)', 'font-weight: bold;');
-                        //(line should clip to a number within the bounds)
-                        signalRegistry.add({ line:20, position:0, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:9, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 9, position: 0, strength: 1},{signalID: 0, line: 9, position: 5, strength: 0}]);
-                        signalRegistry.reset();
-            
-                        signalRegistry.add({ line:-1, position:0, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:0, position: 0, strength: 1},{signalID: 0, line:0, position: 5, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (bad position)', 'font-weight: bold;');
-                        //(position should clip to a place within the bounds, where there length of the signal is also taken into account)
-                        signalRegistry.add({ line:5, position:100, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:59, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:59, strength: 1},{signalID: 0, line:5, position:64, strength: 0}]);
-                        signalRegistry.reset();
-            
-                        signalRegistry.add({ line:5, position:-1, length:5, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:0, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:0, strength: 1},{signalID: 0, line:5, position:5, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (bad length)', 'font-weight: bold;');
-                        //(length should clip to whatever the max is, or at minimum zero)
-                        signalRegistry.add({ line:5, position:10, length:100, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:10, length:10, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:10, strength: 1},{signalID: 0, line:5, position:20, strength: 0}]);
-                        signalRegistry.reset();
-            
-                        signalRegistry.add({ line:5, position:10, length:-1, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:10, length:0, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 5, position:10, strength: 1},{signalID: 0, line:5, position:10, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (ends beyond boundaries)', 'font-weight: bold;');
-                        //(signal should be clipped to fit)
-                        //too far to the right
-                        signalRegistry.add({ line:5, position:62, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:62, length:2, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:5, position:62, strength: 1},{signalID: 0, line:5, position:64, strength: 0}]);
-                        signalRegistry.reset();
-                        //too far to the left
-                        signalRegistry.add({ line:5, position:-5, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:5, position:0, length:8, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:5, position:0, strength: 1},{signalID: 0, line:5, position:8, strength: 0}]);
-                        signalRegistry.reset();
-                        //below last line
-                        signalRegistry.add({ line:50, position:5, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:9, position:5, length:8, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID:0, line:9, position:5, strength: 1},{signalID:0, line:9, position:13, strength: 0}]);
-                        signalRegistry.reset();
-                        //above top line
-                        signalRegistry.add({ line:-6, position:5, length:8, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:5, length:8, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID:0, line:0, position:5, strength: 1},{signalID:0, line:0, position:13, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- adding a signal (all of the above)', 'font-weight: bold;');
-                        //(length is limited before the position is corrected. Line can be corrected in an unrelated way)
-                        signalRegistry.add({ line:50, position:100, length:100, strength:1 });
-                        tester(signalRegistry.getAllSignals(), [{line:9, position:54, length:10, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line:9, position:54, strength: 1},{signalID: 0, line:9, position:64, strength: 0}]);
-                        signalRegistry.reset();
-            
-                    console.log('%c-- remove signal (signal doesn\'t exist)', 'font-weight: bold;');
-                        //remove should just do nothing
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.add({ line:1, position:1, length:1, strength:0.5 });
-                        signalRegistry.add({ line:2, position:6, length:10, strength:0.25 });
-                        signalRegistry.remove(10);
-                        signalRegistry.remove(-1);
-                        tester(signalRegistry.getAllSignals(), [
-                            {line: 0, position: 0, length: 5, strength: 1},
-                            {line: 1, position: 1, length: 1, strength: 0.5},
-                            {line: 2, position: 6, length: 10, strength: 0.25},
-                        ]);
-                        tester(signalRegistry.getAllEvents(), [
-                            {signalID: 0, line: 0, position: 0, strength: 1},{signalID: 0, line: 0, position: 5, strength: 0},
-                            {signalID: 1, line: 1, position: 1, strength: 0.5},{signalID: 1, line: 1, position: 2, strength: 0},
-                            {signalID: 2, line: 2, position: 6, strength: 0.25},{signalID: 2, line: 2, position: 16, strength: 0},
-                        ]);
-            
-                    console.log('%c-- getting events (out of range)', 'font-weight: bold;');
-                        //should be pretty straight-forward. Either there are events in the range, or there aren't
-                        tester( signalRegistry.eventsBetween(100,1000), []);
-                        tester( signalRegistry.eventsBetween(-100,-1), []);
-                        tester( signalRegistry.eventsBetween(-100,100), [
-                            {signalID: 0, line: 0, position: 0, strength: 1},
-                            {signalID: 1, line: 1, position: 1, strength: 0.5},
-                            {signalID: 1, line: 1, position: 2, strength: 0},
-                            {signalID: 0, line: 0, position: 5, strength: 0},
-                            {signalID: 2, line: 2, position: 6, strength: 0.25},
-                            {signalID: 2, line: 2, position: 16, strength: 0},
-                        ]);
-                        
-                    console.log('%c-- updating a signal (wrong position)', 'font-weight: bold;');
-                        //(signal should be prevented from moving too far to the right)
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10, 10);
-                        signalRegistry.add({ line:0, position:0, length:5, strength:1 });
-                        signalRegistry.update(0,{position:100});
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:59, length:5, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 59, strength: 1},{signalID: 0, line: 0, position: 64, strength: 0}]);
-                    console.log('%c-- updating a signal (wrong length)', 'font-weight: bold;');
-                        //(signal should be prevented from extending past the right limit)
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10);
-                        signalRegistry.add({ line:0, position:7, length:5, strength:1 });
-                        signalRegistry.update(0,{length:100});
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:7, length:57, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 7, strength: 1},{signalID: 0, line: 0, position: 64, strength: 0}]);
-                    console.log('%c-- updating a signal (wrong length and position)', 'font-weight: bold;');
-                        //(signal should be prevented from extending past the right limit)
-                        var signalRegistry = new _canvas_.library.structure.signalRegistry(64, 10);
-                        signalRegistry.add({ line:0, position:7, length:5, strength:1 });
-                        signalRegistry.update(0,{position:100,length:100});
-                        tester(signalRegistry.getAllSignals(), [{line:0, position:64, length:0, strength:1}]);
-                        tester(signalRegistry.getAllEvents(), [{signalID: 0, line: 0, position: 64, strength: 1},{signalID: 0, line: 0, position: 64, strength: 0}]);
-            
-            console.log('');
-            console.log('%cTesting - library.misc', 'font-size:15px; font-weight:bold;');
-            
-            //serialize / unserialize
-                console.log('%c- serialize/unserialize (no compression)', 'font-weight: bold;');
-                    function doBoth(data,ser_data,un_data){
-                        var s_data = _canvas_.library.misc.serialize(data,false);
-                        tester(s_data,ser_data);
-                        var u_data = _canvas_.library.misc.unserialize(s_data,false);
-                        tester(u_data,un_data);
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        console.log('>',data.event.code);
+                        return false; 
                     }
-            
-                    var org_data;
-                    var ser_data;
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 1;
-                    var ser_data = '1';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 5;
-                    var ser_data = '5';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 546544494849;
-                    var ser_data = '546544494849';
-                    doBoth(org_data,ser_data,org_data);
-            
-                    var org_data = '';
-                    var ser_data = '""';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = 'hello\n';
-                    var ser_data = JSON.stringify('hello\n');
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = '546544494849';
-                    var ser_data = '"546544494849"';
-                    doBoth(org_data,ser_data,org_data);
-            
-                    var org_data = [1,2,3];
-                    var ser_data = '[1,2,3]';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = [1,2,3];
-                    var ser_data = '[1,2,3]';
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = ['hello','there','my','friend'];
-                    var ser_data = JSON.stringify(['hello','there','my','friend']);
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = ['hello',1,'my',76];
-                    var ser_data = JSON.stringify(['hello',1,'my',76]);
-                    doBoth(org_data,ser_data,org_data);
-            
-                    var org_data = {item:0,thing:'hello',null:null};
-                    var ser_data = JSON.stringify({item:0,thing:'hello',null:null});
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = {item:0,thing:function(){console.log('hello');},null:null};
-                    var ser_data = JSON.stringify({"item":0,"thing":{"__uniqueType":"function","__value":"function(){console.log('hello');}","__name":"thing"},"null":null});
-                    doBoth(org_data,ser_data,org_data);
-            
-                    var org_data = new ArrayBuffer(8);
-                    var ser_data = JSON.stringify({"__uniqueType":"arraybuffer","__value":"AA=="});
-                    doBoth(org_data,ser_data,org_data);
-                    var org_data = [new ArrayBuffer(8),new ArrayBuffer(8),new ArrayBuffer(8)]
-                    var ser_data = JSON.stringify([{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="},{"__uniqueType":"arraybuffer","__value":"AA=="}]);
-                    doBoth(org_data,ser_data,org_data);
-            
-            //loadFileFromURL
-                //(the results of this are dependent on when the response is received, so, they could arrive out of order with the rest)
-                _canvas_.library.misc.loadFileFromURL('http://localhost:8000/CNAME', function(response){console.log('%c- loadFileFromURL', 'font-weight: bold;');tester(response,'curve.metasophiea.com\n')}, 'text');
-            
-            console.log('');
-            
-            console.log( _canvas_.library._control.logflow.printResults() );
+                }
+            );
+            _canvas_.system.keyboard.functionList.onkeyup.push(
+                {
+                    requiredKeys:[],
+                    function:function(data){
+                        console.log('<',data.event.code);
+                        return false; 
+                    }
+                }
+            );
             
             
-            
-            
-            
-            
-            
-            
+            _canvas_.system.keyboard.functionList.onkeydown.push(
+                {
+                    requiredKeys:[['control','KeyV'],['command','KeyV']],
+                    function:function(data){
+                        _canvas_.system.keyboard.releaseAll();
+                        console.log('paste!',JSON.stringify(data),JSON.stringify(_canvas_.system.keyboard.pressedKeys));
+                        return true; 
+                    }
+                }
+            );
 
 
         }

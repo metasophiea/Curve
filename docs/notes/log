@@ -8,6 +8,14 @@
     unionPolygons is frightfully slow and is slowing the path element down
     tremendously 
 
+    - added in the ability to add new elements while the system is running, by
+      using the serialize/deserialize code found in the library... it actually
+      runs surprisingly well
+    - added the system layer (needs a little testing, but seems really good)
+    - added a ".go" fuction to the system layer, which acts like the ".go"
+      function of core; but activates only when the system layer is done all
+      it's work (I just think this is so clever)
+
 
 2019-11-16
   - oops; accidentally deleted the library tests somewhere along the way.. I

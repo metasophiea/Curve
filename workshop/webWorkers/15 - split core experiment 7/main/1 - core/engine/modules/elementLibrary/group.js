@@ -111,39 +111,36 @@ this.group = function(name,_id){
         this.getChildByName = function(name){return getChildByName(name);};
         this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
         this.contains = checkForElement;
-        this.append = function(element){
-            dev.log.elementLibrary(type,self.getAddress(),'.append('+JSON.stringify(element)+')'); //#development
+        this.append = function(newElement){
+            dev.log.elementLibrary(type,self.getAddress(),'.append('+JSON.stringify(newElement)+')'); //#development
 
-            if( !isValidElement(element) ){ return; }
+            if( !isValidElement(newElement) ){ return; }
 
-            children.push(element); 
-            element.parent = this;
-            augmentExtremities_add(element);
+            children.push(newElement); 
+            newElement.parent = this;
+            augmentExtremities_add(newElement);
 
-            childRegistry[element.name] = element;
-            if(element.onadd != undefined){element.onadd(false);}
+            childRegistry[newElement.name] = newElement;
         };
-        this.prepend = function(element){
-            dev.log.elementLibrary(type,self.getAddress(),'.prepend('+JSON.stringify(element)+')'); //#development
+        this.prepend = function(newElement){
+            dev.log.elementLibrary(type,self.getAddress(),'.prepend('+JSON.stringify(newElement)+')'); //#development
 
-            if( !isValidElement(element) ){ return; }
+            if( !isValidElement(newElement) ){ return; }
 
-            children.unshift(element); 
-            element.parent = this;
-            augmentExtremities_add(element);
+            children.unshift(newElement); 
+            newElement.parent = this;
+            augmentExtremities_add(newElement);
 
-            childRegistry[element.name] = element;
-            if(element.onadd != undefined){element.onadd(true);}
+            childRegistry[newElement.name] = newElement;
         };
-        this.remove = function(element){
-            dev.log.elementLibrary(type,self.getAddress(),'.remove('+JSON.stringify(element)+')'); //#development
-            if(element == undefined){return;}
-            if(element.onremove != undefined){element.onremove();}
-            children.splice(children.indexOf(element), 1);
-            augmentExtremities_remove(element);
+        this.remove = function(newElement){
+            dev.log.elementLibrary(type,self.getAddress(),'.remove('+JSON.stringify(newElement)+')'); //#development
+            if(newElement == undefined){return;}
+            children.splice(children.indexOf(newElement), 1);
+            augmentExtremities_remove(newElement);
 
-            element.parent = undefined;
-            delete childRegistry[element.name];
+            newElement.parent = undefined;
+            delete childRegistry[newElement.name];
         };
         this.clear = function(){ children = []; childRegistry = {} };
         this.getElementsUnderPoint = function(x,y){

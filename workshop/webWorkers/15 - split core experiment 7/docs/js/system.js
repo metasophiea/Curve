@@ -1,5 +1,5 @@
 (function() {
-    const __canvasPrefix = 'core';
+    const __canvasPrefix = 'system';
     var __canvasElements = document.getElementsByTagName('canvas');
     for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.length; __canvasElements_count++){
         if( __canvasElements[__canvasElements_count].hasAttribute(__canvasPrefix) ){
@@ -21655,6 +21655,207 @@
                     };
 
             };
+            _canvas_.system = new function(){
+                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:19} };
+            };
+            _canvas_.system.mouse = new function(){
+                //setup
+                    this.tmp = {};
+                    this.functionList = {};
+                    this.functionList.onmousedown = [];
+                    this.functionList.onmousemove = [];
+                    this.functionList.onmouseup = [];
+                    this.functionList.onmouseleave = [];
+                    this.functionList.onmouseenter = [];
+                    this.functionList.onwheel = [];
+                    this.functionList.onclick = [];
+                    this.functionList.ondblclick = [];
+                
+                //save the listener functions of the canvas
+                    this.original = {
+                        onmousemove: _canvas_.onmousemove,
+                        onmouseleave: _canvas_.onmouseleave,
+                        onmouseup: _canvas_.onmouseup,
+                    };
+                
+                //utility functions
+                    this.mouseInteractionHandler = function(moveCode, stopCode){
+                        //replace listener code
+                            //movement code
+                                _canvas_.onmousemove = function(event){ 
+                                    if(moveCode!=undefined){
+                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                        moveCode(event);
+                                    }
+                                };
+                            //stopping code
+                                _canvas_.onmouseup = function(event){
+                                    if(stopCode != undefined){ 
+                                        event.X = event.offsetX; event.Y = event.offsetY;
+                                        stopCode(event);
+                                    }
+                
+                                    _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
+                                    _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
+                                    _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
+                                };
+                                _canvas_.onmouseleave = _canvas_.onmouseup;
+                    };
+                
+                //connect callbacks to mouse function lists
+                    this.setUpCallbacks = function(){
+                        [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
+                            _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
+                                if(elementIds.length == 0){
+                                    _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
+                                }
+                            }
+                        });
+                    }
+                    this.setUpCallbacks();
+            };
+            _canvas_.system.keyboard = new function(){
+                //setup
+                    var keyboard = this;
+                    this.pressedKeys = {
+                        control:false,
+                        alt:false,
+                        meta:false,
+                    };
+                    this.functionList = {};
+                    this.functionList.onkeydown = [];
+                    this.functionList.onkeyup = [];
+                
+                //utility functions
+                    function customKeyInterpreter(event,press){
+                        var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                        if(event.code == 'ControlLeft' || event.code == 'ControlRight'){  pressedKeys.control = press; }
+                        else if(event.code == 'AltLeft' || event.code == 'AltRight'){     pressedKeys.alt = press;     }
+                        else if(event.code == 'MetaLeft' || event.code == 'MetaRight'){   pressedKeys.meta = press;    }
+                        else if(event.code == 'ShiftLeft' || event.code == 'ShiftRight'){ pressedKeys.shift = press;   }
+                
+                        //adjustment for mac keyboards
+                            if( window.navigator.platform.indexOf('Mac') != -1 ){
+                                pressedKeys.option = pressedKeys.alt;
+                                pressedKeys.command = pressedKeys.meta;
+                            }
+                    }
+                    this.releaseAll = function(){
+                        Object.keys(this.pressedKeys).forEach(a => keyboard.releaseKey(a))
+                    };
+                    this.releaseKey = function(code){
+                        _canvas_.onkeyup( new KeyboardEvent('keyup',{code:code}) );
+                    }
+                
+                //connect callbacks to keyboard function lists
+                    _canvas_.core.callback.functions.onkeydown = function(x,y,event,shapes){
+                        //if key is already pressed, don't press it again
+                            if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
+                            _canvas_.system.keyboard.pressedKeys[event.code] = true;
+                            customKeyInterpreter(event,true);
+                
+                        // //ESCAPE operation code
+                        //     if(event.key == 'Escape'){ 
+                        //         console.log('%cEscape key pressed', 'color:White; background-color: Black;'); 
+                        //         _canvas_.system.keyboard.releaseAll();
+                        //         _canvas_.onmouseup({offsetX:0,offsetY:0});
+                        //         _canvas_.system.mouse.setUpCallbacks();
+                        //     }
+                        
+                        //perform action
+                            for(var a = 0; a < shapes.length; a++){
+                                if(shapes[a].glyphs.includes(event.key)){
+                                    shapes[a].onkeydown(x,y,event);
+                                    return;
+                                }
+                            }
+                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                    };
+                
+                    _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
+                        //if key isn't pressed, don't release it
+                            if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
+                            delete _canvas_.system.keyboard.pressedKeys[event.code];
+                            customKeyInterpreter(event,false);
+                        
+                        //perform action
+                            for(var a = 0; a < shapes.length; a++){
+                                if(shapes[a].glyphs.includes(event.key)){
+                                    shapes[a].onkeyup(x,y,event);
+                                    return;
+                                }
+                            }
+                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                    };
+            };
+            
+            //add main panes to arrangement
+            _canvas_.system.pane = {};
+            
+            _canvas_.core.meta.go = function(){
+            
+                //background
+                    _canvas_.core.meta.createSetAppend('group','background',{ignored:true}).then(id => { 
+                        _canvas_.system.pane.background = id;
+                        _canvas_.system.pane.b = id;
+                    });
+            
+                //middleground
+                     _canvas_.core.meta.createSetAppend('group','middleground').then(id => { 
+                        _canvas_.system.pane.middleground = id;
+                    }).then(() => {
+                        //back
+                            _canvas_.core.meta.createSetAppend('group','back',undefined,_canvas_.system.pane.middleground).then(id => { 
+                                _canvas_.system.pane.middleground.back = id;
+                                _canvas_.system.pane.mb = id;
+                            });
+            
+                        //middle
+                            _canvas_.core.meta.createSetAppend('group','middle',undefined,_canvas_.system.pane.middleground).then(id => { 
+                                _canvas_.system.pane.middleground.middle = id; 
+                                _canvas_.system.pane.mm = id;
+                            });
+            
+                        //front
+                            _canvas_.core.meta.createSetAppend('group','front',undefined,_canvas_.system.pane.middleground).then(id => { 
+                                _canvas_.system.pane.middleground.front = id;
+                                _canvas_.system.pane.mf = id;
+                            });
+                    });
+            
+                //foreground
+                    _canvas_.core.meta.createSetAppend('group','foreground',{ignored:true}).then(id => { 
+                        _canvas_.system.pane.foreground = id;
+                        _canvas_.system.pane.f = id;
+                    });
+            
+                
+                const checkingInterval = setInterval(() => {
+                    if(
+                        _canvas_.system.pane.b != undefined &&
+                        _canvas_.system.pane.mb != undefined &&
+                        _canvas_.system.pane.mm != undefined &&
+                        _canvas_.system.pane.mf != undefined &&
+                        _canvas_.system.pane.f != undefined
+                    ){
+                        clearInterval(checkingInterval);
+                        if(_canvas_.system.go){_canvas_.system.go();}
+                    }
+                }, 1);
+            };
+            
+            //utility
+                _canvas_.system.pane.getMiddlegroundPane = function(element){
+                    const middlegrounds = [_canvas_.system.pane.mb, _canvas_.system.pane.mm, _canvas_.system.pane.mf];
+            
+                    return new Promise((resolve, reject) => {
+                        _canvas_.core.arrangement.areParents( element, middlegrounds ).then(response => {
+                            const index = response.indexOf(0);
+                            resolve( index == -1 ? null : middlegrounds[index] );
+                        });
+                    });
+                };
+
         }
     }
 })();

@@ -8,8 +8,8 @@ var rect = _canvas_.core.shape.create('rectangle');
     rect.name = 'testRectangle2';
     rect.x(200); rect.y(0);
     rect.width(30); rect.height(30);
-    rect.angle = 0.2;
-    rect.anchor = {x:0.5,y:0.5};
+    rect.angle(0.2);
+    rect.anchor({x:0.5,y:0.5});
     rect.colour = {r:0,g:1,b:0,a:0.3};
     _canvas_.system.pane.mm.append(rect);
 
@@ -17,7 +17,7 @@ var img = _canvas_.core.shape.create('image');
     img.name = 'testImage1';
     img.x(50); img.y(10);
     img.width(100); img.height(100);
-    img.angle = -0.2;
+    img.angle(-0.2);
     _canvas_.system.pane.mm.append(img);
 
 var g = _canvas_.core.shape.create('group');

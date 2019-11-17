@@ -20925,36 +20925,33 @@ const element = new function(){
                     this.getChildByName = function(name){return getChildByName(name);};
                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
                     this.contains = checkForElement;
-                    this.append = function(element){
+                    this.append = function(newElement){
             
-                        if( !isValidElement(element) ){ return; }
+                        if( !isValidElement(newElement) ){ return; }
             
-                        children.push(element); 
-                        element.parent = this;
-                        augmentExtremities_add(element);
+                        children.push(newElement); 
+                        newElement.parent = this;
+                        augmentExtremities_add(newElement);
             
-                        childRegistry[element.name] = element;
-                        if(element.onadd != undefined){element.onadd(false);}
+                        childRegistry[newElement.name] = newElement;
                     };
-                    this.prepend = function(element){
+                    this.prepend = function(newElement){
             
-                        if( !isValidElement(element) ){ return; }
+                        if( !isValidElement(newElement) ){ return; }
             
-                        children.unshift(element); 
-                        element.parent = this;
-                        augmentExtremities_add(element);
+                        children.unshift(newElement); 
+                        newElement.parent = this;
+                        augmentExtremities_add(newElement);
             
-                        childRegistry[element.name] = element;
-                        if(element.onadd != undefined){element.onadd(true);}
+                        childRegistry[newElement.name] = newElement;
                     };
-                    this.remove = function(element){
-                        if(element == undefined){return;}
-                        if(element.onremove != undefined){element.onremove();}
-                        children.splice(children.indexOf(element), 1);
-                        augmentExtremities_remove(element);
+                    this.remove = function(newElement){
+                        if(newElement == undefined){return;}
+                        children.splice(children.indexOf(newElement), 1);
+                        augmentExtremities_remove(newElement);
             
-                        element.parent = undefined;
-                        delete childRegistry[element.name];
+                        newElement.parent = undefined;
+                        delete childRegistry[newElement.name];
                     };
                     this.clear = function(){ children = []; childRegistry = {} };
                     this.getElementsUnderPoint = function(x,y){
@@ -22138,7 +22135,7 @@ const element = new function(){
                         //get offset from parent, if one isn't provided
                             if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
                         //calculate adjusted offset based on the offset
-                            let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                             let adjusted = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
@@ -22167,10 +22164,11 @@ const element = new function(){
                             render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
                             render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
                     };
-                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){            
+                    this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){    
+                    
                         //combine offset with shape's position, angle and scale to produce adjust value for render
-                            let point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                            let adjust = { 
+                            const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                            const adjust = { 
                                 x: point.x*offset.scale + offset.x,
                                 y: point.y*offset.scale + offset.y,
                                 scale: offset.scale*scale,
@@ -22199,6 +22197,7 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> x: '+x);
                         report.info(self.getAddress(),'._dump -> y: '+y);
                         report.info(self.getAddress(),'._dump -> radius: '+radius);
+                        report.info(self.getAddress(),'._dump -> detail: '+detail);
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
                         report.info(self.getAddress(),'._dump -> static: '+static);
                     };
@@ -22516,6 +22515,7 @@ const element = new function(){
                         report.info(self.getAddress(),'._dump -> x: '+x);
                         report.info(self.getAddress(),'._dump -> y: '+y);
                         report.info(self.getAddress(),'._dump -> radius: '+radius);
+                        report.info(self.getAddress(),'._dump -> detail: '+detail);
                         report.info(self.getAddress(),'._dump -> scale: '+scale);
                         report.info(self.getAddress(),'._dump -> thickness: '+thickness);
                         report.info(self.getAddress(),'._dump -> static: '+static);
@@ -25405,6 +25405,14 @@ const element = new function(){
         this.getAvailableElements = function(){ 
             return Object.keys(elementLibrary);
         };
+        this.installElement = function(elementName, creatorMethod, allowOverwrite=false){
+
+            if(!allowOverwrite && elementName in elementLibrary){
+                return false
+            }
+            elementLibrary[elementName] = creatorMethod;
+            return true;
+        };
 
     //element control
         //database
@@ -25522,6 +25530,21 @@ const arrangement = new function(){
         }
 
         recursivePrint(design.getTree(), '/root');
+    };
+    this.areParents = function(elementId,potentialParents=[]){
+
+        let count = 0;
+        let workingElement = element.getElementFromId(elementId);
+        potentialParents = potentialParents.map(id => element.getElementFromId(id));
+
+        do{
+            let index = potentialParents.indexOf(workingElement);
+            if(index != -1){
+                potentialParents[index] = count++;
+            }
+        }while((workingElement=workingElement.parent) != undefined);
+
+        return potentialParents.map(item => typeof item == 'number' ? item : null);
     };
 
     this._dump = function(){ design._dump(); };
@@ -26168,6 +26191,9 @@ const callback = new function(){
         communicationModule.function['element.getAvailableElements'] = function(){
             return element.getAvailableElements();
         };
+        communicationModule.function['element.installElement'] = function(elementName,serializedCreatorMethod){
+            return element.installElement(elementName,library.misc.unserialize(serializedCreatorMethod));
+        };
         communicationModule.function['element.getCreatedElements'] = function(){
             return element.getCreatedElements().map(ele => element.getIdFromElement(ele));
         };
@@ -26217,6 +26243,9 @@ const callback = new function(){
         };
         communicationModule.function['arrangement.printTree'] = function(mode){
             arrangement.printTree(mode);
+        };
+        communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
+            return arrangement.areParents(elementId,potentialParents);
         };
 
     //render

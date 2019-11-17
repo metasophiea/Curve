@@ -71,6 +71,22 @@ const arrangement = new function(){
 
         recursivePrint(design.getTree(), '/root');
     };
+    this.areParents = function(elementId,potentialParents=[]){
+        dev.log.arrangement('.areParents('+elementId+','+JSON.stringify(potentialParents)+')'); //#development
+
+        let count = 0;
+        let workingElement = element.getElementFromId(elementId);
+        potentialParents = potentialParents.map(id => element.getElementFromId(id));
+
+        do{
+            let index = potentialParents.indexOf(workingElement);
+            if(index != -1){
+                potentialParents[index] = count++;
+            }
+        }while((workingElement=workingElement.parent) != undefined);
+
+        return potentialParents.map(item => typeof item == 'number' ? item : null);
+    };
 
     this._dump = function(){ design._dump(); };
     // this.__ = design;

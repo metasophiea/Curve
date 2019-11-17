@@ -1,6 +1,6 @@
 var rect = _canvas_.core.shape.create('rectangle');
     rect.name = 'testRectangle_background';
-    rect.x(0); rect.y = 0;
+    rect.x(0); rect.y(0);
     rect.width(60); rect.height(60);
     rect.colour = {r:1,g:0,b:0,a:0.3};
     rect.dotFrame = true;

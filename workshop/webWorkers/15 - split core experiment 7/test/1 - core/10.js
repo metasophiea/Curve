@@ -1,12 +1,12 @@
-this.circleWithOutline = function(name,_id){
+const rectangleWithRoundEnds = function(name,_id){
     const self = this;
 
     //attributes 
         //protected attributes
-            const type = 'circleWithOutline'; 
-            this.getType = function(){return type;}
-            const id = _id; 
-            this.getId = function(){return id;}
+                const type = 'rectangleWithRoundEnds'; 
+                this.getType = function(){return type;}
+                const id = _id; 
+                this.getId = function(){return id;}
 
         //simple attributes
             this.name = name;
@@ -26,27 +26,22 @@ this.circleWithOutline = function(name,_id){
                 colour = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
             };
-            let lineColour = {r:1,g:0,b:0,a:1};
-            this.lineColour = function(a){
-                if(a==undefined){return lineColour;}     
-                lineColour = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.lineColour('+JSON.stringify(a)+')'); //#development
-            };
-        
+                
         //advanced use attributes
             let allowComputeExtremities = true;
 
         //addressing
-            this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
+            this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
 
         //attributes pertinent to extremity calculation
             let x = 0;
             let y = 0; 
             let angle = 0;
-            let radius = 10;
+            let anchor = {x:0,y:0};
+            let width = 10;
+            let height = 10;
             let detail = 25;
             let scale = 1;
-            let thickness = 0;
             let static = false;
             this.x = function(a){ 
                 if(a==undefined){return x;}     
@@ -60,10 +55,28 @@ this.circleWithOutline = function(name,_id){
                 dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
-            this.radius = function(a){ 
-                if(a==undefined){return radius;} 
-                radius = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.radius('+a+')'); //#development
+            this.angle = function(a){ 
+                if(a==undefined){return angle;} 
+                angle = a;
+                dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
+                if(allowComputeExtremities){computeExtremities();}
+            };
+            this.anchor = function(a){
+                if(a==undefined){return anchor;} 
+                anchor = a; 
+                dev.log.elementLibrary(type,self.getAddress(),'.anchor('+JSON.stringify(a)+')'); //#development
+                if(allowComputeExtremities){computeExtremities();}
+            };
+            this.width = function(a){
+                if(a==undefined){return width;}  
+                width = a;  
+                dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
+                if(allowComputeExtremities){computeExtremities();}
+            };
+            this.height = function(a){
+                if(a==undefined){return height;} 
+                height = a; 
+                dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.detail = function(a){ 
@@ -79,12 +92,6 @@ this.circleWithOutline = function(name,_id){
                 dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
-            this.thickness = function(a){ 
-                if(a==undefined){return thickness;} 
-                thickness = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.thickness('+a+')'); //#development
-                if(allowComputeExtremities){computeExtremities();}
-            };
             this.static = function(a){
                 if(a==undefined){return static;}  
                 static = a;  
@@ -94,7 +101,7 @@ this.circleWithOutline = function(name,_id){
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, lineColour:lineColour, x:x, y:y, angle:angle, radius:radius, detail:detail, scale:scale, thickness:thickness, static:static}; } 
+                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static }; } 
                 dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
 
                 allowComputeExtremities = false;
@@ -112,18 +119,34 @@ this.circleWithOutline = function(name,_id){
         let pointsChanged = true;
         function calculateCirclePoints(){
             points = [];
-            //outline
-                for(let a = 0; a < detail; a++){
-                    points.push(0,0);
-                    points.push( Math.sin( 2*Math.PI * (a/detail) ), Math.cos( 2*Math.PI * (a/detail) ) );
-                    points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
+            points.push(-1,0);
+
+            //round top
+                {
+                    const pointCount = detail+1;
+                    for(let a = 1; a < pointCount; a++){
+                        points.push(
+                            Math.sin( Math.PI * ((pointCount-a)/pointCount) + Math.PI/2 ),
+                            Math.cos( Math.PI * ((pointCount-a)/pointCount) + Math.PI/2 )
+                        );
+                    }
                 }
-            //main circle
-                for(let a = 0; a < detail; a++){
-                    points.push(0,0);
-                    points.push( Math.sin( 2*Math.PI * (a/detail) ), Math.cos( 2*Math.PI * (a/detail) ) );
-                    points.push( Math.sin( 2*Math.PI * ((a+1)/detail) ), Math.cos( 2*Math.PI * ((a+1)/detail) ) );
+
+            points.push(1,0,1,0);
+
+            //round bottom
+                {
+                    const pointCount = detail+1;
+                    for(let a = 1; a < pointCount; a++){
+                        points.push(
+                            Math.sin( Math.PI * ((pointCount-a)/pointCount) - Math.PI/2 ),
+                            Math.cos( Math.PI * ((pointCount-a)/pointCount) - Math.PI/2 )
+                        );
+                    }
                 }
+
+            points.push(-1,0);
+        
             pointsChanged = true;
         }
         calculateCirclePoints();
@@ -132,7 +155,7 @@ this.circleWithOutline = function(name,_id){
             '#version 300 es' + library.glsl.geometry + `
             //index
                 in lowp float index;
-            
+
             //constants
                 in vec2 point;
 
@@ -145,22 +168,16 @@ this.circleWithOutline = function(name,_id){
                 uniform location adjust;
 
                 uniform vec2 resolution;
-                uniform float radius;
-                uniform float thickness;
-                uniform vec4 colour;
-                uniform vec4 lineColour;
-                uniform lowp float indexParting;
-        
-            //varyings
-                out vec4 activeColour;
+                uniform float width;
+                uniform float height;
+                uniform vec2 anchor;
+                uniform lowp float detail;
 
-            void main(){    
-                //adjust points by radius and xy adjust
-                    float tmpRadius = radius + (thickness/2.0) * (index < indexParting ? 1.0 : -1.0);
-                    vec2 P = cartesianAngleAdjust(point*tmpRadius*adjust.scale, -adjust.angle) + adjust.xy;
-
-                //select colour
-                    activeColour = index >= indexParting ? colour : lineColour;
+            void main(){
+                float push = detail+1.0 < index ? height : 0.0;
+                
+                //adjust points by width and xy offset
+                    vec2 P = cartesianAngleAdjust(point*(width/2.0)*adjust.scale + vec2(0,push*adjust.scale), -adjust.angle) + adjust.xy;
 
                 //convert from unit space to clipspace
                     gl_Position = vec4( (((P / resolution) * 2.0) - 1.0) * vec2(1, -1), 0, 1 );
@@ -169,18 +186,18 @@ this.circleWithOutline = function(name,_id){
         const fragmentShaderSource = `#version 300 es
             precision mediump float;
             out vec4 outputColour;
-            in vec4 activeColour;
+            uniform vec4 colour;
                                                                         
             void main(){
-                outputColour = activeColour;
+                outputColour = colour;
             }
         `;
-        const point = { buffer:undefined, attributeLocation:undefined };
         const index = { buffer:undefined, attributeLocation:undefined };
+        const point = { buffer:undefined, attributeLocation:undefined };
         let uniformLocations;
-        function updateGLAttributes(context,adjust){
+        function updateGLAttributes(context,adjust){       
             dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes(-context-,'+JSON.stringify(adjust)+')'); //#development
-
+    
             //buffers
                 //points
                     if(point.buffer == undefined || pointsChanged){
@@ -196,9 +213,10 @@ this.circleWithOutline = function(name,_id){
                         dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> updating point.buffer...'); //#development
                         context.bindBuffer(context.ARRAY_BUFFER, point.buffer); 
                         context.vertexAttribPointer( point.attributeLocation, 2, context.FLOAT,false, 0, 0 );
-                }
+                    }
+
                 //index
-                    if(index.buffer == undefined || pointsChanged){
+                    if(index.buffer == undefined){
                         dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> creating index.buffer...'); //#development
                         index.attributeLocation = context.getAttribLocation(program, "index");
                         index.buffer = context.createBuffer();
@@ -213,18 +231,17 @@ this.circleWithOutline = function(name,_id){
                     }
 
             //uniforms
-                if(uniformLocations == undefined){
+                if( uniformLocations == undefined ){
                     dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> defining uniformLocations...'); //#development
                     uniformLocations = {
                         "adjust.xy": context.getUniformLocation(program, "adjust.xy"),
                         "adjust.scale": context.getUniformLocation(program, "adjust.scale"),
                         "adjust.angle": context.getUniformLocation(program, "adjust.angle"),
                         "resolution": context.getUniformLocation(program, "resolution"),
-                        "radius": context.getUniformLocation(program, "radius"),
-                        "thickness": context.getUniformLocation(program, "thickness"),
+                        "width": context.getUniformLocation(program, "width"),
+                        "height": context.getUniformLocation(program, "height"),
                         "colour": context.getUniformLocation(program, "colour"),
-                        "indexParting": context.getUniformLocation(program, "indexParting"),
-                        "lineColour": context.getUniformLocation(program, "lineColour"),
+                        "detail": context.getUniformLocation(program, "detail"),
                     };
                 }
 
@@ -232,40 +249,37 @@ this.circleWithOutline = function(name,_id){
                 dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.scale:'+adjust.scale); //#development
                 dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> adjust.angle:'+adjust.angle); //#development
                 dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> resolution:'+context.canvas.width+' canvas.height:'+context.canvas.height); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> radius:'+radius); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> thickness:'+thickness); //#development
+                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> width:'+width+' height:'+height); //#development
                 dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> colour:'+JSON.stringify(colour)); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> lineColour:'+JSON.stringify(lineColour)); //#development
-                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> indexParting:'+points.length/4); //#development
+                dev.log.elementLibrary(type,self.getAddress(),'::updateGLAttributes -> detail:'+detail); //#development
                 context.uniform2f(uniformLocations["adjust.xy"], adjust.x, adjust.y);
                 context.uniform1f(uniformLocations["adjust.scale"], adjust.scale);
                 context.uniform1f(uniformLocations["adjust.angle"], adjust.angle);
                 context.uniform2f(uniformLocations["resolution"], context.canvas.width, context.canvas.height);
-                context.uniform1f(uniformLocations["radius"], radius);
-                context.uniform1f(uniformLocations["thickness"], thickness);
+                context.uniform1f(uniformLocations["width"], width);
+                context.uniform1f(uniformLocations["height"], height);
                 context.uniform4f(uniformLocations["colour"], colour.r, colour.g, colour.b, colour.a);
-                context.uniform4f(uniformLocations["lineColour"], lineColour.r, lineColour.g, lineColour.b, lineColour.a);
-                context.uniform1f(uniformLocations["indexParting"], points.length/4);
+                context.uniform1f(uniformLocations["detail"], detail);
         }
         let program;
         function activateGLRender(context,adjust){
             dev.log.elementLibrary(type,self.getAddress(),'::activateGLRender(-context-,'+JSON.stringify(adjust)+')'); //#development
-            if(program == undefined){ program = render.produceProgram(self.getType(), vertexShaderSource, fragmentShaderSource); }
+            if(program == undefined){ program = render.produceProgram('rectangleWithRoundEnds', vertexShaderSource, fragmentShaderSource); }
 
             context.useProgram(program);
             updateGLAttributes(context,adjust);
-            context.drawArrays(context.TRIANGLES, 0, points.length/2);
+            context.drawArrays(context.TRIANGLE_FAN, 0, points.length/2);
         }
 
     //extremities
         function computeExtremities(informParent=true,offset){
             dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
-
+            
             //get offset from parent, if one isn't provided
                 if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                const adjusted = { 
+                let adjusted = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale*scale,
@@ -274,10 +288,13 @@ this.circleWithOutline = function(name,_id){
             //calculate points based on the adjusted offset
                 self.extremities.points = [];
                 for(let a = 0; a < points.length; a+=2){
-                    self.extremities.points.push({
-                        x: (points[a]   * radius * adjusted.scale) + adjusted.x,
-                        y: (points[a+1] * radius * adjusted.scale) + adjusted.y,
-                    });
+                    const push = detail+1.0 < a/2 ? height : 0;
+                    const P = library.math.cartesianAngleAdjust(
+                        points[a]*(width/2)*adjusted.scale,
+                        points[a+1]*(width/2)*adjusted.scale + push, 
+                        -adjusted.angle
+                    );
+                    self.extremities.points.push({ x:P.x+adjusted.x, y:P.y+adjusted.y });
                 }
                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
             //if told to do so, inform parent (if there is one) that extremities have changed
@@ -293,8 +310,9 @@ this.circleWithOutline = function(name,_id){
                 render.drawDot(self.extremities.boundingBox.topLeft.x,self.extremities.boundingBox.topLeft.y,2,{r:0,g:0,b:1,a:1});
                 render.drawDot(self.extremities.boundingBox.bottomRight.x,self.extremities.boundingBox.bottomRight.y,2,{r:0,g:0,b:1,a:1});
         };
-        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){
-            dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
+        this.render = function(context,offset={x:0,y:0,scale:1,angle:0}){     
+            dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development     
+
             //combine offset with shape's position, angle and scale to produce adjust value for render
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const adjust = { 
@@ -323,13 +341,12 @@ this.circleWithOutline = function(name,_id){
             report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
             report.info(self.getAddress(),'._dump -> ignored: '+ignored);
             report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-            report.info(self.getAddress(),'._dump -> lineColour: '+JSON.stringify(lineColour));
             report.info(self.getAddress(),'._dump -> x: '+x);
             report.info(self.getAddress(),'._dump -> y: '+y);
-            report.info(self.getAddress(),'._dump -> radius: '+radius);
+            report.info(self.getAddress(),'._dump -> width: '+width);
+            report.info(self.getAddress(),'._dump -> height: '+height);
             report.info(self.getAddress(),'._dump -> detail: '+detail);
             report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> thickness: '+thickness);
             report.info(self.getAddress(),'._dump -> static: '+static);
         };
     
@@ -340,7 +357,8 @@ this.circleWithOutline = function(name,_id){
             this.lineColour = self.lineColour;
             this.x = self.x;
             this.y = self.y;
-            this.radius = self.radius;
+            this.width = self.width;
+            this.height = self.height;
             this.scale = self.scale;
             this.thickness = self.thickness;
             this.static = self.static;
@@ -348,4 +366,46 @@ this.circleWithOutline = function(name,_id){
             this.getAddress = self.getAddress;
             this._dump = self._dump;
         };
+};
+
+_canvas_.core.meta.go = function(){
+
+    _canvas_.core.element.installElement( 'rectangleWithRoundEnds', rectangleWithRoundEnds );
+
+    setTimeout(()=>{
+        _canvas_.core.meta.createSetAppend(
+            'rectangle','test_rectangle_1', 
+            { 
+                x:10, y:10, width:60, height:60, 
+                colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
+            }
+        );
+        _canvas_.core.meta.createSetAppend(
+            'rectangleWithRoundEnds','test_rectangleWithRoundEnds_1', 
+            { 
+                x:110, y:40, width:60, height:120, detail:4, angle:1,
+                colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
+            }
+        );
+        _canvas_.core.meta.createSetAppend(
+            'rectangleWithRoundEnds','test_rectangleWithRoundEnds_2', 
+            { 
+                x:180, y:40, width:60, height:120, detail:3, angle:1,
+                colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
+            }
+        );
+        _canvas_.core.meta.createSetAppend(
+            'rectangleWithRoundEnds','test_rectangleWithRoundEnds_3', 
+            { 
+                x:250, y:40, width:60, height:120, detail:10, angle:1,
+                colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
+            }
+        );
+    },500);
+
+
+    setTimeout(()=>{
+        _canvas_.core.render.frame();
+    },1500);
+    
 };

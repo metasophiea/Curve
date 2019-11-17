@@ -69,6 +69,11 @@
                 communicationModule.run('element.getAvailableElements',[],resolve);
             });
         };
+        this.installElement = function(elementName,creatorMethod){
+            return new Promise((resolve, reject) => {
+                communicationModule.run('element.installElement',[elementName,_canvas_.library.misc.serialize(creatorMethod)],resolve);
+            });
+        };
         this.getCreatedElements = function(){
             return new Promise((resolve, reject) => {
                 communicationModule.run('element.getCreatedElements',[],resolve);
@@ -135,6 +140,11 @@
         };
         this.printTree = function(mode){
             communicationModule.run('arrangement.printTree',[mode]);
+        };
+        this.areParents = function(elementId,potentialParents=[]){
+            return new Promise((resolve, reject) => {
+                communicationModule.run('arrangement.areParents',[elementId,potentialParents],resolve);
+            });
         };
     };
 
