@@ -57,13 +57,13 @@ const arrangement = new function(){
         function recursivePrint(grouping,prefix=''){
             grouping.children.forEach(function(a){
                 if(mode == 'spaced'){
-                    console.log(prefix+'- '+a.name);
-                    if(a.type == 'group'){ recursivePrint(a, prefix+'- ') }
+                    console.log(prefix+' -  '+a.name+' ('+a.id+')');
+                    if(a.type == 'group'){ recursivePrint(a, prefix+' - ') }
                 }else if(mode == 'tabular'){
-                    console.log(prefix+'- \t'+a.name);
-                    if(a.type == 'group'){ recursivePrint(a, prefix+'-\t') }
+                    console.log(prefix+'\t-\t\t'+a.name+' ('+a.id+')');
+                    if(a.type == 'group'){ recursivePrint(a, prefix+'\t-\t') }
                 }else if(mode == 'address'){
-                    console.log(prefix+'/'+a.name);
+                    console.log(prefix+'/'+a.name+' ('+a.id+')');
                     if(a.type == 'group'){ recursivePrint(a, prefix+'/'+a.name) }
                 }
             });
@@ -73,4 +73,5 @@ const arrangement = new function(){
     };
 
     this._dump = function(){ design._dump(); };
+    // this.__ = design;
 };

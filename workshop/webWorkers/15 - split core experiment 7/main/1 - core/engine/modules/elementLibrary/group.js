@@ -18,8 +18,14 @@ this.group = function(name,_id){
                 if(a==undefined){return ignored;}     
                 ignored = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
-                computeExtremities();
+                if(allowComputeExtremities){computeExtremities();}
             };
+            
+        //advanced use attributes
+            let allowComputeExtremities = true;
+
+        //addressing
+            this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
         
         //attributes pertinent to extremity calculation
             let x = 0;     
@@ -32,79 +38,53 @@ this.group = function(name,_id){
                 if(a==undefined){return x;}     
                 x = a;     
                 dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
-                computeExtremities();
+                if(allowComputeExtremities){computeExtremities();}
             };
             this.y = function(a){ 
                 if(a==undefined){return y;}     
                 y = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
-                computeExtremities();
+                if(allowComputeExtremities){computeExtremities();}
             };
             this.angle = function(a){ 
                 if(a==undefined){return angle;} 
                 angle = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
-                computeExtremities();
+                if(allowComputeExtremities){computeExtremities();}
             };
             this.scale = function(a){ 
                 if(a==undefined){return scale;} 
                 scale = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
-                computeExtremities();
+                if(allowComputeExtremities){computeExtremities();}
             };
             this.heedCamera = function(a){
                 if(a==undefined){return heedCamera;}     
                 heedCamera = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.heedCamera('+a+')'); //#development
-                computeExtremities();
+                if(allowComputeExtremities){computeExtremities();}
             };
             this.static = function(a){
                 if(a==undefined){return static;}  
                 static = a;  
                 dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
-                computeExtremities();
+                if(allowComputeExtremities){computeExtremities();}
             };
+
+        //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return {x:x, y:y, angle:angle, scale:scale, ignored:ignored, heedCamera:heedCamera, static:static}; } 
+                if(attributes==undefined){ return { ignored:ignored, x:x, y:y, angle:angle, scale:scale, heedCamera:heedCamera, static:static }; } 
                 dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
 
-                if('ignored' in attributes){ 
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "ignored" to '+attributes.ignored); //#development
-                    ignored = attributes.ignored;
-                }
-
-                if('x' in attributes){ 
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "x" to '+attributes.x); //#development
-                    x = attributes.x;
-                }
-                if('y' in attributes){ 
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "y" to '+attributes.y); //#development
-                    y = attributes.y;
-                }
-                if('angle' in attributes){ 
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "angle" to '+attributes.angle); //#development
-                    angle = attributes.angle;
-                }
-                if('scale' in attributes){ 
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "scale" to '+attributes.scale); //#development
-                    scale = attributes.scale;
-                }
-                if('heedCamera' in attributes){ 
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "heedCamera" to '+attributes.heedCamera); //#development
-                    scale = attributes.heedCamera;
-                }
-                if('static' in attributes){ 
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "static" to '+attributes.static); //#development
-                    scale = attributes.static;
-                }
+                allowComputeExtremities = false;
+                Object.keys(attributes).forEach(key => {
+                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+attributes[key]); //#development
+                    self[key](attributes[key]);
+                });
+                allowComputeExtremities = true;
 
                 computeExtremities();
             };
-
-    //addressing
-        this.getAddress = function(){
-            return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name;
-        };
 
     //group functions
         let children = []; 
@@ -169,10 +149,10 @@ this.group = function(name,_id){
         this.getElementsUnderPoint = function(x,y){
             dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderPoint('+x+','+y+')'); //#development
 
-            var returnList = [];
+            let returnList = [];
 
             //run though children backwords (thus, front to back)
-            for(var a = children.length-1; a >= 0; a--){
+            for(let a = children.length-1; a >= 0; a--){
                 //if child wants to be ignored, just move on to the next one
                     if( children[a].ignored() ){ continue; }
 
@@ -191,10 +171,10 @@ this.group = function(name,_id){
         this.getElementsUnderArea = function(points){
             dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderArea('+points+')'); //#development
 
-            var returnList = [];
+            let returnList = [];
 
             //run though children backwords (thus, front to back)
-            for(var a = children.length-1; a >= 0; a--){
+            for(let a = children.length-1; a >= 0; a--){
                 //if child wants to be ignored, just move on to the next one
                     if( children[a].ignored() ){ continue; }
 
@@ -211,18 +191,18 @@ this.group = function(name,_id){
             return returnList;
         };
         this.getTree = function(){
-            var result = {name:this.name,type:type,children:[]};
+            const result = {name:this.name,type:type,id:this.getId(),children:[]};
 
             children.forEach(function(a){
                 if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
-                else{ result.children.push({ type:a.getType(), name:a.name }); }
+                else{ result.children.push({ type:a.getType(), name:a.name, id:a.getId() }); }
             });
 
             return result;
         };
 
     //clipping
-        var clipping = { stencil:undefined, active:false };
+        const clipping = { stencil:undefined, active:false };
         this.stencil = function(element){
             if(element == undefined){return clipping.stencil;}
             dev.log.elementLibrary(type,self.getAddress(),'.stencil('+JSON.stringify(element)+')'); //#development
@@ -240,18 +220,33 @@ this.group = function(name,_id){
     //extremities
         function calculateExtremitiesBox(){
             dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox()'); //#development
-            var limits = {left:0,right:0,top:0,bottom:0};
-            children.forEach(child => {
-                var tmp = library.math.boundingBoxFromPoints(child.extremities.points);
-                if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
-                else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
-                if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
-                else if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
-            });
+
+            let limits = {left:undefined,right:undefined,top:undefined,bottom:undefined};
+            if(children.length == 0){
+                dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> no children'); //#development
+                limits = {left:x,right:x,top:y,bottom:y};
+            }else{
+                dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> children.length: '+children.length); //#development
+                const firstChild = library.math.boundingBoxFromPoints(children[0].extremities.points);
+                dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> firstChild: '+JSON.stringify(firstChild)); //#development
+                limits = { left:firstChild.topLeft.x, right:firstChild.bottomRight.x, top:firstChild.bottomRight.y, bottom:firstChild.topLeft.y }
+
+                children.slice(1).forEach(child => {
+                    const tmp = library.math.boundingBoxFromPoints(child.extremities.points);
+                    dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> child: '+JSON.stringify(tmp)); //#development
+                    if( tmp.bottomRight.x > limits.right ){ limits.right = tmp.bottomRight.x; }
+                    else if( tmp.topLeft.x < limits.left ){ limits.left = tmp.topLeft.x; }
+                    if( tmp.bottomRight.y > limits.top ){ limits.top = tmp.bottomRight.y; }
+                    else if( tmp.topLeft.y < limits.bottom ){ limits.bottom = tmp.topLeft.y; }
+                });
+            }
+
             self.extremities.points = [ {x:limits.left,y:limits.top}, {x:limits.right,y:limits.top}, {x:limits.right,y:limits.bottom}, {x:limits.left,y:limits.bottom} ];
+            dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> self.extremities.points: '+JSON.stringify(self.extremities.points)); //#development
         }
         function updateExtremities(informParent=true){
-
+            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities()'); //#development
+           
             //generate extremity points
                 self.extremities.points = [];
 
@@ -266,6 +261,7 @@ this.group = function(name,_id){
 
             //generate bounding box from points
                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
+                dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> self.extremities.boundingBox: '+JSON.stringify(self.extremities.boundingBox)); //#development
 
             //update parent
                 if(informParent){ if(self.parent){self.parent.updateExtremities();} }
@@ -274,10 +270,10 @@ this.group = function(name,_id){
             dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities('+JSON.stringify(element)+')'); //#development
 
             //get offset from parent
-                var offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
             //combine offset with group's position, angle and scale to produce new offset for children
-                var point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                var newOffset = { 
+                const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                const newOffset = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale*scale,
@@ -297,17 +293,17 @@ this.group = function(name,_id){
             dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
-            //combine offset with group's position, angle and scale to produce new offset for chilren
-                var point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                var newOffset = { 
+                if(offset == undefined){ offset = self.parent && !static? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+            //combine offset with group's position, angle and scale to produce new offset for children
+                const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                const newOffset = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale*scale,
                     angle: offset.angle + angle,
                 };
             //run computeExtremities on all children
-                children.forEach(a => a.computeExtremities(false,newOffset));
+                children.forEach(child => child.computeExtremities(false,newOffset));
             //run computeExtremities on stencil (if applicable)
                 if( clipping.stencil != undefined ){ clipping.stencil.computeExtremities(false,newOffset); }
             //update extremities
@@ -317,10 +313,10 @@ this.group = function(name,_id){
             dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add('+JSON.stringify(element)+')'); //#development
 
             //get offset from parent
-                var offset = self.parent && !self.static() ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
             //combine offset with group's position, angle and scale to produce new offset for children
-                var point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                var newOffset = { 
+                const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                const newOffset = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale*scale,
@@ -349,7 +345,7 @@ this.group = function(name,_id){
             //otherwise the element is touching the boundary, in which case search through the children for another 
             //element that also touches the boundary, or find the closest element and adjust the boundary to touch that
 
-            var data = {
+            const data = {
                 topLeft:{
                     x: self.extremities.boundingBox.topLeft.x - element.extremities.boundingBox.topLeft.x,
                     y: self.extremities.boundingBox.topLeft.y - element.extremities.boundingBox.topLeft.y,
@@ -368,10 +364,10 @@ this.group = function(name,_id){
                         if(data[cornerName][axisName] == 0){
                             dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_remove -> '+cornerName+'_'+axisName+' is at boundary'); //#development
 
-                            var boundaryToucherFound = false;
-                            var closestToBoundary = {distance:undefined, position:undefined};
-                            for(var a = 0; a < children.length; a++){
-                                var tmp = Math.abs(children[a].extremities.boundingBox[cornerName][axisName] - self.extremities.boundingBox[cornerName][axisName]);
+                            let boundaryToucherFound = false;
+                            let closestToBoundary = {distance:undefined, position:undefined};
+                            for(let a = 0; a < children.length; a++){
+                                const tmp = Math.abs(children[a].extremities.boundingBox[cornerName][axisName] - self.extremities.boundingBox[cornerName][axisName]);
                                 if(closestToBoundary.distance == undefined || closestToBoundary.distance > tmp){
                                     closestToBoundary = { distance:tmp, position:children[a].extremities.boundingBox[cornerName][axisName] };
                                     if(closestToBoundary.distance == 0){ boundaryToucherFound = true; break; }
@@ -390,8 +386,8 @@ this.group = function(name,_id){
 
         this.getOffset = function(){
             if(this.parent){
-                var offset = this.parent.getOffset();
-                var point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                const offset = this.parent.getOffset();
+                const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 return { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
@@ -403,7 +399,6 @@ this.group = function(name,_id){
         this.computeExtremities = computeExtremities;
         this.updateExtremities = updateExtremities;
     
-
     //lead render
         function drawDotFrame(){
             //draw bounding box top left and bottom right points
@@ -413,8 +408,8 @@ this.group = function(name,_id){
         this.render = function(context, offset){
             dev.log.elementLibrary(type,self.getAddress(),'.render(-context-,'+JSON.stringify(offset)+')'); //#development
             //combine offset with group's position, angle and scale to produce new offset for children
-                var point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                var newOffset = { 
+                const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
+                const newOffset = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale*scale,
@@ -466,6 +461,9 @@ this.group = function(name,_id){
         this._dump = function(){
             report.info(self.getAddress(),'._dump()');
             report.info(self.getAddress(),'._dump -> id: '+id);
+            report.info(self.getAddress(),'._dump -> type: '+type);
+            report.info(self.getAddress(),'._dump -> name: '+self.name);
+            report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
             report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
             report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
             report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
@@ -505,7 +503,7 @@ this.group = function(name,_id){
             this.getElementsUnderPoint = function(x,y){ return element.getIdFromElement(self.getElementsUnderPoint(x,y)); };
             this.getElementsUnderArea = function(points){ return element.getIdFromElement(self.getElementsUnderArea(points)); };
             this.getTree = self.getTree;
-            this.stencil = self.stencil;
+            this.stencil = function(elementId){ return self.stencil(element.getElementFromId(elementId)); };
             this.clipActive = self.clipActive;
 
             this._dump = self._dump;

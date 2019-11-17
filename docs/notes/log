@@ -1,4 +1,51 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-11-17
+  CoreV3
+    - shifted the font code out from core into the library (where it seems more
+      natural)
+    - did up the library (again) to have the cool new logging
+    
+    unionPolygons is frightfully slow and is slowing the path element down
+    tremendously 
+
+
+2019-11-16
+  - oops; accidentally deleted the library tests somewhere along the way.. I
+    think I actually just moved them into the workshop instead of copying them
+    there, so an easy fix to put them back
+
+  CoreV3
+    - added the image element in
+    I can't add the canvas element like before, as you can't have a regular
+    canvas in a webWorker, only a webGl canvas. So, instead of implementing that,
+    I've expanded the image element so one can transfer in a canvas from the
+    main thread. Hopefully this will suffice.
+      Obviously this means that there's a lot more control given over to the
+    user, and no more 'resolution' controls. One must also be careful of
+    selecting the correct size of canvas to transfer into the image element
+
+
+2019-11-15
+  CoreV3
+    - added more shapes (only canvas and image left) though messed up the
+      unifiedAttribute method along the way for all of them (in a bid to make
+      things shorter, I totally forgot why they were long in the first place)
+    - rewrote (in a hurry) 'characterString', so that it new uses the group
+      element secretly inside itself, instead of being basically a
+      reimplementation of the group element 
+
+2019-11-14
+  CoreV3
+    - adjust the callback module, so that onmouseenterelement and
+      onmouseleaveelement act more for what is visible on screen, over what is
+      actually there. For example, now when two elements overlap, and the mouse
+      moves from over one of the elements to a location where the two overlap;
+      the system only considers the top-most element. It's as if the lower
+      element has had the upper shape cut away. In the past these elememts
+      would have been considered serperatly. (this should actually fix bug
+      [2019-08-03:1])
+
+
 2019-11-12
   CoreV3
     - began on draft 15, which is constructed more like how the actual system is

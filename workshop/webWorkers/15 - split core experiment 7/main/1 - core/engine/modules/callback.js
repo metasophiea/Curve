@@ -85,10 +85,12 @@ const callback = new function(){
 
         //onmousemove / onmouseenter / onmouseleave
             var elementMouseoverList = [];
+            const onMouseTransitionElement_visableOnly = true;
             this.coupling.onmousemove = function(event){
                 dev.log.callback('.coupling.onmousemove('+JSON.stringify(event)+')'); //#development
                 viewport.mousePosition(event.X,event.Y);
                 var elementsUnderPoint = arrangement.getElementsUnderPoint(event.X,event.Y);
+                if(onMouseTransitionElement_visableOnly){ elementsUnderPoint = elementsUnderPoint.length > 0 ? [elementsUnderPoint[0]] : []; }
                 dev.log.callback('.coupling.onmousemove -> elementsUnderPoint.length: '+elementsUnderPoint.length); //#development
                 var point = viewport.adapter.windowPoint2workspacePoint(event.X,event.Y);
                 dev.log.callback('.coupling.onmousemove -> workspace point: '+JSON.stringify(point)); //#development
@@ -101,8 +103,8 @@ const callback = new function(){
                         //elements only on elements list; add to elementMouseoverList
                         //elements only on elementMouseoverList; remove from elementMouseoverList
                         if(elementCallbackStates.onmouseenter){
-                            if(diff.b.length > 0){ self.functions.onmouseenterelement( point.x, point.y, event, diff.b); }
                             if(diff.a.length > 0){ self.functions.onmouseleaveelement( point.x, point.y, event, diff.a); }
+                            if(diff.b.length > 0){ self.functions.onmouseenterelement( point.x, point.y, event, diff.b); }
                         }
                         diff.b.forEach(function(element){ elementMouseoverList.push(element); });
                         diff.a.forEach(function(element){ elementMouseoverList.splice(elementMouseoverList.indexOf(element),1); });

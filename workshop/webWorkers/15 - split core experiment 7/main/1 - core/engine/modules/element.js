@@ -1,8 +1,10 @@
 const element = new function(){
     //element library
         const elementLibrary = new function(){
-            {{include:elementLibrary/*}} /**/
+            const elementLibrary = this;
+            {{include:elementLibrary/main.js}}
         };
+        this.__ = elementLibrary;
         this.getAvailableElements = function(){ 
             dev.log.element('.getAvailableElements()'); //#development
             return Object.keys(elementLibrary);
@@ -61,8 +63,8 @@ const element = new function(){
                 report.info('element._dump()');
                 Object.keys(elementLibrary).forEach(key => { report.info('element._dump -> elementLibrary: '+key); })
 
-                if(reatedElements.length == 0){ report.info('element._dump -> there are no created elements'); }
-                else if(reatedElements.length == 1){ report.info('element._dump -> there is 1 created element'); }
+                if(createdElements.length == 0){ report.info('element._dump -> there are no created elements'); }
+                else if(createdElements.length == 1){ report.info('element._dump -> there is 1 created element'); }
                 else{ report.info('element._dump -> there are '+createdElements.length+' created elements'); }
                 
                 createdElements.forEach(item => { report.info('element._dump -> createdElements: '+JSON.stringify(item)); });

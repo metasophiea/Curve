@@ -7,7 +7,9 @@
     
 //utility functions
     this.changeAudioParam = function(context,audioParam,target,time,curve,cancelScheduledValues=true){
-        library._control.logflow.log('audio.changeAudioParam'); //#development
+        dev.log.audio('.changeAudioParam(-context-,'+JSON.stringify(audioParam)+','+target+','+time+','+curve+','+cancelScheduledValues+')'); //#development
+        dev.count('.audio.changeAudioParam'); //#development
+    
         if(target==null){return audioParam.value;}
     
         if(cancelScheduledValues){ audioParam.cancelScheduledValues(0); }
@@ -23,9 +25,9 @@
                     audioParam.exponentialRampToValueAtTime(target, context.currentTime+time);
                 break;
                 case 's':
-                    var mux = target - audioParam.value;
-                    var array = library.math.curveGenerator.s(10);
-                    for(var a = 0; a < array.length; a++){
+                    const mux = target - audioParam.value;
+                    const array = library.math.curveGenerator.s(10);
+                    for(let a = 0; a < array.length; a++){
                         array[a] = audioParam.value + array[a]*mux;
                     }
                     audioParam.setValueCurveAtTime(new Float32Array(array), context.currentTime, time);
@@ -41,10 +43,12 @@
         }
     };
     this.loadAudioFile = function(callback,type='file',url=''){
-        library._control.logflow.log('audio.loadAudioFile'); //#development
+        dev.log.audio('.loadAudioFile('+JSON.stringify(callback)+','+type+','+url+')'); //#development
+        dev.count('.audio.loadAudioFile'); //#development
+    
         switch(type){
             case 'url': 
-                var request = new XMLHttpRequest();
+                const request = new XMLHttpRequest();
                 request.open('GET', url, true);
                 request.responseType = 'arraybuffer';
                 request.onload = function(){
@@ -59,11 +63,11 @@
                 request.send();
             break;
             case 'file': default:
-                var inputObject = document.createElement('input');
+                const inputObject = document.createElement('input');
                 inputObject.type = 'file';
                 inputObject.onchange = function(){
-                    var file = this.files[0];
-                    var fileReader = new FileReader();
+                    const file = this.files[0];
+                    const fileReader = new FileReader();
                     fileReader.readAsArrayBuffer(file);
                     fileReader.onload = function(data){
                         library.audio.context.decodeAudioData(data.target.result, function(buffer){
@@ -82,18 +86,20 @@
         }
     };
     this.waveformSegment = function(audioBuffer, bounds={start:0,end:1}, resolution=10000){
-        library._control.logflow.log('audio.waveformSegment'); //#development
-        var waveform = audioBuffer.getChannelData(0);
+        dev.log.audio('.waveformSegment('+JSON.stringify(audioBuffer)+','+JSON.stringify(bounds)+','+resolution+')'); //#development
+        dev.count('.audio.waveformSegment'); //#development
+    
+        const waveform = audioBuffer.getChannelData(0);
         // var channelCount = audioBuffer.numberOfChannels;
     
         bounds.start = bounds.start ? bounds.start : 0;
         bounds.end = bounds.end ? bounds.end : 1;
-        var start = audioBuffer.length*bounds.start;
-        var end = audioBuffer.length*bounds.end;
-        var step = (end - start)/resolution;
+        const start = audioBuffer.length*bounds.start;
+        const end = audioBuffer.length*bounds.end;
+        const step = (end - start)/resolution;
     
-        var outputArray = [];
-        for(var a = start; a < end; a+=Math.round(step)){
+        const outputArray = [];
+        for(let a = start; a < end; a+=Math.round(step)){
             outputArray.push( 
                 library.math.largestValueFound(
                     waveform.slice(a, a+Math.round(step))
@@ -104,8 +110,10 @@
         return outputArray;
     };
     this.loadBuffer = function(context, data, destination, onended){
-        library._control.logflow.log('audio.loadBuffer'); //#development
-        var temp = context.createBufferSource();
+        dev.log.audio('.loadBuffer(-context-,'+JSON.stringify(data)+','+destination+','+onended+')'); //#development
+        dev.count('.audio.loadBuffer'); //#development
+    
+        const temp = context.createBufferSource();
         temp.buffer = data;
         temp.connect(destination);
         temp.onended = onended;
@@ -124,6 +132,9 @@
     this.destination.connect(this.context.destination);
     this.destination._gain = 1;
     this.destination.masterGain = function(value){
+        dev.log.audio('.masterGain('+value+')'); //#development
+        dev.count('.audio.masterGain'); //#development
+    
         if(value == undefined){return this.destination._gain;}
         this._gain = value;
         library.audio.changeAudioParam(library.audio.context, this.gain, this._gain, 0.01, 'instant', true);
@@ -152,21 +163,21 @@
         //generate forward index
         // eg. {... '4C':261.6, '4C#':277.2 ...}
             this.names_frequencies = {};
-            var octaves = Object.entries(this.names_frequencies_split);
-            for(var a = 0; a < octaves.length; a++){
-                var names = Object.entries(this.names_frequencies_split[a]);
-                for(var b = 0; b < names.length; b++){
-                    this.names_frequencies[ octaves[a][0]+names[b][0] ] = names[b][1];
-                }
-            }
+            Object.entries(this.names_frequencies_split).forEach((octave,index) => {
+                Object.entries(this.names_frequencies_split[index]).forEach(name => {
+                    this.names_frequencies[ octave[0]+name[0] ] = name[1];
+                });
+            });
+
         //generate backward index
         // eg. {... 261.6:'4C', 277.2:'4C#' ...}
             this.frequencies_names = {};
-            var temp = Object.entries(this.names_frequencies);
-            for(var a = 0; a < temp.length; a++){ this.frequencies_names[temp[a][1]] = temp[a][0]; }
+            Object.entries(this.names_frequencies).forEach(entry => {
+                this.frequencies_names[entry[1]] = entry[0];
+            });
 
     //generate midi notes index
-        var temp = [
+        const noteNames = [
             '0C', '0C#', '0D', '0D#', '0E', '0F', '0F#', '0G', '0G#', '0A', '0A#', '0B',
             '1C', '1C#', '1D', '1D#', '1E', '1F', '1F#', '1G', '1G#', '1A', '1A#', '1B',
             '2C', '2C#', '2D', '2D#', '2E', '2F', '2F#', '2G', '2G#', '2A', '2A#', '2B',
@@ -179,22 +190,51 @@
         ];
         //generate forward index
             this.midinumbers_names = {};
-            for(var a = 0; a < temp.length; a++){
-                this.midinumbers_names[a+24] = temp[a];
-            }
+            noteNames.forEach((entry,index) => {
+                this.midinumbers_names[index+24] = entry;
+            });
         //generate backward index
             this.names_midinumbers = {};
-            var temp = Object.entries(this.midinumbers_names);
-            for(var a = 0; a < temp.length; a++){ 
-                this.names_midinumbers[temp[a][1]] = parseInt(temp[a][0]);
-            }
+            Object.entries(this.midinumbers_names).forEach(entry => {
+                this.names_midinumbers[entry[1]] = parseInt(entry[0]);
+            });
 
     //lead functions
-        this.num2name = function(num){ return this.midinumbers_names[num]; };
-        this.num2freq = function(num){ return this.names_frequencies[this.midinumbers_names[num]]; };
+        this.num2name = function(num){ 
+            dev.log.audio('.num2name('+num+')'); //#development
+            dev.count('.audio.num2name'); //#development
+    
+            return this.midinumbers_names[num];
+        };
+        this.num2freq = function(num){ 
+            dev.log.audio('.num2freq('+num+')'); //#development
+            dev.count('.audio.num2freq'); //#development
+    
+            return this.names_frequencies[this.midinumbers_names[num]];
+        };
 
-        this.name2num = function(name){ return this.names_midinumbers[name]; };
-        this.name2freq = function(name){ return this.names_frequencies[name]; };
+        this.name2num = function(name){ 
+            dev.log.audio('.name2num('+name+')'); //#development
+            dev.count('.audio.name2num'); //#development
+    
+            return this.names_midinumbers[name];
+        };
+        this.name2freq = function(name){ 
+            dev.log.audio('.name2freq(-'+name+')'); //#development
+            dev.count('.audio.name2freq'); //#development
+    
+            return this.names_frequencies[name];
+        };
 
-        this.freq2num = function(freq){ return this.names_midinumbers[this.frequencies_names[freq]]; };
-        this.freq2name = function(freq){ return this.frequencies_names[freq]; };
+        this.freq2num = function(freq){ 
+            dev.log.audio('.freq2num('+freq+')'); //#development
+            dev.count('.audio.freq2num'); //#development
+    
+            return this.names_midinumbers[this.frequencies_names[freq]];
+        };
+        this.freq2name = function(freq){ 
+            dev.log.audio('.freq2name(-'+freq+')'); //#development
+            dev.count('.audio.freq2name'); //#development
+    
+            return this.frequencies_names[freq];
+        };

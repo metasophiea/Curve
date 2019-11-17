@@ -8,7 +8,9 @@
         };
         this.refresh = function(){
             dev.log.interface('.refresh()'); //#development
-            communicationModule.run('refresh',[]);
+            return new Promise((resolve, reject) => {
+                communicationModule.run('refresh',[],resolve);
+            });
         };
         this.createSetAppend = function(type,name,setList,appendingGroup){
             dev.log.interface('.createSetAppend('+type+','+name+','+JSON.stringify(setList)+','+appendingGroup+')'); //#development
@@ -88,9 +90,9 @@
                 communicationModule.run('element.getTypeById',[id],resolve);
             });
         };
-        this.executeMethod = function(id,method,argumentList=[]){
+        this.executeMethod = function(id,method,argumentList=[],transferableArguments){
             return new Promise((resolve, reject) => {
-                communicationModule.run('element.executeMethod',[id,method,argumentList],resolve);
+                communicationModule.run('element.executeMethod',[id,method,argumentList],resolve,transferableArguments);
             });
         };
     };

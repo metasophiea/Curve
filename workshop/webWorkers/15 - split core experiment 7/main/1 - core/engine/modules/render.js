@@ -266,6 +266,12 @@ const render = new function(){
 
     //misc
         this.getCanvasSize = function(){ return {width:pageData.currentCanvasSize.width/pageData.devicePixelRatio, height:pageData.currentCanvasSize.height/pageData.devicePixelRatio}; };
+        this.drawDot = function(x,y,r=2,colour={r:1,g:0,b:0,a:1}){
+            const dot = element.create_skipDatabase('circle','core-drawDot-dot');
+            dot.dotFrame = false;
+            dot.unifiedAttribute({x:x, y:y, radius:r, colour:colour});
+            dot.render(context);
+        };
         this._dump = function(){
             report.info('render._dump()');
             report.info('render._dump -> pageData: '+JSON.stringify(pageData));

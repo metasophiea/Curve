@@ -1,27 +1,33 @@
 this.averageArray = function(array){
-    library._control.logflow.log('math.averageArray'); //#development
+    dev.log.math('.averageArray('+JSON.stringify(array)+')'); //#development
+    dev.count('.math.averageArray'); //#development
+
     // return array.reduce( ( p, c ) => p + c, 0 ) / array.length
 
     //this seems to be a little faster
-    var sum = array[0];
-    for(var a = 1; a < array.length; a++){ sum += array[a]; }
+    let sum = array[0];
+    for(let a = 1; a < array.length; a++){ sum += array[a]; }
     return sum/array.length;
 };
 this.averagePoint = function(points){
-    library._control.logflow.log('math.averagePoint'); //#development
-    var sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
+    dev.log.math('.averagePoint('+JSON.stringify(points)+')'); //#development
+    dev.count('.math.averagePoint'); //#development
+
+    const sum = points.reduce((a,b) => {return {x:(a.x+b.x),y:(a.y+b.y)};} );
     return {x:sum.x/points.length,y:sum.y/points.length};
 };
 this.boundingBoxFromPoints = function(points){
-    library._control.logflow.log('math.boundingBoxFromPoints'); //#development
+    dev.log.math('.boundingBoxFromPoints('+JSON.stringify(points)+')'); //#development
+    dev.count('.math.boundingBoxFromPoints'); //#development
+
     if(points.length == 0){
         return { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
     }
 
-    var left = points[0].x; var right = points[0].x;
-    var top = points[0].y;  var bottom = points[0].y;
+    let left = points[0].x; let right = points[0].x;
+    let top = points[0].y;  let bottom = points[0].y;
 
-    for(var a = 1; a < points.length; a++){
+    for(let a = 1; a < points.length; a++){
         if( points[a].x < left ){ left = points[a].x; }
         else if(points[a].x > right){ right = points[a].x; }
 
@@ -35,7 +41,8 @@ this.boundingBoxFromPoints = function(points){
     };
 };
 this.cartesianAngleAdjust = function(x,y,angle){
-    library._control.logflow.log('math.cartesianAngleAdjust'); //#development
+    dev.log.math('.cartesianAngleAdjust('+x+','+y+','+angle+')'); //#development
+    dev.count('.math.cartesianAngleAdjust'); //#development
 
     // //v1    
     //     if(angle == 0){ return {x:x,y:y}; }
@@ -53,11 +60,15 @@ this.cartesianAngleAdjust = function(x,y,angle){
 };
 this.convertColour = new function(){
     this.obj2rgba = function(obj){
-        library._control.logflow.log('math.convertColour.obj2rgba'); //#development
+        dev.log.math('.convertColour.obj2rgba('+JSON.stringify(obj)+')'); //#development
+        dev.count('.math.convertColour.obj2rgba'); //#development
+
         return 'rgba('+obj.r*255+','+obj.g*255+','+obj.b*255+','+obj.a+')';
     };
     this.rgba2obj = function(rgba){
-        library._control.logflow.log('math.convertColour.rgba2obj'); //#development
+        dev.log.math('.convertColour.rgba2obj('+JSON.stringify(rgba)+')'); //#development
+        dev.count('.convertColour.rgba2obj'); //#development
+
         rgba = rgba.split(',');
         rgba[0] = rgba[0].replace('rgba(', '');
         rgba[3] = rgba[3].replace(')', '');
@@ -67,89 +78,99 @@ this.convertColour = new function(){
 };
 this.curveGenerator = new function(){
     this.linear = function(stepCount=2, start=0, end=1){
-        library._control.logflow.log('math.curveGenerator.linear'); //#development
+        dev.log.math('.curveGenerator.linear('+stepCount+','+start+','+end+')'); //#development
+        dev.count('.math.curveGenerator.linear'); //#development
+
         stepCount = Math.abs(stepCount)-1; var outputArray = [0];
-        for(var a = 1; a < stepCount; a++){ 
+        for(let a = 1; a < stepCount; a++){ 
             outputArray.push(a/stepCount);
         }
         outputArray.push(1); 
 
-        var mux = end-start;
-        for(var a = 0 ; a < outputArray.length; a++){
+        const mux = end-start;
+        for(let a = 0 ; a < outputArray.length; a++){
             outputArray[a] = outputArray[a]*mux + start;
         }
 
         return outputArray;
     };
     this.sin = function(stepCount=2, start=0, end=1){
-        library._control.logflow.log('math.curveGenerator.sin'); //#development
+        dev.log.math('.curveGenerator.sin('+stepCount+','+start+','+end+')'); //#development
+        dev.count('.math.curveGenerator.sin'); //#development
+
         stepCount = Math.abs(stepCount) -1;
-        var outputArray = [0];
-        for(var a = 1; a < stepCount; a++){ 
+        let outputArray = [0];
+        for(let a = 1; a < stepCount; a++){ 
             outputArray.push(
                 Math.sin( Math.PI/2*(a/stepCount) )
             );
         }
         outputArray.push(1); 
 
-        var mux = end-start;
-        for(var a = 0 ; a < outputArray.length; a++){
+        const mux = end-start;
+        for(let a = 0 ; a < outputArray.length; a++){
             outputArray[a] = outputArray[a]*mux + start;
         }
 
         return outputArray;		
     };
     this.cos = function(stepCount=2, start=0, end=1){
-        library._control.logflow.log('math.curveGenerator.cos'); //#development
+        dev.log.math('.curveGenerator.cos('+stepCount+','+start+','+end+')'); //#development
+        dev.count('.math.curveGenerator.cos'); //#development
+
         stepCount = Math.abs(stepCount) -1;
-        var outputArray = [0];
-        for(var a = 1; a < stepCount; a++){ 
+        let outputArray = [0];
+        for(let a = 1; a < stepCount; a++){ 
             outputArray.push(
                 1 - Math.cos( Math.PI/2*(a/stepCount) )
             );
         }
         outputArray.push(1); 
 
-        var mux = end-start;
-        for(var a = 0 ; a < outputArray.length; a++){
+        const mux = end-start;
+        for(let a = 0 ; a < outputArray.length; a++){
             outputArray[a] = outputArray[a]*mux + start;
         }
 
         return outputArray;	
     };
     this.s = function(stepCount=2, start=0, end=1, sharpness=8){
-        library._control.logflow.log('math.curveGenerator.s'); //#development
+        dev.log.math('.curveGenerator.s('+stepCount+','+start+','+end+','+sharpness+')'); //#development
+        dev.count('.math.curveGenerator.s'); //#development
+
         if(sharpness == 0){sharpness = 1/1000000;}
 
-        var curve = [];
-        for(var a = 0; a < stepCount; a++){
+        let curve = [];
+        for(let a = 0; a < stepCount; a++){
             curve.push(
                 1/( 1 + Math.exp(-sharpness*((a/stepCount)-0.5)) )
             );
         }
 
-        var outputArray = library.math.normalizeStretchArray(curve);
+        const outputArray = library.math.normalizeStretchArray(curve);
 
-        var mux = end-start;
-        for(var a = 0 ; a < outputArray.length; a++){
+        const mux = end-start;
+        for(let a = 0 ; a < outputArray.length; a++){
             outputArray[a] = outputArray[a]*mux + start;
         }
 
         return outputArray;
     };
     this.exponential = function(stepCount=2, start=0, end=1, sharpness=2){
-        library._control.logflow.log('math.curveGenerator.exponential'); //#development
-        var stepCount = stepCount-1;
-        var outputArray = [];
+        dev.log.math('.curveGenerator.exponential('+stepCount+','+start+','+end+','+sharpness+')'); //#development
+        dev.count('.math.curveGenerator.exponential'); //#development
+
+        stepCount = stepCount-1;
+        let outputArray = [];
         
-        for(var a = 0; a <= stepCount; a++){
+        for(let a = 0; a <= stepCount; a++){
             outputArray.push( (Math.exp(sharpness*(a/stepCount))-1)/(Math.E-1) ); // Math.E == Math.exp(1)
         }
 
         outputArray = library.math.normalizeStretchArray(outputArray);
 
-        var mux = end-start;
-        for(var a = 0 ; a < outputArray.length; a++){
+        const mux = end-start;
+        for(let a = 0 ; a < outputArray.length; a++){
             outputArray[a] = outputArray[a]*mux + start;
         }
 
@@ -158,19 +179,28 @@ this.curveGenerator = new function(){
 };
 this.curvePoint = new function(){
     this.linear = function(x=0.5, start=0, end=1){
-        library._control.logflow.log('math.curvePoint.linear'); //#development
+        dev.log.math('.curvePoint.linear('+x+','+start+','+end+')'); //#development
+        dev.count('.math.curvePoint.linear'); //#development
+
         return x *(end-start)+start;
     };
     this.sin = function(x=0.5, start=0, end=1){
-        library._control.logflow.log('math.curvePoint.sin'); //#development
+        dev.log.math('.curvePoint.sin('+x+','+start+','+end+')'); //#development
+        dev.count('.math.curvePoint.sin'); //#development
+
         return Math.sin(Math.PI/2*x) *(end-start)+start;
     };
     this.cos = function(x=0.5, start=0, end=1){
+        dev.log.math('.curvePoint.cos('+x+','+start+','+end+')'); //#development
+        dev.count('.math.curvePoint.cos'); //#development
+
         return (1-Math.cos(Math.PI/2*x)) *(end-start)+start;
     };
     this.s = function(x=0.5, start=0, end=1, sharpness=8){
-        library._control.logflow.log('math.curvePoint.s'); //#development
-        var temp = library.math.normalizeStretchArray([
+        dev.log.math('.curvePoint.s('+x+','+start+','+end+','+sharpness+')'); //#development
+        dev.count('.math.curvePoint.s'); //#development
+
+        const temp = library.math.normalizeStretchArray([
             1/( 1 + Math.exp(-sharpness*(0-0.5)) ),
             1/( 1 + Math.exp(-sharpness*(x-0.5)) ),
             1/( 1 + Math.exp(-sharpness*(1-0.5)) ),
@@ -178,8 +208,10 @@ this.curvePoint = new function(){
         return temp[1] *(end-start)+start;
     };
     this.exponential = function(x=0.5, start=0, end=1, sharpness=2){
-        library._control.logflow.log('math.curvePoint.exponential'); //#development
-        var temp = library.math.normalizeStretchArray([
+        dev.log.math('.curvePoint.exponential('+x+','+start+','+end+','+sharpness+')'); //#development
+        dev.count('.math.curvePoint.exponential'); //#development
+
+        const temp = library.math.normalizeStretchArray([
             (Math.exp(sharpness*0)-1)/(Math.E-1),
             (Math.exp(sharpness*x)-1)/(Math.E-1),
             (Math.exp(sharpness*1)-1)/(Math.E-1),
@@ -188,28 +220,33 @@ this.curvePoint = new function(){
     };
 };
 this.detectOverlap = new function(){
-    var detectOverlap = this;
+    const detectOverlap = this;
 
     this.boundingBoxes = function(a, b){
-        library._control.logflow.log('math.detectOverlap.boundingBoxes'); //#development
+        dev.log.math('.detectOverlap.boundingBoxes('+JSON.stringify(a)+','+JSON.stringify(b)+')'); //#development
+        dev.count('.math.detectOverlap.boundingBoxes'); //#development
+
         return a.bottomRight.y >= b.topLeft.y && 
             a.bottomRight.x >= b.topLeft.x && 
             a.topLeft.y <= b.bottomRight.y && 
             a.topLeft.x <= b.bottomRight.x;
     };
     this.pointWithinBoundingBox = function(point,box){
-        library._control.logflow.log('math.detectOverlap.pointWithinBoundingBox'); //#development
+        dev.log.math('.detectOverlap.pointWithinBoundingBox('+JSON.stringify(point)+','+JSON.stringify(box)+')'); //#development
+        dev.count('.math.detectOverlap.pointWithinBoundingBox'); //#development
+
         return !(
             point.x < box.topLeft.x     ||  point.y < box.topLeft.y     ||
             point.x > box.bottomRight.x ||  point.y > box.bottomRight.y
         );
     };
     this.pointWithinPoly = function(point,points){
-        library._control.logflow.log('math.detectOverlap.pointWithinPoly'); //#development
-        //Ray casting algorithm
+        dev.log.math('.detectOverlap.pointWithinPoly('+JSON.stringify(point)+','+JSON.stringify(points)+')'); //#development
+        dev.count('.math.detectOverlap.pointWithinPoly'); //#development
 
-        var inside = false;
-        for(var a = 0, b = points.length - 1; a < points.length; b = a++){
+        //Ray casting algorithm
+        let inside = false;
+        for(let a = 0, b = points.length - 1; a < points.length; b = a++){
             //if the point is on a point of the poly; bail and return true
             if( point.x == points[a].x && point.y == points[a].y ){ return true; }
 
@@ -220,14 +257,15 @@ this.detectOverlap = new function(){
                     inside = !inside;
                 }else{
                     //calculate what side of the line this point is
+                        let areaLocation;
                         if( points[b].y > points[a].y && points[b].x > points[a].x ){
-                            var areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
+                            areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) - (point.y-points[a].y)/(points[b].y-points[a].y) + 1;
                         }else if( points[b].y <= points[a].y && points[b].x <= points[a].x ){
-                            var areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
+                            areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) - (point.y-points[b].y)/(points[a].y-points[b].y) + 1;
                         }else if( points[b].y > points[a].y && points[b].x < points[a].x ){
-                            var areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
+                            areaLocation = (point.x-points[b].x)/(points[a].x-points[b].x) + (point.y-points[a].y)/(points[b].y-points[a].y);
                         }else if( points[b].y <= points[a].y && points[b].x >= points[a].x ){
-                            var areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
+                            areaLocation = (point.x-points[a].x)/(points[b].x-points[a].x) + (point.y-points[b].y)/(points[a].y-points[b].y);
                         }
 
                     //if its on the line, return true immediatly, if it's just above 1 do a flip
@@ -242,12 +280,14 @@ this.detectOverlap = new function(){
         return inside;
     };
     this.lineSegments = function(segment1, segment2){
-        library._control.logflow.log('math.detectOverlap.lineSegments'); //#development
-        var denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
+        dev.log.math('.detectOverlap.lineSegments('+JSON.stringify(segment1)+','+JSON.stringify(segment2)+')'); //#development
+        dev.count('.math.detectOverlap.lineSegments'); //#development
+
+        const denominator = (segment2[1].y-segment2[0].y)*(segment1[1].x-segment1[0].x) - (segment2[1].x-segment2[0].x)*(segment1[1].y-segment1[0].y);
         if(denominator == 0){return null;}
 
-        var u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
-        var u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;;
+        const u1 = ((segment2[1].x-segment2[0].x)*(segment1[0].y-segment2[0].y) - (segment2[1].y-segment2[0].y)*(segment1[0].x-segment2[0].x))/denominator;
+        const u2 = ((segment1[1].x-segment1[0].x)*(segment1[0].y-segment2[0].y) - (segment1[1].y-segment1[0].y)*(segment1[0].x-segment2[0].x))/denominator;
         return {
             'x':      (segment1[0].x + u1*(segment1[1].x-segment1[0].x)),
             'y':      (segment1[0].y + u1*(segment1[1].y-segment1[0].y)),
@@ -256,24 +296,26 @@ this.detectOverlap = new function(){
         };
     };
     this.overlappingPolygons = function(points_a,points_b){
-        library._control.logflow.log('math.detectOverlap.overlappingPolygons'); //#development
+        dev.log.math('.detectOverlap.overlappingPolygons('+JSON.stringify(points_a)+','+JSON.stringify(points_b)+')'); //#development
+        dev.count('.math.detectOverlap.overlappingPolygons'); //#development
+
         //a point from A is in B
-            for(var a = 0; a < points_a.length; a++){
+            for(let a = 0; a < points_a.length; a++){
                 if(detectOverlap.pointWithinPoly(points_a[a],points_b)){ return true; }
             }
 
         //a point from B is in A
-            for(var a = 0; a < points_b.length; a++){
+            for(let a = 0; a < points_b.length; a++){
                 if(detectOverlap.pointWithinPoly(points_b[a],points_a)){ return true; }
             }
 
         //side intersection
-            var a_indexing = Array.apply(null, {length: points_a.length}).map(Number.call, Number).concat([0]);
-            var b_indexing = Array.apply(null, {length: points_b.length}).map(Number.call, Number).concat([0]);
+            const a_indexing = Array.apply(null, {length: points_a.length}).map(Number.call, Number).concat([0]);
+            const b_indexing = Array.apply(null, {length: points_b.length}).map(Number.call, Number).concat([0]);
 
-            for(var a = 0; a < a_indexing.length-1; a++){
-                for(var b = 0; b < b_indexing.length-1; b++){
-                    var tmp = detectOverlap.lineSegments( 
+            for(let a = 0; a < a_indexing.length-1; a++){
+                for(let b = 0; b < b_indexing.length-1; b++){
+                    const tmp = detectOverlap.lineSegments( 
                         [ points_a[a_indexing[a]], points_a[a_indexing[a+1]] ],
                         [ points_b[b_indexing[b]], points_b[b_indexing[b+1]] ]
                     );
@@ -284,8 +326,10 @@ this.detectOverlap = new function(){
         return false;
     };
     this.overlappingPolygonWithPolygons = function(poly,polys){ 
-        library._control.logflow.log('math.detectOverlap.overlappingPolygonWithPolygons'); //#development
-        for(var a = 0; a < polys.length; a++){
+        dev.log.math('.detectOverlap.overlappingPolygonWithPolygons('+JSON.stringify(poly)+','+JSON.stringify(polys)+')'); //#development
+        dev.count('.math.detectOverlap.overlappingPolygonWithPolygons'); //#development
+
+        for(let a = 0; a < polys.length; a++){
             if(detectOverlap.boundingBoxes(poly.boundingBox, polys[a].boundingBox)){
                 if(detectOverlap.overlappingPolygons(poly.points, polys[a].points)){
                     return true;
@@ -296,9 +340,12 @@ this.detectOverlap = new function(){
     };
 
     function overlappingLineWithPolygon(line,poly){
+        dev.log.math('.detectOverlap::overlappingLineWithPolygon('+JSON.stringify(line)+','+JSON.stringify(poly)+')'); //#development
+        dev.count('.math.detectOverlap::overlappingLineWithPolygon'); //#development
+
         //go through every side of the poly, and if one of them collides with the line, return true
-        for(var a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
-            var tmp = library.math.detectOverlap.lineSegments(
+        for(let a = poly.points.length-1, b = 0; b < poly.points.length; a = b++){
+            const tmp = library.math.detectOverlap.lineSegments(
                 [
                     { x:line.x1, y:line.y1 },
                     { x:line.x2, y:line.y2 }
@@ -314,9 +361,11 @@ this.detectOverlap = new function(){
         return false;
     };
     this.overlappingLineWithPolygons = function(line,polys){
-        library._control.logflow.log('math.detectOverlap.overlappingLineWithPolygons'); //#development
+        dev.log.math('.detectOverlap.overlappingLineWithPolygons('+JSON.stringify(line)+','+JSON.stringify(polys)+')'); //#development
+        dev.count('.math.detectOverlap.overlappingLineWithPolygons'); //#development
+
         //generate a bounding box for the line
-            var line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
+            const line_boundingBox = { topLeft:{x:0,y:0}, bottomRight:{x:0,y:0} };
             if(line.x1 > line.x2){
                 line_boundingBox.topLeft.x = line.x2;
                 line_boundingBox.bottomRight.x = line.x1;
@@ -333,7 +382,7 @@ this.detectOverlap = new function(){
             }
 
         //gather the indexes of the polys that collide with this line
-            var collidingPolyIndexes = [];
+            const collidingPolyIndexes = [];
             polys.forEach((poly,index) => {
                 if( !library.math.detectOverlap.boundingBoxes(line_boundingBox,poly.boundingBox) ){return;}
                 if( overlappingLineWithPolygon(line,poly) ){ collidingPolyIndexes.push(index); }
@@ -343,12 +392,14 @@ this.detectOverlap = new function(){
     };
 };
 this.getAngleOfTwoPoints = function(point_1,point_2){
-    library._control.logflow.log('math.getAngleOfTwoPoints'); //#development
+    dev.log.math('.getAngleOfTwoPoints('+JSON.stringify(point_1)+','+JSON.stringify(point_2)+')'); //#development
+    dev.count('.math.getAngleOfTwoPoints'); //#development
+
     if(point_1.x == point_2.x && point_1.y == point_2.y){return 0;}
 
-    var xDelta = point_2.x - point_1.x;
-    var yDelta = point_2.y - point_1.y;
-    var angle = Math.atan( yDelta/xDelta );
+    const xDelta = point_2.x - point_1.x;
+    const yDelta = point_2.y - point_1.y;
+    let angle = Math.atan( yDelta/xDelta );
 
     if(xDelta < 0){ angle = Math.PI + angle; }
     else if(yDelta < 0){ angle = Math.PI*2 + angle; }
@@ -356,10 +407,12 @@ this.getAngleOfTwoPoints = function(point_1,point_2){
     return angle;
 };
 this.getDifferenceOfArrays = function(array_a,array_b){
-    library._control.logflow.log('math.getDifferenceOfArrays'); //#development
+    dev.log.math('.getDifferenceOfArrays('+JSON.stringify(array_a)+','+JSON.stringify(array_b)+')'); //#development
+    dev.count('.math.getDifferenceOfArrays'); //#development
+
     function arrayRemovals(a,b){
         a.forEach(item => {
-            var i = b.indexOf(item);
+            let i = b.indexOf(item);
             if(i != -1){ b.splice(i,1); }
         });
         return b;
@@ -371,12 +424,14 @@ this.getDifferenceOfArrays = function(array_a,array_b){
     };
 };
 this.getIndexOfSequence = function(array,sequence){ 
-    library._control.logflow.log('math.getIndexOfSequence'); //#development
+    dev.log.math('.getIndexOfSequence('+JSON.stringify(array)+','+JSON.stringify(sequence)+')'); //#development
+    dev.count('.math.getIndexOfSequence'); //#development
+
     function comp(thing_A,thing_B){
-        var keys = Object.keys(thing_A);
+        const keys = Object.keys(thing_A);
         if(keys.length == 0){ return thing_A == thing_B; }
 
-        for(var a = 0; a < keys.length; a++){
+        for(let a = 0; a < keys.length; a++){
             if( !thing_B.hasOwnProperty(keys[a]) ){ return false; }
             if( thing_A[keys[a]] != thing_B[keys[a]] ){ return false; }
         }
@@ -385,11 +440,11 @@ this.getIndexOfSequence = function(array,sequence){
 
     if(array.length == 0 || sequence.length == 0){return undefined;}
 
-    var index = 0;
+    let index = 0;
     for(index = 0; index < array.length - sequence.length + 1; index++){
         if( comp(array[index], sequence[0]) ){
-            var match = true;
-            for(var a = 1; a < sequence.length; a++){
+            let match = true;
+            for(let a = 1; a < sequence.length; a++){
                 if( !comp(array[index+a],sequence[a]) ){
                     match = false;
                     break;
@@ -402,13 +457,18 @@ this.getIndexOfSequence = function(array,sequence){
     return undefined;
 };
 this.largestValueFound = function(array){
+    dev.log.math('.largestValueFound('+JSON.stringify(array)+')'); //#development
+    dev.count('.math.largestValueFound'); //#development
+
     if(array.length == 0){return undefined;}
     return array.reduce(function(max,current){
         return Math.abs(max) > Math.abs(current) ? max : current;
     });
 };
 this.normalizeStretchArray = function(array){
-    library._control.logflow.log('math.normalizeStretchArray'); //#development
+    dev.log.math('.normalizeStretchArray('+JSON.stringify(array)+')'); //#development
+    dev.count('.math.normalizeStretchArray'); //#development
+
     //discover the largest number
         var biggestIndex = array.reduce( function(oldIndex, currentValue, index, array){ return currentValue > array[oldIndex] ? index : oldIndex; }, 0);
 
@@ -423,21 +483,26 @@ this.normalizeStretchArray = function(array){
 
     return array;
 };
-
 this.relativeDistance = function(realLength, start,end, d, allowOverflow=false){
-    library._control.logflow.log('math.relativeDistance'); //#development
-    var mux = (d - start)/(end - start);
+    dev.log.math('.relativeDistance('+realLength+','+start+','+end+','+d+','+allowOverflow+')'); //#development
+    dev.count('.math.relativeDistance'); //#development
+
+    const mux = (d - start)/(end - start);
     if(!allowOverflow){ if(mux > 1){return realLength;}else if(mux < 0){return 0;} }
     return mux*realLength;
 };
 this.removeTheseElementsFromThatArray = function(theseElements,thatArray){
-    library._control.logflow.log('math.removeTheseElementsFromThatArray'); //#development
+    dev.log.math('.removeTheseElementsFromThatArray('+JSON.stringify(theseElements)+','+JSON.stringify(thatArray)+')'); //#development
+    dev.count('.math.removeTheseElementsFromThatArray'); //#development
+
     theseElements.forEach(a => thatArray.splice(thatArray.indexOf(a), 1) );
     return thatArray;
 };
 this.seconds2time = function(seconds){
-    library._control.logflow.log('math.seconds2time'); //#development
-    var result = {h:0, m:0, s:0};
+    dev.log.math('.seconds2time('+seconds+')'); //#development
+    dev.count('.math.seconds2time'); //#development
+
+    const result = {h:0, m:0, s:0};
     
     result.h = Math.floor(seconds/3600);
     seconds = seconds - result.h*3600;
@@ -451,8 +516,10 @@ this.seconds2time = function(seconds){
 };
 
 this.cartesian2polar = function(x,y){
-    library._control.logflow.log('math.cartesian2polar'); //#development
-    var dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
+    dev.log.math('.cartesian2polar('+x+','+y+')'); //#development
+    dev.count('.math.cartesian2polar'); //#development
+
+    const dis = Math.pow(Math.pow(x,2)+Math.pow(y,2),0.5); var ang = 0;
 
     if(x === 0){
         if(y === 0){ang = 0;}
@@ -468,12 +535,16 @@ this.cartesian2polar = function(x,y){
     return {'dis':dis,'ang':ang};
 };
 this.polar2cartesian = function(angle,distance){
-    library._control.logflow.log('math.polar2cartesian'); //#development
+    dev.log.math('.polar2cartesian('+angle+','+distance+')'); //#development
+    dev.count('.math.polar2cartesian'); //#development
+
     return {'x':(distance*Math.cos(angle)), 'y':(distance*Math.sin(angle))};
 };
 
 this.blendColours = function(rgba_1,rgba_2,ratio){
-    library._control.logflow.log('math.blendColours'); //#development
+    dev.log.math('.blendColours('+JSON.stringify(rgba_1)+','+JSON.stringify(rgba_2)+','+ratio+')'); //#development
+    dev.count('.math.blendColours'); //#development
+
     return {
         r: (1-ratio)*rgba_1.r + ratio*rgba_2.r,
         g: (1-ratio)*rgba_1.g + ratio*rgba_2.g,
@@ -481,34 +552,40 @@ this.blendColours = function(rgba_1,rgba_2,ratio){
         a: (1-ratio)*rgba_1.a + ratio*rgba_2.a,
     };           
 };
-this.multiBlendColours = function(rgbaList,ratio){//console.log(rgbaList,ratio);
-    library._control.logflow.log('math.multiBlendColours'); //#development
+this.multiBlendColours = function(rgbaList,ratio){
+    dev.log.math('.multiBlendColours('+JSON.stringify(rgbaList)+','+ratio+')'); //#development
+    dev.count('.math.multiBlendColours'); //#development
+
     //special cases
         if(ratio == 0){return rgbaList[0];}
         if(ratio == 1){return rgbaList[rgbaList.length-1];}
     //calculate the start colour and ratio(represented by as "colourIndex.ratio"), then blend
-        var p = ratio*(rgbaList.length-1);
+        const p = ratio*(rgbaList.length-1);
         return library.math.blendColours(rgbaList[~~p],rgbaList[~~p+1], p%1);
 };
 
 
 
 this.polygonToSubTriangles = function(regions,inputFormat='XYArray'){
-    library._control.logflow.log('math.polygonToSubTriangles'); //#development
+    dev.log.math('.polygonToSubTriangles('+JSON.stringify(regions)+','+inputFormat+')'); //#development
+    dev.count('.math.polygonToSubTriangles'); //#development
+
     if(inputFormat == 'flatArray'){
-        var tmp = [];
+        const tmp = [];
         for(var a = 0; a < regions.length; a+=2){ tmp.push( {x:regions[a+0], y:regions[a+1]} ); }
         regions = [tmp];
     }
 
-    var holes = regions.reverse().map(region => region.length);
+    const holes = regions.reverse().map(region => region.length);
     holes.forEach((item,index) => { if(index > 0){ holes[index] = item + holes[index-1]; } });
     holes.pop();
 
     return _thirdparty.earcut(regions.flat().map(item => [item.x,item.y]).flat(),holes);
 };
 this.unionPolygons = function(polygon1,polygon2){
-    library._control.logflow.log('math.unionPolygons'); //#development
+    dev.log.math('.unionPolygons('+JSON.stringify(polygon1)+','+JSON.stringify(polygon2)+')'); //#development
+    dev.count('.math.unionPolygons'); //#development
+
     //martinez (not working)
     // for(var a = 0; a < polygon1.length; a++){
     //     polygon1[a].push( polygon1[a][0] );
@@ -530,13 +607,18 @@ this.unionPolygons = function(polygon1,polygon2){
     ).regions.map(region => region.map(item => ({x:item[0],y:item[1]})));
 }
 this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='none',loopPath=false,detail=5,sharpLimit=thickness*4){
-    library._control.logflow.log('math.pathExtrapolation'); //#development
+    dev.log.math('.pathExtrapolation('+JSON.stringify(path),thickness,capType,joinType,loopPath,detail,sharpLimit+')'); //#development
+    dev.count('.math.pathExtrapolation'); //#development
+
     function loopThisPath(path){
-        var joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
-        var loopingPath = [];
+        dev.log.math('.pathExtrapolation::loopThisPath('+JSON.stringify(path)+')'); //#development
+        dev.count('.math.pathExtrapolation::loopThisPath'); //#development
+    
+        const joinPoint = [ (path[0]+path[2])/2, (path[1]+path[3])/2 ];
+        let loopingPath = [];
     
         loopingPath = loopingPath.concat(joinPoint);
-        for(var a = 2; a < path.length; a+=2){
+        for(let a = 2; a < path.length; a+=2){
             loopingPath = loopingPath.concat( [path[a], path[a+1]] );
         }
         loopingPath = loopingPath.concat( [path[0], path[1]] );
@@ -545,16 +627,19 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
         return loopingPath;
     }
     function calculateJointData(path,thickness){
-        var jointData = [];
+        dev.log.math('.pathExtrapolation::calculateJointData('+JSON.stringify(path)+','+thickness+')'); //#development
+        dev.count('.math.pathExtrapolation::calculateJointData'); //#development
+    
+        const jointData = [];
         //parse path
-            for(var a = 0; a < path.length/2; a++){
+            for(let a = 0; a < path.length/2; a++){
                 jointData.push({ point:{ x:path[a*2], y:path[a*2 +1] } });
             }
         //calculation of joint data
-            for(var a = 0; a < jointData.length; a++){
+            for(let a = 0; a < jointData.length; a++){
                 //calculate segment angles    
                     if( a != jointData.length-1 ){
-                        var tmp = _canvas_.library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
+                        const tmp = library.math.getAngleOfTwoPoints( jointData[a].point, jointData[a+1].point );
                         if(jointData[a] != undefined){jointData[a].departAngle = tmp;}
                         if(jointData[a+1] != undefined){jointData[a+1].implementAngle = tmp;}
                     }
@@ -573,11 +658,14 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
         return jointData;
     }
     function path_to_rectangleSeries(path,thickness){
-        var outputPoints = [];
-        for(var a = 1; a < path.length/2; a++){
-            var angle = _canvas_.library.math.getAngleOfTwoPoints( {x:path[a*2-2], y:path[a*2 -1]}, {x:path[a*2], y:path[a*2 +1]});
-            var left =  _canvas_.library.math.cartesianAngleAdjust(thickness, 0, Math.PI/2 + angle);
-            var right = { x:-left.x, y:-left.y };
+        dev.log.math('.pathExtrapolation::path_to_rectangleSeries('+JSON.stringify(path)+','+thickness+')'); //#development
+        dev.count('.math.pathExtrapolation::path_to_rectangleSeries'); //#development
+    
+        let outputPoints = [];
+        for(let a = 1; a < path.length/2; a++){
+            const angle = library.math.getAngleOfTwoPoints( {x:path[a*2-2], y:path[a*2 -1]}, {x:path[a*2], y:path[a*2 +1]});
+            const left =  library.math.cartesianAngleAdjust(thickness, 0, Math.PI/2 + angle);
+            const right = { x:-left.x, y:-left.y };
     
             outputPoints.push([
                 {x:path[a*2-2]+left.x,  y:path[a*2-1]+left.y},
@@ -591,15 +679,18 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
     }
 
     function flatJoints(jointData,thickness){
-        var polygons = [];
+        dev.log.math('.pathExtrapolation::flatJoints('+JSON.stringify(jointData)+','+thickness+')'); //#development
+        dev.count('.math.pathExtrapolation::flatJoints'); //#development
+    
+        const polygons = [];
 
-        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
-        var perpenR = {x:-perpenL.x, y:-perpenL.y};
-        for(var a = 1; a < jointData.length-1; a++){
-            var last_perpenL = perpenL;
-            var last_perpenR = perpenR;
-            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
-            var perpenR = {x:-perpenL.x, y:-perpenL.y};
+        let perpenL = library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+        let perpenR = {x:-perpenL.x, y:-perpenL.y};
+        for(let a = 1; a < jointData.length-1; a++){
+            const last_perpenL = perpenL;
+            const last_perpenR = perpenR;
+            perpenL = library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+            perpenR = {x:-perpenL.x, y:-perpenL.y};
 
             if(jointData[a].joiningAngle == Math.PI){
                 //do nothing
@@ -621,17 +712,20 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
         return polygons;
     }
     function roundJoints(jointData,thickness,detail=5){
-        var polygons = [];
+        dev.log.math('.pathExtrapolation::roundJoints('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
+        dev.count('.math.pathExtrapolation::roundJoints'); //#development
+    
+        const polygons = [];
         if(detail < 1){detail = 1;}
 
-        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
-        var perpenR = {x:-perpenL.x, y:-perpenL.y};
-        for(var a = 1; a < jointData.length-1; a++){
-            var newPolygon = [];
-            var last_perpenL = perpenL;
-            var last_perpenR = perpenR;
-            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
-            var perpenR = {x:-perpenL.x, y:-perpenL.y};
+        let perpenL = library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+        let perpenR = {x:-perpenL.x, y:-perpenL.y};
+        for(let a = 1; a < jointData.length-1; a++){
+            const newPolygon = [];
+            const last_perpenL = perpenL;
+            const last_perpenR = perpenR;
+            perpenL = library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+            perpenR = {x:-perpenL.x, y:-perpenL.y};
 
             if(jointData[a].joiningAngle == Math.PI){
                 //do nothing
@@ -639,11 +733,11 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
                 newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
                 newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
 
-                var gapSize = Math.PI - jointData[a].joiningAngle;
-                var partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
-                for(var b = 1; b < partialDetail; b++){
-                    var angle = b*(gapSize/partialDetail);
-                    var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenR.x, last_perpenR.y, -angle);
+                const gapSize = Math.PI - jointData[a].joiningAngle;
+                const partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
+                for(let b = 1; b < partialDetail; b++){
+                    const angle = b*(gapSize/partialDetail);
+                    const p = library.math.cartesianAngleAdjust(last_perpenR.x, last_perpenR.y, -angle);
                     newPolygon.push( {x:jointData[a].point.x + p.x, y:jointData[a].point.y + p.y} );
                 }
 
@@ -652,11 +746,11 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
                 newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
                 newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
 
-                var gapSize = Math.PI - jointData[a].joiningAngle;
-                var partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
-                for(var b = 1; b < partialDetail; b++){
-                    var angle = b*(gapSize/partialDetail);
-                    var p = _canvas_.library.math.cartesianAngleAdjust(last_perpenL.x, last_perpenL.y, -angle);
+                const gapSize = Math.PI - jointData[a].joiningAngle;
+                const partialDetail = Math.floor((2+detail)*(Math.abs(gapSize)/Math.PI));
+                for(let b = 1; b < partialDetail; b++){
+                    const angle = b*(gapSize/partialDetail);
+                    const p = library.math.cartesianAngleAdjust(last_perpenL.x, last_perpenL.y, -angle);
                     newPolygon.push( {x:jointData[a].point.x + p.x, y:jointData[a].point.y + p.y} );
                 }
 
@@ -669,30 +763,33 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
         return polygons;
     }
     function sharpJoints(jointData,thickness,sharpLimit=thickness*4){
-        var polygons = [];
+        dev.log.math('.pathExtrapolation::sharpJoints('+JSON.stringify(jointData)+','+thickness+','+sharpLimit+')'); //#development
+        dev.count('.math.pathExtrapolation::sharpJoints'); //#development
+    
+        const polygons = [];
 
-        var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
-        var perpenR = {x:-perpenL.x, y:-perpenL.y};
-        for(var a = 1; a < jointData.length-1; a++){
-            var newPolygon = [];
-            var last_perpenL = perpenL;
-            var last_perpenR = perpenR;
-            var perpenL = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
-            var perpenR = {x:-perpenL.x, y:-perpenL.y};
+        let perpenL = library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle - Math.PI/2);
+        let perpenR = {x:-perpenL.x, y:-perpenL.y};
+        for(let a = 1; a < jointData.length-1; a++){
+            const newPolygon = [];
+            const last_perpenL = perpenL;
+            const last_perpenR = perpenR;
+            perpenL = library.math.cartesianAngleAdjust(thickness, 0, jointData[a].departAngle - Math.PI/2);
+            perpenR = {x:-perpenL.x, y:-perpenL.y};
 
             if(jointData[a].joiningAngle == Math.PI){
                 //do nothing
             }else if(jointData[a].joiningAngle < Math.PI){
                 if( Math.abs(jointData[a].wingWidth) <= sharpLimit ){
-                    var plus = _canvas_.library.math.cartesianAngleAdjust(0, jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
+                    const plus = library.math.cartesianAngleAdjust(0, jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
                     newPolygon.push( {x:plus.x + jointData[a].point.x, y:plus.y + jointData[a].point.y} );
                     newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
                     newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
                     newPolygon.push( {x:jointData[a].point.x + perpenR.x, y:jointData[a].point.y + perpenR.y} );
                 }else{
-                    var length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
-                    var partialWingA = _canvas_.library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].implementAngle);
-                    var partialWingB = _canvas_.library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].departAngle);
+                    const length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
+                    const partialWingA = library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].implementAngle);
+                    const partialWingB = library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].departAngle);
 
                     newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
                     newPolygon.push( {x:jointData[a].point.x + last_perpenR.x, y:jointData[a].point.y + last_perpenR.y} );
@@ -702,15 +799,15 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
                 }
             }else if(jointData[a].joiningAngle > Math.PI){
                 if( Math.abs(jointData[a].wingWidth) <= sharpLimit ){
-                    var plus = _canvas_.library.math.cartesianAngleAdjust(0, -jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
+                    const plus = library.math.cartesianAngleAdjust(0, -jointData[a].wingWidth, Math.PI/2 + jointData[a].wingAngle);
                     newPolygon.push( {x:plus.x + jointData[a].point.x, y:plus.y + jointData[a].point.y} );
                     newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
                     newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
                     newPolygon.push( {x:jointData[a].point.x + perpenL.x, y:jointData[a].point.y + perpenL.y} );
                 }else{
-                    var length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
-                    var partialWingA = _canvas_.library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].implementAngle);
-                    var partialWingB = _canvas_.library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].departAngle);
+                    const length = Math.cos(jointData[a].joiningAngle/2)*sharpLimit;
+                    const partialWingA = library.math.cartesianAngleAdjust(0, length, Math.PI/2 + jointData[a].implementAngle);
+                    const partialWingB = library.math.cartesianAngleAdjust(0, -length, Math.PI/2 + jointData[a].departAngle);
 
                     newPolygon.push( {x:jointData[a].point.x, y:jointData[a].point.y} );
                     newPolygon.push( {x:jointData[a].point.x + last_perpenL.x, y:jointData[a].point.y + last_perpenL.y} );
@@ -727,37 +824,40 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
     }
 
     function roundCaps(jointData,thickness,detail=5){
+        dev.log.math('.pathExtrapolation::roundCaps('+JSON.stringify(jointData)+','+thickness+','+detail+')'); //#development
+        dev.count('.math.pathExtrapolation::roundCaps'); //#development
+    
         if(detail < 1){detail = 1;}
 
-        var polygons = [];
+        const polygons = [];
 
         //top
-            var newPolygon = [];
-            newPolygon.push( { x:jointData[0].point.x, y:jointData[0].point.y } );
-            for(var a = 0; a < detail+1; a++){
-                var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle + Math.PI/2 + (a/(detail))*(Math.PI) );
-                newPolygon.push( {x:jointData[0].point.x + p.x, y:jointData[0].point.y + p.y} );
+            const newPolygon_top = [];
+            newPolygon_top.push( { x:jointData[0].point.x, y:jointData[0].point.y } );
+            for(let a = 0; a < detail+1; a++){
+                const p = library.math.cartesianAngleAdjust(thickness, 0, jointData[0].departAngle + Math.PI/2 + (a/(detail))*(Math.PI) );
+                newPolygon_top.push( {x:jointData[0].point.x + p.x, y:jointData[0].point.y + p.y} );
             }
-            polygons.push(newPolygon);
+            polygons.push(newPolygon_top);
         //bottom
-            var newPolygon = [];
-            newPolygon.push( { x:jointData[jointData.length-1].point.x, y:jointData[jointData.length-1].point.y } );
-            for(var a = 0; a < detail+1; a++){
-                var p = _canvas_.library.math.cartesianAngleAdjust(thickness, 0, jointData[jointData.length-1].implementAngle - Math.PI/2 + (a/(detail))*(Math.PI) );
-                newPolygon.push( {x:jointData[jointData.length-1].point.x + p.x, y:jointData[jointData.length-1].point.y + p.y} );
+            const newPolygon_bottom = [];
+            newPolygon_bottom.push( { x:jointData[jointData.length-1].point.x, y:jointData[jointData.length-1].point.y } );
+            for(let a = 0; a < detail+1; a++){
+                const p = library.math.cartesianAngleAdjust(thickness, 0, jointData[jointData.length-1].implementAngle - Math.PI/2 + (a/(detail))*(Math.PI) );
+                newPolygon_bottom.push( {x:jointData[jointData.length-1].point.x + p.x, y:jointData[jointData.length-1].point.y + p.y} );
             }
-            polygons.push(newPolygon);
+            polygons.push(newPolygon_bottom);
 
         return polygons;
     }
 
 
     if(loopPath){path = loopThisPath(path);}
-    var jointData = calculateJointData(path,thickness);
+    const jointData = calculateJointData(path,thickness);
     if(jointData.length == 0){return [];}
 
     //generate polygons
-        var polygons = path_to_rectangleSeries(path,thickness);
+        let polygons = path_to_rectangleSeries(path,thickness);
         //joints
         if(joinType == 'flat'){ polygons = polygons.concat(flatJoints(jointData,thickness)); }
         if(joinType == 'round'){ polygons = polygons.concat(roundJoints(jointData,thickness,detail)); }
@@ -770,12 +870,20 @@ this.pathExtrapolation = function(path,thickness=10,capType='none',joinType='non
 };
 
 
-this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8},dev=false){
-    library._control.logflow.log('math.fitPolyIn'); //#development
+this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10,y:10,angle:Math.PI/8}){
+    dev.log.math('.fitPolyIn('+JSON.stringify(freshPoly)+','+JSON.stringify(environmentPolys)+','+JSON.stringify(snapping)+')'); //#development
+    dev.count('.math.fitPolyIn'); //#development
+
     function applyOffsetToPoints(offset,points){
+        dev.log.math('.fitPolyIn::applyOffsetToPoints('+JSON.stringify(offset)+JSON.stringify(points)+')'); //#development
+        dev.count('.math.fitPolyIn::applyOffsetToPoints'); //#development
+    
         return points.map(a => { return{x:a.x+offset.x,y:a.y+offset.y} } );
     };
     function applyOffsetToPolygon(offset,poly){
+        dev.log.math('.fitPolyIn::applyOffsetToPolygon('+JSON.stringify(offset)+JSON.stringify(poly)+')'); //#development
+        dev.count('.math.fitPolyIn::applyOffsetToPolygon'); //#development
+    
         var newPolygon = { points: applyOffsetToPoints(offset,poly.points), boundingBox:{} };
         newPolygon.boundingBox = library.math.boundingBoxFromPoints(newPolygon.points);
         return newPolygon;
@@ -783,123 +891,128 @@ this.fitPolyIn = function(freshPoly,environmentPolys,snapping={active:false,x:10
 
     
 
-    var offset = {x:0,y:0};
-    var paths = [[],[],[]];
+    let offset = {x:0,y:0};
+    const paths = [[],[],[]];
 
     //get the middle ("average") point of freshPoly
-        var middlePoint = library.math.averagePoint(freshPoly.points);
+        const middlePoint = library.math.averagePoint(freshPoly.points);
 
     //circle out to find initial offsets
-        var stepCount = 1;
-        var maxIterationCount = 100;
+        let successfulOffsets = [];
+        let stepCount = 1;
+        {
+            const maxIterationCount = 100;
 
-        var successfulOffsets = [];
-        for(stepCount = 1; stepCount < maxIterationCount+1; stepCount++){
-            successfulOffsets = [];
-            var stepsInThisCircle = 2*stepCount + 1;
-            var circularStepSizeInRad = (2*Math.PI) / stepsInThisCircle;
-            var radius = Math.pow(stepCount,2);
-            
-            //head round the circle, testing each point as an offset
-                for(var a = 0; a < stepsInThisCircle; a++){
-                    //calculate the current offset
-                        var tmpOffset = library.math.polar2cartesian( circularStepSizeInRad*a, radius );
-                        tmpOffset.x = snapping.active ? Math.round(tmpOffset.x/snapping.x)*snapping.x : tmpOffset.x;
-                        tmpOffset.y = snapping.active ? Math.round(tmpOffset.y/snapping.y)*snapping.y : tmpOffset.y;
+            for(stepCount = 1; stepCount < maxIterationCount+1; stepCount++){
+                successfulOffsets = [];
+                const stepsInThisCircle = 2*stepCount + 1;
+                const circularStepSizeInRad = (2*Math.PI) / stepsInThisCircle;
+                const radius = Math.pow(stepCount,2);
+                
+                //head round the circle, testing each point as an offset
+                    for(let a = 0; a < stepsInThisCircle; a++){
+                        //calculate the current offset
+                            const tmpOffset = library.math.polar2cartesian( circularStepSizeInRad*a, radius );
+                            tmpOffset.x = snapping.active ? Math.round(tmpOffset.x/snapping.x)*snapping.x : tmpOffset.x;
+                            tmpOffset.y = snapping.active ? Math.round(tmpOffset.y/snapping.y)*snapping.y : tmpOffset.y;
 
-                        if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
-                    
-                    //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
-                        if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
-                            successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
-                        }
-                }
+                            if(dev){paths[0].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
+                        
+                        //if offsetting the shape in this way results in no collision; save this offset in 'successfulOffsets'
+                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                successfulOffsets.push( {ang:circularStepSizeInRad*a, dis:radius} );
+                            }
+                    }
 
-            //if on this circle we've found at least one possible location; break out of this section and move on to the next
-                if( successfulOffsets.length != 0 ){break;}
+                //if on this circle we've found at least one possible location; break out of this section and move on to the next
+                    if( successfulOffsets.length != 0 ){break;}
+            }
         }
 
 
     //use midpointing from these points to find the single closest circular offset
-        var maxIterationCount = 10;
-        var successfulOffset;
+        let successfulOffset;
+        {
+            const maxIterationCount = 10;
+            if(successfulOffsets.length == 1){
+                successfulOffset = successfulOffsets[0];
+            }else{
+                //there was more than one possible offset for this radius, so we need to edge each of them closer
+                //to the original point, to whittle them down to the one angle that can provide the smallest radius
 
-        if(successfulOffsets.length == 1){
-            successfulOffset = successfulOffsets[0];
-        }else{
-            //there was more than one possible offset for this radius, so we need to edge each of them closer
-            //to the original point, to whittle them down to the one angle that can provide the smallest radius
+                let maxRadius = Math.pow(stepCount,2);
+                let minRadius = Math.pow(stepCount-1,2);
 
-            var maxRadius = Math.pow(stepCount,2);
-            var minRadius = Math.pow(stepCount-1,2);
+                const provenFunctionalOffsets = [];
+                for(let i = 0; i < maxIterationCount; i++){
+                    const tmp_successfulOffsets = [];
+                    const midRadius = (maxRadius - minRadius)/2 + minRadius;
 
-            var provenFunctionalOffsets = [];
-            for(var i = 0; i < maxIterationCount; i++){
-                var tmpsuccessfulOffsets = [];
-                var midRadius = (maxRadius - minRadius)/2 + minRadius;
+                    //check this new midpoint radius with the successfulOffset values 
+                        for(let a = 0; a < successfulOffsets.length; a++){
+                            //calculate the current offset using the midpoint value
+                                const tmpOffset = library.math.polar2cartesian( successfulOffsets[a].ang, midRadius );
+                                tmpOffset.x = snapping.active ? Math.round(tmpOffset.x/snapping.x)*snapping.x : tmpOffset.x;
+                                tmpOffset.y = snapping.active ? Math.round(tmpOffset.y/snapping.y)*snapping.y : tmpOffset.y;
+                                if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
+                                        
+                            //if offsetting the shape in this way results in no collision; save this offset in 'tmp_successfulOffsets'
+                                if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
+                                    tmp_successfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
+                                    provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
+                                }
+                        }
 
-                //check this new midpoint radius with the successfulOffset values 
-                    for(var a = 0; a < successfulOffsets.length; a++){
-                        //calculate the current offset using the midpoint value
-                            var tmpOffset = library.math.polar2cartesian( successfulOffsets[a].ang, midRadius );
-                            tmpOffset.x = snapping.active ? Math.round(tmpOffset.x/snapping.x)*snapping.x : tmpOffset.x;
-                            tmpOffset.y = snapping.active ? Math.round(tmpOffset.y/snapping.y)*snapping.y : tmpOffset.y;
-                            if(dev){paths[1].push( {x:tmpOffset.x+middlePoint.x, y:tmpOffset.y+middlePoint.y} );}
-                                    
-                        //if offsetting the shape in this way results in no collision; save this offset in 'tmpsuccessfulOffsets'
-                            if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon(tmpOffset,freshPoly),environmentPolys)){
-                                tmpsuccessfulOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
-                                provenFunctionalOffsets.push( {ang:successfulOffsets[a].ang, dis:midRadius} );
-                            }
-                    }
+                    //check if there's only one offset left
+                        if( tmp_successfulOffsets.length == 1 ){ successfulOffset = tmp_successfulOffsets[0]; break; }
 
-                //check if there's only one offset left
-                    if( tmpsuccessfulOffsets.length == 1 ){ successfulOffset = tmpsuccessfulOffsets[0]; break; }
+                    //decide whether to check further out or closer in
+                        if( tmp_successfulOffsets.length == 0 ){
+                            minRadius = midRadius; //somewhere further out
+                        }else{
+                            maxRadius = midRadius; //somewhere further in
+                        }
+                }
 
-                //decide whether to check further out or closer in
-                    if( tmpsuccessfulOffsets.length == 0 ){
-                        minRadius = midRadius; //somewhere further out
-                    }else{
-                        maxRadius = midRadius; //somewhere further in
-                    }
+                //if everything goes wrong with the midpoint method; and we end up with no offsets, use whatever the last proven functional offset was
+                    if(successfulOffset == undefined){ successfulOffset = provenFunctionalOffsets.pop(); }
             }
-
-            //if everything goes wrong with the midpoint method; and we end up with no offsets, use whatever the last proven functional offset was
-                if(successfulOffset == undefined){ successfulOffset = provenFunctionalOffsets.pop(); }
         }
 
     //adjust along x and y to find the closest offset
-        var maxIterationCount = 10;
+        {
+            const maxIterationCount = 10;
 
-        var offset = library.math.polar2cartesian( successfulOffset.ang, successfulOffset.dis );
-        if(dev){paths[2].push( {x:offset.x+middlePoint.x, y:offset.y+middlePoint.y} );}
-        var max = {x:offset.x, y:offset.y};
-        var min = {x:0, y:0};
-        
-        //use midpoint methods to edge the shape (over x and y) to as close as it can be to the original point
-            for(var i = 0; i < maxIterationCount; i++){
-                var midpoint = { x:(max.x-min.x)/2 + min.x, y:(max.y-min.y)/2 + min.y };
-                midpoint.x = snapping.active ? Math.round(midpoint.x/snapping.x)*snapping.x : midpoint.x;
-                midpoint.y = snapping.active ? Math.round(midpoint.y/snapping.y)*snapping.y : midpoint.y;
+            offset = library.math.polar2cartesian( successfulOffset.ang, successfulOffset.dis );
+            if(dev){paths[2].push( {x:offset.x+middlePoint.x, y:offset.y+middlePoint.y} );}
+            const max = {x:offset.x, y:offset.y};
+            const min = {x:0, y:0};
+            
+            //use midpoint methods to edge the shape (over x and y) to as close as it can be to the original point
+                for(let i = 0; i < maxIterationCount; i++){
+                    const midpoint = { x:(max.x-min.x)/2 + min.x, y:(max.y-min.y)/2 + min.y };
+                    midpoint.x = snapping.active ? Math.round(midpoint.x/snapping.x)*snapping.x : midpoint.x;
+                    midpoint.y = snapping.active ? Math.round(midpoint.y/snapping.y)*snapping.y : midpoint.y;
 
-                //can you make a x movement? you can? then do it
-                    if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
-                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
-                        max.x = midpoint.x; //too far
-                    }else{ 
-                        min.x = midpoint.x; //too close
-                    }
+                    //can you make a x movement? you can? then do it
+                        if(dev){paths[2].push( {x:midpoint.x+middlePoint.x, y:max.y+middlePoint.y} );}
+                        if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:midpoint.x, y:max.y},freshPoly),environmentPolys)){
+                            max.x = midpoint.x; //too far
+                        }else{ 
+                            min.x = midpoint.x; //too close
+                        }
 
-                //can you make a y movement? you can? then do it
-                    if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
-                    if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
-                        max.y = midpoint.y; //too far
-                    }else{
-                        min.y = midpoint.y; //too close
-                    }
-            }
+                    //can you make a y movement? you can? then do it
+                        if(dev){paths[2].push( {x:max.x+middlePoint.x, y:midpoint.y+middlePoint.y} );}
+                        if(!library.math.detectOverlap.overlappingPolygonWithPolygons(applyOffsetToPolygon({x:max.x, y:midpoint.y},freshPoly),environmentPolys)){
+                            max.y = midpoint.y; //too far
+                        }else{
+                            min.y = midpoint.y; //too close
+                        }
+                }
 
-        offset = {x:max.x, y:max.y};
+            offset = {x:max.x, y:max.y};
+        }
 
     return dev ? {offset:offset,paths:paths} : offset;
 };

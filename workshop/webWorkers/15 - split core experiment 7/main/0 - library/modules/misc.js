@@ -1,5 +1,7 @@
 this.padString = function(string,length,padding=' ',paddingSide='l'){
-    library._control.logflow.log('misc.padString'); //#development
+    dev.log.misc('.padString('+string+','+length+','+padding+','+paddingSide+')'); //#development
+    dev.count('.misc.padString'); //#development
+
     if(padding.length<1){return string;}
     string = ''+string;
 
@@ -12,15 +14,21 @@ this.padString = function(string,length,padding=' ',paddingSide='l'){
     return string;
 };
 this.compressString = function(string){
-    library._control.logflow.log('misc.compressString'); //#development
+    dev.log.misc('.compressString('+string+')'); //#development
+    dev.count('.misc.compressString'); //#development
+
     return _thirdparty.lzString.compress(string);
 };
 this.decompressString = function(string){
-    library._control.logflow.log('misc.decompressString'); //#development
+    dev.log.misc('.decompressString('+string+')'); //#development
+    dev.count('.misc.decompressString'); //#development
+
     return _thirdparty.lzString.decompress(string);
 };
 this.serialize = function(data,compress=true){
-    library._control.logflow.log('misc.serialize'); //#development
+    dev.log.misc('.serialize('+JSON.stringify(data)+','+compress+')'); //#development
+    dev.count('.misc.serialize'); //#development
+
     function getType(obj){
         return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
     }
@@ -56,7 +64,9 @@ this.serialize = function(data,compress=true){
     return data;
 };
 this.unserialize = function(data,compressed=true){
-    library._control.logflow.log('misc.unserialize'); //#development
+    dev.log.misc('.unserialize('+JSON.stringify(data)+','+compressed+')'); //#development
+    dev.count('.misc.unserialize'); //#development
+
     if(data === undefined){return undefined;}
 
     if(compressed){ data = library.misc.decompressString(data); }
@@ -98,7 +108,9 @@ this.unserialize = function(data,compressed=true){
     });
 };
 this.openFile = function(callback,readAsType='readAsBinaryString'){
-    library._control.logflow.log('misc.openFile'); //#development
+    dev.log.misc('.openFile('+JSON.stringify(callback)+','+readAsType+')'); //#development
+    dev.count('.misc.openFile'); //#development
+
     var i = document.createElement('input');
     i.type = 'file';
     i.onchange = function(){
@@ -114,14 +126,18 @@ this.openFile = function(callback,readAsType='readAsBinaryString'){
     i.click();
 };
 this.printFile = function(filename,data){
-    library._control.logflow.log('misc.printFile'); //#development
+    dev.log.misc('.printFile('+filename+','+JSON.stringify(data)+')'); //#development
+    dev.count('.misc.printFile'); //#development
+
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([data]));
     a.download = filename;
     a.click();
 };
 this.loadFileFromURL = function(URL,callback,responseType='blob',errorCallback){
-    library._control.logflow.log('misc.loadFileFromURL'); //#development
+    dev.log.misc('.loadFileFromURL('+URL+','+JSON.stringify(callback)+','+responseType+','+JSON.stringify(errorCallback)+')'); //#development
+    dev.count('.misc.loadFileFromURL'); //#development
+
     //responseType: text / arraybuffer / blob / document / json 
 
     var xhttp = new XMLHttpRequest();

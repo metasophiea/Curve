@@ -1,28 +1,36 @@
 this.listAllAvailableGlyphs = function(fontFileData){
-    library._control.logflow.log('font.listAllAvailableGlyphs'); //#development
-    var font = this.decodeFont(fontFileData);
+    dev.log.font('.listAllAvailableGlyphs('+JSON.stringify(fontFileData)+')'); //#development
+    dev.count('.font.listAllAvailableGlyphs'); //#development
+
+    const font = this.decodeFont(fontFileData);
     return Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
 };
 this.decodeFont = function(fontFileData){
-    library._control.logflow.log('font.decodeFont'); //#development
+    dev.log.font('.decodeFont('+JSON.stringify(fontFileData)+')'); //#development
+    dev.count('.font.decodeFont'); //#development
+
     return _thirdparty.opentype.parse(fontFileData);
 };
 this.getAllAvailableGlyphDrawingPaths = function(font,reducedGlyphSet){
-    library._control.logflow.log('font.getAllAvailableGlyphDrawingPaths'); //#development
-    var glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
-    var paths = glyphs.map( a => font.getPath(a,0,0,1) );
+    dev.log.font('.getAllAvailableGlyphDrawingPaths('+font+','+JSON.stringify(reducedGlyphSet)+')'); //#development
+    dev.count('.font.getAllAvailableGlyphDrawingPaths'); //#development
 
-    var outputData = {};
-    for(var a = 0; a < glyphs.length; a++){
+    const glyphs = reducedGlyphSet != undefined ? reducedGlyphSet : Object.keys(font.glyphs.glyphs).map(a => String.fromCharCode(font.glyphs.glyphs[a].unicode));
+    const paths = glyphs.map( a => font.getPath(a,0,0,1) );
+
+    let outputData = {};
+    for(let a = 0; a < glyphs.length; a++){
         outputData[glyphs[a]] = paths[a].commands;
     }
 
     return outputData;
 };
 this.convertPathToPoints = function(path,detail=2){
-    library._control.logflow.log('font.convertPathToPoints'); //#development
-    var output = [];
-    var currentPoints = [];
+    dev.log.font('.convertPathToPoints('+JSON.stringify(path)+','+detail+')'); //#development
+    dev.count('.font.convertPathToPoints'); //#development
+
+    let output = [];
+    let currentPoints = [];
 
     path.forEach(function(element){
         switch(element.type){
@@ -35,14 +43,14 @@ this.convertPathToPoints = function(path,detail=2){
             case 'S': break;
 
             case 'Q':
-                var p = {
+                const p = {
                     start:{x:currentPoints[currentPoints.length-1].x, y:currentPoints[currentPoints.length-1].y},
                     control:{x:element.x1,y:element.y1},
                     end:{x:element.x,y:element.y},
                 };
                 
-                for(var a = 1; a <= detail; a++){
-                    var mux = a/detail;
+                for(let a = 1; a <= detail; a++){
+                    let mux = a/detail;
                     currentPoints.push({
                         x: p.start.x + mux*(2*(p.control.x - p.start.x) + mux*(p.end.x - 2*p.control.x + p.start.x)),
                         y: p.start.y + mux*(2*(p.control.y - p.start.y) + mux*(p.end.y - 2*p.control.y + p.start.y)),
@@ -63,12 +71,14 @@ this.convertPathToPoints = function(path,detail=2){
     return output;
 };
 this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
-    library._control.logflow.log('font.getTrianglesFromGlyphPath'); //#development
+    dev.log.font('.getTrianglesFromGlyphPath('+JSON.stringify(glyphPath)+','+detail+')'); //#development
+    dev.count('.font.getTrianglesFromGlyphPath'); //#development
+
     //input checking
         if(glyphPath.length == 0){return [];}
 
     //convert glyphPath into segments with holes
-        var minmax = {top:Infinity,left:Infinity,bottom:0,right:0};
+        const minmax = {top:Infinity,left:Infinity,bottom:0,right:0};
 
         //gather minmax
             glyphPath.forEach(a => {
@@ -78,8 +88,8 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
                 if(a.y > minmax.bottom){minmax.bottom = a.y;}
             });
         //split glyph paths up
-            var paths = [];
-            var tmpPath = [];
+            let paths = [];
+            let tmpPath = [];
             glyphPath.forEach(pathSegment => {
                 tmpPath.push(pathSegment);
                 if(pathSegment.type == 'Z'){ paths.push(tmpPath); tmpPath = []; }
@@ -89,16 +99,16 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
 
         //reorder paths in order of size
             paths = paths.map(a => {
-                var tmp = _canvas_.library.math.boundingBoxFromPoints(a); 
+                const tmp = library.math.boundingBoxFromPoints(a); 
                 return {vector:a, size:(tmp.bottomRight.x-tmp.topLeft.x) * (tmp.bottomRight.y-tmp.topLeft.y)};
             }).sort(function(a,b){ return a.size <= b.size ? 1 : -1; 
             }).map(a => a.vector);
 
         //sort point collections into segments with paths and holes
-            var segments = [];
+            let segments = [];
             paths.forEach(path => {
-                var isHole = false;
-                for(var a = 0; a < segments.length; a++){
+                let isHole = false;
+                for(let a = 0; a < segments.length; a++){
                     if( library.math.detectOverlap.overlappingPolygons(path,segments[a].path) ){
                         segments[a].path = segments[a].path.concat(path);
                         segments[a].regions.unshift(path);
@@ -110,21 +120,23 @@ this.getTrianglesFromGlyphPath = function(glyphPath,detail=2){
             });
 
     //produce triangles from points
-        var triangles = [];
+        let triangles = [];
         segments.forEach(segment => { triangles = triangles.concat( library.math.polygonToSubTriangles(segment.regions) ); });
 
         return triangles;
 };
 this.extractGlyphs = function(fontFileData,reducedGlyphSet){
-    library._control.logflow.log('font.extractGlyphs'); //#development
+    dev.log.font('.extractGlyphs('+JSON.stringify(fontFileData)+','+JSON.stringify(reducedGlyphSet)+')'); //#development
+    dev.count('.font.extractGlyphs'); //#development
+
     //decode font data
-        var font = library.font.decodeFont(fontFileData);
+        const font = library.font.decodeFont(fontFileData);
     //collect all glyph paths
-        var tmp = library.font.getAllAvailableGlyphDrawingPaths(font,reducedGlyphSet);
+        const tmp = library.font.getAllAvailableGlyphDrawingPaths(font,reducedGlyphSet);
     //convert all glyph paths to triangles
-        var outputObject = {};
+        const outputObject = {};
         Object.keys(tmp).forEach(glyph => { 
-            var extraData = font.glyphs.glyphs[glyph.charCodeAt(0)];
+            const extraData = font.glyphs.glyphs[glyph.charCodeAt(0)];
 
             outputObject[glyph] = {
                 vector:library.font.getTrianglesFromGlyphPath(tmp[glyph]),
@@ -160,17 +172,17 @@ this.extractGlyphs = function(fontFileData,reducedGlyphSet){
 
     //normalize all glyph vectors for this font
         //establish ratio
-            var ratio = {height:0,width:0,master:0};
+            const ratio = {height:0,width:0,master:0};
             Object.keys(outputObject).forEach(glyph => {
-                var height = outputObject[glyph].bottom - outputObject[glyph].top;
+                const height = outputObject[glyph].bottom - outputObject[glyph].top;
                 if(height > ratio.height){ratio.height = height;}
-                var width = outputObject[glyph].right - outputObject[glyph].left;
+                const width = outputObject[glyph].right - outputObject[glyph].left;
                 if(width > ratio.width){ratio.width = width;}
             });
             ratio.master = ratio.height < ratio.width ? ratio.height : ratio.width;
         //adjust vectors and extremity values with ratios
             Object.keys(outputObject).forEach(glyph => {
-                for(var a = 0; a < outputObject[glyph].vector.length; a+=2){
+                for(let a = 0; a < outputObject[glyph].vector.length; a+=2){
                     outputObject[glyph].vector[a] /= ratio.master;
                     outputObject[glyph].vector[a+1] /= ratio.master;
                 }
@@ -181,4 +193,125 @@ this.extractGlyphs = function(fontFileData,reducedGlyphSet){
             });
 
     return outputObject;
+};
+
+
+
+
+const vectorLibrary = {};
+const reducedGlyphSet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;?!/\\()[]{}#-_\'"|><+=&*~%'.split('');
+const fontFilesLocation = '/fonts/';
+const systemFonts = [
+    'defaultThick',
+    'defaultThin',
+];
+const fontFileNames = [
+    'Roboto/Roboto-Regular.ttf',
+    'Roboto/Roboto-Italic.ttf',
+    'Roboto/Roboto-Black.ttf',
+    'Roboto/Roboto-BlackItalic.ttf',
+    'Roboto/Roboto-Bold.ttf',
+    'Roboto/Roboto-BoldItalic.ttf',
+    'Roboto/Roboto-Light.ttf',
+    'Roboto/Roboto-LightItalic.ttf',
+    'Roboto/Roboto-Medium.ttf',
+    'Roboto/Roboto-MediumItalic.ttf',
+    'Roboto/Roboto-Thin.ttf',
+    'Roboto/Roboto-ThinItalic.ttf',
+
+    'Helvetica/Helvetica-Bold.ttf',
+    'Helvetica/Helvetica-BoldItalic.ttf',
+    'Helvetica/Helvetica-Italic.ttf',
+    'Helvetica/Helvetica-Light.ttf',
+    'Helvetica/Helvetica.ttf',
+    
+    'Arial/Arial.ttf',
+
+    'Cute_Font/CuteFont-Regular.ttf',
+
+    'Lobster/Lobster-Regular.ttf',
+
+    'AppleGaramond/AppleGaramond.ttf',
+];
+//create locations in the vector library for these fonts
+fontFileNames.forEach(name => {
+    const fontName = name.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]; //produce font name from file name
+    vectorLibrary[fontName] = { fileName:name, loadAttempted:false, isLoaded:false };
+});
+{{include:defaultFonts/defaultThick.js}}
+{{include:defaultFonts/defaultThin.js}} 
+
+
+
+
+this.getLoadableFonts = function(){ 
+    dev.log.font('.getLoadableFonts()'); //#development
+    dev.count('.font.getLoadableFonts'); //#development
+
+    const defaultFontNames = ['defaultThick','defaultThin'];
+    const loadableFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]);
+    return defaultFontNames.concat(loadableFontNames);
+};
+this.getLoadedFonts = function(){
+    dev.log.font('.getLoadedFonts()'); //#development
+    dev.count('.font.getLoadedFonts'); //#development
+
+    const defaultFontNames = ['defaultThick','defaultThin'];
+    const loadedFontNames = fontFileNames.map(a => a.split('.').slice(0,-1)[0].split('/').slice(1,2)[0]).filter(name => vectorLibrary[name].isLoaded);
+    return defaultFontNames.concat(loadedFontNames);
+};
+
+this.isApprovedFont = function(fontName){
+    dev.log.font('.isApprovedFont('+fontName+')'); //#development
+    dev.count('.font.isApprovedFont'); //#development
+
+    return vectorLibrary[fontName] != undefined;
+};
+this.isFontLoaded = function(fontName){
+    dev.log.font('.isFontLoaded('+fontName+')'); //#development
+    dev.count('.font.isFontLoaded'); //#development
+
+    if(vectorLibrary[fontName] == undefined){ console.warn('library.font.isFontLoaded : error : unknown font name:',fontName); return false;}
+    return vectorLibrary[fontName].isLoaded;
+}
+this.fontLoadAttempted = function(fontName){
+    dev.log.font('.fontLoadAttempted('+fontName+')'); //#development
+    dev.count('.font.fontLoadAttempted'); //#development
+
+    if(vectorLibrary[fontName] == undefined){ console.warn('library.font.fontLoadAttempted : error : unknown font name:',fontName); return false;}
+    return vectorLibrary[fontName].loadAttempted;
+}
+this.loadFont = function(fontName,onLoaded=()=>{}){
+    dev.log.font('.loadFont('+fontName+','+JSON.stringify(onLoaded)+')'); //#development
+    dev.count('.font.loadFont'); //#development
+
+    if(vectorLibrary[fontName] == undefined){ report.warning('elementLibrary.character.loadFont : error : unknown font name:',fontName); return false;}
+
+    //make sure font file is on the approved list
+        if( !this.isApprovedFont(fontName) ){
+            console.warn('library.font.loadFont error: attempting to load unapproved font:',fontName); 
+            return;
+        }
+
+    //if font is already loaded, bail
+        if( this.isFontLoaded(fontName) ){return;}
+
+    //set up library entry
+        vectorLibrary[fontName].loadAttempted = true;
+        vectorLibrary[fontName].isLoaded = false;
+        vectorLibrary[fontName]['default'] = {vector:[0,0, 1,0, 0,-1, 1,0, 0,-1, 1,-1]};
+
+    //load file
+        const filename = vectorLibrary[fontName].fileName;
+        library.misc.loadFileFromURL(
+            fontFilesLocation+filename,
+            (fontData) => {
+                const vectors = library.font.extractGlyphs(fontData,reducedGlyphSet);
+                Object.keys(vectors).forEach(glyphName => vectorLibrary[fontName][glyphName] = vectors[glyphName] );
+                vectorLibrary[fontName].isLoaded = true;
+                onLoaded(true);
+            },
+            'arraybuffer',
+            () => { onLoaded(false); },
+        );
 };

@@ -1,5 +1,7 @@
 this.functionListRunner = function(list,activeKeys){
-    library._control.logflow.log('structure.functionListRunner'); //#development
+    dev.log.structure('.functionListRunner('+JSON.stringify(list)+','+JSON.stringify(activeKeys)+')'); //#development
+    dev.count('.structure.functionListRunner'); //#development
+
     //function builder for working with the 'functionList' format
 
     return function(event,data){
@@ -27,7 +29,9 @@ this.functionListRunner = function(list,activeKeys){
 };
 
 this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1){
-    library._control.logflow.log('structure.signalRegistry'); //#development
+    dev.log.structure('.signalRegistry('+rightLimit+','+bottomLimit+','+signalLengthLimit+')'); //#development
+    dev.count('.structure.signalRegistry'); //#development
+
     var signals = [];
     var selectedSignals = [];
     var events = [];
@@ -36,6 +40,9 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
     var positions = [];
 
     this.__dump = function(){
+        dev.log.structure('.signalRegistry.__dump()'); //#development
+        dev.count('.structure.signalRegistry.__dump'); //#development
+    
         console.log('---- signalRegistry dump ----');
 
         console.log('\tsignals');
@@ -71,6 +78,9 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
     };
 
     this.export = function(){
+        dev.log.structure('.signalRegistry.export()'); //#development
+        dev.count('.structure.signalRegistry.export'); //#development
+    
         return JSON.parse(JSON.stringify(
             {
                 signals:            signals,
@@ -83,6 +93,9 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         ));
     };
     this.import = function(data){
+        dev.log.structure('.signalRegistry.import('+JSON.stringify(data)+')'); //#development
+        dev.count('.structure.signalRegistry.import'); //#development
+    
         signals =             JSON.parse(JSON.stringify(data.signals));
         selectedSignals =     JSON.parse(JSON.stringify(data.selectedSignals));
         events =            JSON.parse(JSON.stringify(data.events));
@@ -91,13 +104,29 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         positions =         JSON.parse(JSON.stringify(data.positions));
     };
 
-    this.getAllSignals = function(){ return JSON.parse(JSON.stringify(signals)); };
-    this.getAllEvents = function(){ return JSON.parse(JSON.stringify(events)); };
+    this.getAllSignals = function(){ 
+        dev.log.structure('.signalRegistry.getAllSignals()'); //#development
+        dev.count('.structure.signalRegistry.getAllSignals'); //#development
+    
+        return JSON.parse(JSON.stringify(signals));
+    };
+    this.getAllEvents = function(){ 
+        dev.log.structure('.signalRegistry.getAllEvents()'); //#development
+        dev.count('.structure.signalRegistry.getAllEvents'); //#development
+    
+        return JSON.parse(JSON.stringify(events));
+    };
     this.getSignal = function(id){
+        dev.log.structure('.signalRegistry.getSignal('+id+')'); //#development
+        dev.count('.structure.signalRegistry.getSignal'); //#development
+    
         if( signals[id] == undefined ){return;}
         return JSON.parse(JSON.stringify(signals[id]));
     };
     this.eventsBetween = function(start,end){
+        dev.log.structure('.signalRegistry.eventsBetween('+start+','+end+')'); //#development
+        dev.count('.structure.signalRegistry.eventsBetween'); //#development
+    
         //depending on whether theres an end position or not; get all the events positions that 
         //lie on the start positions, or get all the events that how positions which lie between
         //the start and end positions
@@ -123,6 +152,9 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         });
     };
     this.add = function(data,forceID){
+        dev.log.structure('.signalRegistry.add('+JSON.stringify(data)+','+forceID+')'); //#development
+        dev.count('.structure.signalRegistry.add'); //#development
+    
         //clean up data
             if(data == undefined || !('line' in data) || !('position' in data) || !('length' in data)){return;}
             if(!('strength' in data)){data.strength = 1;}
@@ -180,6 +212,9 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         return newID;
     };
     this.remove = function(id){
+        dev.log.structure('.signalRegistry.remove('+id+')'); //#development
+        dev.count('.structure.signalRegistry.remove'); //#development
+    
         if( signals[id] == undefined ){return;}
 
         delete signals[id];
@@ -195,6 +230,9 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         delete events_byID[id];
     };
     this.update = function(id,data){
+        dev.log.structure('.signalRegistry.update('+id+','+JSON.stringify(data)+')'); //#development
+        dev.count('.structure.signalRegistry.update'); //#development
+    
         //clean input
             if(data == undefined){return;}
             if(!('line' in data)){data.line = signals[id].line;}
@@ -223,6 +261,9 @@ this.signalRegistry = function(rightLimit=-1,bottomLimit=-1,signalLengthLimit=-1
         this.add(data,id);
     };
     this.reset = function(){
+        dev.log.structure('.signalRegistry.reset()'); //#development
+        dev.count('.structure.signalRegistry.reset'); //#development
+    
         signals = [];
         selectedSignals = [];
         events = [];

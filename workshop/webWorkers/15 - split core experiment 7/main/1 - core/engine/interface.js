@@ -16,9 +16,9 @@
 
             const newElement = element.create(type,name);
             const elementId = element.getIdFromElement(newElement);
-            Object.keys(setList).forEach(key => { newElement[key](...[setList[key]]); });
+            newElement.unifiedAttribute(setList);
             if(appendingGroup == -1 || appendingGroup == undefined){ arrangement.append(newElement); }
-            else{ element.getElementFromId(appendingGroup)['append'](elementId); }
+            else{ element.getElementFromId(appendingGroup).interface['append'](elementId); }
             return elementId;
         };
 
@@ -46,7 +46,7 @@
 
     //boatload
         communicationModule.function['boatload.element.executeMethod'] = function(containers){
-            dev.log.interface('.boatload.element.executeMethod('+containers+')'); //#development
+            dev.log.interface('.boatload.element.executeMethod('+JSON.stringify(containers)+')'); //#development
             containers.forEach(container => { 
                 communicationModule.function['element.executeMethod'](container.id,container.method,container.argumentList); 
             });
@@ -242,7 +242,7 @@
         callback.listCallbackTypes().forEach(callbackName => {
             //for accepting the callback signals from the window's canvas
             communicationModule.function['callback.coupling.'+callbackName] = function(event){
-                dev.log.interface('.callback.coupling.'+callbackName+'('+event+')'); //#development
+                dev.log.interface('.callback.coupling.'+callbackName+'('+JSON.stringify(event)+')'); //#development
                 callback.coupling[callbackName](event);
             };
         });
@@ -301,7 +301,7 @@
     callback.listCallbackTypes().forEach(callbackName => {
         //for sending core's callbacks back out
         callback.functions[callbackName] = function(x, y, event, elements){
-            dev.log.interface('.callback.functions.'+callbackName+'('+x+','+y+','+event+','+elements+')'); //#development
+            dev.log.interface('.callback.functions.'+callbackName+'('+x+','+y+','+JSON.stringify(event)+','+JSON.stringify(elements)+')'); //#development
             communicationModule.run('callback.'+callbackName,[x, y, event, elements.map(ele => element.getIdFromElement(ele))]);
         };
     });

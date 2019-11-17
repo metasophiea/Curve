@@ -1,5 +1,6 @@
 _canvas_.core.meta.go = function(){ 
     let rectangleCount = 16;
+    let canvasSize = {width:0,height:0};
 
     //element generation
         let upper_band = {
@@ -56,7 +57,8 @@ _canvas_.core.meta.go = function(){
         function produceRectangle(a,x,y,namePrefix,grouping){
             _canvas_.core.meta.createSetAppend( 'rectangle',namePrefix+a, { x:(x - a*30), y:y, width:30, height:30 }, -1 ).then(id => { grouping.push(id); });
         };
-        _canvas_.core.render.getCanvasSize().then(canvasSize => {
+        _canvas_.core.render.getCanvasSize().then(newCanvasSize => {
+            canvasSize = newCanvasSize; 
             for(let a = 0; a < rectangleCount; a++){
                 produceRectangle( a, (200 + canvasSize.width/2), (-175 + canvasSize.height/2), 'upperBand_rectangle_', upper_band.elementIds );
                 produceRectangle( a, (200 + 20/2 + canvasSize.width/2), (-100 + canvasSize.height/2), 'middleBand_rectangle_', middle_band.elementIds );
@@ -65,9 +67,7 @@ _canvas_.core.meta.go = function(){
         });
 
     //animation
-        let canvasSize = {width:0,height:0};
-        _canvas_.core.render.getCanvasSize().then(newCanvasSize => { canvasSize = newCanvasSize; });
-        function blendColours(A,B,p){ return { r: (1-p)*A.r + p*B.r, g: (1-p)*A.g + p*B.g, b: (1-p)*A.b + p*B.b, a: (1-p)*A.a + p*B.a }; }
+        function blendColours(A,B,p){ return { r:(1-p)*A.r + p*B.r, g:(1-p)*A.g + p*B.g, b:(1-p)*A.b + p*B.b, a:(1-p)*A.a + p*B.a }; }
         function updateColour(band){
             if(band.colour.changeCounter >= 1){
                 band.colour.changeCounter = 0;
