@@ -264,13 +264,13 @@
     up a workshop test area (webWorkers/2) with a copy of the library (minus the
     audio bit) to see what improvements could be made. I had the idea of
     creating multiple instances of the library-worker to perform parallel
-    processesing. So far it works. I can perform 25 loops of
+    processing. So far it works. I can perform 25 loops of
     library.math.pathExtrapolation in ~7.506seconds or ~3.662seconds when using
-    the parallel method. It's certianly something to research. It is asynchronous
+    the parallel method. It's certainly something to research. It is asynchronous
     however, so, that complicates things.
     By limiting the webWorker count to 10; I can do 100 cycles in ~11.7seconds
     (cycles could reuse workers) With 100 workers it took ~20seconds, so,
-    there's certianly some sweet spot. 5 => ~10.2 seconds. 2 => ~18.5 seconds
+    there's certainly some sweet spot. 5 => ~10.2 seconds. 2 => ~18.5 seconds
 
 
 2019-10-20
@@ -2936,7 +2936,7 @@
     about I'll handle their particular renderings and you can just render this
     still image on your cycle"
       Which brings the question: maybe all parts could be sub-canvases? Or all
-    units? Either way, we can certianly start with the readout part. That seems
+    units? Either way, we can certainly start with the readout part. That seems
     to have the most parts right now.
 
 
