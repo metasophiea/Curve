@@ -4,6 +4,22 @@
     for(var __canvasElements_count = 0; __canvasElements_count < __canvasElements.length; __canvasElements_count++){
         if( __canvasElements[__canvasElements_count].hasAttribute(__canvasPrefix) ){
             var _canvas_ = __canvasElements[__canvasElements_count];
+            _canvas_.layers = new function(){
+                const layerRegistry = {};
+            
+                this.registerLayerLoaded = function(layerName, layer){
+                    if(layerRegistry[layerName] == undefined){ layerRegistry[layerName] = {}; }
+                    layerRegistry[layerName].isLoaded = true;
+                    layerRegistry[layerName].versionInformation = layer.versionInformation;
+                    if(this.onLayerLoad){this.onLayerLoad(layerName,layerRegistry);}
+                };
+                this.onLayerLoad = function(layerName,layerRegistry){};
+            
+                this.getVersionInformation = function(){
+                    return Object.keys(layerRegistry).map(key => { return {name:key, data:layerRegistry[key].versionInformation} });
+                };
+            };
+            
             _canvas_.library = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
                 const library = this;
@@ -14,11 +30,11 @@
                     countActive:!false,
                     countMemory:{},
                 
-                    math:{active:false,fontStyle:'color:rgb(87, 161, 80); font-style:italic;'},
-                    structure:{active:false,fontStyle:'color:rgb(129, 80, 161); font-style:italic;'},
-                    audio:{active:false,fontStyle:'color:rgb(80, 161, 141); font-style:italic;'},
-                    font:{active:false,fontStyle:'color:rgb(161, 84, 80); font-style:italic;'},
-                    misc:{active:false,fontStyle:'color:rgb(80, 134, 161); font-style:italic;'},
+                    math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+                    structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+                    audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
+                    font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+                    misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
                 
                     log:{
                         math:function(data){
@@ -50,6 +66,31 @@
                 };
                 this.dev = {
                     countResults:function(){ return dev.countMemory; },
+                    testLoggers:function(){
+                        const math = dev.math.active;
+                        const structure = dev.structure.active;
+                        const audio = dev.audio.active;
+                        const font = dev.font.active;
+                        const misc = dev.misc.active;
+            
+                        dev.math.active = true;
+                        dev.structure.active = true;
+                        dev.audio.active = true;
+                        dev.font.active = true;
+                        dev.misc.active = true;
+            
+                        dev.log.math('.testLoggers -> math');
+                        dev.log.structure('.testLoggers -> structure');
+                        dev.log.audio('.testLoggers -> audio');
+                        dev.log.font('.testLoggers -> font');
+                        dev.log.misc('.testLoggers -> misc');
+            
+                        dev.math.active = math;
+                        dev.structure.active = structure;
+                        dev.audio.active = audio;
+                        dev.font.active = font;
+                        dev.misc.active = misc;
+                    },
                 };
             
                 this.math = new function(){
@@ -21173,10 +21214,8 @@
                     	
                     },{}]},{},[1]);
                 };
-            };
             
-            _canvas_.getVersionInformation = function(){
-                return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
+                _canvas_.layers.registerLayerLoaded('library',this);
             };
             _canvas_.core = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
@@ -21248,418 +21287,1441 @@
                 const dev = {
                     prefix:'core_console',
                 
-                    interface:{active:false,fontStyle:'color:rgb(171, 77, 77); font-style:italic;'},
+                    interface:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+                    service:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+                    elementLibrary:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
                 
                     log:{
                         interface:function(data){
                             if(!dev.interface.active){return;}
                             console.log('%c'+dev.prefix+'.interface'+(new Array(...arguments).join(' ')), dev.interface.fontStyle );
                         },
+                        elementLibrary:function(data){
+                            if(!dev.elementLibrary.active){return;}
+                            console.log('%c'+dev.prefix+'.interface.elementLibrary'+(new Array(...arguments).join(' ')), dev.elementLibrary.fontStyle );
+                        },
+                        service:function(data){
+                            if(!dev.service.active){return;}
+                            console.log('%c'+dev.prefix+'.service'+(new Array(...arguments).join(' ')), dev.service.fontStyle );
+                        },
                     },
                 };
                 
-                //dialing out
-                    this.meta = new function(){
-                        this.areYouReady = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('areYouReady',[],resolve);
-                            });
-                        };
-                        this.refresh = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('refresh',[],resolve);
-                            });
-                        };
-                        this.createSetAppend = function(type,name,setList,appendingGroup){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('createSetAppend',[type,name,setList,appendingGroup],resolve);
-                            });
-                        };
-                    };
+                communicationModule.function.go = function(){
+                    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
+                    if(self.meta.go){self.meta.go();} /* callback */
+                };
+                communicationModule.function.printToScreen = function(imageData){
+                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
+                };
+                communicationModule.function.onViewportAdjust = function(state){
+                    console.log('onViewportAdjust -> ',state); /* callback */
+                };
                 
-                    this._dump = new function(){
-                        this.elememt = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.element',[],resolve);
-                            });
-                        };
-                        this.arrangement = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.arrangement',[],resolve);
-                            });
-                        };
-                        this.render = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.render',[],resolve);
-                            });
-                        };
-                        this.viewport = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.viewport',[],resolve);
-                            });
-                        };
-                        this.callback = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.callback',[],resolve);
-                            });
-                        };
-                    };
+                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
+                    });    
+                };
+                communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
+                    attributes.map((attribute,index) => {
+                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
+                    });
+                };
+                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
+                    });
+                };
                 
-                    this.boatload = new function(){
-                        this.element = new function(){
-                            this.executeMethod = new function(){
-                                let containers = [];
-                                this.load = function(container){
-                                    containers.push(container);
-                                };
-                                this.ship = function(){
-                                    communicationModule.run('boatload.element.executeMethod',[containers]);
-                                    containers = [];
-                                };
-                            };
+                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
+                    return attributeNames.map(attribute => {
+                        return eval('document.'+attribute);
+                    });
+                };
+                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
+                    return attributeNames.map((attribute,index) => {
+                        eval('document.'+attribute+' = "'+values[index]+'"');
+                    });
+                };
+                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
+                    return attributeNames.map(attribute => {
+                        return eval('window.'+attribute);
+                    });
+                };
+                communicationModule.function.setWindowAttributes = function(attributes=[]){
+                    attributes.map((attribute,index) => {
+                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
+                    });
+                };
+                let elementRegistry = [];
+                const elementLibrary = new function(){
+                    this.group = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'group';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            scale: 1,
+                            static: false,
+                            children: [],
+                            stencil: undefined,
+                            clipActive: false,
                         };
-                    };
-                
-                    this.element = new function(){
-                        this.getAvailableElements = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.getAvailableElements',[],resolve);
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.installElement = function(elementName,creatorMethod){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.installElement',[elementName,_canvas_.library.misc.serialize(creatorMethod)],resolve);
-                            });
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
                         };
-                        this.getCreatedElements = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.getCreatedElements',[],resolve);
-                            });
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
                         };
-                        this.create = function(type,name){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.create',[type,name],resolve);
-                            });
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
                         };
-                        this.delete = function(id){
-                            communicationModule.run('element.delete',[id],resolve);
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
                         };
-                        this.deleteAllCreated = function(){
-                            communicationModule.run('element.deleteAllCreated',[],resolve);
+                        this.heedCamera = function(bool,useCache=useCache_default){ 
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.heedCamera); } cashedAttributes.heedCamera = bool;
+                            return executeMethod('heedCamera',[bool]);
                         };
-                        this.getTypeById = function(id){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.getTypeById',[id],resolve);
-                            });
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
                         };
-                        this.executeMethod = function(id,method,argumentList=[],transferableArguments){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.executeMethod',[id,method,argumentList],resolve,transferableArguments);
-                            });
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
                         };
-                    };
-                
-                    this.arrangement = new function(){
-                        this.new = function(){
-                            communicationModule.run('arrangement.new');
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
                         };
-                        this.prepend = function(id){
-                            communicationModule.run('arrangement.prepend',[id]);
+                        this.children = function(useCache=useCache_default){ 
+                            if(useCache){ return resolvedPromise(cashedAttributes.children); } 
+                            return executeMethod('children',[],result => result.map(result => elementRegistry[result]) );
                         };
-                        this.append = function(id){
-                            communicationModule.run('arrangement.append',[id]);
+                        this.getChildByName = function(name){
+                            return executeMethod('getChildByName',[name],result => elementRegistry[result] );
                         };
-                        this.remove = function(id){
-                            communicationModule.run('arrangement.remove',[id]);
+                        this.getChildIndexByName = function(name){
+                            return executeMethod('getChildIndexByName',[name]);
+                        };
+                        this.contains = function(element,useCache=useCache_default){
+                            if(useCache){ return resolvedPromise(cashedAttributes.children.indexOf(element) != -1); } 
+                            return executeMethod('contains',[element.getId()]);
+                        };
+                        this.append = function(element){
+                            return executeMethod('append',[element.getId()],result => {if(result){ cashedAttributes.children.push(element); }});
+                        };
+                        this.prepend = function(element){
+                            return executeMethod('prepend',[element.getId(),result => {if(result){ cashedAttributes.children.unshift(element); }}]);
+                        };
+                        this.remove = function(element){
+                            cashedAttributes.children.splice(cashedAttributes.children.indexOf(element), 1);
+                            return executeMethod('remove',[element.getId()]);
                         };
                         this.clear = function(){
-                            communicationModule.run('arrangement.clear');
-                        };
-                        this.getElementAddress = function(id){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementAddress',[id],resolve);
-                            });
-                        };
-                        this.getElementByAddress = function(address){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementByAddress',[address],resolve);
-                            });
+                            cashedAttributes.children = [];
+                            return executeMethod('clear',[]);
                         };
                         this.getElementsUnderPoint = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementsUnderPoint',[x,y],resolve);
-                            });
+                            return executeMethod('getElementsUnderPoint',[x,y],result => result.map(result => elementRegistry[result]));
                         };
                         this.getElementsUnderArea = function(points){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementsUnderArea',[points],resolve);
-                            });
+                            return executeMethod('getElementsUnderArea',[points],result => result.map(result => elementRegistry[result]));
                         };
-                        this.printTree = function(mode){
-                            communicationModule.run('arrangement.printTree',[mode]);
+                        this.getTree = function(){
+                            return executeMethod('getTree',[]);
                         };
-                        this.areParents = function(elementId,potentialParents=[]){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.areParents',[elementId,potentialParents],resolve);
-                            });
+                        this.stencil = function(element,useCache=useCache_default){
+                            if(useCache && element == undefined){ return resolvedPromise(cashedAttributes.stencil); } cashedAttributes.stencil = element;
+                            return executeMethod('stencil',[element.getId()]);
                         };
-                    };
-                
-                    this.render = new function(){
-                        this.refresh = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.refresh',[],resolve);
-                            });
+                        this.clipActive = function(bool,useCache=useCache_default){ 
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.clipActive); } cashedAttributes.clipActive = bool;
+                            return executeMethod('clipActive',[bool]);
                         };
-                        this.clearColour = function(colour){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.clearColour',[colour],resolve);
-                            });
-                        };
-                        this.adjustCanvasSize = function(newWidth, newHeight){
-                            communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
-                        };
-                        this.getCanvasSize = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.getCanvasSize',[],resolve);
-                            });
-                        };
-                        this.activeLimitToFrameRate = function(active){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
-                            });
-                        };
-                        this.frameRateLimit = function(rate){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.frameRateLimit',[rate],resolve);
-                            });
-                        };
-                        this.frame = function(){
-                            communicationModule.run('render.frame',[]);
-                        };
-                        this.active = function(active){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.active',[active],resolve);
-                            });
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
                         };
                     };
-                
-                    this.viewport = new function(){
-                        this.refresh = function(){
-                            communicationModule.run('viewport.refresh',[]);
+                    
+                    this.rectangle = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'rectangle';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            scale: 1,
+                            static: false,
                         };
-                        this.position = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.position',[x,y],resolve);
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.scale = function(s){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.scale',[s],resolve);
-                            });
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
                         };
-                        this.angle = function(a){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.angle',[a],resolve);
-                            });
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
                         };
-                        this.getElementsUnderPoint = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
-                            });
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
                         };
-                        this.getElementsUnderArea = function(points){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
-                            });
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
                         };
-                        this.getMousePosition = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getMousePosition',[x,y],resolve);
-                            });
+                        this.anchor = function(newAnchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
                         };
-                        this.getBoundingBox = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getBoundingBox',[],resolve);
-                            });
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
                         };
-                        this.stopMouseScroll = function(bool){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
-                            });
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
                         };
                     };
-                
-                    this.stats = new function(){
-                        this.active = function(active){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('stats.active',[active],resolve);
-                            });
+                    this.rectangleWithOutline = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'rectangleWithOutline';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            scale: 1,
+                            thickness: 0,
+                            static: false,
                         };
-                        this.getReport = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('stats.getReport',[],resolve);
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.lineColour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.lineColour); } cashedAttributes.lineColour = colour;
+                            return executeMethod('lineColour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
                         };
                     };
-                
-                    this.callback = new function(){
-                        this.listCallbackTypes = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('callback.listCallbackTypes',[],resolve);
+                    this.circle = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'circle';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            radius: 10,
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.getCallbackTypeState = function(type){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('callback.getCallbackTypeState',[type],resolve);
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.radius = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.radius); } cashedAttributes.radius = number;
+                            return executeMethod('radius',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.circleWithOutline = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'circleWithOutline';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            radius: 10,
+                            scale: 1,
+                            thickness: 0,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.activateCallbackType = function(type){
-                            communicationModule.run('callback.activateCallbackType',[type]);
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
                         };
-                        this.disactivateCallbackType = function(type){
-                            communicationModule.run('callback.disactivateCallbackType',[type]);
+                        this.lineColour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.lineColour); } cashedAttributes.lineColour = colour;
+                            return executeMethod('lineColour',[colour]);
                         };
-                        this.activateAllCallbackTypes = function(){
-                            communicationModule.run('callback.activateAllCallbackTypes',[]);
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
                         };
-                        this.disactivateAllCallbackTypes = function(){
-                            communicationModule.run('callback.disactivateAllCallbackTypes',[]);
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
                         };
+                        this.radius = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.radius); } cashedAttributes.radius = number;
+                            return executeMethod('radius',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.polygon = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'polygon';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            points: [], 
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.points = function(points,useCache=useCache_default){
+                            if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
+                            return executeMethod('points',[points]);
+                        }; 
+                        this.pointsAsXYArray = function(pointsXY,useCache=useCache_default){
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                            
+                            if(useCache && pointsXY == undefined){ return resolvedPromise(pointsToXYArray(cashedAttributes.points)); } 
+                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
+                            return executeMethod('pointsAsXYArray',[pointsXY])
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.polygonWithOutline = function(_id,_name){
+                        
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'polygonWithOutline';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            points: [], 
+                            scale: 1,
+                            thickness: 0,
+                            jointDetail: 25,
+                            jointType: 'sharp',
+                            sharpLimit: 4,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.lineColour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.lineColour); } cashedAttributes.lineColour = colour;
+                            return executeMethod('lineColour',[colour]);
+                        };
+                        this.points = function(points,useCache=useCache_default){
+                            if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
+                            return executeMethod('points',[points]);
+                        }; 
+                        this.pointsAsXYArray = function(points,useCache=useCache_default){
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                            
+                            if(useCache && pointsXY == undefined){ return resolvedPromise(pointsToXYArray(cashedAttributes.points)); } 
+                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
+                            return executeMethod('pointsAsXYArray',[pointsXY])
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.jointDetail = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.jointDetail); } cashedAttributes.jointDetail = number;
+                            return executeMethod('jointDetail',[number]);
+                        };
+                        this.jointType = function(type,useCache=useCache_default){
+                            if(useCache && type == undefined){ return resolvedPromise(cashedAttributes.jointType); } cashedAttributes.jointType = type;
+                            return executeMethod('jointType',[type]);
+                        };
+                        this.sharpLimit = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.sharpLimit); } cashedAttributes.sharpLimit = number;
+                            return executeMethod('sharpLimit',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    
+                    this.path = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'path';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            points: [], 
+                            scale: 1,
+                            thickness: 0,
+                            capType: 'none',
+                            jointDetail: 25,
+                            jointType: 'sharp',
+                            sharpLimit: 4,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.points = function(points,useCache=useCache_default){
+                            if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
+                            return executeMethod('points',[points]);
+                        }; 
+                        this.pointsAsXYArray = function(points,useCache=useCache_default){
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                            
+                            if(useCache && pointsXY == undefined){ return resolvedPromise(pointsToXYArray(cashedAttributes.points)); } 
+                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
+                            return executeMethod('pointsAsXYArray',[pointsXY])
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.looping = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.looping); } cashedAttributes.looping = bool;
+                            return executeMethod('looping',[bool]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.capType = function(type,useCache=useCache_default){
+                            if(useCache && type == undefined){ return resolvedPromise(cashedAttributes.capType); } cashedAttributes.capType = type;
+                            return executeMethod('capType',[type]);
+                        };
+                        this.jointType = function(type,useCache=useCache_default){
+                            if(useCache && type == undefined){ return resolvedPromise(cashedAttributes.jointType); } cashedAttributes.jointType = type;
+                            return executeMethod('jointType',[type]);
+                        };
+                        this.jointDetail = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.jointDetail); } cashedAttributes.jointDetail = number;
+                            return executeMethod('jointDetail',[number]);
+                        };
+                        this.sharpLimit = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.sharpLimit); } cashedAttributes.sharpLimit = number;
+                            return executeMethod('sharpLimit',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    
+                    this.image = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'image';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing,transferables){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                },transferables);
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.imageURL = function(url,useCache=useCache_default){
+                            return executeMethod('imageURL',[url]);
+                        };
+                        this.imageBitmap = function(bitmap,useCache=useCache_default){
+                            return executeMethod('imageBitmap',[bitmap],undefined,bitmap);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    
+                    this.character = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'character';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            font: 'defaultThin',
+                            character: '',
+                            printingMode: { horizontal:'left', vertical:'bottom' },
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.font = function(font,useCache=useCache_default){
+                            if(useCache && font == undefined){ return resolvedPromise(cashedAttributes.font); } cashedAttributes.font = font;
+                            return executeMethod('font',[font]);
+                        };
+                        this.character = function(character,useCache=useCache_default){
+                            if(useCache && character == undefined){ return resolvedPromise(cashedAttributes.character); } cashedAttributes.character = character;
+                            return executeMethod('character',[character]);
+                        };
+                        this.printingMode = function(printingMode,useCache=useCache_default){
+                            if(useCache && printingMode == undefined){ return resolvedPromise(cashedAttributes.printingMode); } cashedAttributes.printingMode = printingMode;
+                            return executeMethod('printingMode',[printingMode]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.characterString = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'characterString';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            font: 'defaultThin',
+                            string: '',
+                            spacing: 0.5,
+                            interCharacterSpacing: 0,
+                            printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.font = function(font,useCache=useCache_default){
+                            if(useCache && font == undefined){ return resolvedPromise(cashedAttributes.font); } cashedAttributes.font = font;
+                            return executeMethod('font',[font]);
+                        };
+                        this.string = function(string,useCache=useCache_default){
+                            if(useCache && string == undefined){ return resolvedPromise(cashedAttributes.string); } cashedAttributes.string = string;
+                            return executeMethod('string',[string]);
+                        };
+                        this.interCharacterSpacing = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.interCharacterSpacing); } cashedAttributes.interCharacterSpacing = number;
+                            return executeMethod('interCharacterSpacing',[number]);
+                        };
+                        this.printingMode = function(printingMode,useCache=useCache_default){
+                            if(useCache && printingMode == undefined){ return resolvedPromise(cashedAttributes.printingMode); } cashedAttributes.printingMode = printingMode;
+                            return executeMethod('printingMode',[printingMode]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+
+                };
                 
-                        const callbackRegistry = new function(){
-                            const registeredShapes = {};
+                this.meta = new function(){
+                    this.areYouReady = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('areYouReady',[],resolve);
+                        });
+                    };
+                    this.refresh = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('refresh',[],resolve);
+                        });
+                    };
+                };
                 
-                            this.register = function(id,callbackType,callback){
-                                if(!(id in registeredShapes)){ registeredShapes[id] = {}; }
-                                registeredShapes[id][callbackType] = callback;
+                this._dump = new function(){
+                    this.elememt = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.element',[],resolve);
+                        });
+                    };
+                    this.arrangement = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.arrangement',[],resolve);
+                        });
+                    };
+                    this.render = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.render',[],resolve);
+                        });
+                    };
+                    this.viewport = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.viewport',[],resolve);
+                        });
+                    };
+                    this.callback = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.callback',[],resolve);
+                        });
+                    };
+                };
+                
+                this.element = new function(){
+                    this.getAvailableElements = function(){
+                        return Object.keys(elementLibrary);
+                    };
+                    this.installElement = function(elementName,creatorMethod,interfaceProxyObject,allowOverwrite=false){
+                
+                        if(!allowOverwrite && elementName in elementLibrary){
+                            return false
+                        }
+                
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('element.installElement',[elementName,_canvas_.library.misc.serialize(creatorMethod)],result => {
+                                elementLibrary[elementName] = interfaceProxyObject;
+                                resolve(result);
+                            });
+                        });
+                    };
+                    this.getCreatedElements = function(){
+                        return elementRegistry;
+                    };
+                
+                    this.create = function(type,name){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('element.create',[type,name],id => {
+                                if(elementLibrary[type] == undefined){
+                                    console.warn('interface.element.create - unknown element type "'+type+'"');
+                                    resolve();
+                                    return;
+                                }
+                                resolve( elementRegistry[id] = new elementLibrary[type](id,name,communicationModule,dev) )
+                            });
+                        });
+                    };
+                    this.delete = function(element){
+                        communicationModule.run('element.delete',[element.getId()]);
+                        elementRegistry[element.getId()] = undefined;
+                    };
+                    this.deleteAllCreated = function(){
+                        communicationModule.run('element.deleteAllCreated',[]);
+                        elementRegistry = [];
+                    };
+                };
+                this.arrangement = new function(){
+                    this.new = function(){
+                        communicationModule.run('arrangement.new');
+                    };
+                    this.prepend = function(element){
+                        communicationModule.run('arrangement.prepend',[element.getId()]);
+                    };
+                    this.append = function(element){
+                        communicationModule.run('arrangement.append',[element.getId()]);
+                    };
+                    this.remove = function(element){
+                        communicationModule.run('arrangement.remove',[element.getId()]);
+                    };
+                    this.clear = function(){
+                        communicationModule.run('arrangement.clear');
+                    };
+                    this.getElementByAddress = function(address){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.getElementByAddress',[address],result => {
+                                resolve(elementRegistry[result]);
+                            });
+                        });
+                    };
+                    this.getElementsUnderPoint = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
+                                resolve(results.map(result => elementRegistry[result]));
+                            });
+                        });
+                    };
+                    this.getElementsUnderArea = function(points){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
+                                resolve(results.map(result => elementRegistry[result]));
+                            });
+                        });
+                    };
+                    this.printTree = function(mode){
+                        communicationModule.run('arrangement.printTree',[mode]);
+                    };
+                    this.areParents = function(element,potentialParents=[]){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
+                        });
+                    };
+                };
+                this.render = new function(){
+                    this.refresh = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.refresh',[],resolve);
+                        });
+                    };
+                    this.clearColour = function(colour){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.clearColour',[colour],resolve);
+                        });
+                    };
+                    this.adjustCanvasSize = function(newWidth, newHeight){
+                        communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
+                    };
+                    this.getCanvasSize = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.getCanvasSize',[],resolve);
+                        });
+                    };
+                    this.activeLimitToFrameRate = function(active){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
+                        });
+                    };
+                    this.frameRateLimit = function(rate){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.frameRateLimit',[rate],resolve);
+                        });
+                    };
+                    this.frame = function(){
+                        communicationModule.run('render.frame',[]);
+                    };
+                    this.active = function(active){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.active',[active],resolve);
+                        });
+                    };
+                };
+
+                this.viewport = new function(){
+                    this.refresh = function(){
+                        communicationModule.run('viewport.refresh',[]);
+                    };
+                    this.position = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.position',[x,y],resolve);
+                        });
+                    };
+                    this.scale = function(s){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.scale',[s],resolve);
+                        });
+                    };
+                    this.angle = function(a){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.angle',[a],resolve);
+                        });
+                    };
+                    this.getElementsUnderPoint = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
+                        });
+                    };
+                    this.getElementsUnderArea = function(points){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
+                        });
+                    };
+                    this.getMousePosition = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getMousePosition',[x,y],resolve);
+                        });
+                    };
+                    this.getBoundingBox = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getBoundingBox',[],resolve);
+                        });
+                    };
+                    this.stopMouseScroll = function(bool){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
+                        });
+                    };
+                };
+                this.stats = new function(){
+                    this.active = function(active){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('stats.active',[active],resolve);
+                        });
+                    };
+                    this.getReport = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('stats.getReport',[],resolve);
+                        });
+                    };
+                };
+                this.callback = new function(){
+                    this.listCallbackTypes = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('callback.listCallbackTypes',[],resolve);
+                        });
+                    };
+                    this.getCallbackTypeState = function(type){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('callback.getCallbackTypeState',[type],resolve);
+                        });
+                    };
+                    this.activateCallbackType = function(type){
+                        communicationModule.run('callback.activateCallbackType',[type]);
+                    };
+                    this.disactivateCallbackType = function(type){
+                        communicationModule.run('callback.disactivateCallbackType',[type]);
+                    };
+                    this.activateAllCallbackTypes = function(){
+                        communicationModule.run('callback.activateAllCallbackTypes',[]);
+                    };
+                    this.disactivateAllCallbackTypes = function(){
+                        communicationModule.run('callback.disactivateAllCallbackTypes',[]);
+                    };
+                
+                
+                    const callbackRegistry = new function(){
+                        const registeredShapes = {};
+                
+                        this.getCallback = function(id,callbackType){
+                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+                            return registeredShapes[id][callbackType];
+                        };
+                        this.register = function(id,callbackType,callback){
+                            if(!(id in registeredShapes)){ registeredShapes[id] = {}; }
+                            registeredShapes[id][callbackType] = callback;
+                        };
+                        this.remove = function(id,callbackType){
+                            registeredShapes[id][callbackType] = undefined;
+                            delete registeredShapes[id][callbackType];
+                        };
+                        this.call = function(id,callbackType,x,y,event){
+                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+                            registeredShapes[id][callbackType](x,y,event);
+                        };
+                    };
+                    this.getCallback = function(element, callbackType){
+                        callbackRegistry.getCallback(element.getId(), callbackType);
+                    };
+                    this.attachCallback = function(element, callbackType, callback){
+                        callbackRegistry.register(element.getId(), callbackType, callback);
+                        communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
+                    };
+                    this.removeCallback = function(element, callbackType){
+                        callbackRegistry.remove(element.getId(), callbackType);
+                        communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
+                    };
+                
+                    let allowDeepElementCallback = false;
+                    this.allowDeepElementCallback = function(bool){
+                        if(bool==undefined){return allowDeepElementCallback;}
+                        allowDeepElementCallback = bool;
+                    };
+                
+                    this.functions = {};
+                    this.listCallbackTypes().then(callbackNames => {
+                        callbackNames.forEach(callbackName => {
+                            _canvas_[callbackName] = function(event){
+                                let sudoEvent = {};
+                                if(event instanceof KeyboardEvent){
+                                    sudoEvent = {
+                                        key: event.key,
+                                        code: event.code,
+                                        keyCode: event.keyCode,
+                                        altKey: event.altKey,
+                                        ctrlKey: event.ctrlKey,
+                                        metaKey: event.metaKey,
+                                        shiftKey: event.shiftKey,
+                                    };
+                                }else if(event instanceof WheelEvent){
+                                    sudoEvent = { 
+                                        X: event.offsetX,
+                                        Y: event.offsetY,
+                                        wheelDelta: event.wheelDelta,
+                                        wheelDeltaX: event.wheelDeltaX,
+                                        wheelDeltaY: event.wheelDeltaY,
+                                    };
+                                }else if(event instanceof MouseEvent){
+                                    sudoEvent = { 
+                                        X: event.offsetX, 
+                                        Y: event.offsetY,
+                                    };
+                                }else{
+                                    console.warn('unknown event type: ',event);
+                                }
+                
+                                communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
                             };
-                            this.remove = function(id,callbackType){
-                                registeredShapes[id][callbackType] = undefined;
-                                delete registeredShapes[id][callbackType];
+                            communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
+                                if(allowDeepElementCallback){
+                                    elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
+                                }else{
+                                    callbackRegistry.call(elements[0],callbackName,x,y,event);
+                                }
+                                if(self.callback.functions[callbackName]){
+                                    self.callback.functions[callbackName](x,y,event,elements);
+                                }
                             };
-                            this.call = function(id,callbackType,x,y,event){
-                                if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
-                                registeredShapes[id][callbackType](x,y,event);
-                            };
-                        };
-                        this.attachCallback = function(id, callbackType, callback){
-                            callbackRegistry.register(id, callbackType, callback);
-                            communicationModule.run('callback.attachCallback',[id,callbackType]);
-                        };
-                        this.removeCallback = function(id, callbackType){
-                            callbackRegistry.remove(id, callbackType);
-                            communicationModule.run('callback.removeCallback',[id,callbackType]);
-                        };
-                
-                        let allowDeepElementCallback = false;
-                        this.allowDeepElementCallback = function(bool){
-                            if(bool==undefined){return allowDeepElementCallback;}
-                            allowDeepElementCallback = bool;
-                        };
-                
-                        this.functions = {};
-                        this.listCallbackTypes().then(callbackNames => {
-                            callbackNames.forEach(callbackName => {
-                                _canvas_[callbackName] = function(event){
-                                    let sudoEvent = {};
-                                    if(event instanceof KeyboardEvent){
-                                        sudoEvent = {
-                                            key: event.key,
-                                            code: event.code,
-                                            keyCode: event.keyCode,
-                                            altKey: event.altKey,
-                                            ctrlKey: event.ctrlKey,
-                                            metaKey: event.metaKey,
-                                            shiftKey: event.shiftKey,
-                                        };
-                                    }else if(event instanceof WheelEvent){
-                                        sudoEvent = { 
-                                            X: event.offsetX,
-                                            Y: event.offsetY,
-                                            wheelDelta: event.wheelDelta,
-                                            wheelDeltaX: event.wheelDeltaX,
-                                            wheelDeltaY: event.wheelDeltaY,
-                                        };
-                                    }else if(event instanceof MouseEvent){
-                                        sudoEvent = { 
-                                            X: event.offsetX, 
-                                            Y: event.offsetY,
-                                        };
-                                    }else{
-                                        console.warn('unknown event type: ',event);
-                                    }
-                
-                                    communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
-                                };
-                                communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
-                                    if(allowDeepElementCallback){
-                                        elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
-                                    }else{
-                                        callbackRegistry.call(elements[0],callbackName,x,y,event);
-                                    }
-                                    if(self.callback.functions[callbackName]){
-                                        self.callback.functions[callbackName](x,y,event,elements);
-                                    }
-                                };
-                            });
                         });
-                    };
-                
-                //dialing in
-                    communicationModule.function.go = function(){
-                        if(self.meta.go){self.meta.go();} /* callback */
-                    };
-                    communicationModule.function.printToScreen = function(imageData){
-                        _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
-                    };
-                    communicationModule.function.onViewportAdjust = function(state){
-                        console.log('onViewportAdjust -> ',state); /* callback */
-                    };
-                
-                    communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                        return attributeNames.map((name,index) => {
-                            return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
-                        });    
-                    };
-                    communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                        attributes.map((attribute,index) => {
-                            _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
-                        });
-                    };
-                    communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                        return attributeNames.map((name,index) => {
-                            return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
-                        });
-                    };
-                
-                    communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                        return attributeNames.map(attribute => {
-                            return eval('document.'+attribute);
-                        });
-                    };
-                    communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                        return attributeNames.map((attribute,index) => {
-                            eval('document.'+attribute+' = "'+values[index]+'"');
-                        });
-                    };
-                    communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                        return attributeNames.map(attribute => {
-                            return eval('window.'+attribute);
-                        });
-                    };
-                    communicationModule.function.setWindowAttributes = function(attributes=[]){
-                        attributes.map((attribute,index) => {
-                            eval('window.'+attribute.name+' = "'+attribute.value+'"');
-                        });
-                    };
+                    });
+                };
+
 
             };
             _canvas_.system = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:19} };
+                this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
             };
             _canvas_.system.mouse = new function(){
                 //setup
+                    const mouse = this;
+                
                     this.tmp = {};
                     this.functionList = {};
                     this.functionList.onmousedown = [];
@@ -21695,9 +22757,9 @@
                                         stopCode(event);
                                     }
                 
-                                    _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
-                                    _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
-                                    _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
+                                    _canvas_.onmousemove = mouse.original.onmousemove;
+                                    _canvas_.onmouseleave = mouse.original.onmouseleave;
+                                    _canvas_.onmouseup = mouse.original.onmouseup;
                                 };
                                 _canvas_.onmouseleave = _canvas_.onmouseup;
                     };
@@ -21707,7 +22769,7 @@
                         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
                             _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
                                 if(elementIds.length == 0){
-                                    _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
+                                    _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
                                 }
                             }
                         });
@@ -21716,7 +22778,7 @@
             };
             _canvas_.system.keyboard = new function(){
                 //setup
-                    var keyboard = this;
+                    const keyboard = this;
                     this.pressedKeys = {
                         control:false,
                         alt:false,
@@ -21728,7 +22790,7 @@
                 
                 //utility functions
                     function customKeyInterpreter(event,press){
-                        var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                        const pressedKeys = keyboard.pressedKeys;
                         if(event.code == 'ControlLeft' || event.code == 'ControlRight'){  pressedKeys.control = press; }
                         else if(event.code == 'AltLeft' || event.code == 'AltRight'){     pressedKeys.alt = press;     }
                         else if(event.code == 'MetaLeft' || event.code == 'MetaRight'){   pressedKeys.meta = press;    }
@@ -21750,42 +22812,42 @@
                 //connect callbacks to keyboard function lists
                     _canvas_.core.callback.functions.onkeydown = function(x,y,event,shapes){
                         //if key is already pressed, don't press it again
-                            if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
-                            _canvas_.system.keyboard.pressedKeys[event.code] = true;
+                            if(keyboard.pressedKeys[event.code]){ return; }
+                            keyboard.pressedKeys[event.code] = true;
                             customKeyInterpreter(event,true);
                 
                         // //ESCAPE operation code
                         //     if(event.key == 'Escape'){ 
                         //         console.log('%cEscape key pressed', 'color:White; background-color: Black;'); 
-                        //         _canvas_.system.keyboard.releaseAll();
+                        //         keyboard.releaseAll();
                         //         _canvas_.onmouseup({offsetX:0,offsetY:0});
                         //         _canvas_.system.mouse.setUpCallbacks();
                         //     }
                         
                         //perform action
-                            for(var a = 0; a < shapes.length; a++){
+                            for(let a = 0; a < shapes.length; a++){
                                 if(shapes[a].glyphs.includes(event.key)){
                                     shapes[a].onkeydown(x,y,event);
                                     return;
                                 }
                             }
-                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                            _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                     };
                 
                     _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
                         //if key isn't pressed, don't release it
-                            if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
-                            delete _canvas_.system.keyboard.pressedKeys[event.code];
+                            if(!keyboard.pressedKeys[event.code]){return;}
+                            delete keyboard.pressedKeys[event.code];
                             customKeyInterpreter(event,false);
                         
                         //perform action
-                            for(var a = 0; a < shapes.length; a++){
+                            for(let a = 0; a < shapes.length; a++){
                                 if(shapes[a].glyphs.includes(event.key)){
                                     shapes[a].onkeyup(x,y,event);
                                     return;
                                 }
                             }
-                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                            _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeyup, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                     };
             };
             
@@ -21793,43 +22855,47 @@
             _canvas_.system.pane = {};
             
             _canvas_.core.meta.go = function(){
-            
                 //background
-                    _canvas_.core.meta.createSetAppend('group','background',{ignored:true}).then(id => { 
-                        _canvas_.system.pane.background = id;
-                        _canvas_.system.pane.b = id;
+                    _canvas_.core.element.create('group','background').then(group => {
+                        _canvas_.core.arrangement.append(group);
+                        group.ignored(true);
+                        _canvas_.system.pane.background = group;
+                        _canvas_.system.pane.b = group;
                     });
             
                 //middleground
-                     _canvas_.core.meta.createSetAppend('group','middleground').then(id => { 
-                        _canvas_.system.pane.middleground = id;
+                    _canvas_.core.element.create('group','middleground').then(group => {
+                        _canvas_.core.arrangement.append(group);
+                        _canvas_.system.pane.middleground = group;
                     }).then(() => {
                         //back
-                            _canvas_.core.meta.createSetAppend('group','back',undefined,_canvas_.system.pane.middleground).then(id => { 
-                                _canvas_.system.pane.middleground.back = id;
-                                _canvas_.system.pane.mb = id;
+                            _canvas_.core.element.create('group','back').then(group => {
+                                _canvas_.system.pane.middleground.append(group);
+                                _canvas_.system.pane.middleground.back = group;
+                                _canvas_.system.pane.mb = group;
                             });
-            
                         //middle
-                            _canvas_.core.meta.createSetAppend('group','middle',undefined,_canvas_.system.pane.middleground).then(id => { 
-                                _canvas_.system.pane.middleground.middle = id; 
-                                _canvas_.system.pane.mm = id;
+                            _canvas_.core.element.create('group','middle').then(group => {
+                                _canvas_.system.pane.middleground.append(group);
+                                _canvas_.system.pane.middleground.middle = group;
+                                _canvas_.system.pane.mm = group;
                             });
-            
                         //front
-                            _canvas_.core.meta.createSetAppend('group','front',undefined,_canvas_.system.pane.middleground).then(id => { 
-                                _canvas_.system.pane.middleground.front = id;
-                                _canvas_.system.pane.mf = id;
+                            _canvas_.core.element.create('group','front').then(group => {
+                                _canvas_.system.pane.middleground.append(group);
+                                _canvas_.system.pane.middleground.front = group;
+                                _canvas_.system.pane.mf = group;
                             });
                     });
             
                 //foreground
-                    _canvas_.core.meta.createSetAppend('group','foreground',{ignored:true}).then(id => { 
-                        _canvas_.system.pane.foreground = id;
-                        _canvas_.system.pane.f = id;
+                    _canvas_.core.element.create('group','foreground').then(group => {
+                        _canvas_.core.arrangement.append(group);
+                        group.ignored(true);
+                        _canvas_.system.pane.foreground = group;
+                        _canvas_.system.pane.f = group;
                     });
             
-                
                 const checkingInterval = setInterval(() => {
                     if(
                         _canvas_.system.pane.b != undefined &&
@@ -21839,6 +22905,7 @@
                         _canvas_.system.pane.f != undefined
                     ){
                         clearInterval(checkingInterval);
+                        _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
                         if(_canvas_.system.go){_canvas_.system.go();}
                     }
                 }, 1);

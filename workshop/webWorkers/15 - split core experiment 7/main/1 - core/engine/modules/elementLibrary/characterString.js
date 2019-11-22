@@ -1,4 +1,4 @@
-this.characterString = function(name,_id){
+this.characterString = function(_id,_name){
     const self = this;
 
     //attributes 
@@ -12,7 +12,7 @@ this.characterString = function(name,_id){
             const group = element.create_skipDatabase('group','characterString_group');
 
         //simple attributes
-            this.name = name;
+            this.name = _name;
             this.parent = undefined;
             this.dotFrame = false; group.dotFrame = this.dotFrame;
             this.extremities = group.extremities;
@@ -159,8 +159,12 @@ this.characterString = function(name,_id){
                 dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
 
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+attributes[key]); //#development
-                    self[key](attributes[key]);
+                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    try{
+                        self[key](attributes[key]);
+                    }catch(err){
+                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                    }
                 });
             };
          

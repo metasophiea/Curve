@@ -7,11 +7,11 @@ const library = new function(){
         countActive:!false,
         countMemory:{},
     
-        math:{active:false,fontStyle:'color:rgb(87, 161, 80); font-style:italic;'},
-        structure:{active:false,fontStyle:'color:rgb(129, 80, 161); font-style:italic;'},
-        audio:{active:false,fontStyle:'color:rgb(80, 161, 141); font-style:italic;'},
-        font:{active:false,fontStyle:'color:rgb(161, 84, 80); font-style:italic;'},
-        misc:{active:false,fontStyle:'color:rgb(80, 134, 161); font-style:italic;'},
+        math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+        structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+        audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
+        font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+        misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
     
         log:{
             math:function(data){
@@ -43,6 +43,31 @@ const library = new function(){
     };
     this.dev = {
         countResults:function(){ return dev.countMemory; },
+        testLoggers:function(){
+            const math = dev.math.active;
+            const structure = dev.structure.active;
+            const audio = dev.audio.active;
+            const font = dev.font.active;
+            const misc = dev.misc.active;
+
+            dev.math.active = true;
+            dev.structure.active = true;
+            dev.audio.active = true;
+            dev.font.active = true;
+            dev.misc.active = true;
+
+            dev.log.math('.testLoggers -> math');
+            dev.log.structure('.testLoggers -> structure');
+            dev.log.audio('.testLoggers -> audio');
+            dev.log.font('.testLoggers -> font');
+            dev.log.misc('.testLoggers -> misc');
+
+            dev.math.active = math;
+            dev.structure.active = structure;
+            dev.audio.active = audio;
+            dev.font.active = font;
+            dev.misc.active = misc;
+        },
     };
     
     this.math = new function(){
@@ -20761,24 +20786,20 @@ const communicationModule = new communicationModuleMaker(this,'core_engine');
 const dev = {
     prefix:'core_engine',
 
-    // library:{active:!true,fontStyle:'color:rgb(87, 161, 80); font-style:italic;'},
-    element:{active:false,fontStyle:'color:rgb(161, 145, 80); font-style:italic;'},
-    elementLibrary:{active:false,fontStyle:'color:rgb(129, 80, 161); font-style:italic;'},
-    arrangement:{active:false,fontStyle:'color:rgb(80, 161, 141); font-style:italic;'},
-    render:{active:false,fontStyle:'color:rgb(161, 84, 80); font-style:italic;'},
-    viewport:{active:false,fontStyle:'color:rgb(80, 134, 161); font-style:italic;'},
-    stats:{active:false,fontStyle:'color:rgb(87, 80, 161); font-style:italic;'},
-    callback:{active:false,fontStyle:'color:rgb(122, 163, 82); font-style:italic;'},
-    interface:{active:false,fontStyle:'color:rgb(77, 171, 169); font-style:italic;'},
+    element:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+    elementLibrary:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+    arrangement:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
+    render:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+    viewport:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
+    stats:{active:false,fontStyle:'color:rgb(24, 53, 157); font-style:italic;'},
+    callback:{active:false,fontStyle:'color:rgb(66, 145, 115); font-style:italic;'},
+    service:{active:false,fontStyle:'color:rgb(145, 125, 124); font-style:italic;'},
+    interface:{active:false,fontStyle:'color:rgb(128, 131, 137); font-style:italic;'},
 
     log:{
-        // library:function(subSection,data){
-        //     if(!dev.library.active){return;}
-        //     console.log('%c'+dev.prefix+'.library.'+subSection+(new Array(...arguments).slice(1).join(' ')), dev.library.fontStyle );
-        // },
         element:function(data){
             if(!dev.element.active){return;}
-            console.log('%c'+dev.prefix+'e.element'+(new Array(...arguments).join(' ')), dev.element.fontStyle );
+            console.log('%c'+dev.prefix+'.element'+(new Array(...arguments).join(' ')), dev.element.fontStyle );
         },
         elementLibrary:function(elementType,address,data){
             if(!dev.elementLibrary.active){return;}
@@ -20805,23 +20826,74 @@ const dev = {
             if(!dev.callback.active){return;}
             console.log('%c'+dev.prefix+'.callback'+(new Array(...arguments).join(' ')), dev.callback.fontStyle );
         },
+        service:function(data){
+            if(!dev.service.active){return;}
+            console.log('%c'+dev.prefix+'.service'+(new Array(...arguments).join(' ')), dev.service.fontStyle );
+        },
         interface:function(data){
             if(!dev.interface.active){return;}
             console.log('%c'+dev.prefix+'.interface'+(new Array(...arguments).join(' ')), dev.interface.fontStyle );
         },
+    },
+
+    testLoggers:function(){
+        const element = dev.element.active;
+        const elementLibrary = dev.elementLibrary.active;
+        const arrangement = dev.arrangement.active;
+        const render = dev.render.active;
+        const viewport = dev.viewport.active;
+        const stats = dev.stats.active;
+        const callback = dev.callback.active;
+        const service = dev.service.active;
+        const interface = dev.interface.active;
+
+        dev.element.active = true;
+        dev.elementLibrary.active = true;
+        dev.arrangement.active = true;
+        dev.render.active = true;
+        dev.viewport.active = true;
+        dev.stats.active = true;
+        dev.callback.active = true;
+        dev.service.active = true;
+        dev.interface.active = true;
+
+        dev.log.element('.testLoggers -> element');
+        dev.log.elementLibrary('elementType','/address/goes/here/','.testLoggers -> elementLibrary');
+        dev.log.arrangement('.testLoggers -> arrangement');
+        dev.log.render('.testLoggers -> render');
+        dev.log.viewport('.testLoggers -> viewport');
+        dev.log.stats('.testLoggers -> stats');
+        dev.log.callback('.testLoggers -> callback');
+        dev.log.service('.testLoggers -> service');
+        dev.log.interface('.testLoggers -> interface');
+
+        dev.element.active = element;
+        dev.elementLibrary.active = elementLibrary;
+        dev.arrangement.active = arrangement;
+        dev.render.active = render;
+        dev.viewport.active = viewport;
+        dev.stats.active = stats;
+        dev.callback.active = callback;
+        dev.service.active = service;
+        dev.interface.active = interface;
     },
 };
 const report = {
     info:function(){ console.log(...['core_engine.report.info:'].concat(...new Array(...arguments))); },
     warning:function(){ console.warn(...['core_engine.report.warning:'].concat(...new Array(...arguments))); },
     error:function(){ console.error(...['core_engine.report.error:'].concat(...new Array(...arguments))); },
+    testReporters:function(){
+        report.info('info');
+        report.warning('warning');
+        report.error('error');
+    },
 };
 
 const element = new function(){
     //element library
         const elementLibrary = new function(){
             const elementLibrary = this;
-            this.group = function(name,_id){
+            this.group = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -20832,7 +20904,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -20893,7 +20965,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -20924,26 +21000,30 @@ const element = new function(){
                     this.children = function(){return children;};
                     this.getChildByName = function(name){return getChildByName(name);};
                     this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
-                    this.contains = checkForElement;
+                    this.contains = function(element){ return checkForElement(element) != undefined; };
                     this.append = function(newElement){
             
-                        if( !isValidElement(newElement) ){ return; }
+                        if( !isValidElement(newElement) ){ return false; } 
             
                         children.push(newElement); 
                         newElement.parent = this;
                         augmentExtremities_add(newElement);
             
                         childRegistry[newElement.name] = newElement;
+            
+                        return true;
                     };
                     this.prepend = function(newElement){
             
-                        if( !isValidElement(newElement) ){ return; }
+                        if( !isValidElement(newElement) ){ return false; }
             
                         children.unshift(newElement); 
                         newElement.parent = this;
                         augmentExtremities_add(newElement);
             
                         childRegistry[newElement.name] = newElement;
+            
+                        return true;
                     };
                     this.remove = function(newElement){
                         if(newElement == undefined){return;}
@@ -20958,7 +21038,7 @@ const element = new function(){
             
                         let returnList = [];
             
-                        //run though children backwords (thus, front to back)
+                        //run though children backwards (thus, front to back)
                         for(let a = children.length-1; a >= 0; a--){
                             //if child wants to be ignored, just move on to the next one
                                 if( children[a].ignored() ){ continue; }
@@ -20997,7 +21077,7 @@ const element = new function(){
                         return returnList;
                     };
                     this.getTree = function(){
-                        const result = {name:this.name,type:type,id:this.getId(),children:[]};
+                        const result = {name:self.name, type:type, id:self.getId(), children:[]};
             
                         children.forEach(function(a){
                             if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
@@ -21282,8 +21362,8 @@ const element = new function(){
                         this.prepend = function(elementId){ return self.prepend(element.getElementFromId(elementId)); };
                         this.remove = function(elementId){ return self.remove(element.getElementFromId(elementId)); };
                         this.clear = self.clear;
-                        this.getElementsUnderPoint = function(x,y){ return element.getIdFromElement(self.getElementsUnderPoint(x,y)); };
-                        this.getElementsUnderArea = function(points){ return element.getIdFromElement(self.getElementsUnderArea(points)); };
+                        this.getElementsUnderPoint = function(x,y){ return self.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele)); };
+                        this.getElementsUnderArea = function(points){ return self.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele)); };
                         this.getTree = self.getTree;
                         this.stencil = function(elementId){ return self.stencil(element.getElementFromId(elementId)); };
                         this.clipActive = self.clipActive;
@@ -21292,7 +21372,7 @@ const element = new function(){
                     };
             };
             
-            this.rectangle = function(name,_id){
+            this.rectangle = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -21303,7 +21383,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -21381,7 +21461,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -21574,7 +21658,7 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
-            this.rectangleWithOutline = function(name,_id){
+            this.rectangleWithOutline = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -21585,7 +21669,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -21675,7 +21759,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -21946,7 +22034,7 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
-            this.circle = function(name,_id){
+            this.circle = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -21957,7 +22045,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -22025,7 +22113,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -22216,7 +22308,7 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
-            this.circleWithOutline = function(name,_id){
+            this.circleWithOutline = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -22227,7 +22319,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -22306,7 +22398,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -22537,7 +22633,7 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
-            this.polygon = function(name,_id){
+            this.polygon = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -22548,7 +22644,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -22609,7 +22705,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -22759,7 +22859,7 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
-            this.polygonWithOutline = function(name,_id){
+            this.polygonWithOutline = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -22770,7 +22870,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -22864,7 +22964,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -23056,7 +23160,7 @@ const element = new function(){
                     };
             };
             
-            this.path = function(name,_id){
+            this.path = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -23067,7 +23171,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -23177,7 +23281,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -23342,7 +23450,7 @@ const element = new function(){
                     };
             };
             
-            this.image = function(name,_id){
+            this.image = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -23353,7 +23461,7 @@ const element = new function(){
                         this.getId = function(){return id;}
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -23431,7 +23539,12 @@ const element = new function(){
                         };
                         function loadImage(url){
                             image.url = url;
-                            fetch(url).then( response =>{
+                            fetch(url).then( response => {
+                                if(response.status != 200){
+                                    console.warn(type,id,self.getAddress(),'cound not find image at: '+url);
+                                    return;
+                                }
+            
                                 response.blob().then(data => {
                                     createImageBitmap(data).then(bitmap => {
                                         image.bitmap = bitmap;
@@ -23470,7 +23583,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -23687,7 +23804,7 @@ const element = new function(){
                     };
             };
             
-            this.character = function(name,_id){
+            this.character = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -23700,7 +23817,7 @@ const element = new function(){
                         const defaultFontName = 'defaultThin';
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false;
                         this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -23818,7 +23935,11 @@ const element = new function(){
             
                             allowComputeExtremities = false;
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                             allowComputeExtremities = true;
             
@@ -24041,7 +24162,6 @@ const element = new function(){
                         this.x = self.x;
                         this.y = self.y;
                         this.scale = self.scale;
-                        this.static = self.static;
                         this.angle = self.angle;
                         this.anchor = self.anchor;
                         this.width = self.width;
@@ -24055,7 +24175,7 @@ const element = new function(){
                         this._dump = self._dump;
                     };
             };
-            this.characterString = function(name,_id){
+            this.characterString = function(_id,_name){
                 const self = this;
             
                 //attributes 
@@ -24069,7 +24189,7 @@ const element = new function(){
                         const group = element.create_skipDatabase('group','characterString_group');
             
                     //simple attributes
-                        this.name = name;
+                        this.name = _name;
                         this.parent = undefined;
                         this.dotFrame = false; group.dotFrame = this.dotFrame;
                         this.extremities = group.extremities;
@@ -24198,7 +24318,11 @@ const element = new function(){
                             if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
             
                             Object.keys(attributes).forEach(key => {
-                                self[key](attributes[key]);
+                                try{
+                                    self[key](attributes[key]);
+                                }catch(err){
+                                    console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                                }
                             });
                         };
                      
@@ -25432,7 +25556,7 @@ const element = new function(){
 
         //creation
             this.create_skipDatabase = function(type,name){
-                return new elementLibrary[type](name,-1);
+                return new elementLibrary[type](-1,name);
             };
             this.create = function(type,name){
 
@@ -25441,7 +25565,7 @@ const element = new function(){
                 if(elementLibrary[type] == undefined){ report.error('elememt.createElement: type "'+type+'" does not exist - element will not be produced'); return; }
 
                 const newElement_id = generateElementId();
-                createdElements[newElement_id] = new elementLibrary[type](name,newElement_id);
+                createdElements[newElement_id] = new elementLibrary[type](newElement_id,name);
                 return createdElements[newElement_id];
             };
 
@@ -25513,7 +25637,7 @@ const arrangement = new function(){
         return design.getElementsUnderArea(points); 
     };
         
-    this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address
+    this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address 
         function recursivePrint(grouping,prefix=''){
             grouping.children.forEach(function(a){
                 if(mode == 'spaced'){
@@ -26142,254 +26266,251 @@ const callback = new function(){
             };
 };
 
-//dialing in
-    //meta
-        communicationModule.function['areYouReady'] = function(){
-            return true;
-        };
-        communicationModule.delayedFunction['refresh'] = function(responseFunction){
-            render.refresh(() => {
-                viewport.refresh();
-                responseFunction();
-            });
-        };
-        communicationModule.function['createSetAppend'] = function(type,name,setList,appendingGroup){
-
-            const newElement = element.create(type,name);
-            const elementId = element.getIdFromElement(newElement);
-            newElement.unifiedAttribute(setList);
-            if(appendingGroup == -1 || appendingGroup == undefined){ arrangement.append(newElement); }
-            else{ element.getElementFromId(appendingGroup).interface['append'](elementId); }
-            return elementId;
-        };
-
-    //_dump
-        communicationModule.function['_dump.element'] = function(){
-            element._dump();
-        };
-        communicationModule.function['_dump.arrangement'] = function(){
-            arrangement._dump();
-        };
-        communicationModule.function['_dump.render'] = function(){
-            render._dump();
-        };
-        communicationModule.function['_dump.viewport'] = function(){
-            viewport._dump();
-        };
-        communicationModule.function['_dump.callback'] = function(){
-            callback._dump();
-        };
-
-    //boatload
-        communicationModule.function['boatload.element.executeMethod'] = function(containers){
-            containers.forEach(container => { 
-                communicationModule.function['element.executeMethod'](container.id,container.method,container.argumentList); 
-            });
-        };
-
-    //element
-        communicationModule.function['element.getAvailableElements'] = function(){
-            return element.getAvailableElements();
-        };
-        communicationModule.function['element.installElement'] = function(elementName,serializedCreatorMethod){
-            return element.installElement(elementName,library.misc.unserialize(serializedCreatorMethod));
-        };
-        communicationModule.function['element.getCreatedElements'] = function(){
-            return element.getCreatedElements().map(ele => element.getIdFromElement(ele));
-        };
-        communicationModule.function['element.create'] = function(type,name){
-            return element.getIdFromElement(element.create(type,name));
-        };
-        communicationModule.function['element.delete'] = function(id){
-            element.delete(element.getElementFromId(id));
-        };
-        communicationModule.function['element.deleteAllCreated'] = function(){
-            element.deleteAllCreated();
-        };
-        communicationModule.function['element.getTypeById'] = function(id){
-            return element.getTypeById(element.getElementFromId(id));
-        };
-        communicationModule.function['element.executeMethod'] = function(id,method,argumentList=[]){
-            return element.getElementFromId(id).interface[method](...argumentList);
-        };
-
-    //arrangement
-        communicationModule.function['arrangement.new'] = function(){
-            arrangement.new();
-        };
-        communicationModule.function['arrangement.prepend'] = function(id){
-            arrangement.prepend(element.getElementFromId(id));
-        };
-        communicationModule.function['arrangement.append'] = function(id){
-            arrangement.append(element.getElementFromId(id));
-        };
-        communicationModule.function['arrangement.remove'] = function(id){
-            arrangement.remove(element.getElementFromId(id));
-        };
-        communicationModule.function['arrangement.clear'] = function(){
-            arrangement.clear();
-        };
-        communicationModule.function['arrangement.getElementAddress'] = function(id){
-            return element.getElementFromId(id).getAddress();
-        };
-        communicationModule.function['arrangement.getElementByAddress'] = function(address){
-            return element.getIdFromElement(arrangement.getElementByAddress(address));
-        };
-        communicationModule.function['arrangement.getElementsUnderPoint'] = function(x,y){
-            return arrangement.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele));
-        };
-        communicationModule.function['arrangement.getElementsUnderArea'] = function(points){
-            return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
-        };
-        communicationModule.function['arrangement.printTree'] = function(mode){
-            arrangement.printTree(mode);
-        };
-        communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
-            return arrangement.areParents(elementId,potentialParents);
-        };
-
-    //render
-        communicationModule.delayedFunction['render.refresh'] = function(responseFunction){
-            render.refresh(responseFunction);
-        };
-        communicationModule.function['render.clearColour'] = function(colour){
-            return render.clearColour(colour);
-        };
-        communicationModule.function['render.adjustCanvasSize'] = function(newWidth, newHeight){
-            render.adjustCanvasSize(newWidth, newHeight);
-        };
-        communicationModule.function['render.getCanvasSize'] = function(){
-            return render.getCanvasSize();
-        };
-        communicationModule.function['render.activeLimitToFrameRate'] = function(active){
-            return render.activeLimitToFrameRate(active);
-        };
-        communicationModule.function['render.frameRateLimit'] = function(rate){
-            return render.frameRateLimit(rate);
-        };
-        communicationModule.function['render.frame'] = function(){
-            render.frame();
-        };
-        communicationModule.function['render.active'] = function(active){
-            return render.active(active);
-        };
-
-    //viewport
-        communicationModule.function['viewport.refresh'] = function(){
+//meta
+    communicationModule.function['areYouReady'] = function(){
+        return true;
+    };
+    communicationModule.delayedFunction['refresh'] = function(responseFunction){
+        render.refresh(() => {
             viewport.refresh();
-        };
-        communicationModule.function['viewport.position'] = function(x,y){
-            return viewport.position(x,y);
-        };
-        communicationModule.function['viewport.scale'] = function(s){
-            return viewport.scale(s);
-        };
-        communicationModule.function['viewport.angle'] = function(a){
-            return viewport.angle(a);
-        };
-        communicationModule.function['viewport.getElementsUnderPoint'] = function(x,y){
-            return viewport.getElementsUnderPoint(x,y);
-        };
-        communicationModule.function['viewport.getElementsUnderArea'] = function(points){
-            return viewport.getElementsUnderArea(points);
-        };
-        communicationModule.function['viewport.getMousePosition'] = function(){
-            return viewport.mousePosition();
-        };
-        communicationModule.function['viewport.getBoundingBox'] = function(){
-            return viewport.getBoundingBox();
-        };
-        communicationModule.function['viewport.stopMouseScroll'] = function(bool){
-            return viewport.stopMouseScroll(bool);
-        };
-
-    //stats
-        communicationModule.function['stats.active'] = function(active){
-            return stats.active(active);
-        };
-        communicationModule.function['stats.getReport'] = function(){
-            return stats.getReport();
-        };
-
-    //callback
-        communicationModule.function['callback.listCallbackTypes'] = function(){
-            return callback.listCallbackTypes();
-        };
-        communicationModule.function['callback.getCallbackTypeState'] = function(type){
-            return callback.getCallbackTypeState(type);
-        };
-        communicationModule.function['callback.activateCallbackType'] = function(type){
-            callback.activateCallbackType(type);
-        };
-        communicationModule.function['callback.disactivateCallbackType'] = function(type){
-            callback.disactivateCallbackType(type);
-        };
-        communicationModule.function['callback.activateAllCallbackTypes'] = function(){
-            callback.activateAllCallbackTypes();
-        };
-        communicationModule.function['callback.disactivateAllCallbackTypes'] = function(){
-            callback.disactivateAllCallbackTypes();
-        };
-        communicationModule.function['callback.attachCallback'] = function(id, callbackType){
-            callback.attachCallback(element.getElementFromId(id),callbackType);
-        };
-        communicationModule.function['callback.removeCallback'] = function(id, callbackType){
-            callback.removeCallback(element.getElementFromId(id),callbackType);
-        };
-        callback.listCallbackTypes().forEach(callbackName => {
-            //for accepting the callback signals from the window's canvas
-            communicationModule.function['callback.coupling.'+callbackName] = function(event){
-                callback.coupling[callbackName](event);
-            };
+            responseFunction();
         });
+    };
+    communicationModule.function['createSetAppend'] = function(type,name,setList,appendingGroup){
 
-//dialing out
-    const interface = new function(){
-        this.go = function(){
-            communicationModule.run('go');
-        };
-        this.printToScreen = function(imageData){
-            communicationModule.run('printToScreen',[imageData],undefined,[imageData]);
-        };
-        this.onViewportAdjust = function(state){
-            communicationModule.run('onViewportAdjust',[state]);
-        };
-        this.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-            return new Promise((resolve, reject) => {
-                communicationModule.run('getCanvasAttributes',[attributeNames,prefixActiveArray],resolve);
-            });
-        };
-        this.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
-            communicationModule.run('setCanvasAttributes',[attributeNames,values,prefixActiveArray]);
-        };
-        this.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-            return new Promise((resolve, reject) => {
-                communicationModule.run('getCanvasParentAttributes',[attributeNames,prefixActiveArray],resolve);
-            });
-        };
-        this.getDocumentAttributes = function(attributeNames=[]){
-            return new Promise((resolve, reject) => {
-                communicationModule.run('getDocumentAttributes',[attributeNames],resolve);
-            });
-        };
-        this.setDocumentAttributes = function(attributeNames=[],values=[]){
-            communicationModule.run('setDocumentAttributes',[attributeNames,values]);
-        };
-        this.getWindowAttributes = function(attributeNames=[]){
-            return new Promise((resolve, reject) => {
-                communicationModule.run('getWindowAttributes',[attributeNames],resolve);
-            });
-        };
-        this.setWindowAttributes = function(attributeNames=[],values=[]){
-            communicationModule.run('setWindowAttributes',[attributeNames,values]);
-        };
+        const newElement = element.create(type,name);
+        const elementId = element.getIdFromElement(newElement);
+        newElement.unifiedAttribute(setList);
+        if(appendingGroup == -1 || appendingGroup == undefined){ arrangement.append(newElement); }
+        else{ element.getElementFromId(appendingGroup).interface['append'](elementId); }
+        return elementId;
+    };
+
+//_dump
+    communicationModule.function['_dump.element'] = function(){
+        element._dump();
+    };
+    communicationModule.function['_dump.arrangement'] = function(){
+        arrangement._dump();
+    };
+    communicationModule.function['_dump.render'] = function(){
+        render._dump();
+    };
+    communicationModule.function['_dump.viewport'] = function(){
+        viewport._dump();
+    };
+    communicationModule.function['_dump.callback'] = function(){
+        callback._dump();
+    };
+
+//boatload
+    communicationModule.function['boatload.element.executeMethod'] = function(containers){
+        containers.forEach(container => { 
+            communicationModule.function['element.executeMethod'](container.id,container.method,container.argumentList); 
+        });
+    };
+
+//element
+    communicationModule.function['element.getAvailableElements'] = function(){
+        return element.getAvailableElements();
+    };
+    communicationModule.function['element.installElement'] = function(elementName,serializedCreatorMethod){
+        return element.installElement(elementName,library.misc.unserialize(serializedCreatorMethod));
+    };
+    communicationModule.function['element.getCreatedElements'] = function(){
+        return element.getCreatedElements().map(ele => element.getIdFromElement(ele));
+    };
+    communicationModule.function['element.create'] = function(type,name){
+        return element.getIdFromElement(element.create(type,name));
+    };
+    communicationModule.function['element.delete'] = function(id){
+        element.delete(element.getElementFromId(id));
+    };
+    communicationModule.function['element.deleteAllCreated'] = function(){
+        element.deleteAllCreated();
+    };
+    communicationModule.function['element.getTypeById'] = function(id){
+        return element.getTypeById(element.getElementFromId(id));
+    };
+    communicationModule.function['element.executeMethod'] = function(id,method,argumentList=[]){
+        return element.getElementFromId(id).interface[method](...argumentList);
+    };
+
+//arrangement
+    communicationModule.function['arrangement.new'] = function(){
+        arrangement.new();
+    };
+    communicationModule.function['arrangement.prepend'] = function(id){
+        arrangement.prepend(element.getElementFromId(id));
+    };
+    communicationModule.function['arrangement.append'] = function(id){
+        arrangement.append(element.getElementFromId(id));
+    };
+    communicationModule.function['arrangement.remove'] = function(id){
+        arrangement.remove(element.getElementFromId(id));
+    };
+    communicationModule.function['arrangement.clear'] = function(){
+        arrangement.clear();
+    };
+    communicationModule.function['arrangement.getElementAddress'] = function(id){
+        return element.getElementFromId(id).getAddress();
+    };
+    communicationModule.function['arrangement.getElementByAddress'] = function(address){
+        return element.getIdFromElement(arrangement.getElementByAddress(address));
+    };
+    communicationModule.function['arrangement.getElementsUnderPoint'] = function(x,y){
+        return arrangement.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele));
+    };
+    communicationModule.function['arrangement.getElementsUnderArea'] = function(points){
+        return arrangement.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele));
+    };
+    communicationModule.function['arrangement.printTree'] = function(mode){
+        arrangement.printTree(mode);
+    };
+    communicationModule.function['arrangement.areParents'] = function(elementId,potentialParents){
+        return arrangement.areParents(elementId,potentialParents);
+    };
+
+//render
+    communicationModule.delayedFunction['render.refresh'] = function(responseFunction){
+        render.refresh(responseFunction);
+    };
+    communicationModule.function['render.clearColour'] = function(colour){
+        return render.clearColour(colour);
+    };
+    communicationModule.function['render.adjustCanvasSize'] = function(newWidth, newHeight){
+        render.adjustCanvasSize(newWidth, newHeight);
+    };
+    communicationModule.function['render.getCanvasSize'] = function(){
+        return render.getCanvasSize();
+    };
+    communicationModule.function['render.activeLimitToFrameRate'] = function(active){
+        return render.activeLimitToFrameRate(active);
+    };
+    communicationModule.function['render.frameRateLimit'] = function(rate){
+        return render.frameRateLimit(rate);
+    };
+    communicationModule.function['render.frame'] = function(){
+        render.frame();
+    };
+    communicationModule.function['render.active'] = function(active){
+        return render.active(active);
+    };
+
+//viewport
+    communicationModule.function['viewport.refresh'] = function(){
+        viewport.refresh();
+    };
+    communicationModule.function['viewport.position'] = function(x,y){
+        return viewport.position(x,y);
+    };
+    communicationModule.function['viewport.scale'] = function(s){
+        return viewport.scale(s);
+    };
+    communicationModule.function['viewport.angle'] = function(a){
+        return viewport.angle(a);
+    };
+    communicationModule.function['viewport.getElementsUnderPoint'] = function(x,y){
+        return viewport.getElementsUnderPoint(x,y);
+    };
+    communicationModule.function['viewport.getElementsUnderArea'] = function(points){
+        return viewport.getElementsUnderArea(points);
+    };
+    communicationModule.function['viewport.getMousePosition'] = function(){
+        return viewport.mousePosition();
+    };
+    communicationModule.function['viewport.getBoundingBox'] = function(){
+        return viewport.getBoundingBox();
+    };
+    communicationModule.function['viewport.stopMouseScroll'] = function(bool){
+        return viewport.stopMouseScroll(bool);
+    };
+
+//stats
+    communicationModule.function['stats.active'] = function(active){
+        return stats.active(active);
+    };
+    communicationModule.function['stats.getReport'] = function(){
+        return stats.getReport();
+    };
+
+//callback
+    communicationModule.function['callback.listCallbackTypes'] = function(){
+        return callback.listCallbackTypes();
+    };
+    communicationModule.function['callback.getCallbackTypeState'] = function(type){
+        return callback.getCallbackTypeState(type);
+    };
+    communicationModule.function['callback.activateCallbackType'] = function(type){
+        callback.activateCallbackType(type);
+    };
+    communicationModule.function['callback.disactivateCallbackType'] = function(type){
+        callback.disactivateCallbackType(type);
+    };
+    communicationModule.function['callback.activateAllCallbackTypes'] = function(){
+        callback.activateAllCallbackTypes();
+    };
+    communicationModule.function['callback.disactivateAllCallbackTypes'] = function(){
+        callback.disactivateAllCallbackTypes();
+    };
+    communicationModule.function['callback.attachCallback'] = function(id, callbackType){
+        callback.attachCallback(element.getElementFromId(id),callbackType);
+    };
+    communicationModule.function['callback.removeCallback'] = function(id, callbackType){
+        callback.removeCallback(element.getElementFromId(id),callbackType);
     };
     callback.listCallbackTypes().forEach(callbackName => {
-        //for sending core's callbacks back out
-        callback.functions[callbackName] = function(x, y, event, elements){
-            communicationModule.run('callback.'+callbackName,[x, y, event, elements.map(ele => element.getIdFromElement(ele))]);
+        //for accepting the callback signals from the window's canvas
+        communicationModule.function['callback.coupling.'+callbackName] = function(event){
+            callback.coupling[callbackName](event);
         };
     });
+const interface = new function(){
+    this.go = function(){
+        communicationModule.run('go');
+    };
+    this.printToScreen = function(imageData){
+        communicationModule.run('printToScreen',[imageData],undefined,[imageData]);
+    };
+    this.onViewportAdjust = function(state){
+        communicationModule.run('onViewportAdjust',[state]);
+    };
+    this.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+        return new Promise((resolve, reject) => {
+            communicationModule.run('getCanvasAttributes',[attributeNames,prefixActiveArray],resolve);
+        });
+    };
+    this.setCanvasAttributes = function(attributeNames=[],values=[],prefixActiveArray=[]){
+        communicationModule.run('setCanvasAttributes',[attributeNames,values,prefixActiveArray]);
+    };
+    this.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+        return new Promise((resolve, reject) => {
+            communicationModule.run('getCanvasParentAttributes',[attributeNames,prefixActiveArray],resolve);
+        });
+    };
+    this.getDocumentAttributes = function(attributeNames=[]){
+        return new Promise((resolve, reject) => {
+            communicationModule.run('getDocumentAttributes',[attributeNames],resolve);
+        });
+    };
+    this.setDocumentAttributes = function(attributeNames=[],values=[]){
+        communicationModule.run('setDocumentAttributes',[attributeNames,values]);
+    };
+    this.getWindowAttributes = function(attributeNames=[]){
+        return new Promise((resolve, reject) => {
+            communicationModule.run('getWindowAttributes',[attributeNames],resolve);
+        });
+    };
+    this.setWindowAttributes = function(attributeNames=[],values=[]){
+        communicationModule.run('setWindowAttributes',[attributeNames,values]);
+    };
+};
+callback.listCallbackTypes().forEach(callbackName => {
+    //for sending core's callbacks back out
+    callback.functions[callbackName] = function(x, y, event, elements){
+        communicationModule.run('callback.'+callbackName,[x, y, event, elements.map(ele => element.getIdFromElement(ele))]);
+    };
+});
 
 render.refresh(() => {
     viewport.refresh();

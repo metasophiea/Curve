@@ -7,11 +7,11 @@ const library = new function(){
         countActive:!false,
         countMemory:{},
     
-        math:{active:false,fontStyle:'color:rgb(87, 161, 80); font-style:italic;'},
-        structure:{active:false,fontStyle:'color:rgb(129, 80, 161); font-style:italic;'},
-        audio:{active:false,fontStyle:'color:rgb(80, 161, 141); font-style:italic;'},
-        font:{active:false,fontStyle:'color:rgb(161, 84, 80); font-style:italic;'},
-        misc:{active:false,fontStyle:'color:rgb(80, 134, 161); font-style:italic;'},
+        math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+        structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+        audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
+        font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+        misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
     
         log:{
             math:function(data){
@@ -43,6 +43,31 @@ const library = new function(){
     };
     this.dev = {
         countResults:function(){ return dev.countMemory; },
+        testLoggers:function(){
+            const math = dev.math.active;
+            const structure = dev.structure.active;
+            const audio = dev.audio.active;
+            const font = dev.font.active;
+            const misc = dev.misc.active;
+
+            dev.math.active = true;
+            dev.structure.active = true;
+            dev.audio.active = true;
+            dev.font.active = true;
+            dev.misc.active = true;
+
+            dev.log.math('.testLoggers -> math');
+            dev.log.structure('.testLoggers -> structure');
+            dev.log.audio('.testLoggers -> audio');
+            dev.log.font('.testLoggers -> font');
+            dev.log.misc('.testLoggers -> misc');
+
+            dev.math.active = math;
+            dev.structure.active = structure;
+            dev.audio.active = audio;
+            dev.font.active = font;
+            dev.misc.active = misc;
+        },
     };
     
     this.math = new function(){
@@ -69,24 +94,20 @@ const communicationModule = new communicationModuleMaker(this,'core_engine');
 const dev = {
     prefix:'core_engine',
 
-    // library:{active:!true,fontStyle:'color:rgb(87, 161, 80); font-style:italic;'},
-    element:{active:false,fontStyle:'color:rgb(161, 145, 80); font-style:italic;'},
-    elementLibrary:{active:false,fontStyle:'color:rgb(129, 80, 161); font-style:italic;'},
-    arrangement:{active:false,fontStyle:'color:rgb(80, 161, 141); font-style:italic;'},
-    render:{active:false,fontStyle:'color:rgb(161, 84, 80); font-style:italic;'},
-    viewport:{active:false,fontStyle:'color:rgb(80, 134, 161); font-style:italic;'},
-    stats:{active:false,fontStyle:'color:rgb(87, 80, 161); font-style:italic;'},
-    callback:{active:false,fontStyle:'color:rgb(122, 163, 82); font-style:italic;'},
-    interface:{active:false,fontStyle:'color:rgb(77, 171, 169); font-style:italic;'},
+    element:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+    elementLibrary:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+    arrangement:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
+    render:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+    viewport:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
+    stats:{active:false,fontStyle:'color:rgb(24, 53, 157); font-style:italic;'},
+    callback:{active:false,fontStyle:'color:rgb(66, 145, 115); font-style:italic;'},
+    service:{active:false,fontStyle:'color:rgb(145, 125, 124); font-style:italic;'},
+    interface:{active:false,fontStyle:'color:rgb(128, 131, 137); font-style:italic;'},
 
     log:{
-        // library:function(subSection,data){
-        //     if(!dev.library.active){return;}
-        //     console.log('%c'+dev.prefix+'.library.'+subSection+(new Array(...arguments).slice(1).join(' ')), dev.library.fontStyle );
-        // },
         element:function(data){
             if(!dev.element.active){return;}
-            console.log('%c'+dev.prefix+'e.element'+(new Array(...arguments).join(' ')), dev.element.fontStyle );
+            console.log('%c'+dev.prefix+'.element'+(new Array(...arguments).join(' ')), dev.element.fontStyle );
         },
         elementLibrary:function(elementType,address,data){
             if(!dev.elementLibrary.active){return;}
@@ -113,16 +134,67 @@ const dev = {
             if(!dev.callback.active){return;}
             console.log('%c'+dev.prefix+'.callback'+(new Array(...arguments).join(' ')), dev.callback.fontStyle );
         },
+        service:function(data){
+            if(!dev.service.active){return;}
+            console.log('%c'+dev.prefix+'.service'+(new Array(...arguments).join(' ')), dev.service.fontStyle );
+        },
         interface:function(data){
             if(!dev.interface.active){return;}
             console.log('%c'+dev.prefix+'.interface'+(new Array(...arguments).join(' ')), dev.interface.fontStyle );
         },
+    },
+
+    testLoggers:function(){
+        const element = dev.element.active;
+        const elementLibrary = dev.elementLibrary.active;
+        const arrangement = dev.arrangement.active;
+        const render = dev.render.active;
+        const viewport = dev.viewport.active;
+        const stats = dev.stats.active;
+        const callback = dev.callback.active;
+        const service = dev.service.active;
+        const interface = dev.interface.active;
+
+        dev.element.active = true;
+        dev.elementLibrary.active = true;
+        dev.arrangement.active = true;
+        dev.render.active = true;
+        dev.viewport.active = true;
+        dev.stats.active = true;
+        dev.callback.active = true;
+        dev.service.active = true;
+        dev.interface.active = true;
+
+        dev.log.element('.testLoggers -> element');
+        dev.log.elementLibrary('elementType','/address/goes/here/','.testLoggers -> elementLibrary');
+        dev.log.arrangement('.testLoggers -> arrangement');
+        dev.log.render('.testLoggers -> render');
+        dev.log.viewport('.testLoggers -> viewport');
+        dev.log.stats('.testLoggers -> stats');
+        dev.log.callback('.testLoggers -> callback');
+        dev.log.service('.testLoggers -> service');
+        dev.log.interface('.testLoggers -> interface');
+
+        dev.element.active = element;
+        dev.elementLibrary.active = elementLibrary;
+        dev.arrangement.active = arrangement;
+        dev.render.active = render;
+        dev.viewport.active = viewport;
+        dev.stats.active = stats;
+        dev.callback.active = callback;
+        dev.service.active = service;
+        dev.interface.active = interface;
     },
 };
 const report = {
     info:function(){ console.log(...['core_engine.report.info:'].concat(...new Array(...arguments))); },
     warning:function(){ console.warn(...['core_engine.report.warning:'].concat(...new Array(...arguments))); },
     error:function(){ console.error(...['core_engine.report.error:'].concat(...new Array(...arguments))); },
+    testReporters:function(){
+        report.info('info');
+        report.warning('warning');
+        report.error('error');
+    },
 };
 
 {{include:modules/element.js}}
@@ -132,6 +204,7 @@ const report = {
 {{include:modules/stats.js}}
 {{include:modules/callback.js}}
 
+{{include:service.js}}
 {{include:interface.js}}
 
 render.refresh(() => {

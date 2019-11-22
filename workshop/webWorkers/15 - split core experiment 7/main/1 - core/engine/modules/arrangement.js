@@ -53,7 +53,7 @@ const arrangement = new function(){
         return design.getElementsUnderArea(points); 
     };
         
-    this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address
+    this.printTree = function(mode='spaced'){ //modes: spaced / tabular / address 
         function recursivePrint(grouping,prefix=''){
             grouping.children.forEach(function(a){
                 if(mode == 'spaced'){

@@ -2,43 +2,47 @@
 _canvas_.system.pane = {};
 
 _canvas_.core.meta.go = function(){
-
     //background
-        _canvas_.core.meta.createSetAppend('group','background',{ignored:true}).then(id => { 
-            _canvas_.system.pane.background = id;
-            _canvas_.system.pane.b = id;
+        _canvas_.core.element.create('group','background').then(group => {
+            _canvas_.core.arrangement.append(group);
+            group.ignored(true);
+            _canvas_.system.pane.background = group;
+            _canvas_.system.pane.b = group;
         });
 
     //middleground
-         _canvas_.core.meta.createSetAppend('group','middleground').then(id => { 
-            _canvas_.system.pane.middleground = id;
+        _canvas_.core.element.create('group','middleground').then(group => {
+            _canvas_.core.arrangement.append(group);
+            _canvas_.system.pane.middleground = group;
         }).then(() => {
             //back
-                _canvas_.core.meta.createSetAppend('group','back',undefined,_canvas_.system.pane.middleground).then(id => { 
-                    _canvas_.system.pane.middleground.back = id;
-                    _canvas_.system.pane.mb = id;
+                _canvas_.core.element.create('group','back').then(group => {
+                    _canvas_.system.pane.middleground.append(group);
+                    _canvas_.system.pane.middleground.back = group;
+                    _canvas_.system.pane.mb = group;
                 });
-
             //middle
-                _canvas_.core.meta.createSetAppend('group','middle',undefined,_canvas_.system.pane.middleground).then(id => { 
-                    _canvas_.system.pane.middleground.middle = id; 
-                    _canvas_.system.pane.mm = id;
+                _canvas_.core.element.create('group','middle').then(group => {
+                    _canvas_.system.pane.middleground.append(group);
+                    _canvas_.system.pane.middleground.middle = group;
+                    _canvas_.system.pane.mm = group;
                 });
-
             //front
-                _canvas_.core.meta.createSetAppend('group','front',undefined,_canvas_.system.pane.middleground).then(id => { 
-                    _canvas_.system.pane.middleground.front = id;
-                    _canvas_.system.pane.mf = id;
+                _canvas_.core.element.create('group','front').then(group => {
+                    _canvas_.system.pane.middleground.append(group);
+                    _canvas_.system.pane.middleground.front = group;
+                    _canvas_.system.pane.mf = group;
                 });
         });
 
     //foreground
-        _canvas_.core.meta.createSetAppend('group','foreground',{ignored:true}).then(id => { 
-            _canvas_.system.pane.foreground = id;
-            _canvas_.system.pane.f = id;
+        _canvas_.core.element.create('group','foreground').then(group => {
+            _canvas_.core.arrangement.append(group);
+            group.ignored(true);
+            _canvas_.system.pane.foreground = group;
+            _canvas_.system.pane.f = group;
         });
 
-    
     const checkingInterval = setInterval(() => {
         if(
             _canvas_.system.pane.b != undefined &&
@@ -48,6 +52,7 @@ _canvas_.core.meta.go = function(){
             _canvas_.system.pane.f != undefined
         ){
             clearInterval(checkingInterval);
+            _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
             if(_canvas_.system.go){_canvas_.system.go();}
         }
     }, 1);

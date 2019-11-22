@@ -1,4 +1,6 @@
 //setup
+    const mouse = this;
+
     this.tmp = {};
     this.functionList = {};
     this.functionList.onmousedown = [];
@@ -34,9 +36,9 @@
                         stopCode(event);
                     }
 
-                    _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
-                    _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
-                    _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
+                    _canvas_.onmousemove = mouse.original.onmousemove;
+                    _canvas_.onmouseleave = mouse.original.onmouseleave;
+                    _canvas_.onmouseup = mouse.original.onmouseup;
                 };
                 _canvas_.onmouseleave = _canvas_.onmouseup;
     };
@@ -46,7 +48,7 @@
         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
             _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
                 if(elementIds.length == 0){
-                    _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
+                    _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
                 }
             }
         });

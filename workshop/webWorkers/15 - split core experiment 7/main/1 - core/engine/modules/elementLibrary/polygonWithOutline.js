@@ -1,4 +1,4 @@
-this.polygonWithOutline = function(name,_id){
+this.polygonWithOutline = function(_id,_name){
     const self = this;
 
     //attributes 
@@ -9,7 +9,7 @@ this.polygonWithOutline = function(name,_id){
             this.getId = function(){return id;}
 
         //simple attributes
-            this.name = name;
+            this.name = _name;
             this.parent = undefined;
             this.dotFrame = false;
             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -115,8 +115,12 @@ this.polygonWithOutline = function(name,_id){
 
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+attributes[key]); //#development
-                    self[key](attributes[key]);
+                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    try{
+                        self[key](attributes[key]);
+                    }catch(err){
+                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                    }
                 });
                 allowComputeExtremities = true;
 

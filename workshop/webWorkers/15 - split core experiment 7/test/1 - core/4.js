@@ -1,40 +1,50 @@
-let groupId_1;
-let groupId_2;
-let rectangleId_1;
-let rectangleId_2;
-let rectangleId_3;
+let group_1;
+let group_2;
+let rectangle_1;
+let rectangle_2;
+let rectangle_3;
 
 _canvas_.core.meta.go = function(){
-    _canvas_.core.meta.createSetAppend( 'group','group_1', {x:100, y:100} ).then(id => {
-        groupId_1 = id;
+    _canvas_.core.element.create('group','group_1').then(group => {
+        group_1 = group;
+        group.unifiedAttribute({ x:100, y:100 });
+        _canvas_.core.arrangement.append(group);
 
-        _canvas_.core.meta.createSetAppend( 'rectangle','rectangle_1', {width:30, height:30, colour:{r:1,g:0,b:0,a:1}}, groupId_1).then(id => {
-            rectangleId_1 = id;
+        _canvas_.core.element.create('rectangle','rectangle_1').then(rectangle => {
+            rectangle_1 = rectangle;
+            rectangle.unifiedAttribute({ width:30, height:30, colour:{r:1,g:0,b:0,a:1} });
+            group_1.append(rectangle_1);
         });
 
-        _canvas_.core.meta.createSetAppend('group','group_2', {x:50}, groupId_1).then(id => {
-            groupId_2 = id;
+        _canvas_.core.element.create('group','group_2').then(group => {
+            group_2 = group;
+            group.unifiedAttribute({ x:50 });
+            group_1.append(group);
 
-            _canvas_.core.meta.createSetAppend( 'rectangle','rectangle_2', {width:30, height:30, colour:{r:0,g:1,b:0,a:1}}, groupId_2).then(id => {
-                rectangleId_2 = id;
+            _canvas_.core.element.create('rectangle','rectangle_2').then(rectangle => {
+                rectangle_2 = rectangle;
+                rectangle.unifiedAttribute({ width:30, height:30, colour:{r:0,g:1,b:0,a:1} });
+                group_2.append(rectangle_2);
             });
-            _canvas_.core.meta.createSetAppend( 'rectangle','rectangle_3', {x:50, width:30, height:30, colour:{r:0,g:0,b:1,a:1}}, groupId_2).then(id => {
-                rectangleId_3 = id;
+
+            _canvas_.core.element.create('rectangle','rectangle_3').then(rectangle => {
+                rectangle_3 = rectangle;
+                rectangle.unifiedAttribute({ x:50, width:30, height:30, colour:{r:0,g:0,b:1,a:1} });
+                group_2.append(rectangle_3);
             });
         });
     });
 
     var tick = 0;
-    const em = _canvas_.core.element.executeMethod;
     setInterval(function(){
-        em(groupId_1,'angle').then(angle => { em(groupId_1,'angle',[angle+0.04]); });
-        em(groupId_1,'scale',[1 + 0.5*Math.sin( 2*Math.PI*tick )]);
+        group_1.angle().then(angle => { group_1.angle(angle+0.04); });
+        group_1.scale().then(() => { group_1.scale(1 + 0.5*Math.sin( 2*Math.PI*tick )); });
 
-        em(groupId_2,'angle').then(angle => { em(groupId_2,'angle',[angle+0.04]); });
-        em(groupId_2,'scale',[1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/4 )]);
+        group_2.angle().then(angle => { group_2.angle(angle+0.04); });
+        group_2.scale().then(() => { group_2.scale(1 + 0.5*Math.sin( 2*Math.PI*tick )); });
 
-        em(rectangleId_3,'angle').then(angle => { em(rectangleId_3,'angle',[angle+0.04]); });
-        em(rectangleId_3,'scale',[1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/2)]);
+        rectangle_3.angle().then(angle => { rectangle_3.angle(angle+0.04); });
+        rectangle_3.scale().then(() => { rectangle_3.scale(1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/2)); });
 
         tick += 0.01;
     },1000/40);

@@ -57,6 +57,22 @@
 
             
             // -- Only one test per time -- //
+            _canvas_.layers = new function(){
+                const layerRegistry = {};
+            
+                this.registerLayerLoaded = function(layerName, layer){
+                    if(layerRegistry[layerName] == undefined){ layerRegistry[layerName] = {}; }
+                    layerRegistry[layerName].isLoaded = true;
+                    layerRegistry[layerName].versionInformation = layer.versionInformation;
+                    if(this.onLayerLoad){this.onLayerLoad(layerName,layerRegistry);}
+                };
+                this.onLayerLoad = function(layerName,layerRegistry){};
+            
+                this.getVersionInformation = function(){
+                    return Object.keys(layerRegistry).map(key => { return {name:key, data:layerRegistry[key].versionInformation} });
+                };
+            };
+            
             _canvas_.library = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
                 const library = this;
@@ -67,11 +83,11 @@
                     countActive:!false,
                     countMemory:{},
                 
-                    math:{active:false,fontStyle:'color:rgb(87, 161, 80); font-style:italic;'},
-                    structure:{active:false,fontStyle:'color:rgb(129, 80, 161); font-style:italic;'},
-                    audio:{active:false,fontStyle:'color:rgb(80, 161, 141); font-style:italic;'},
-                    font:{active:false,fontStyle:'color:rgb(161, 84, 80); font-style:italic;'},
-                    misc:{active:false,fontStyle:'color:rgb(80, 134, 161); font-style:italic;'},
+                    math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+                    structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+                    audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
+                    font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+                    misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
                 
                     log:{
                         math:function(data){
@@ -103,6 +119,31 @@
                 };
                 this.dev = {
                     countResults:function(){ return dev.countMemory; },
+                    testLoggers:function(){
+                        const math = dev.math.active;
+                        const structure = dev.structure.active;
+                        const audio = dev.audio.active;
+                        const font = dev.font.active;
+                        const misc = dev.misc.active;
+            
+                        dev.math.active = true;
+                        dev.structure.active = true;
+                        dev.audio.active = true;
+                        dev.font.active = true;
+                        dev.misc.active = true;
+            
+                        dev.log.math('.testLoggers -> math');
+                        dev.log.structure('.testLoggers -> structure');
+                        dev.log.audio('.testLoggers -> audio');
+                        dev.log.font('.testLoggers -> font');
+                        dev.log.misc('.testLoggers -> misc');
+            
+                        dev.math.active = math;
+                        dev.structure.active = structure;
+                        dev.audio.active = audio;
+                        dev.font.active = font;
+                        dev.misc.active = misc;
+                    },
                 };
             
                 this.math = new function(){
@@ -21226,10 +21267,8 @@
                     	
                     },{}]},{},[1]);
                 };
-            };
             
-            _canvas_.getVersionInformation = function(){
-                return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
+                _canvas_.layers.registerLayerLoaded('library',this);
             };
             _canvas_.core = new function(){
                 this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
@@ -21301,418 +21340,1441 @@
                 const dev = {
                     prefix:'core_console',
                 
-                    interface:{active:false,fontStyle:'color:rgb(171, 77, 77); font-style:italic;'},
+                    interface:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+                    service:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+                    elementLibrary:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
                 
                     log:{
                         interface:function(data){
                             if(!dev.interface.active){return;}
                             console.log('%c'+dev.prefix+'.interface'+(new Array(...arguments).join(' ')), dev.interface.fontStyle );
                         },
+                        elementLibrary:function(data){
+                            if(!dev.elementLibrary.active){return;}
+                            console.log('%c'+dev.prefix+'.interface.elementLibrary'+(new Array(...arguments).join(' ')), dev.elementLibrary.fontStyle );
+                        },
+                        service:function(data){
+                            if(!dev.service.active){return;}
+                            console.log('%c'+dev.prefix+'.service'+(new Array(...arguments).join(' ')), dev.service.fontStyle );
+                        },
                     },
                 };
                 
-                //dialing out
-                    this.meta = new function(){
-                        this.areYouReady = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('areYouReady',[],resolve);
-                            });
-                        };
-                        this.refresh = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('refresh',[],resolve);
-                            });
-                        };
-                        this.createSetAppend = function(type,name,setList,appendingGroup){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('createSetAppend',[type,name,setList,appendingGroup],resolve);
-                            });
-                        };
-                    };
+                communicationModule.function.go = function(){
+                    _canvas_.layers.registerLayerLoaded('core',_canvas_.core);
+                    if(self.meta.go){self.meta.go();} /* callback */
+                };
+                communicationModule.function.printToScreen = function(imageData){
+                    _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
+                };
+                communicationModule.function.onViewportAdjust = function(state){
+                    console.log('onViewportAdjust -> ',state); /* callback */
+                };
                 
-                    this._dump = new function(){
-                        this.elememt = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.element',[],resolve);
-                            });
-                        };
-                        this.arrangement = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.arrangement',[],resolve);
-                            });
-                        };
-                        this.render = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.render',[],resolve);
-                            });
-                        };
-                        this.viewport = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.viewport',[],resolve);
-                            });
-                        };
-                        this.callback = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('_dump.callback',[],resolve);
-                            });
-                        };
-                    };
+                communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
+                    });    
+                };
+                communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
+                    attributes.map((attribute,index) => {
+                        _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
+                    });
+                };
+                communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
+                    return attributeNames.map((name,index) => {
+                        return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
+                    });
+                };
                 
-                    this.boatload = new function(){
-                        this.element = new function(){
-                            this.executeMethod = new function(){
-                                let containers = [];
-                                this.load = function(container){
-                                    containers.push(container);
-                                };
-                                this.ship = function(){
-                                    communicationModule.run('boatload.element.executeMethod',[containers]);
-                                    containers = [];
-                                };
-                            };
+                communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
+                    return attributeNames.map(attribute => {
+                        return eval('document.'+attribute);
+                    });
+                };
+                communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
+                    return attributeNames.map((attribute,index) => {
+                        eval('document.'+attribute+' = "'+values[index]+'"');
+                    });
+                };
+                communicationModule.function.getWindowAttributes = function(attributeNames=[]){
+                    return attributeNames.map(attribute => {
+                        return eval('window.'+attribute);
+                    });
+                };
+                communicationModule.function.setWindowAttributes = function(attributes=[]){
+                    attributes.map((attribute,index) => {
+                        eval('window.'+attribute.name+' = "'+attribute.value+'"');
+                    });
+                };
+                let elementRegistry = [];
+                const elementLibrary = new function(){
+                    this.group = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'group';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            scale: 1,
+                            static: false,
+                            children: [],
+                            stencil: undefined,
+                            clipActive: false,
                         };
-                    };
-                
-                    this.element = new function(){
-                        this.getAvailableElements = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.getAvailableElements',[],resolve);
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.installElement = function(elementName,creatorMethod){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.installElement',[elementName,_canvas_.library.misc.serialize(creatorMethod)],resolve);
-                            });
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
                         };
-                        this.getCreatedElements = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.getCreatedElements',[],resolve);
-                            });
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
                         };
-                        this.create = function(type,name){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.create',[type,name],resolve);
-                            });
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
                         };
-                        this.delete = function(id){
-                            communicationModule.run('element.delete',[id],resolve);
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
                         };
-                        this.deleteAllCreated = function(){
-                            communicationModule.run('element.deleteAllCreated',[],resolve);
+                        this.heedCamera = function(bool,useCache=useCache_default){ 
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.heedCamera); } cashedAttributes.heedCamera = bool;
+                            return executeMethod('heedCamera',[bool]);
                         };
-                        this.getTypeById = function(id){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.getTypeById',[id],resolve);
-                            });
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
                         };
-                        this.executeMethod = function(id,method,argumentList=[],transferableArguments){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('element.executeMethod',[id,method,argumentList],resolve,transferableArguments);
-                            });
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
                         };
-                    };
-                
-                    this.arrangement = new function(){
-                        this.new = function(){
-                            communicationModule.run('arrangement.new');
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
                         };
-                        this.prepend = function(id){
-                            communicationModule.run('arrangement.prepend',[id]);
+                        this.children = function(useCache=useCache_default){ 
+                            if(useCache){ return resolvedPromise(cashedAttributes.children); } 
+                            return executeMethod('children',[],result => result.map(result => elementRegistry[result]) );
                         };
-                        this.append = function(id){
-                            communicationModule.run('arrangement.append',[id]);
+                        this.getChildByName = function(name){
+                            return executeMethod('getChildByName',[name],result => elementRegistry[result] );
                         };
-                        this.remove = function(id){
-                            communicationModule.run('arrangement.remove',[id]);
+                        this.getChildIndexByName = function(name){
+                            return executeMethod('getChildIndexByName',[name]);
+                        };
+                        this.contains = function(element,useCache=useCache_default){
+                            if(useCache){ return resolvedPromise(cashedAttributes.children.indexOf(element) != -1); } 
+                            return executeMethod('contains',[element.getId()]);
+                        };
+                        this.append = function(element){
+                            return executeMethod('append',[element.getId()],result => {if(result){ cashedAttributes.children.push(element); }});
+                        };
+                        this.prepend = function(element){
+                            return executeMethod('prepend',[element.getId(),result => {if(result){ cashedAttributes.children.unshift(element); }}]);
+                        };
+                        this.remove = function(element){
+                            cashedAttributes.children.splice(cashedAttributes.children.indexOf(element), 1);
+                            return executeMethod('remove',[element.getId()]);
                         };
                         this.clear = function(){
-                            communicationModule.run('arrangement.clear');
-                        };
-                        this.getElementAddress = function(id){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementAddress',[id],resolve);
-                            });
-                        };
-                        this.getElementByAddress = function(address){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementByAddress',[address],resolve);
-                            });
+                            cashedAttributes.children = [];
+                            return executeMethod('clear',[]);
                         };
                         this.getElementsUnderPoint = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementsUnderPoint',[x,y],resolve);
-                            });
+                            return executeMethod('getElementsUnderPoint',[x,y],result => result.map(result => elementRegistry[result]));
                         };
                         this.getElementsUnderArea = function(points){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.getElementsUnderArea',[points],resolve);
-                            });
+                            return executeMethod('getElementsUnderArea',[points],result => result.map(result => elementRegistry[result]));
                         };
-                        this.printTree = function(mode){
-                            communicationModule.run('arrangement.printTree',[mode]);
+                        this.getTree = function(){
+                            return executeMethod('getTree',[]);
                         };
-                        this.areParents = function(elementId,potentialParents=[]){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('arrangement.areParents',[elementId,potentialParents],resolve);
-                            });
+                        this.stencil = function(element,useCache=useCache_default){
+                            if(useCache && element == undefined){ return resolvedPromise(cashedAttributes.stencil); } cashedAttributes.stencil = element;
+                            return executeMethod('stencil',[element.getId()]);
                         };
-                    };
-                
-                    this.render = new function(){
-                        this.refresh = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.refresh',[],resolve);
-                            });
+                        this.clipActive = function(bool,useCache=useCache_default){ 
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.clipActive); } cashedAttributes.clipActive = bool;
+                            return executeMethod('clipActive',[bool]);
                         };
-                        this.clearColour = function(colour){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.clearColour',[colour],resolve);
-                            });
-                        };
-                        this.adjustCanvasSize = function(newWidth, newHeight){
-                            communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
-                        };
-                        this.getCanvasSize = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.getCanvasSize',[],resolve);
-                            });
-                        };
-                        this.activeLimitToFrameRate = function(active){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
-                            });
-                        };
-                        this.frameRateLimit = function(rate){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.frameRateLimit',[rate],resolve);
-                            });
-                        };
-                        this.frame = function(){
-                            communicationModule.run('render.frame',[]);
-                        };
-                        this.active = function(active){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('render.active',[active],resolve);
-                            });
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
                         };
                     };
-                
-                    this.viewport = new function(){
-                        this.refresh = function(){
-                            communicationModule.run('viewport.refresh',[]);
+                    
+                    this.rectangle = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'rectangle';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            scale: 1,
+                            static: false,
                         };
-                        this.position = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.position',[x,y],resolve);
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.scale = function(s){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.scale',[s],resolve);
-                            });
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
                         };
-                        this.angle = function(a){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.angle',[a],resolve);
-                            });
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
                         };
-                        this.getElementsUnderPoint = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
-                            });
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
                         };
-                        this.getElementsUnderArea = function(points){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
-                            });
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
                         };
-                        this.getMousePosition = function(x,y){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getMousePosition',[x,y],resolve);
-                            });
+                        this.anchor = function(newAnchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
                         };
-                        this.getBoundingBox = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.getBoundingBox',[],resolve);
-                            });
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
                         };
-                        this.stopMouseScroll = function(bool){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
-                            });
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
                         };
                     };
-                
-                    this.stats = new function(){
-                        this.active = function(active){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('stats.active',[active],resolve);
-                            });
+                    this.rectangleWithOutline = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'rectangleWithOutline';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            scale: 1,
+                            thickness: 0,
+                            static: false,
                         };
-                        this.getReport = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('stats.getReport',[],resolve);
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.lineColour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.lineColour); } cashedAttributes.lineColour = colour;
+                            return executeMethod('lineColour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
                         };
                     };
-                
-                    this.callback = new function(){
-                        this.listCallbackTypes = function(){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('callback.listCallbackTypes',[],resolve);
+                    this.circle = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'circle';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            radius: 10,
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.getCallbackTypeState = function(type){
-                            return new Promise((resolve, reject) => {
-                                communicationModule.run('callback.getCallbackTypeState',[type],resolve);
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.radius = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.radius); } cashedAttributes.radius = number;
+                            return executeMethod('radius',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.circleWithOutline = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'circleWithOutline';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            radius: 10,
+                            scale: 1,
+                            thickness: 0,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
                             });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
                         };
-                        this.activateCallbackType = function(type){
-                            communicationModule.run('callback.activateCallbackType',[type]);
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
                         };
-                        this.disactivateCallbackType = function(type){
-                            communicationModule.run('callback.disactivateCallbackType',[type]);
+                        this.lineColour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.lineColour); } cashedAttributes.lineColour = colour;
+                            return executeMethod('lineColour',[colour]);
                         };
-                        this.activateAllCallbackTypes = function(){
-                            communicationModule.run('callback.activateAllCallbackTypes',[]);
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
                         };
-                        this.disactivateAllCallbackTypes = function(){
-                            communicationModule.run('callback.disactivateAllCallbackTypes',[]);
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
                         };
+                        this.radius = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.radius); } cashedAttributes.radius = number;
+                            return executeMethod('radius',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.polygon = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'polygon';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            points: [], 
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.points = function(points,useCache=useCache_default){
+                            if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
+                            return executeMethod('points',[points]);
+                        }; 
+                        this.pointsAsXYArray = function(pointsXY,useCache=useCache_default){
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                            
+                            if(useCache && pointsXY == undefined){ return resolvedPromise(pointsToXYArray(cashedAttributes.points)); } 
+                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
+                            return executeMethod('pointsAsXYArray',[pointsXY])
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.polygonWithOutline = function(_id,_name){
+                        
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'polygonWithOutline';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            points: [], 
+                            scale: 1,
+                            thickness: 0,
+                            jointDetail: 25,
+                            jointType: 'sharp',
+                            sharpLimit: 4,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.lineColour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.lineColour); } cashedAttributes.lineColour = colour;
+                            return executeMethod('lineColour',[colour]);
+                        };
+                        this.points = function(points,useCache=useCache_default){
+                            if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
+                            return executeMethod('points',[points]);
+                        }; 
+                        this.pointsAsXYArray = function(points,useCache=useCache_default){
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                            
+                            if(useCache && pointsXY == undefined){ return resolvedPromise(pointsToXYArray(cashedAttributes.points)); } 
+                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
+                            return executeMethod('pointsAsXYArray',[pointsXY])
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.jointDetail = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.jointDetail); } cashedAttributes.jointDetail = number;
+                            return executeMethod('jointDetail',[number]);
+                        };
+                        this.jointType = function(type,useCache=useCache_default){
+                            if(useCache && type == undefined){ return resolvedPromise(cashedAttributes.jointType); } cashedAttributes.jointType = type;
+                            return executeMethod('jointType',[type]);
+                        };
+                        this.sharpLimit = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.sharpLimit); } cashedAttributes.sharpLimit = number;
+                            return executeMethod('sharpLimit',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    
+                    this.path = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'path';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            lineColour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            points: [], 
+                            scale: 1,
+                            thickness: 0,
+                            capType: 'none',
+                            jointDetail: 25,
+                            jointType: 'sharp',
+                            sharpLimit: 4,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.points = function(points,useCache=useCache_default){
+                            if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
+                            return executeMethod('points',[points]);
+                        }; 
+                        this.pointsAsXYArray = function(points,useCache=useCache_default){
+                            function pointsToXYArray(points){ 
+                                const output = [];
+                                for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
+                                return output;
+                            }
+                            
+                            if(useCache && pointsXY == undefined){ return resolvedPromise(pointsToXYArray(cashedAttributes.points)); } 
+                            cashedAttributes.points = pointsXY.map((point) => [point.x,point.y]).flat();
+                            return executeMethod('pointsAsXYArray',[pointsXY])
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.looping = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.looping); } cashedAttributes.looping = bool;
+                            return executeMethod('looping',[bool]);
+                        };
+                        this.thickness = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
+                            return executeMethod('thickness',[number]);
+                        };
+                        this.capType = function(type,useCache=useCache_default){
+                            if(useCache && type == undefined){ return resolvedPromise(cashedAttributes.capType); } cashedAttributes.capType = type;
+                            return executeMethod('capType',[type]);
+                        };
+                        this.jointType = function(type,useCache=useCache_default){
+                            if(useCache && type == undefined){ return resolvedPromise(cashedAttributes.jointType); } cashedAttributes.jointType = type;
+                            return executeMethod('jointType',[type]);
+                        };
+                        this.jointDetail = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.jointDetail); } cashedAttributes.jointDetail = number;
+                            return executeMethod('jointDetail',[number]);
+                        };
+                        this.sharpLimit = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.sharpLimit); } cashedAttributes.sharpLimit = number;
+                            return executeMethod('sharpLimit',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    
+                    this.image = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'image';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing,transferables){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                },transferables);
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.imageURL = function(url,useCache=useCache_default){
+                            return executeMethod('imageURL',[url]);
+                        };
+                        this.imageBitmap = function(bitmap,useCache=useCache_default){
+                            return executeMethod('imageBitmap',[bitmap],undefined,bitmap);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    
+                    this.character = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'character';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            font: 'defaultThin',
+                            character: '',
+                            printingMode: { horizontal:'left', vertical:'bottom' },
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.font = function(font,useCache=useCache_default){
+                            if(useCache && font == undefined){ return resolvedPromise(cashedAttributes.font); } cashedAttributes.font = font;
+                            return executeMethod('font',[font]);
+                        };
+                        this.character = function(character,useCache=useCache_default){
+                            if(useCache && character == undefined){ return resolvedPromise(cashedAttributes.character); } cashedAttributes.character = character;
+                            return executeMethod('character',[character]);
+                        };
+                        this.printingMode = function(printingMode,useCache=useCache_default){
+                            if(useCache && printingMode == undefined){ return resolvedPromise(cashedAttributes.printingMode); } cashedAttributes.printingMode = printingMode;
+                            return executeMethod('printingMode',[printingMode]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.characterString = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'characterString';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            font: 'defaultThin',
+                            string: '',
+                            spacing: 0.5,
+                            interCharacterSpacing: 0,
+                            printingMode: { widthCalculation:'absolute', horizontal:'left', vertical:'bottom' },
+                            scale: 1,
+                            static: false,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                });
+                            });
+                        }
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.colour = function(colour,useCache=useCache_default){
+                            if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
+                            return executeMethod('colour',[colour]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            return executeMethod('height',[number]);
+                        };
+                        this.font = function(font,useCache=useCache_default){
+                            if(useCache && font == undefined){ return resolvedPromise(cashedAttributes.font); } cashedAttributes.font = font;
+                            return executeMethod('font',[font]);
+                        };
+                        this.string = function(string,useCache=useCache_default){
+                            if(useCache && string == undefined){ return resolvedPromise(cashedAttributes.string); } cashedAttributes.string = string;
+                            return executeMethod('string',[string]);
+                        };
+                        this.interCharacterSpacing = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.interCharacterSpacing); } cashedAttributes.interCharacterSpacing = number;
+                            return executeMethod('interCharacterSpacing',[number]);
+                        };
+                        this.printingMode = function(printingMode,useCache=useCache_default){
+                            if(useCache && printingMode == undefined){ return resolvedPromise(cashedAttributes.printingMode); } cashedAttributes.printingMode = printingMode;
+                            return executeMethod('printingMode',[printingMode]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+
+                };
                 
-                        const callbackRegistry = new function(){
-                            const registeredShapes = {};
+                this.meta = new function(){
+                    this.areYouReady = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('areYouReady',[],resolve);
+                        });
+                    };
+                    this.refresh = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('refresh',[],resolve);
+                        });
+                    };
+                };
                 
-                            this.register = function(id,callbackType,callback){
-                                if(!(id in registeredShapes)){ registeredShapes[id] = {}; }
-                                registeredShapes[id][callbackType] = callback;
+                this._dump = new function(){
+                    this.elememt = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.element',[],resolve);
+                        });
+                    };
+                    this.arrangement = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.arrangement',[],resolve);
+                        });
+                    };
+                    this.render = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.render',[],resolve);
+                        });
+                    };
+                    this.viewport = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.viewport',[],resolve);
+                        });
+                    };
+                    this.callback = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('_dump.callback',[],resolve);
+                        });
+                    };
+                };
+                
+                this.element = new function(){
+                    this.getAvailableElements = function(){
+                        return Object.keys(elementLibrary);
+                    };
+                    this.installElement = function(elementName,creatorMethod,interfaceProxyObject,allowOverwrite=false){
+                
+                        if(!allowOverwrite && elementName in elementLibrary){
+                            return false
+                        }
+                
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('element.installElement',[elementName,_canvas_.library.misc.serialize(creatorMethod)],result => {
+                                elementLibrary[elementName] = interfaceProxyObject;
+                                resolve(result);
+                            });
+                        });
+                    };
+                    this.getCreatedElements = function(){
+                        return elementRegistry;
+                    };
+                
+                    this.create = function(type,name){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('element.create',[type,name],id => {
+                                if(elementLibrary[type] == undefined){
+                                    console.warn('interface.element.create - unknown element type "'+type+'"');
+                                    resolve();
+                                    return;
+                                }
+                                resolve( elementRegistry[id] = new elementLibrary[type](id,name,communicationModule,dev) )
+                            });
+                        });
+                    };
+                    this.delete = function(element){
+                        communicationModule.run('element.delete',[element.getId()]);
+                        elementRegistry[element.getId()] = undefined;
+                    };
+                    this.deleteAllCreated = function(){
+                        communicationModule.run('element.deleteAllCreated',[]);
+                        elementRegistry = [];
+                    };
+                };
+                this.arrangement = new function(){
+                    this.new = function(){
+                        communicationModule.run('arrangement.new');
+                    };
+                    this.prepend = function(element){
+                        communicationModule.run('arrangement.prepend',[element.getId()]);
+                    };
+                    this.append = function(element){
+                        communicationModule.run('arrangement.append',[element.getId()]);
+                    };
+                    this.remove = function(element){
+                        communicationModule.run('arrangement.remove',[element.getId()]);
+                    };
+                    this.clear = function(){
+                        communicationModule.run('arrangement.clear');
+                    };
+                    this.getElementByAddress = function(address){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.getElementByAddress',[address],result => {
+                                resolve(elementRegistry[result]);
+                            });
+                        });
+                    };
+                    this.getElementsUnderPoint = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.getElementsUnderPoint',[x,y],results => {
+                                resolve(results.map(result => elementRegistry[result]));
+                            });
+                        });
+                    };
+                    this.getElementsUnderArea = function(points){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.getElementsUnderArea',[points],results => {
+                                resolve(results.map(result => elementRegistry[result]));
+                            });
+                        });
+                    };
+                    this.printTree = function(mode){
+                        communicationModule.run('arrangement.printTree',[mode]);
+                    };
+                    this.areParents = function(element,potentialParents=[]){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('arrangement.areParents',[element.getId(),potentialParents.map(parent => parent.getId())],resolve);
+                        });
+                    };
+                };
+                this.render = new function(){
+                    this.refresh = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.refresh',[],resolve);
+                        });
+                    };
+                    this.clearColour = function(colour){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.clearColour',[colour],resolve);
+                        });
+                    };
+                    this.adjustCanvasSize = function(newWidth, newHeight){
+                        communicationModule.run('render.adjustCanvasSize',[newWidth, newHeight]);
+                    };
+                    this.getCanvasSize = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.getCanvasSize',[],resolve);
+                        });
+                    };
+                    this.activeLimitToFrameRate = function(active){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.activeLimitToFrameRate',[active],resolve);
+                        });
+                    };
+                    this.frameRateLimit = function(rate){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.frameRateLimit',[rate],resolve);
+                        });
+                    };
+                    this.frame = function(){
+                        communicationModule.run('render.frame',[]);
+                    };
+                    this.active = function(active){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('render.active',[active],resolve);
+                        });
+                    };
+                };
+
+                this.viewport = new function(){
+                    this.refresh = function(){
+                        communicationModule.run('viewport.refresh',[]);
+                    };
+                    this.position = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.position',[x,y],resolve);
+                        });
+                    };
+                    this.scale = function(s){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.scale',[s],resolve);
+                        });
+                    };
+                    this.angle = function(a){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.angle',[a],resolve);
+                        });
+                    };
+                    this.getElementsUnderPoint = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getElementsUnderPoint',[x,y],resolve);
+                        });
+                    };
+                    this.getElementsUnderArea = function(points){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getElementsUnderArea',[points],resolve);
+                        });
+                    };
+                    this.getMousePosition = function(x,y){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getMousePosition',[x,y],resolve);
+                        });
+                    };
+                    this.getBoundingBox = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.getBoundingBox',[],resolve);
+                        });
+                    };
+                    this.stopMouseScroll = function(bool){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('viewport.stopMouseScroll',[bool],resolve);
+                        });
+                    };
+                };
+                this.stats = new function(){
+                    this.active = function(active){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('stats.active',[active],resolve);
+                        });
+                    };
+                    this.getReport = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('stats.getReport',[],resolve);
+                        });
+                    };
+                };
+                this.callback = new function(){
+                    this.listCallbackTypes = function(){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('callback.listCallbackTypes',[],resolve);
+                        });
+                    };
+                    this.getCallbackTypeState = function(type){
+                        return new Promise((resolve, reject) => {
+                            communicationModule.run('callback.getCallbackTypeState',[type],resolve);
+                        });
+                    };
+                    this.activateCallbackType = function(type){
+                        communicationModule.run('callback.activateCallbackType',[type]);
+                    };
+                    this.disactivateCallbackType = function(type){
+                        communicationModule.run('callback.disactivateCallbackType',[type]);
+                    };
+                    this.activateAllCallbackTypes = function(){
+                        communicationModule.run('callback.activateAllCallbackTypes',[]);
+                    };
+                    this.disactivateAllCallbackTypes = function(){
+                        communicationModule.run('callback.disactivateAllCallbackTypes',[]);
+                    };
+                
+                
+                    const callbackRegistry = new function(){
+                        const registeredShapes = {};
+                
+                        this.getCallback = function(id,callbackType){
+                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+                            return registeredShapes[id][callbackType];
+                        };
+                        this.register = function(id,callbackType,callback){
+                            if(!(id in registeredShapes)){ registeredShapes[id] = {}; }
+                            registeredShapes[id][callbackType] = callback;
+                        };
+                        this.remove = function(id,callbackType){
+                            registeredShapes[id][callbackType] = undefined;
+                            delete registeredShapes[id][callbackType];
+                        };
+                        this.call = function(id,callbackType,x,y,event){
+                            if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
+                            registeredShapes[id][callbackType](x,y,event);
+                        };
+                    };
+                    this.getCallback = function(element, callbackType){
+                        callbackRegistry.getCallback(element.getId(), callbackType);
+                    };
+                    this.attachCallback = function(element, callbackType, callback){
+                        callbackRegistry.register(element.getId(), callbackType, callback);
+                        communicationModule.run('callback.attachCallback',[element.getId(),callbackType]);
+                    };
+                    this.removeCallback = function(element, callbackType){
+                        callbackRegistry.remove(element.getId(), callbackType);
+                        communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
+                    };
+                
+                    let allowDeepElementCallback = false;
+                    this.allowDeepElementCallback = function(bool){
+                        if(bool==undefined){return allowDeepElementCallback;}
+                        allowDeepElementCallback = bool;
+                    };
+                
+                    this.functions = {};
+                    this.listCallbackTypes().then(callbackNames => {
+                        callbackNames.forEach(callbackName => {
+                            _canvas_[callbackName] = function(event){
+                                let sudoEvent = {};
+                                if(event instanceof KeyboardEvent){
+                                    sudoEvent = {
+                                        key: event.key,
+                                        code: event.code,
+                                        keyCode: event.keyCode,
+                                        altKey: event.altKey,
+                                        ctrlKey: event.ctrlKey,
+                                        metaKey: event.metaKey,
+                                        shiftKey: event.shiftKey,
+                                    };
+                                }else if(event instanceof WheelEvent){
+                                    sudoEvent = { 
+                                        X: event.offsetX,
+                                        Y: event.offsetY,
+                                        wheelDelta: event.wheelDelta,
+                                        wheelDeltaX: event.wheelDeltaX,
+                                        wheelDeltaY: event.wheelDeltaY,
+                                    };
+                                }else if(event instanceof MouseEvent){
+                                    sudoEvent = { 
+                                        X: event.offsetX, 
+                                        Y: event.offsetY,
+                                    };
+                                }else{
+                                    console.warn('unknown event type: ',event);
+                                }
+                
+                                communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
                             };
-                            this.remove = function(id,callbackType){
-                                registeredShapes[id][callbackType] = undefined;
-                                delete registeredShapes[id][callbackType];
+                            communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
+                                if(allowDeepElementCallback){
+                                    elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
+                                }else{
+                                    callbackRegistry.call(elements[0],callbackName,x,y,event);
+                                }
+                                if(self.callback.functions[callbackName]){
+                                    self.callback.functions[callbackName](x,y,event,elements);
+                                }
                             };
-                            this.call = function(id,callbackType,x,y,event){
-                                if(id == undefined || registeredShapes[id] == undefined || registeredShapes[id][callbackType] == undefined){return;}
-                                registeredShapes[id][callbackType](x,y,event);
-                            };
-                        };
-                        this.attachCallback = function(id, callbackType, callback){
-                            callbackRegistry.register(id, callbackType, callback);
-                            communicationModule.run('callback.attachCallback',[id,callbackType]);
-                        };
-                        this.removeCallback = function(id, callbackType){
-                            callbackRegistry.remove(id, callbackType);
-                            communicationModule.run('callback.removeCallback',[id,callbackType]);
-                        };
-                
-                        let allowDeepElementCallback = false;
-                        this.allowDeepElementCallback = function(bool){
-                            if(bool==undefined){return allowDeepElementCallback;}
-                            allowDeepElementCallback = bool;
-                        };
-                
-                        this.functions = {};
-                        this.listCallbackTypes().then(callbackNames => {
-                            callbackNames.forEach(callbackName => {
-                                _canvas_[callbackName] = function(event){
-                                    let sudoEvent = {};
-                                    if(event instanceof KeyboardEvent){
-                                        sudoEvent = {
-                                            key: event.key,
-                                            code: event.code,
-                                            keyCode: event.keyCode,
-                                            altKey: event.altKey,
-                                            ctrlKey: event.ctrlKey,
-                                            metaKey: event.metaKey,
-                                            shiftKey: event.shiftKey,
-                                        };
-                                    }else if(event instanceof WheelEvent){
-                                        sudoEvent = { 
-                                            X: event.offsetX,
-                                            Y: event.offsetY,
-                                            wheelDelta: event.wheelDelta,
-                                            wheelDeltaX: event.wheelDeltaX,
-                                            wheelDeltaY: event.wheelDeltaY,
-                                        };
-                                    }else if(event instanceof MouseEvent){
-                                        sudoEvent = { 
-                                            X: event.offsetX, 
-                                            Y: event.offsetY,
-                                        };
-                                    }else{
-                                        console.warn('unknown event type: ',event);
-                                    }
-                
-                                    communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
-                                };
-                                communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
-                                    if(allowDeepElementCallback){
-                                        elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
-                                    }else{
-                                        callbackRegistry.call(elements[0],callbackName,x,y,event);
-                                    }
-                                    if(self.callback.functions[callbackName]){
-                                        self.callback.functions[callbackName](x,y,event,elements);
-                                    }
-                                };
-                            });
                         });
-                    };
-                
-                //dialing in
-                    communicationModule.function.go = function(){
-                        if(self.meta.go){self.meta.go();} /* callback */
-                    };
-                    communicationModule.function.printToScreen = function(imageData){
-                        _canvas_.getContext("bitmaprenderer").transferFromImageBitmap(imageData);
-                    };
-                    communicationModule.function.onViewportAdjust = function(state){
-                        console.log('onViewportAdjust -> ',state); /* callback */
-                    };
-                
-                    communicationModule.function.getCanvasAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                        return attributeNames.map((name,index) => {
-                            return _canvas_.getAttribute((prefixActiveArray[index]?__canvasPrefix:'')+name);
-                        });    
-                    };
-                    communicationModule.function.setCanvasAttributes = function(attributes=[],prefixActiveArray=[]){
-                        attributes.map((attribute,index) => {
-                            _canvas_.setAttribute((prefixActiveArray[index]?__canvasPrefix:'')+attribute.name,attribute.value);
-                        });
-                    };
-                    communicationModule.function.getCanvasParentAttributes = function(attributeNames=[],prefixActiveArray=[]){
-                        return attributeNames.map((name,index) => {
-                            return _canvas_.parentElement[(prefixActiveArray[index]?__canvasPrefix:'')+name];
-                        });
-                    };
-                
-                    communicationModule.function.getDocumentAttributes = function(attributeNames=[]){
-                        return attributeNames.map(attribute => {
-                            return eval('document.'+attribute);
-                        });
-                    };
-                    communicationModule.function.setDocumentAttributes = function(attributeNames=[],values=[]){
-                        return attributeNames.map((attribute,index) => {
-                            eval('document.'+attribute+' = "'+values[index]+'"');
-                        });
-                    };
-                    communicationModule.function.getWindowAttributes = function(attributeNames=[]){
-                        return attributeNames.map(attribute => {
-                            return eval('window.'+attribute);
-                        });
-                    };
-                    communicationModule.function.setWindowAttributes = function(attributes=[]){
-                        attributes.map((attribute,index) => {
-                            eval('window.'+attribute.name+' = "'+attribute.value+'"');
-                        });
-                    };
+                    });
+                };
+
 
             };
             _canvas_.system = new function(){
-                this.versionInformation = { tick:0, lastDateModified:{y:2019,m:10,d:19} };
+                this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
             };
             _canvas_.system.mouse = new function(){
                 //setup
+                    const mouse = this;
+                
                     this.tmp = {};
                     this.functionList = {};
                     this.functionList.onmousedown = [];
@@ -21748,9 +22810,9 @@
                                         stopCode(event);
                                     }
                 
-                                    _canvas_.onmousemove = _canvas_.system.mouse.original.onmousemove;
-                                    _canvas_.onmouseleave = _canvas_.system.mouse.original.onmouseleave;
-                                    _canvas_.onmouseup = _canvas_.system.mouse.original.onmouseup;
+                                    _canvas_.onmousemove = mouse.original.onmousemove;
+                                    _canvas_.onmouseleave = mouse.original.onmouseleave;
+                                    _canvas_.onmouseup = mouse.original.onmouseup;
                                 };
                                 _canvas_.onmouseleave = _canvas_.onmouseup;
                     };
@@ -21760,7 +22822,7 @@
                         [ 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick', 'onmouseenterelement', 'onmouseleaveelement' ].forEach(callback => {
                             _canvas_.core.callback.functions[callback] = function(x,y,event,elementIds){
                                 if(elementIds.length == 0){
-                                    _canvas_.library.structure.functionListRunner( _canvas_.system.mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
+                                    _canvas_.library.structure.functionListRunner( mouse.functionList[callback], _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event}); 
                                 }
                             }
                         });
@@ -21769,7 +22831,7 @@
             };
             _canvas_.system.keyboard = new function(){
                 //setup
-                    var keyboard = this;
+                    const keyboard = this;
                     this.pressedKeys = {
                         control:false,
                         alt:false,
@@ -21781,7 +22843,7 @@
                 
                 //utility functions
                     function customKeyInterpreter(event,press){
-                        var pressedKeys = _canvas_.system.keyboard.pressedKeys;
+                        const pressedKeys = keyboard.pressedKeys;
                         if(event.code == 'ControlLeft' || event.code == 'ControlRight'){  pressedKeys.control = press; }
                         else if(event.code == 'AltLeft' || event.code == 'AltRight'){     pressedKeys.alt = press;     }
                         else if(event.code == 'MetaLeft' || event.code == 'MetaRight'){   pressedKeys.meta = press;    }
@@ -21803,42 +22865,42 @@
                 //connect callbacks to keyboard function lists
                     _canvas_.core.callback.functions.onkeydown = function(x,y,event,shapes){
                         //if key is already pressed, don't press it again
-                            if(_canvas_.system.keyboard.pressedKeys[event.code]){ return; }
-                            _canvas_.system.keyboard.pressedKeys[event.code] = true;
+                            if(keyboard.pressedKeys[event.code]){ return; }
+                            keyboard.pressedKeys[event.code] = true;
                             customKeyInterpreter(event,true);
                 
                         // //ESCAPE operation code
                         //     if(event.key == 'Escape'){ 
                         //         console.log('%cEscape key pressed', 'color:White; background-color: Black;'); 
-                        //         _canvas_.system.keyboard.releaseAll();
+                        //         keyboard.releaseAll();
                         //         _canvas_.onmouseup({offsetX:0,offsetY:0});
                         //         _canvas_.system.mouse.setUpCallbacks();
                         //     }
                         
                         //perform action
-                            for(var a = 0; a < shapes.length; a++){
+                            for(let a = 0; a < shapes.length; a++){
                                 if(shapes[a].glyphs.includes(event.key)){
                                     shapes[a].onkeydown(x,y,event);
                                     return;
                                 }
                             }
-                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeydown, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                            _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeydown, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                     };
                 
                     _canvas_.core.callback.functions.onkeyup = function(x,y,event,shapes){
                         //if key isn't pressed, don't release it
-                            if(!_canvas_.system.keyboard.pressedKeys[event.code]){return;}
-                            delete _canvas_.system.keyboard.pressedKeys[event.code];
+                            if(!keyboard.pressedKeys[event.code]){return;}
+                            delete keyboard.pressedKeys[event.code];
                             customKeyInterpreter(event,false);
                         
                         //perform action
-                            for(var a = 0; a < shapes.length; a++){
+                            for(let a = 0; a < shapes.length; a++){
                                 if(shapes[a].glyphs.includes(event.key)){
                                     shapes[a].onkeyup(x,y,event);
                                     return;
                                 }
                             }
-                            _canvas_.library.structure.functionListRunner( _canvas_.system.keyboard.functionList.onkeyup, _canvas_.system.keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
+                            _canvas_.library.structure.functionListRunner( keyboard.functionList.onkeyup, keyboard.pressedKeys )({x:event.X,y:event.Y,event:event});
                     };
             };
             
@@ -21846,43 +22908,47 @@
             _canvas_.system.pane = {};
             
             _canvas_.core.meta.go = function(){
-            
                 //background
-                    _canvas_.core.meta.createSetAppend('group','background',{ignored:true}).then(id => { 
-                        _canvas_.system.pane.background = id;
-                        _canvas_.system.pane.b = id;
+                    _canvas_.core.element.create('group','background').then(group => {
+                        _canvas_.core.arrangement.append(group);
+                        group.ignored(true);
+                        _canvas_.system.pane.background = group;
+                        _canvas_.system.pane.b = group;
                     });
             
                 //middleground
-                     _canvas_.core.meta.createSetAppend('group','middleground').then(id => { 
-                        _canvas_.system.pane.middleground = id;
+                    _canvas_.core.element.create('group','middleground').then(group => {
+                        _canvas_.core.arrangement.append(group);
+                        _canvas_.system.pane.middleground = group;
                     }).then(() => {
                         //back
-                            _canvas_.core.meta.createSetAppend('group','back',undefined,_canvas_.system.pane.middleground).then(id => { 
-                                _canvas_.system.pane.middleground.back = id;
-                                _canvas_.system.pane.mb = id;
+                            _canvas_.core.element.create('group','back').then(group => {
+                                _canvas_.system.pane.middleground.append(group);
+                                _canvas_.system.pane.middleground.back = group;
+                                _canvas_.system.pane.mb = group;
                             });
-            
                         //middle
-                            _canvas_.core.meta.createSetAppend('group','middle',undefined,_canvas_.system.pane.middleground).then(id => { 
-                                _canvas_.system.pane.middleground.middle = id; 
-                                _canvas_.system.pane.mm = id;
+                            _canvas_.core.element.create('group','middle').then(group => {
+                                _canvas_.system.pane.middleground.append(group);
+                                _canvas_.system.pane.middleground.middle = group;
+                                _canvas_.system.pane.mm = group;
                             });
-            
                         //front
-                            _canvas_.core.meta.createSetAppend('group','front',undefined,_canvas_.system.pane.middleground).then(id => { 
-                                _canvas_.system.pane.middleground.front = id;
-                                _canvas_.system.pane.mf = id;
+                            _canvas_.core.element.create('group','front').then(group => {
+                                _canvas_.system.pane.middleground.append(group);
+                                _canvas_.system.pane.middleground.front = group;
+                                _canvas_.system.pane.mf = group;
                             });
                     });
             
                 //foreground
-                    _canvas_.core.meta.createSetAppend('group','foreground',{ignored:true}).then(id => { 
-                        _canvas_.system.pane.foreground = id;
-                        _canvas_.system.pane.f = id;
+                    _canvas_.core.element.create('group','foreground').then(group => {
+                        _canvas_.core.arrangement.append(group);
+                        group.ignored(true);
+                        _canvas_.system.pane.foreground = group;
+                        _canvas_.system.pane.f = group;
                     });
             
-                
                 const checkingInterval = setInterval(() => {
                     if(
                         _canvas_.system.pane.b != undefined &&
@@ -21892,6 +22958,7 @@
                         _canvas_.system.pane.f != undefined
                     ){
                         clearInterval(checkingInterval);
+                        _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
                         if(_canvas_.system.go){_canvas_.system.go();}
                     }
                 }, 1);
@@ -21909,72 +22976,1520 @@
                     });
                 };
 
+            _canvas_.interface = new function(){
+                this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
+                const interface = this;
+            
+                const dev = {
+                    prefix:'interface',
+            
+                    circuit:{active:!false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+                    part:{active:!false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+                    unit:{active:!false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+            
+                    log:{
+                        circuit:function(data){
+                            if(!dev.circuit.active){return;}
+                            console.log('%c'+dev.prefix+'.circuit'+(new Array(...arguments).join(' ')), dev.circuit.fontStyle );
+                        },
+                        part:function(data){
+                            if(!dev.part.active){return;}
+                            console.log('%c'+dev.prefix+'.part'+(new Array(...arguments).join(' ')), dev.part.fontStyle );
+                        },
+                        unit:function(data){
+                            if(!dev.unit.active){return;}
+                            console.log('%c'+dev.prefix+'.unit'+(new Array(...arguments).join(' ')), dev.unit.fontStyle );
+                        },
+                    },
+            
+                    testLoggers:function(){
+                        const circuit = dev.circuit.active;
+                        const part = dev.part.active;
+                        const unit = dev.unit.active;
+            
+                        dev.circuit.active = true;
+                        dev.part.active = true;
+                        dev.unit.active = true;
+            
+                        dev.log.circuit('.testLoggers -> circuit');
+                        dev.log.part('.testLoggers -> part');
+                        dev.log.unit('.testLoggers -> unit');
+            
+                        dev.circuit.active = circuit;
+                        dev.part.active = part;
+                        dev.unit.active = unit;
+                    },
+                };
+            
+                this.circuit = new function(){
+                    this.recorder = function(context){
+                    
+                        //state
+                            const state = {
+                                recordedChunks: [],
+                                recordingStartTime: -1,
+                                recordingLength: 0,
+                            };
+                    
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    leftIn:{}, rightIn:{},
+                                    recordingNode:{},
+                                    leftOut:{}, rightOut:{},
+                                };
+                    
+                            //leftIn
+                                flow.leftIn.node = context.createAnalyser();
+                            //rightIn
+                                flow.rightIn.node = context.createAnalyser();
+                    
+                            //recordingNode
+                                flow.recordingNode.audioDest = new MediaStreamAudioDestinationNode(context);
+                                flow.recordingNode.node = new MediaRecorder(flow.recordingNode.audioDest.stream, {mimeType : 'audio/webm'});
+                    
+                                flow.recordingNode.node.onstart = function(){};
+                                flow.recordingNode.node.ondataavailable = function(e){
+                                    state.recordedChunks.push(e.data);
+                                };
+                                flow.recordingNode.node.onpause = function(){};
+                                flow.recordingNode.node.onresume = function(){};
+                                flow.recordingNode.node.onerror = function(error){console.log(error);};
+                                flow.recordingNode.node.onstop = function(){};
+                    
+                                flow.leftIn.node.connect(flow.recordingNode.audioDest);
+                                flow.rightIn.node.connect(flow.recordingNode.audioDest);
+                    
+                            //leftOut
+                                flow.leftOut.node = context.createAnalyser();
+                                flow.leftIn.node.connect(flow.leftOut.node);
+                            //rightIn
+                                flow.rightOut.node = context.createAnalyser();
+                                flow.rightIn.node.connect(flow.rightOut.node);
+                    
+                    
+                        //internal functions
+                            function getRecordingLength(){
+                                switch(flow.recordingNode.node.state){
+                                    case 'inactive': case 'paused':
+                                        return state.recordingLength;
+                                    break;
+                                    case 'recording':
+                                        return context.currentTime - state.recordingStartTime;
+                                    break;
+                                }            
+                            }
+                    
+                        //controls
+                            this.clear =  function(){
+                                this.stop();
+                                state.recordedChunks = [];
+                                state.recordingStartTime = -1;
+                                state.recordingLength = 0;
+                            };
+                            this.start =  function(){
+                                this.clear();
+                                flow.recordingNode.node.start();
+                                state.recordingStartTime = context.currentTime;
+                            };
+                            this.pause =  function(){
+                                if(this.state() == 'inactive'){return;}
+                                state.recordingLength = getRecordingLength();
+                                flow.recordingNode.node.pause();
+                            };
+                            this.resume = function(){
+                                flow.recordingNode.node.resume();
+                                state.recordingStartTime = context.currentTime - state.recordingLength;
+                            };
+                            this.stop =   function(){
+                                if(this.state() == 'inactive'){return;}
+                                state.recordingLength = getRecordingLength();
+                                flow.recordingNode.node.stop();
+                            };
+                            this.export = function(){
+                                return new Blob(state.recordedChunks, { type: 'audio/ogg; codecs=opus' });
+                            };
+                            this.save = function(filename='output'){
+                                const a = document.createElement('a');
+                                a.href = URL.createObjectURL(this.export());
+                                a.download = filename+'.ogg';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                            };
+                    
+                            this.state = function(){return flow.recordingNode.node.state;};
+                            this.recordingTime = function(){
+                                return getRecordingLength();
+                            };
+                            this.getTrack = function(){return this.export(); };
+                    
+                        //io
+                            this.in_left  =  function(){return flow.leftIn.node;};
+                            this.in_right =  function(){return flow.rightIn.node;};
+                            this.out_left  = function(){return flow.leftOut.node;};
+                            this.out_right = function(){return flow.rightOut.node;};
+                    };
+
+                    this.audioIn = function(
+                        context, setupConnect=true
+                    ){
+                        //flow chain
+                            const flow = {
+                                audioDevice:undefined,
+                                outAggregator: {}
+                            };
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 1;
+                            flow.outAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain);
+                    
+                    
+                        //output node
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                        //methods
+                            this.listDevices = function(callback){
+                                navigator.mediaDevices.enumerateDevices().then(
+                                    function(devices){
+                                        callback(devices.filter((d) => d.kind === 'audioinput'));
+                                    }
+                                );
+                            };
+                            this.selectDevice = function(deviceId){
+                                const promise = navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}});
+                                promise.then(
+                                    function(source){
+                                        if(flow.audioDevice != undefined){ flow.audioDevice.disconnect(); }
+                                        flow.audioDevice = _canvas_.library.audio.context.createMediaStreamSource(source);
+                                        flow.audioDevice.connect(flow.outAggregator.node);                    
+                                    },
+                                    function(error){
+                                        console.warn('could not find audio input device: "' + deviceId + '"');
+                                        console.warn('\terror:',error);
+                                    }
+                                );
+                            };
+                            this.gain = function(a){
+                                if(a==null){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain = a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain,a);
+                            };
+                    
+                        //setup
+                            if(setupConnect){this.selectDevice('default');}
+                    };
+                    this.audio2percentage = function(){
+                        return new function(){
+                            const analyser = {
+                                timeDomainDataArray: null,
+                                frequencyData: null,
+                                refreshRate: 30,
+                                refreshInterval: null,
+                                returnedValueLimits: {min:0, max: 256, halfdiff:128},
+                                resolution: 128
+                            };
+                            analyser.analyserNode = _canvas_.library.audio.context.createAnalyser();
+                            analyser.analyserNode.fftSize = analyser.resolution;
+                            analyser.timeDomainDataArray = new Uint8Array(analyser.analyserNode.fftSize);
+                            analyser.frequencyData = new Uint8Array(analyser.analyserNode.fftSize);
+                    
+                            this.__render = function(){
+                                    analyser.analyserNode.getByteTimeDomainData(analyser.timeDomainDataArray);
+                    
+                                    const numbers = [];
+                                    for(let a = 0; a < analyser.timeDomainDataArray.length; a++){
+                                        numbers.push(
+                                            analyser.timeDomainDataArray[a]/analyser.returnedValueLimits.halfdiff - 1
+                                        );
+                                    }
+                    
+                                    let val = 0;
+                                    numbers.forEach(function(item){ if(Math.abs(item) > val){val = Math.abs(item);} });
+                    
+                                    this.newValue(val);
+                            }
+                    
+                            //audio connections
+                                this.audioIn = function(){return analyser.analyserNode;};
+                    
+                            //methods
+                                this.start = function(){
+                                    analyser.refreshInterval = setInterval( function(that){ that.__render(); }, 1000/30, this );
+                                };
+                                this.stop = function(){
+                                    clearInterval(analyser.refreshInterval);
+                                };
+                    
+                            //callbacks
+                                this.newValue = function(a){};
+                        };
+                    };
+                    this.reverbUnit = function(
+                        context,
+                    ){
+                        //flow chain
+                            const flow = {
+                                inAggregator: {},
+                                reverbGain: {}, bypassGain: {},
+                                reverbNode: {},
+                                outAggregator: {},
+                            };
+                    
+                        //inAggregator
+                            flow.inAggregator.gain = 1;
+                            flow.inAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                        //reverbGain / bypassGain
+                            flow.reverbGain.gain = 0.5;
+                            flow.bypassGain.gain = 0.5;
+                            flow.reverbGain.node = context.createGain();
+                            flow.bypassGain.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                            _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                    
+                        //reverbNode
+                            flow.reverbNode.impulseResponseRepoURL = 'https://metasophiea.com/lib/audio/impulseResponse/';
+                            flow.reverbNode.selectedReverbType = 'Musikvereinsaal.wav';
+                            flow.reverbNode.node = context.createConvolver();
+                    
+                            function setReverbType(repoURL,type,callback){
+                                const ajaxRequest = new XMLHttpRequest();
+                                ajaxRequest.open('GET', repoURL+type, true);
+                                ajaxRequest.responseType = 'arraybuffer';
+                                ajaxRequest.onload = function(){
+                                    //undo connections
+                                        flow.reverbNode.node.disconnect();
+                                    //create new convolver
+                                        flow.reverbNode.node = context.createConvolver();
+                                    //redo connections
+                                        flow.reverbGain.node.connect(flow.reverbNode.node);
+                                        flow.reverbNode.node.connect(flow.outAggregator.node);
+                                    //load in new buffer
+                                        context.decodeAudioData(ajaxRequest.response, function(buffer){flow.reverbNode.node.buffer = buffer;}, function(e){console.warn("Error with decoding audio data" + e.err);});
+                                    //run any callbacks
+                                        if(callback){callback();}  
+                                };
+                                ajaxRequest.send();
+                            }
+                            function getReverbTypeList(repoURL,callback=null){
+                                const ajaxRequest = new XMLHttpRequest();
+                                ajaxRequest.open('GET', repoURL+'available2.list', true);
+                                ajaxRequest.onload = function() {
+                                    const list = ajaxRequest.response.split('\n');
+                                    
+                                    list[list.length-1] = list[list.length-1].split(''); 
+                                    list[list.length-1].pop();
+                                    list[list.length-1] = list[list.length-1].join('');		
+                    
+                                    list.splice(-1,1);
+                                    
+                                    if(callback == null){console.log(list);}
+                                    else{callback(list);}
+                                }
+                                ajaxRequest.send();
+                            }	
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 1;
+                            flow.outAggregator.node = context.createGain();    
+                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                        //do connections
+                            flow.inAggregator.node.connect(flow.reverbGain.node);
+                            flow.inAggregator.node.connect(flow.bypassGain.node);
+                            flow.reverbGain.node.connect(flow.reverbNode.node);
+                            flow.bypassGain.node.connect(flow.outAggregator.node);
+                            flow.reverbNode.node.connect(flow.outAggregator.node);
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                        
+                        //controls
+                            this.getTypes = function(callback){ getReverbTypeList(flow.reverbNode.impulseResponseRepoURL, callback); };
+                            this.type = function(name,callback){
+                                if(name==null){return flow.reverbNode.selectedReverbType;}
+                                flow.reverbNode.selectedReverbType = name;
+                                setReverbType(flow.reverbNode.impulseResponseRepoURL, flow.reverbNode.selectedReverbType, callback);
+                            };
+                            this.outGain = function(a){
+                                if(a==null){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain=a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.wetdry = function(a,w,d){
+                                if(a=='manualControl'){
+                                    if(a==null){return {w:flow.reverbGain.gain,d:flow.bypassGain.gain};}
+                                    flow.reverbGain.gain=w;
+                                    flow.bypassGain.gain=d;
+                                }else{
+                                    if(a==null){return flow.reverbGain.gain;}
+                                    flow.reverbGain.gain=a;
+                                    flow.bypassGain.gain=1-a;
+                                }
+                    
+                                _canvas_.library.audio.changeAudioParam(context,flow.reverbGain.node.gain, flow.reverbGain.gain, 0.01, 'instant', true);
+                                _canvas_.library.audio.changeAudioParam(context,flow.bypassGain.node.gain, flow.bypassGain.gain, 0.01, 'instant', true);
+                            };
+                    
+                        //setup
+                            setReverbType(flow.reverbNode.impulseResponseRepoURL,flow.reverbNode.selectedReverbType);
+                    };
+
+                    this.multibandFilter = function(
+                        context, bandcount, frames=false
+                    ){
+                        //saved values
+                            const saved = {
+                                settings:[], //{Q, gain, frequency, fresh(bool)}
+                                responses:[], //{magResponse, phaseResponse, frequencyArray}
+                            };
+                    
+                        //flow chain
+                            const flow = {
+                                inAggregator: {},
+                                filterNodes: [],
+                                gainNodes: [],
+                                outAggregator: {},
+                            };
+                    
+                            //inAggregator
+                                flow.inAggregator.gain = 1;
+                                flow.inAggregator.node = context.createGain();
+                                _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                            //filterNodes
+                                function makeGenericFilter(type){
+                                    const temp = { frequency:110, Q:0.1, node:context.createBiquadFilter() };
+                                    temp.node.type = type;
+                                    _canvas_.library.audio.changeAudioParam(context, temp.node.frequency,110,0.01,'instant',true);
+                                    _canvas_.library.audio.changeAudioParam(context, temp.node.Q,0.1,0.01,'instant',true);
+                                    return temp;
+                                }
+                    
+                                if(frames){
+                                    if(bandcount < 2){bandcount = 2;}
+                                    //lowpass
+                                        flow.filterNodes.push(makeGenericFilter('lowpass'));
+                                    //bands
+                                        for(let a = 1; a < bandcount-1; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                                    //highpass
+                                        flow.filterNodes.push(makeGenericFilter('highpass'));
+                                }else{
+                                    //bands
+                                        for(let a = 0; a < bandcount; a++){ flow.filterNodes.push(makeGenericFilter('bandpass')); }
+                                }
+                    
+                            //gainNodes
+                                for(let a = 0; a < bandcount; a++){
+                                    const temp = { gain:1, node:context.createGain() };
+                                    _canvas_.library.audio.changeAudioParam(context, temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                    flow.gainNodes.push(temp);
+                                    saved.settings[a] = { Q:0.1, gain:1, frequency:110, fresh:true };
+                                }
+                    
+                            //outAggregator
+                                flow.outAggregator.gain = 1;
+                                flow.outAggregator.node = context.createGain();
+                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                    
+                        //do connections
+                            for(let a = 0; a < bandcount; a++){
+                                flow.inAggregator.node.connect(flow.filterNodes[a].node);
+                                flow.filterNodes[a].node.connect(flow.gainNodes[a].node);
+                                flow.gainNodes[a].node.connect(flow.outAggregator.node);
+                            }
+                    
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                    
+                        //controls
+                            this.masterGain = function(value){
+                                if(value == undefined){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain = value;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                            };
+                            this.gain = function(band,value){
+                                if(band == undefined){ return flow.gainNodes.map(a => a.gain);}
+                                if(value == undefined){return flow.gainNodes[band].gain;}
+                                flow.gainNodes[band].gain = value;
+                                _canvas_.library.audio.changeAudioParam(context, flow.gainNodes[band].node.gain, flow.gainNodes[band].gain, 0.01, 'instant', true);
+                    
+                                saved.settings[band].gain = value;
+                                saved.settings[band].fresh = true;
+                            };
+                            this.frequency = function(band,value){
+                                if(band == undefined){ return flow.filterNodes.map(a => a.frequency);}
+                                if(value == undefined){return flow.filterNodes[band].frequency;}
+                                flow.filterNodes[band].frequency = value;
+                                _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.frequency,flow.filterNodes[band].frequency,0.01,'instant',true);
+                    
+                                saved.settings[band].frequency = value;
+                                saved.settings[band].fresh = true;
+                            };
+                            this.Q = function(band,value){
+                                if(band == undefined){ return flow.filterNodes.map(a => a.Q);}
+                                if(value == undefined){return flow.filterNodes[band].Q;}
+                                flow.filterNodes[band].Q = value;
+                                _canvas_.library.audio.changeAudioParam(context, flow.filterNodes[band].node.Q,flow.filterNodes[band].Q,0.01,'instant',true);
+                    
+                                saved.settings[band].Q = value;
+                                saved.settings[band].fresh = true;
+                            };
+                        
+                            this.measureFrequencyResponse = function(band, frequencyArray){
+                                //if band is undefined, gather the response for all bands
+                                    if(band == undefined){ return Array(bandcount).fill(0).map((a,i) => this.measureFrequencyResponse(i,frequencyArray)); }
+                    
+                                //if band hasn't had it's setttings changed since last time, just return the last values (multiplied by the master gain)
+                                    if(!saved.settings[band].fresh){
+                                        return [ saved.responses[band].magResponse.map(a => a*flow.outAggregator.gain), saved.responses[band].requencyArray ];
+                                    }
+                    
+                                //do full calculation of band, save and return
+                                    const Float32_frequencyArray = new Float32Array(frequencyArray);
+                                    const magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                    const phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                    flow.filterNodes[band].node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                    
+                                    saved.responses[band] = {
+                                        magResponse:magResponseOutput.map(a => a*flow.gainNodes[band].gain), 
+                                        phaseResponse:phaseResponseOutput, 
+                                        frequencyArray:frequencyArray,
+                                    };
+                                    saved.settings[band].fresh = false;
+                                    return [magResponseOutput.map(a => a*flow.gainNodes[band].gain*flow.outAggregator.gain),frequencyArray];
+                            };
+                    };
+                    this.distortionUnit = function(
+                        context,
+                    ){
+                        //flow chain
+                            const flow = {
+                                inAggregator: {},
+                                distortionNode: {},
+                                outAggregator: {},
+                            };
+                    
+                        //inAggregator
+                            flow.inAggregator.gain = 0;
+                            flow.inAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                        //distortionNode
+                            flow.distortionNode.distortionAmount = 0;
+                            flow.distortionNode.oversample = 'none'; //'none', '2x', '4x'
+                            flow.distortionNode.resolution = 100;
+                            function makeDistortionNode(){
+                                flow.inAggregator.node.disconnect();
+                                if(flow.distortionNode.node){flow.distortionNode.node.disconnect();}
+                                
+                                flow.distortionNode.node = context.createWaveShaper();
+                                    flow.distortionNode.curve = new Float32Array(_canvas_.library.math.curveGenerator.s(flow.distortionNode.resolution,-1,1,flow.distortionNode.distortionAmount));
+                                    flow.distortionNode.node.curve = flow.distortionNode.curve;
+                                    flow.distortionNode.node.oversample = flow.distortionNode.oversample;
+                                    
+                                flow.inAggregator.node.connect(flow.distortionNode.node);
+                                flow.distortionNode.node.connect(flow.outAggregator.node);
+                            }
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 0;
+                            flow.outAggregator.node = context.createGain();    
+                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                        //controls
+                            this.inGain = function(a){
+                                if(a==null){return flow.inAggregator.gain;}
+                                flow.inAggregator.gain=a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.outGain = function(a){
+                                if(a==null){return flow.outAggregator.gain;}
+                                flow.outAggregator.gain=a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, a, 0.01, 'instant', true);
+                            };
+                            this.distortionAmount = function(a){
+                                if(a==null){return flow.distortionNode.distortionAmount;}
+                                flow.distortionNode.distortionAmount=a;
+                                makeDistortionNode();
+                            };
+                            this.oversample = function(a){
+                                if(a==null){return flow.distortionNode.oversample;}
+                                flow.distortionNode.oversample=a;
+                                makeDistortionNode();
+                            };
+                            this.resolution = function(a){
+                                if(a==null){return flow.distortionNode.resolution;}
+                                flow.distortionNode.resolution = a>=2?a:2;
+                                makeDistortionNode();
+                            };
+                    
+                        //setup
+                            makeDistortionNode();
+                    };
+                    this.player = function(context){
+                    
+                        //state
+                            const self = this;
+                            const state = {
+                                fileLoaded:false,
+                                playhead:[], //{ position:n, lastSightingTime:n, playing,bool },
+                                loop:{ active:false, timeout:[] },
+                                rate:1,
+                                concurrentPlayCountLimit:1, //'-1' is infinite
+                                area:{ percentage_start:0, percentage_end:1, actual_start:0, actual_end:1 },
+                            };
+                    
+                            //flow
+                                //flow chain
+                                const flow = {
+                                    track:{},
+                                    bufferSource:[],
+                                    channelSplitter:{},
+                                    leftOut:{}, rightOut:{}
+                                };
+                        
+                                //channelSplitter
+                                    flow.channelSplitter = context.createChannelSplitter(2);
+                        
+                                //leftOut
+                                    flow.leftOut.gain = 1;
+                                    flow.leftOut.node = context.createGain();
+                                    flow.leftOut.node.gain.setTargetAtTime(flow.leftOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.leftOut.node, 0);
+                                //rightOut
+                                    flow.rightOut.gain = 1;
+                                    flow.rightOut.node = context.createGain();
+                                    flow.rightOut.node.gain.setTargetAtTime(flow.rightOut.gain, context.currentTime, 0);
+                                    flow.channelSplitter.connect(flow.rightOut.node, 1);
+                        
+                                //output node
+                                    this.out_left  = function(){return flow.leftOut.node;}
+                                    this.out_right = function(){return flow.rightOut.node;}
+                    
+                            
+                        //internal functions
+                            function unloadRaw(){
+                                return flow.track;
+                            };
+                            function loadRaw(data,callback){
+                                if(Object.keys(data).length === 0){return;}
+                                self.stop();
+                                flow.track = data;
+                                state.fileLoaded = true;
+                                state.playhead = [];
+                                self.area(state.area.percentage_start,state.area.percentage_end);
+                                callback(data);
+                            }
+                            function load(type,callback,url=''){
+                                state.fileLoaded = false;
+                                _canvas_.library.audio.loadAudioFile( function(data){ loadRaw(data,callback) }, type, url);
+                            }
+                            function generatePlayheadNumber(){
+                                let num = 0;
+                                while( Object.keys(state.playhead).includes(String(num)) && state.playhead[num] != undefined ){num++;}
+                                return num;
+                            }
+                            function playheadCompute(playhead){
+                                if(playhead == undefined){
+                                    Object.keys(state.playhead).map(key => playheadCompute(parseInt(key)));
+                                    return;
+                                }
+                    
+                                //this code is used to update the playhead position as well as to calculate when the loop end will occur, 
+                                //and thus when the playhead should jump to the start of the loop. The actual looping of the audio is 
+                                //done by the system, so this process is done solely to update the playhead position data.
+                                //  Using the playhead's current position and play rate; the length of time before the playhead is 
+                                //scheduled to reach the end bound of the loop is calculated and given to a timeout. When this timeout 
+                                //occurs; the playhead will jump to the start bound and the process is run again to calculate the new 
+                                //length of time before the playhead reaches the end bound.
+                                //  The playhead cannot move beyond the end bound, thus any negative time calculated will be set to
+                                //zero, and the playhead will instantly jump back to the start bound (this is to mirror the operation of
+                                //the underlying audio system)
+                    
+                                clearInterval(state.loop.timeout[playhead]);
+                    
+                                //update playhead position data
+                                    const currentTime = self.currentTime(playhead);
+                                    state.playhead[playhead].position = currentTime;
+                                    state.playhead[playhead].lastSightingTime = context.currentTime;
+                    
+                                //obviously, if the loop isn't active or the file isn't playing, don't do any of the work
+                                    if(!state.loop.active || !state.playhead[playhead].playing){return;}
+                    
+                                //calculate time until the timeout should be called
+                                    let timeUntil = state.area.actual_end - currentTime;
+                                    if(timeUntil < 0){timeUntil = 0;}
+                    
+                                //the callback (which performs the jump to the start of the loop, and recomputes)
+                                    state.loop.timeout[playhead] = setTimeout(
+                                        (function(playhead){
+                                            return function(){
+                                                jumpToTime(playhead,state.area.actual_start,true);
+                                                playheadCompute(playhead);
+                                            }
+                                        })(playhead),
+                                        (timeUntil*1000)/state.rate
+                                    );
+                            }
+                            function jumpToTime(playhead=0,value,doNotActuallyAffectTheAudioBuffer=false){
+                                //check if we should jump at all
+                                //(file must be loaded and playhead must exist)
+                                    if(!state.fileLoaded || state.playhead[playhead] == undefined){return;}
+                    
+                                //if playback is stopped; only adjust the playhead position
+                                    if( !state.playhead[playhead].playing ){
+                                        state.playhead[playhead].position = value;
+                                        state.playhead[playhead].lastSightingTime = context.currentTime;
+                                        return;
+                                    }
+                    
+                                //if loop is enabled, and the desired value is beyond the loop's end boundary,
+                                //set the value to the start value
+                                    if(state.loop.active && value > state.loop.actual_end){value = state.loop.actual_start;}
+                    
+                                //stop playback, with a callback that will change the playhead position
+                                //and then restart playback
+                                    if(doNotActuallyAffectTheAudioBuffer){
+                                        state.playhead[playhead].position = value;
+                                        state.playhead[playhead].lastSightingTime = context.currentTime;
+                                        return;
+                                    }
+                                    self.pause(playhead,
+                                        (function(playhead){
+                                            return function(){
+                                                state.playhead[playhead].position = value;
+                                                state.playhead[playhead].lastSightingTime = context.currentTime;
+                                                self.resume(playhead);
+                                            }
+                                        })(playhead)
+                                    );
+                            }
+                            function rejigger(playhead){
+                                if(playhead == undefined){
+                                    Object.keys(state.playhead).map(key => rejigger(parseInt(key)));
+                                    return;
+                                }
+                    
+                                jumpToTime(playhead,state.playhead[playhead].position);
+                            }
+                    
+                        //controls
+                            this.concurrentPlayCountLimit = function(value){
+                                if(value == undefined){return state.concurrentPlayCountLimit;}
+                    
+                                state.concurrentPlayCountLimit = value;
+                                for(let a = value; a < state.playhead.length; a++){ this.stop(a); }
+                            };
+                        
+                            this.unloadRaw = function(){ 
+                                return unloadRaw(); 
+                            };
+                            this.loadRaw = function(data,callback){ 
+                                loadRaw(data,callback); 
+                            };
+                            this.load = function(type,callback,url=''){ 
+                                load(type,callback,url); 
+                            };
+                    
+                            // this.generatePlayheadNumber = function(){ 
+                            //     return generatePlayheadNumber();
+                            // };
+                    
+                            this.start = function(playhead){
+                    
+                                //check if we should play at all (file must be loaded)
+                                    if(!state.fileLoaded){return;}
+                                //if no particular playhead is selected, generate a new one
+                                //(unless we've already reached the concurrentPlayCountLimit)
+                                    if(playhead == undefined){
+                                        if(state.concurrentPlayCountLimit != -1 && state.playhead.filter(() => true).length >= state.concurrentPlayCountLimit){ return -1; }
+                    
+                                        playhead = generatePlayheadNumber();
+                                        state.playhead[playhead] = { position:0, lastSightingTime:0 };
+                                    }
+                                //ensure that the playhead is after the start of the area
+                                    if(state.playhead[playhead].position < state.area.actual_start){ state.playhead[playhead].position = state.area.actual_start; }
+                                    if(state.playhead[playhead].position > state.area.actual_end){ state.playhead[playhead].position = state.area.actual_start; }
+                                //load buffer, enter settings and start from playhead position
+                                    flow.bufferSource[playhead] = _canvas_.library.audio.loadBuffer(context, flow.track.buffer, flow.channelSplitter, (function(playhead){ return function(){self.stop(playhead);};})(playhead));
+                                    flow.bufferSource[playhead].loop = state.loop.active;
+                                    flow.bufferSource[playhead].loopStart = state.area.actual_start;
+                                    flow.bufferSource[playhead].loopEnd = state.area.actual_end;
+                                    flow.bufferSource[playhead].playbackRate.value = state.rate;
+                                    flow.bufferSource[playhead].start( 
+                                        0, 
+                                        state.playhead[playhead].position, 
+                                        state.loop.active ? undefined : state.area.actual_end-state.playhead[playhead].position
+                                    );
+                                //log the starting time, play state
+                                    state.playhead[playhead].lastSightingTime = context.currentTime;
+                                    state.playhead[playhead].playing = true;
+                                    playheadCompute(playhead);
+                                //return the playhead number
+                                    return playhead;
+                            };
+                            this.pause = function(playhead,callback){
+                                if(playhead == undefined){
+                                    Object.keys(state.playhead).map(key => self.pause(parseInt(key)));
+                                    return;
+                                }
+                    
+                                //check if we should stop at all (player must be playing)
+                                    if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
+                                //log play state and run playheadCompute
+                                    playheadCompute(playhead);
+                                    state.playhead[playhead].playing = false;
+                                //actually stop the buffer and destroy it
+                                    flow.bufferSource[playhead].onended = callback;
+                                    flow.bufferSource[playhead].stop(0);
+                                    delete flow.bufferSource[playhead];
+                            };
+                            this.resume = function(playhead){
+                                if(playhead == undefined){
+                                    Object.keys(state.playhead).map(key => self.resume(parseInt(key)));
+                                    return;
+                                }
+                    
+                                this.start(playhead);
+                            };
+                            this.stop = function(playhead,callback){
+                                if(playhead == undefined){
+                                    Object.keys(state.playhead).map(key => self.stop(parseInt(key)));
+                                    return;
+                                }
+                    
+                                //check if we should stop at all (player must be playing)
+                                    if( state.playhead[playhead] == undefined || !state.playhead[playhead].playing ){return;}
+                                //actually stop the buffer and destroy it
+                                    flow.bufferSource[playhead].onended = callback;
+                                    flow.bufferSource[playhead].stop(0);
+                                    delete flow.bufferSource[playhead];
+                                //playheadCompute and delete playhead
+                                    state.playhead[playhead].playing = false;
+                                    playheadCompute(playhead);
+                                    delete state.playhead[playhead];
+                            };
+                            this.restart = function(playhead){
+                                this.stop(playhead);
+                                this.start(playhead);
+                            };
+                    
+                            this.jumpTo = function(playhead=0,value=0,percentage=true){
+                                if(percentage){
+                                    value = (value>1 ? 1 : value);
+                                    value = (value<0 ? 0 : value);
+                                    jumpToTime(playhead,this.duration()*value);
+                                }else{
+                                    jumpToTime(playhead,value);
+                                }
+                                playheadCompute(playhead);
+                            };
+                            this.area = function(start,end,percentage=true){
+                                if(start == undefined && end == undefined){ return state.area; }
+                                if(start == undefined){ start = percentage ? state.area.percentage_start : state.area.actual_start; }
+                                if(end == undefined){ end = percentage ? state.area.percentage_end : state.area.actual_end; }
+                    
+                                if(percentage){
+                                    state.area.percentage_start = start;
+                                    state.area.percentage_end = end;
+                                    state.area.actual_start = start*this.duration();
+                                    state.area.actual_end = end*this.duration();
+                                }else{
+                                    state.area.percentage_start = start/this.duration();
+                                    state.area.percentage_end = end/this.duration();
+                                    state.area.actual_start = start;
+                                    state.area.actual_end = end;
+                                }
+                    
+                                playheadCompute();
+                                rejigger();
+                    
+                                return state.area;
+                            };
+                            this.loop = function(active){
+                                if(active == undefined){return state.loop.active;}
+                    
+                                state.loop.active = active;
+                    
+                                playheadCompute();
+                                rejigger();
+                            };
+                            this.rate = function(value){
+                                if(value == undefined){return state.rate;}
+                    
+                                playheadCompute();
+                                state.rate = value;
+                                flow.bufferSource.forEach(item => item.playbackRate.value = value);
+                                playheadCompute();
+                            };
+                    
+                            this.createPlayhead = function(position){
+                                if(state.concurrentPlayCountLimit != -1 && state.playhead.filter(() => true).length >= state.concurrentPlayCountLimit){ return -1; }
+                    
+                                playhead = generatePlayheadNumber();
+                                state.playhead[playhead] = { position:this.duration()*position, lastSightingTime:0 };
+                            };
+                    
+                        //info
+                            this._printState = function(){console.log(state);};
+                            this.isLoaded = function(){return state.fileLoaded;};
+                            this.duration = function(){return !state.fileLoaded ? -1 : flow.track.duration;};
+                            this.title = function(){return !state.fileLoaded ? '' : flow.track.name;};
+                            this.currentTime = function(playhead){
+                                //check if file is loaded
+                                    if(!state.fileLoaded){return -1;}
+                                //if no playhead is selected, do all of them
+                                    if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.currentTime(key)); }
+                                //if playback is stopped, return the playhead position, 
+                                    if(state.playhead[playhead] == undefined){return -1;}
+                                    if(!state.playhead[playhead].playing){return state.playhead[playhead].position;}
+                                //otherwise, calculate the current position
+                                    return state.playhead[playhead].position + state.rate*(context.currentTime - state.playhead[playhead].lastSightingTime);
+                            };
+                            this.progress = function(playhead){
+                                //if no playhead is selected, do all of them
+                                    if(playhead == undefined){ return Object.keys(state.playhead).map(key => self.progress(key)); }
+                    
+                                const time = this.currentTime(playhead);
+                                if(time == -1){return -1;}
+                                return time/this.duration();
+                            };
+                            this.waveformSegment = function(data={start:0,end:1},resolution){
+                                if(data==undefined || !state.fileLoaded){return [];}
+                                return _canvas_.library.audio.waveformSegment(flow.track.buffer, data, resolution);
+                            };
+                    };
+                    this.channelMultiplier = function(
+                        context, outputCount=2
+                    ){
+                        //flow
+                            //flow chain
+                                const flow = {
+                                    in: {},
+                                    outs:[],
+                                    out_0: {}, out_1: {},
+                                };
+                            
+                            //in
+                                flow.in.gain = 1;
+                                flow.in.node = context.createGain();    
+                                _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                    
+                            //outs
+                                for(let a = 0; a < outputCount; a++){
+                                    const temp = { gain:0.5, node:context.createGain() };
+                                    _canvas_.library.audio.changeAudioParam(context,temp.node.gain, temp.gain, 0.01, 'instant', true);
+                                    flow.outs.push(temp);
+                                    flow.in.node.connect(temp.node);
+                                }
+                    
+                        //input/output node
+                            this.in = function(){return flow.in.node;}
+                            this.out = function(a){return flow.outs[a].node;}
+                    
+                        //controls
+                            this.inGain = function(a){
+                                if(a == undefined){return flow.in.gain;}
+                                flow.in.gain = a;
+                                _canvas_.library.audio.changeAudioParam(context,flow.in.node.gain, flow.in.gain, 0.01, 'instant', true);
+                            };
+                            this.outGain = function(a,value){
+                                if(value == undefined){ return flow.outs[a].gain; }
+                                flow.outs[a].gain = value;
+                                _canvas_.library.audio.changeAudioParam(context,flow.outs[a].node.gain, flow.outs[a].gain, 0.01, 'instant', true);
+                            };
+                    };
+                        
+                    this.filterUnit = function(
+                        context
+                    ){
+                        //flow chain
+                            const flow = {
+                                inAggregator: {},
+                                filterNode: {},
+                                outAggregator: {},
+                            };
+                    
+                        //inAggregator
+                            flow.inAggregator.gain = 1;
+                            flow.inAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.inAggregator.node.gain, flow.inAggregator.gain, 0.01, 'instant', true);
+                    
+                        //filterNode
+                            flow.filterNode.node = context.createBiquadFilter();
+                    	    flow.filterNode.node.type = "lowpass";
+                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,110,0.01,'instant',true);
+                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,1,0.01,'instant',true);
+                            _canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,0.1,0.01,'instant',true);
+                    
+                        //outAggregator
+                            flow.outAggregator.gain = 1;
+                            flow.outAggregator.node = context.createGain();
+                            _canvas_.library.audio.changeAudioParam(context,flow.outAggregator.node.gain, flow.outAggregator.gain, 0.01, 'instant', true);
+                    
+                    
+                        //do connections
+                            flow.inAggregator.node.connect(flow.filterNode.node);
+                            flow.filterNode.node.connect(flow.outAggregator.node);
+                    
+                        //input/output node
+                            this.in = function(){return flow.inAggregator.node;}
+                            this.out = function(){return flow.outAggregator.node;}
+                    
+                        //methods
+                            this.type = function(type){flow.filterNode.node.type = type;};
+                            this.frequency = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.frequency,value,0.01,'instant',true);};
+                            this.gain = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.gain,value,0.01,'instant',true);};
+                            this.Q = function(value){_canvas_.library.audio.changeAudioParam(context, flow.filterNode.node.Q,value,0.01,'instant',true);};
+                            this.measureFrequencyResponse = function(start,end,step){
+                                const frequencyArray = [];
+                                for(let a = start; a < end; a += step){frequencyArray.push(a);}
+                            
+                                return this.measureFrequencyResponse_values(frequencyArray);
+                            };
+                            this.measureFrequencyResponse_values = function(frequencyArray){
+                                const Float32_frequencyArray = new Float32Array(frequencyArray);
+                                const magResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                                const phaseResponseOutput = new Float32Array(Float32_frequencyArray.length);
+                            
+                                flow.filterNode.node.getFrequencyResponse(Float32_frequencyArray,magResponseOutput,phaseResponseOutput);
+                                return [magResponseOutput,frequencyArray];
+                            };
+                    };
+
+                    this.synthesizer = function(
+                        context,
+                        waveType='sine', periodicWave={'sin':[0,1], 'cos':[0,0]}, 
+                        gain=1, gainWobbleDepth=0, gainWobblePeriod=0, gainWobbleMin=0.01, gainWobbleMax=1,
+                        attack={time:0.01, curve:'linear'}, release={time:0.05, curve:'linear'},
+                        octave=0,
+                        detune=0, detuneWobbleDepth=0, detuneWobblePeriod=0, detuneWobbleMin=0.01, detuneWobbleMax=1
+                    ){
+                        //flow chain
+                            const flow = {
+                                OSCmaker:{},
+                                liveOscillators: {},
+                                wobbler_detune: {},
+                                aggregator: {},
+                                wobbler_gain: {},
+                                mainOut: {}
+                            };
+                    
+                    
+                            flow.OSCmaker.waveType = waveType;
+                            flow.OSCmaker.periodicWave = periodicWave;
+                            flow.OSCmaker.attack = attack;
+                            flow.OSCmaker.release = release;
+                            flow.OSCmaker.octave  = octave;
+                            flow.OSCmaker.detune  = detune;
+                            flow.OSCmaker.func = function(
+                                context, connection, midinumber,
+                                type, periodicWave, 
+                                gain, attack, release,
+                                detune, octave
+                            ){
+                                return new function(){
+                                    this.generator = context.createOscillator();
+                                        if(type == 'custom'){ 
+                                            this.generator.setPeriodicWave(
+                                                context.createPeriodicWave(new Float32Array(periodicWave.cos),new Float32Array(periodicWave.sin))
+                                            ); 
+                                        }else{ this.generator.type = type; }
+                                        this.generator.frequency.setTargetAtTime(_canvas_.library.audio.num2freq(midinumber+12*octave), context.currentTime, 0);
+                                        this.generator.detune.setTargetAtTime(detune, context.currentTime, 0);
+                                        this.generator.start(0);
+                    
+                                    this.gain = context.createGain();
+                                    this.generator.connect(this.gain);
+                                    this.gain.gain.setTargetAtTime(0, context.currentTime, 0);
+                                    _canvas_.library.audio.changeAudioParam(context,this.gain.gain, gain, attack.time, attack.curve, false);
+                                    this.gain.connect(connection);
+                    
+                                    this.detune = function(target,time,curve){
+                                        _canvas_.library.audio.changeAudioParam(context,this.generator.detune,target,time,curve);
+                                    };
+                                    this.changeVelocity = function(a){
+                                        _canvas_.library.audio.changeAudioParam(context,this.gain.gain,a,attack.time,attack.curve);
+                                    };
+                                    this.stop = function(){
+                                        _canvas_.library.audio.changeAudioParam(context,this.gain.gain,0,release.time,release.curve);
+                                        setTimeout(function(that){
+                                            that.gain.disconnect(); 
+                                            that.generator.stop(); 
+                                            that.generator.disconnect(); 
+                                            that.gain=null; 
+                                            that.generator=null; 
+                                            that=null;
+                                        }, release.time*1000, this);
+                                    };
+                                };
+                            };
+                    
+                    
+                            flow.wobbler_detune.depth = detuneWobbleDepth;
+                            flow.wobbler_detune.period = detuneWobblePeriod;
+                            flow.wobbler_detune.phase = true;
+                            flow.wobbler_detune.wave = 's';
+                            flow.wobbler_detune.interval = null;
+                            flow.wobbler_detune.start = function(){
+                                if(flow.wobbler_detune.period < detuneWobbleMin || flow.wobbler_detune.period >= detuneWobbleMax){ return; }
+                                flow.wobbler_detune.interval = setInterval(function(){
+                                    const OSCs = Object.keys(flow.liveOscillators);
+                                    if(flow.wobbler_detune.phase){
+                                        for(let b = 0; b < OSCs.length; b++){ 
+                                            flow.liveOscillators[OSCs[b]].detune(flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                        }
+                                    }else{
+                                        for(let b = 0; b < OSCs.length; b++){ 
+                                            flow.liveOscillators[OSCs[b]].detune(-flow.wobbler_detune.depth,0.9*flow.wobbler_detune.period,flow.wobbler_detune.wave);
+                                        }
+                                    }
+                                    flow.wobbler_detune.phase = !flow.wobbler_detune.phase;
+                                }, 1000*flow.wobbler_detune.period);
+                            };
+                            flow.wobbler_detune.stop = function(){clearInterval(flow.wobbler_detune.interval);};
+                    
+                    
+                            flow.aggregator.node = context.createGain();    
+                            flow.aggregator.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                    
+                    
+                            flow.wobbler_gain.depth = gainWobbleDepth;
+                            flow.wobbler_gain.period = gainWobblePeriod;
+                            flow.wobbler_gain.phase = true;
+                            flow.wobbler_gain.wave = 's';
+                            flow.wobbler_gain.interval = null;
+                            flow.wobbler_gain.start = function(){
+                                if(flow.wobbler_gain.period < gainWobbleMin || flow.wobbler_gain.period >= gainWobbleMax){
+                                    _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.01, flow.wobbler_gain.wave );
+                                    return;
+                                }
+                                flow.wobbler_gain.interval = setInterval(function(){
+                                    if(flow.wobbler_gain.phase){ _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1, 0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                    else{                        _canvas_.library.audio.changeAudioParam(context, flow.wobbler_gain.node.gain, 1-flow.wobbler_gain.depth,  0.9*flow.wobbler_gain.period, flow.wobbler_gain.wave ); }
+                                    flow.wobbler_gain.phase = !flow.wobbler_gain.phase;
+                                }, 1000*flow.wobbler_gain.period);
+                            };
+                            flow.wobbler_gain.stop = function(){clearInterval(flow.wobbler_gain.interval);};
+                            flow.wobbler_gain.node = context.createGain();
+                            flow.wobbler_gain.node.gain.setTargetAtTime(1, context.currentTime, 0);
+                            flow.aggregator.node.connect(flow.wobbler_gain.node);
+                    
+                            
+                            flow.mainOut.gain = gain;
+                            flow.mainOut.node = context.createGain();
+                            flow.mainOut.node.gain.setTargetAtTime(gain, context.currentTime, 0);
+                            flow.wobbler_gain.node.connect(flow.mainOut.node);
+                    
+                        //output node
+                            this.out = function(){return flow.mainOut.node;}
+                    
+                        //controls
+                            this.perform = function(note){
+                                if( !flow.liveOscillators[note.num] && note.velocity == 0 ){/*trying to stop a non-existant tone*/return;}
+                                else if( !flow.liveOscillators[note.num] && note.velocity != 0 ){ 
+                                    //create new tone
+                                    flow.liveOscillators[note.num] = flow.OSCmaker.func(
+                                        context, 
+                                        flow.aggregator.node, 
+                                        note.num, 
+                                        flow.OSCmaker.waveType, 
+                                        flow.OSCmaker.periodicWave, 
+                                        note.velocity, 
+                                        flow.OSCmaker.attack, 
+                                        flow.OSCmaker.release, 
+                                        flow.OSCmaker.detune, 
+                                        flow.OSCmaker.octave
+                                    );
+                                }
+                                else if( note.velocity == 0 ){ 
+                                    //stop and destroy tone
+                                    flow.liveOscillators[note.num].stop();
+                                    delete flow.liveOscillators[note.num];
+                                }
+                                else{
+                                    //adjust tone
+                                    flow.liveOscillators[note.num].changeVelocity(note.velocity);
+                                }
+                            };
+                            this.panic = function(){
+                                const OSCs = Object.keys(flow.liveOscillators);
+                                for(let a = 0; a < OSCs.length; a++){ this.perform( {'num':OSCs[a], 'velocity':0} ); }
+                            };
+                            this.waveType = function(a){if(a==null){return flow.OSCmaker.waveType;}flow.OSCmaker.waveType=a;};
+                            this.periodicWave = function(a){if(a==null){return flow.OSCmaker.periodicWave;}flow.OSCmaker.periodicWave=a;};
+                            this.gain = function(target,time,curve){ return _canvas_.library.audio.changeAudioParam(context,flow.mainOut.node.gain,target,time,curve); };
+                            this.attack = function(time,curve){
+                                if(time==null&&curve==null){return flow.OSCmaker.attack;}
+                                flow.OSCmaker.attack.time = time ? time : flow.OSCmaker.attack.time;
+                                flow.OSCmaker.attack.curve = curve ? curve : flow.OSCmaker.attack.curve;
+                            };
+                            this.release = function(time,curve){
+                                if(time==null&&curve==null){return flow.OSCmaker.release;}
+                                flow.OSCmaker.release.time = time ? time : flow.OSCmaker.release.time;
+                                flow.OSCmaker.release.curve = curve ? curve : flow.OSCmaker.release.curve;
+                            };
+                            this.octave = function(a){if(a==null){return flow.OSCmaker.octave;}flow.OSCmaker.octave=a;};
+                            this.detune = function(target,time,curve){
+                                if(target==null){return flow.OSCmaker.detune;}
+                    
+                                //change stored value for any new oscillators that are made
+                                    const start = flow.OSCmaker.detune;
+                                    const mux = target-start;
+                                    const stepsPerSecond = Math.round(Math.abs(mux));
+                                    const totalSteps = stepsPerSecond*time;
+                    
+                                    let steps = [1];
+                                    switch(curve){
+                                        case 'linear': steps = system.utility.math.curveGenerator.linear(totalSteps); break;
+                                        case 'exponential': steps = system.utility.math.curveGenerator.exponential(totalSteps); break;
+                                        case 's': steps = system.utility.math.curveGenerator.s(totalSteps,8); break;
+                                        case 'instant': default: break;
+                                    }
+                                    
+                                    if(steps.length != 0){
+                                        const interval = setInterval(function(){
+                                            flow.OSCmaker.detune = start+(steps.shift()*mux);
+                                            if(steps.length == 0){clearInterval(interval);}
+                                        },1000/stepsPerSecond);
+                                    }
+                    
+                                //instruct liveOscillators to adjust their values
+                                    const OSCs = Object.keys(flow.liveOscillators);
+                                    for(let b = 0; b < OSCs.length; b++){ 
+                                        flow.liveOscillators[OSCs[b]].detune(target,time,curve);
+                                    }
+                            };
+                            this.gainWobbleDepth = function(value){
+                                if(value==null){return flow.wobbler_gain.depth; }
+                                flow.wobbler_gain.depth = value;
+                                flow.wobbler_gain.stop();
+                                flow.wobbler_gain.start();
+                            };
+                            this.gainWobblePeriod = function(value){
+                                if(value==null){return flow.wobbler_gain.period; }
+                                flow.wobbler_gain.period = value;
+                                flow.wobbler_gain.stop();
+                                flow.wobbler_gain.start();
+                            };
+                            this.detuneWobbleDepth = function(value){
+                                if(value==null){return flow.wobbler_detune.depth; }
+                                flow.wobbler_detune.depth = value;
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
+                            };
+                            this.detuneWobblePeriod = function(value){
+                                if(value==null){return flow.wobbler_detune.period; }
+                                flow.wobbler_detune.period = value;
+                                flow.wobbler_detune.stop();
+                                flow.wobbler_detune.start();
+                            };
+                    };
+
+                };
+                this.part = new function(){
+                    const interfacePart = this;
+                    
+                    this.partLibrary = {};
+                    this.builder = function(collection,type,name,data){
+                        if(!data){data={};}
+                        if(data.style == undefined){data.style={};}
+                    
+                        if(collection in this.partLibrary && type in this.partLibrary[collection]){
+                            return this.partLibrary[collection][type](name,data);
+                        }
+                    
+                        console.warn('Interface Part Builder :: Unknown element: '+ collection + '::' + type); return null;
+                    }
+                    const partRegistry = {};
+                    this.collection = new function(){
+                        this.basic = new function(){
+                            interfacePart.partLibrary.basic = {};
+                            this.polygon = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('polygon',name).then(polygon => { 
+                                        polygon.unifiedAttribute({ ignored:ignored, colour:colour });
+                                        if(points.length != 0){ polygon.points(points); }
+                                        else{ polygon.pointsAsXYArray(pointsAsXYArray); }
+                                        resolve(polygon);
+                                    });
+                                });
+                            }
+                            
+                            interfacePart.partLibrary.basic.polygon = function(name,data){ 
+                                return interfacePart.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
+                            };
+                            this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('rectangleWithOutline',name).then(rectangleWithOutline => { 
+                                        rectangleWithOutline.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            width:width, 
+                                            height:height, 
+                                            angle:angle, 
+                                            anchor:anchor, 
+                                            ignored:ignored, 
+                                            colour:colour,
+                                            lineColour:lineColour,
+                                            thickness:thickness,
+                                        });
+                                        resolve(rectangleWithOutline);
+                                    });
+                                });
+                            };
+                            
+                            interfacePart.partLibrary.basic.rectangleWithOutline = function(name,data){ 
+                                return interfacePart.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
+                            };
+                            this.circle = function( name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('circle',name).then(circle => { 
+                                        circle.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            radius:radius, 
+                                            detail:detail, 
+                                            ignored:ignored, 
+                                            colour:colour
+                                        });
+                                        resolve(circle);
+                                    });
+                                });
+                            };
+                            
+                            interfacePart.partLibrary.basic.circle = function(name,data){ 
+                                return interfacePart.collection.basic.circle( name, data.x, data.y, data.radius, data.detail, data.ignored, data.colour );
+                            };
+                            this.polygonWithOutline = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('polygonWithOutline',name).then(polygonWithOutline => { 
+                                        polygonWithOutline.unifiedAttribute({ ignored:ignored, colour:colour, lineColour:lineColour, thickness:thickness });
+                                        if(points.length != 0){ polygonWithOutline.points(points); }
+                                        else{ polygonWithOutline.pointsAsXYArray(pointsAsXYArray); }
+                                        resolve(polygonWithOutline);
+                                    });
+                                });
+                            }
+                            
+                            interfacePart.partLibrary.basic.polygonWithOutline = function(name,data){ 
+                                return interfacePart.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
+                            };
+                            this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url='' ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('image',name).then(image => { 
+                                        image.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            width:width, 
+                                            height:height, 
+                                            angle:angle, 
+                                            anchor:anchor, 
+                                            ignored:ignored, 
+                                        });
+                                        image.imageURL(url);
+                                        resolve(image);
+                                    });
+                                });
+                            };
+                            
+                            interfacePart.partLibrary.basic.image = function(name,data){ 
+                                return interfacePart.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
+                            };
+                            this.path = function( name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[], jointType='sharp', capType='none', looping=false, jointDetail=25, sharpLimit=4 ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('path',name).then(path => { 
+                                        path.unifiedAttribute({ 
+                                            ignored:ignored,
+                                            colour:colour,
+                                            thickness:thickness,
+                                            jointType:jointType,
+                                            capType:capType,
+                                            looping:looping,
+                                            jointDetail:jointDetail,
+                                            sharpLimit:sharpLimit,
+                                        });
+                                        if(points.length != 0){ path.points(points); }
+                                        else{ path.pointsAsXYArray(pointsAsXYArray); }
+                                        resolve(path);
+                                    });
+                                });
+                            }
+                            
+                            interfacePart.partLibrary.basic.path = function(name,data){ 
+                                return interfacePart.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray, data.jointType, data.capType, data.looping, data.jointDetail, data.sharpLimit );
+                            };
+                            this.rectangle = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('rectangle',name).then(rectangle => { 
+                                        rectangle.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            width:width, 
+                                            height:height, 
+                                            angle:angle, 
+                                            anchor:anchor, 
+                                            ignored:ignored, 
+                                            colour:colour 
+                                        });
+                                        resolve(rectangle);
+                                    });
+                                });
+                            };
+                            
+                            interfacePart.partLibrary.basic.rectangle = function(name,data){ 
+                                return interfacePart.collection.basic.rectangle( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour );
+                            };
+                            this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('group',name).then(group => { 
+                                        group.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            angle:angle, 
+                                            ignored:ignored,
+                                        });
+                                        resolve(group);
+                                    });
+                                });
+                            }
+                            
+                            interfacePart.partLibrary.basic.group = function(name,data){ 
+                                return interfacePart.collection.basic.group(name, data.x, data.y, data.angle, data.ignored);
+                            };
+                            this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0 ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('characterString',name).then(characterString => { 
+                                        characterString.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            width:width,
+                                            height:height,
+                                            angle:angle,
+                                            ignored:ignored, 
+                                            colour:colour,
+                                            font:fontName,
+                                            string:text,
+                                            printingMode:printingMode,
+                                            spacing:spacing,
+                                            interCharacterSpacing:interCharacterSpacing,
+                                        });
+                                        resolve(characterString);
+                                    });
+                                });
+                            };
+                            
+                            interfacePart.partLibrary.basic.text = function(name,data){ 
+                                return interfacePart.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing );
+                            };
+                            this.circleWithOutline = function( name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('circleWithOutline',name).then(circleWithOutline => { 
+                                        circleWithOutline.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            radius:radius, 
+                                            detail:detail, 
+                                            thickness:thickness,
+                                            ignored:ignored, 
+                                            colour:colour,
+                                            lineColour:lineColour,
+                                        });
+                                        resolve(circleWithOutline);
+                                    });
+                                });
+                            };
+                            
+                            interfacePart.partLibrary.basic.circleWithOutline = function(name,data){ 
+                                return interfacePart.collection.basic.circleWithOutline( name, data.x, data.y, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
+                            };
+                        };
+                        // this.display = new function(){
+                        //     interfacePart.partLibrary.display = {};
+                        // };
+                        // this.control = new function(){
+                        //     interfacePart.partLibrary.control = {};
+                        // };
+                        // this.dynamic = new function(){
+                        //     interfacePart.partLibrary.dynamic = {};
+                        // };
+                    };
+
+                };
+                this.unit = new function(){
+                };
+            };
             
             _canvas_.system.go = function(){
-                _canvas_.core.meta.createSetAppend(
-                    'rectangle','testRectangle_background', 
-                    { 
-                        x:0, y:0, width:60, height:60, 
-                        colour:{r:1,g:0,b:0,a:0.3},
-                    },
-                    _canvas_.system.pane.b
-                );
+                _canvas_.layers.registerLayerLoaded('interface',_canvas_.interface);
+                if(_canvas_.interface.go){_canvas_.interface.go();}
+            };
             
-                _canvas_.core.meta.createSetAppend(
-                    'rectangle','testRectangle_middlegroud_back', 
-                    { 
-                        x:10, y:60, width:60, height:60, 
-                        colour:{r:0,g:1,b:0,a:0.3},
-                    },
-                    _canvas_.system.pane.mb
-                );
-                _canvas_.core.meta.createSetAppend(
-                    'rectangle','testRectangle_middlegroud_middle', 
-                    { 
-                        x:80, y:60, width:60, height:60, 
-                        colour:{r:0,g:1,b:0,a:0.6},
-                    },
-                    _canvas_.system.pane.mm
-                ).then(id => {
-                    _canvas_.core.callback.attachCallback(id,'onmousemove',(x,y,event) => {
-                        console.log('rectangle::testRectangle_middlegroud_middle::onmousemove',x,y,event);
+            _canvas_.interface.go = function(){
+                _canvas_.core.render.active(true);
+            
+                //basic
+                    _canvas_.interface.part.builder( 'basic', 'group', 'basicGroup_1', { x:10, y:10 } ).then(basicGroup => {
+                        _canvas_.system.pane.mm.append(basicGroup);
+            
+                        _canvas_.interface.part.builder('basic', 'rectangle', 'testRectangle', { 
+                            x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1}
+                        }).then(rectangle => { basicGroup.append(rectangle); });
+                        _canvas_.interface.part.builder('basic', 'circle', 'testCircle', { 
+                            x:20, y:55, radius:15
+                        }).then(circle => { basicGroup.append(circle); });
+                        _canvas_.interface.part.builder('basic', 'image', 'testImage', { 
+                            x:40, y:40, width:30, height:30, url:'/images/testImages/Dore-munchausen-illustration.jpg'
+                        }).then(image => { basicGroup.append(image); });
+            
+                        _canvas_.interface.part.builder( 'basic', 'group', 'clippingGroup', { x:75, y:5 } ).then(clippingGroup => {
+                            basicGroup.append(clippingGroup);
+                            clippingGroup.clipActive(true);
+            
+                            _canvas_.interface.part.builder('basic', 'polygon', 'testPolygon', { 
+                                points:[0,0, 50,0, 50,50], 
+                            }).then(polygon => { clippingGroup.stencil(polygon); });
+                            _canvas_.interface.part.builder('basic', 'image', 'clippedImage', { 
+                                width:50, height:50, url:'/images/testImages/mikeandbrian.jpg'
+                            }).then(image => { clippingGroup.append(image); });
+                        });
+            
+                        _canvas_.interface.part.builder('basic', 'polygon', 'testPolygon', { 
+                            points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1},
+                        }).then(polygon => { basicGroup.append(polygon); });
+                        _canvas_.interface.part.builder('basic', 'polygonWithOutline', 'testPolygonWithOutline', { 
+                            points:[75,15, 75,55, 115,55], thickness:1, colour:{r:1,g:0,b:0.5,a:1}, lineColour:{r:0,g:0,b:0,a:1},
+                        }).then(polygonWithOutline => { basicGroup.append(polygonWithOutline); });
+                        _canvas_.interface.part.builder('basic', 'text', 'testText', { 
+                            x:5, y:75, text:'Hello', height:15, width:70, colour:{r:150/255,g:150/255,b:1,a:1},
+                        }).then(text => { basicGroup.append(text); });
+                        _canvas_.interface.part.builder('basic', 'path', 'testPath', { 
+                            points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1.25, jointType:'round', capType:'round',
+                        }).then(path => { basicGroup.append(path); });
+                        _canvas_.interface.part.builder('basic', 'circleWithOutline', 'testCircleWithOutline', { 
+                            x:90, y:70, radius:10,
+                        }).then(circleWithOutline => { basicGroup.append(circleWithOutline); });
+                        _canvas_.interface.part.builder('basic', 'rectangleWithOutline', 'testRectangleWithOutline', { 
+                            x:105, y:60, width:30, height:30,
+                        }).then(rectangleWithOutline => { basicGroup.append(rectangleWithOutline); });
                     });
-                    _canvas_.core.callback.attachCallback(id,'onmouseenterelement',(x,y,event) => {
-                        console.log('rectangle::testRectangle_middlegroud_middle::onmouseenterelement',x,y,event);
-                    });
-                    _canvas_.core.callback.attachCallback(id,'onmouseleaveelement',(x,y,event) => {
-                        console.log('rectangle::testRectangle_middlegroud_middle::onmouseleaveelement',x,y,event);
-                    });
-                });
-                _canvas_.core.meta.createSetAppend(
-                    'rectangle','testRectangle_middlegroud_front', 
-                    { 
-                        x:150, y:60, width:60, height:60, 
-                        colour:{r:0,g:1,b:0,a:0.8},
-                    },
-                    _canvas_.system.pane.mf
-                );
-            
-                _canvas_.core.meta.createSetAppend(
-                    'rectangle','testRectangle_foreground', 
-                    { 
-                        x:160, y:120, width:60, height:60, 
-                        colour:{r:0,g:0,b:1,a:0.6}
-                    },
-                    _canvas_.system.pane.f
-                );
             
             
-                setTimeout(_canvas_.core.render.frame,500);
-                setTimeout(_canvas_.core.arrangement.printTree,500);
             
-                setTimeout(() => {
-                    _canvas_.system.pane.getMiddlegroundPane(3).then(console.log);
-                    _canvas_.system.pane.getMiddlegroundPane(7).then(console.log);
-                    _canvas_.system.pane.getMiddlegroundPane(8).then(console.log);
-                    _canvas_.system.pane.getMiddlegroundPane(9).then(console.log);
-                    _canvas_.system.pane.getMiddlegroundPane(10).then(console.log);
-                },1000);
             };
 
 

@@ -1,4 +1,26 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-11-22
+  CoreV3
+    - redid the core interface to use proxy elements
+    - updated proxy elements to have caching (they all come with an argument to
+      not use the caching) ..probably not the most useful feature, and I've
+      written it in a way that it doesn't affect the interaction in any way
+    - put back together the system layer, which seems to be working fine (not
+      much change needed from the time before this switch to proxy elements)
+    - started again on the interface layer. All the old circuit work has just
+      been copied, and I've gotten together all the 'basic' parts (which of
+      course is a rather simple task now thanks to the proxy elements)
+
+
+2019-11-18
+  CoreV3
+    - added a new layer to the layer stack (though I'm not giving it its own
+      folder as its really just a sub-layer of the library) "_canvas_.layers"
+      which is used to register new layers as they are loaded and has methods
+      for discovering what their version information and a callback for when a
+      new layer is loaded and ready
+
+
 2019-11-17
   CoreV3
     - shifted the font code out from core into the library (where it seems more
@@ -12,7 +34,7 @@
       using the serialize/deserialize code found in the library... it actually
       runs surprisingly well
     - added the system layer (needs a little testing, but seems really good)
-    - added a ".go" fuction to the system layer, which acts like the ".go"
+    - added a ".go" function to the system layer, which acts like the ".go"
       function of core; but activates only when the system layer is done all
       it's work (I just think this is so clever)
 

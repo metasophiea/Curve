@@ -40,7 +40,7 @@ const element = new function(){
         //creation
             this.create_skipDatabase = function(type,name){
                 dev.log.element('.create_skipDatabase('+type+','+name+')'); //#development
-                return new elementLibrary[type](name,-1);
+                return new elementLibrary[type](-1,name);
             };
             this.create = function(type,name){
                 dev.log.element('.create('+type+','+name+')'); //#development
@@ -50,7 +50,7 @@ const element = new function(){
                 if(elementLibrary[type] == undefined){ report.error('elememt.createElement: type "'+type+'" does not exist - element will not be produced'); return; }
 
                 const newElement_id = generateElementId();
-                createdElements[newElement_id] = new elementLibrary[type](name,newElement_id);
+                createdElements[newElement_id] = new elementLibrary[type](newElement_id,name);
                 return createdElements[newElement_id];
             };
 

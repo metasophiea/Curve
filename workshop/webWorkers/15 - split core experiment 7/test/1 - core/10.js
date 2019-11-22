@@ -354,58 +354,137 @@ const rectangleWithRoundEnds = function(name,_id){
         this.interface = new function(){
             this.ignored = self.ignored;
             this.colour = self.colour;
-            this.lineColour = self.lineColour;
             this.x = self.x;
             this.y = self.y;
             this.width = self.width;
             this.height = self.height;
+            this.detail = self.detail;
             this.scale = self.scale;
-            this.thickness = self.thickness;
             this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;
         };
 };
+const rectangleWithRoundEnds_proxy = function(_id,_name,communicationModule,dev){
+    dev.log.elementLibrary(' - new rectangleWithRoundEnds_proxy('+_id+')'); //#development
+    const id = _id;
+    this.getId = function(){return id;};
+    const name = _name;
+    this.getName = function(){return name;};
+    this.getType = function(){return 'rectangleWithRoundEnds_proxy';};
+
+    this.ignored = function(bool){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.ignored('+bool+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'ignored',[bool]],resolve);
+        });
+    };
+    this.colour = function(colour){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.colour('+colour+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'colour',[colour]],resolve);
+        });
+    };
+    this.x = function(number){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.x('+number+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'x',[number]],resolve);
+        });
+    };
+    this.y = function(number){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.y('+number+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'y',[number]],resolve);
+        });
+    };
+    this.width = function(number){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.width('+number+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'width',[number]],resolve);
+        });
+    };
+    this.height = function(number){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.height('+number+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'height',[number]],resolve);
+        });
+    };
+    this.detail = function(number){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.detail('+number+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'detail',[number]],resolve);
+        });
+    };
+    this.scale = function(number){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.scale('+number+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'scale',[number]],resolve);
+        });
+    };
+    this.static = function(bool){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.static('+bool+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'static',[bool]],resolve);
+        });
+    };
+    this.unifiedAttribute = function(attributes){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]],resolve);
+        });
+    };
+    this.getAddress = function(){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy.getAddress()'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'getAddress',[]],resolve);
+        });
+    };
+    this._dump = function(){
+        dev.log.elementLibrary(' - rectangleWithRoundEnds_proxy._dump()'); //#development
+        return new Promise((resolve, reject) => {
+            communicationModule.run('element.executeMethod',[id,'_dump',[number]]);
+        });
+    };
+};
 
 _canvas_.core.meta.go = function(){
+    _canvas_.core.element.installElement( 'rectangleWithRoundEnds', rectangleWithRoundEnds, rectangleWithRoundEnds_proxy );
 
-    _canvas_.core.element.installElement( 'rectangleWithRoundEnds', rectangleWithRoundEnds );
-
-    setTimeout(()=>{
-        _canvas_.core.meta.createSetAppend(
-            'rectangle','test_rectangle_1', 
-            { 
+    setTimeout(() => {
+        _canvas_.core.element.create('rectangle','test_rectangle_1').then(rectangle => {
+            rectangle.unifiedAttribute({
                 x:10, y:10, width:60, height:60, 
                 colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
-            }
-        );
-        _canvas_.core.meta.createSetAppend(
-            'rectangleWithRoundEnds','test_rectangleWithRoundEnds_1', 
-            { 
+            });
+            _canvas_.core.arrangement.append(rectangle);
+        });
+
+        _canvas_.core.element.create('rectangleWithRoundEnds','test_rectangleWithRoundEnds_1').then(rectangleWithRoundEnds => {
+            rectangleWithRoundEnds.unifiedAttribute({
                 x:110, y:40, width:60, height:120, detail:4, angle:1,
                 colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
-            }
-        );
-        _canvas_.core.meta.createSetAppend(
-            'rectangleWithRoundEnds','test_rectangleWithRoundEnds_2', 
-            { 
+            });
+            _canvas_.core.arrangement.append(rectangleWithRoundEnds);
+        });
+        _canvas_.core.element.create('rectangleWithRoundEnds','test_rectangleWithRoundEnds_2').then(rectangleWithRoundEnds => {
+            rectangleWithRoundEnds.unifiedAttribute({
                 x:180, y:40, width:60, height:120, detail:3, angle:1,
                 colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
-            }
-        );
-        _canvas_.core.meta.createSetAppend(
-            'rectangleWithRoundEnds','test_rectangleWithRoundEnds_3', 
-            { 
+            });
+            _canvas_.core.arrangement.append(rectangleWithRoundEnds);
+        });
+        _canvas_.core.element.create('rectangleWithRoundEnds','test_rectangleWithRoundEnds_3').then(rectangleWithRoundEnds => {
+            rectangleWithRoundEnds.unifiedAttribute({
                 x:250, y:40, width:60, height:120, detail:10, angle:1,
                 colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1},
-            }
-        );
+            });
+            _canvas_.core.arrangement.append(rectangleWithRoundEnds);
+        });
     },500);
 
 
     setTimeout(()=>{
         _canvas_.core.render.frame();
     },1500);
-    
 };

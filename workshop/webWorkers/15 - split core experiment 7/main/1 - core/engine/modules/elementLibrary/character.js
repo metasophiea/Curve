@@ -1,4 +1,4 @@
-this.character = function(name,_id){
+this.character = function(_id,_name){
     const self = this;
 
     //attributes 
@@ -11,7 +11,7 @@ this.character = function(name,_id){
             const defaultFontName = 'defaultThin';
 
         //simple attributes
-            this.name = name;
+            this.name = _name;
             this.parent = undefined;
             this.dotFrame = false;
             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -146,8 +146,12 @@ this.character = function(name,_id){
 
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+attributes[key]); //#development
-                    self[key](attributes[key]);
+                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    try{
+                        self[key](attributes[key]);
+                    }catch(err){
+                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                    }
                 });
                 allowComputeExtremities = true;
 
@@ -385,7 +389,6 @@ this.character = function(name,_id){
             this.x = self.x;
             this.y = self.y;
             this.scale = self.scale;
-            this.static = self.static;
             this.angle = self.angle;
             this.anchor = self.anchor;
             this.width = self.width;

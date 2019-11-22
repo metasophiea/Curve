@@ -1,28 +1,41 @@
-let groupId_1;
-let groupId_2;
-let rectangleId_1;
-let rectangleId_2;
-let rectangleId_3;
+let group_1;
+let group_2;
+let rectangle_1;
+let rectangle_2;
+let rectangle_3;
 
 _canvas_.core.meta.go = function(){
-    _canvas_.core.meta.createSetAppend( 'group','group_1', {x:100, y:100} ).then(id => {
-        groupId_1 = id;
 
-        _canvas_.core.meta.createSetAppend( 'rectangle','rectangle_1', {width:30, height:30, colour:{r:1,g:0,b:0,a:1}}, groupId_1).then(id => {
-            rectangleId_1 = id;
+    _canvas_.core.element.create('group','group_1').then(group => {
+        group_1 = group;
+        group.unifiedAttribute({ x:100, y:100 });
+        _canvas_.core.arrangement.append(group);
+
+        _canvas_.core.element.create('rectangle','rectangle_1').then(rectangle => {
+            rectangle_1 = rectangle;
+            rectangle.unifiedAttribute({ width:30, height:30, colour:{r:1,g:0,b:0,a:1} });
+            group_1.append(rectangle_1);
         });
 
-        _canvas_.core.meta.createSetAppend('group','group_2', {x:50}, groupId_1).then(id => {
-            groupId_2 = id;
+        _canvas_.core.element.create('group','group_2').then(group => {
+            group_2 = group;
+            group.unifiedAttribute({ x:50 });
+            group_1.append(group);
 
-            _canvas_.core.meta.createSetAppend( 'rectangle','rectangle_2', {width:30, height:30, colour:{r:0,g:1,b:0,a:1}}, groupId_2).then(id => {
-                rectangleId_2 = id;
+            _canvas_.core.element.create('rectangle','rectangle_2').then(rectangle => {
+                rectangle_2 = rectangle;
+                rectangle.unifiedAttribute({ width:30, height:30, colour:{r:0,g:1,b:0,a:1} });
+                group_2.append(rectangle_2);
             });
-            _canvas_.core.meta.createSetAppend( 'rectangle','rectangle_3', {x:50, width:30, height:30, colour:{r:0,g:0,b:1,a:1}}, groupId_2).then(id => {
-                rectangleId_3 = id;
+
+            _canvas_.core.element.create('rectangle','rectangle_3').then(rectangle => {
+                rectangle_3 = rectangle;
+                rectangle.unifiedAttribute({ x:50, width:30, height:30, colour:{r:0,g:0,b:1,a:1} });
+                group_2.append(rectangle_3);
             });
         });
     });
+
 };
 
 // _canvas_.core.render.active(true);
@@ -30,9 +43,9 @@ _canvas_.core.meta.go = function(){
 setTimeout(()=>{_canvas_.core.arrangement.printTree()},500);
 
 setTimeout(()=>{
-    _canvas_.core.arrangement.areParents(rectangleId_3, [rectangleId_2,groupId_2]).then(console.log);
-    _canvas_.core.arrangement.areParents(rectangleId_3, [groupId_1]).then(console.log);
-    _canvas_.core.arrangement.areParents(rectangleId_3, [rectangleId_2]).then(console.log);
-    _canvas_.core.arrangement.areParents(rectangleId_1, [groupId_2]).then(console.log);
-    _canvas_.core.arrangement.areParents(rectangleId_2, [groupId_1,groupId_2]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_3, [rectangle_2,group_2]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_3, [group_1]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_3, [rectangle_2]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_1, [group_2]).then(console.log);
+    _canvas_.core.arrangement.areParents(rectangle_2, [group_1,group_2]).then(console.log);
 },1000);

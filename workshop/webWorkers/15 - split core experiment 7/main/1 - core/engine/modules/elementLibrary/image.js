@@ -1,4 +1,4 @@
-this.image = function(name,_id){
+this.image = function(_id,_name){
     const self = this;
 
     //attributes 
@@ -9,7 +9,7 @@ this.image = function(name,_id){
             this.getId = function(){return id;}
 
         //simple attributes
-            this.name = name;
+            this.name = _name;
             this.parent = undefined;
             this.dotFrame = false;
             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -97,12 +97,18 @@ this.image = function(name,_id){
             function loadImage(url){
                 dev.log.elementLibrary(type,self.getAddress(),'::loadImage('+url+')'); //#development
                 image.url = url;
-                fetch(url).then( response =>{
-                    dev.log.elementLibrary(type,self.getAddress(),'::loadImage => response: '+JSON.stringify(response)); //#development
+                fetch(url).then( response => {
+                    if(response.status != 200){
+                        dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> image was not found at url: '+url); //#development
+                        console.warn(type,id,self.getAddress(),'cound not find image at: '+url);
+                        return;
+                    }
+
+                    dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> response: '+JSON.stringify(response)); //#development
                     response.blob().then(data => {
-                        dev.log.elementLibrary(type,self.getAddress(),'::loadImage => data: '+JSON.stringify(data)); //#development
+                        dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> data: '+JSON.stringify(data)); //#development
                         createImageBitmap(data).then(bitmap => {
-                            dev.log.elementLibrary(type,self.getAddress(),'::loadImage => bitmap: '+JSON.stringify(bitmap)); //#development
+                            dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> bitmap: '+JSON.stringify(bitmap)); //#development
                             image.bitmap = bitmap;
                             image.isLoaded = true;
                             image.isChanged = true;
@@ -142,8 +148,12 @@ this.image = function(name,_id){
 
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+attributes[key]); //#development
-                    self[key](attributes[key]);
+                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    try{
+                        self[key](attributes[key]);
+                    }catch(err){
+                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                    }
                 });
                 allowComputeExtremities = true;
 

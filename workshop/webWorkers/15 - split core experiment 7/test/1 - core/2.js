@@ -4,7 +4,7 @@ _canvas_.core.meta.go = function(){
 
     //element generation
         let upper_band = {
-            elementIds:[],
+            elements:[],
             tick:0,
             tickStep:0.02*rectangleCount,
             wavelength:3,
@@ -21,7 +21,7 @@ _canvas_.core.meta.go = function(){
         };
 
         let middle_band = {
-            elementIds:[],
+            elements:[],
             tick:0,
             tickStep:0.02*rectangleCount,
             wavelength:2,
@@ -38,7 +38,7 @@ _canvas_.core.meta.go = function(){
         };
 
         let lower_band = {
-            elementIds:[],
+            elements:[],
             tick:0,
             tickStep:0.02*rectangleCount,
             wavelength:1,
@@ -55,14 +55,18 @@ _canvas_.core.meta.go = function(){
         };
 
         function produceRectangle(a,x,y,namePrefix,grouping){
-            _canvas_.core.meta.createSetAppend( 'rectangle',namePrefix+a, { x:(x - a*30), y:y, width:30, height:30 }, -1 ).then(id => { grouping.push(id); });
+            _canvas_.core.element.create('rectangle',namePrefix+a).then(rectangle => {
+                rectangle.unifiedAttribute({ x:(x - a*30), y:y, width:30, height:30, colour:{r:1,g:1,b:1,a:1} });
+                _canvas_.core.arrangement.append(rectangle);
+                grouping.push(rectangle);
+            });
         };
         _canvas_.core.render.getCanvasSize().then(newCanvasSize => {
             canvasSize = newCanvasSize; 
             for(let a = 0; a < rectangleCount; a++){
-                produceRectangle( a, (200 + canvasSize.width/2), (-175 + canvasSize.height/2), 'upperBand_rectangle_', upper_band.elementIds );
-                produceRectangle( a, (200 + 20/2 + canvasSize.width/2), (-100 + canvasSize.height/2), 'middleBand_rectangle_', middle_band.elementIds );
-                produceRectangle( a, (200 + canvasSize.width/2), (75 + canvasSize.height/2), 'lowerBand_rectangle_', lower_band.elementIds );
+                produceRectangle( a, (200 + canvasSize.width/2), (-175 + canvasSize.height/2), 'upperBand_rectangle_', upper_band.elements );
+                produceRectangle( a, (200 + 20/2 + canvasSize.width/2), (-100 + canvasSize.height/2), 'middleBand_rectangle_', middle_band.elements );
+                produceRectangle( a, (200 + canvasSize.width/2), (75 + canvasSize.height/2), 'lowerBand_rectangle_', lower_band.elements );
             }  
         });
 
@@ -94,51 +98,41 @@ _canvas_.core.meta.go = function(){
             updateColour(lower_band);
 
             //upper band
-                upper_band.elementIds.forEach((elementID,index) => {
-                    let t = Math.PI*( (upper_band.tick+index*upper_band.wavelength)/upper_band.elementIds.length );
-                    _canvas_.core.boatload.element.executeMethod.load({
-                        id:elementID,
-                        method:'unifiedAttribute',
-                        argumentList:[{ 
+                upper_band.elements.forEach((element,index) => {
+                    let t = Math.PI*( (upper_band.tick+index*upper_band.wavelength)/upper_band.elements.length );
+                    element.unifiedAttribute({ 
                             width:30 + 25*Math.sin(t), 
                             height:30 + 25*Math.cos(t), 
                             colour:upper_band.colour.history[index]
-                        }],
-                    });
+                        }
+                    );
                 });
 
             //middle band
-                middle_band.elementIds.forEach((elementID,index) => {
-                    let t = Math.PI*( (middle_band.tick+index*middle_band.wavelength)/middle_band.elementIds.length );
-                    _canvas_.core.boatload.element.executeMethod.load({
-                        id:elementID,
-                        method:'unifiedAttribute',
-                        argumentList:[{ 
+                middle_band.elements.forEach((element,index) => {
+                    let t = Math.PI*( (middle_band.tick+index*middle_band.wavelength)/middle_band.elements.length );
+                    element.unifiedAttribute({ 
                             y:-75 + 30 + 25*Math.sin(t) + canvasSize.height/2,
                             height:30 + 25*Math.cos(t),
                             colour:middle_band.colour.history[index]
-                        }],
-                    });
+                        }
+                    );
                 });
 
             //lower band
-                lower_band.elementIds.forEach((elementID,index) => {
-                    let t = Math.PI*( (lower_band.tick+index*lower_band.wavelength)/lower_band.elementIds.length );
-                    _canvas_.core.boatload.element.executeMethod.load({
-                        id:elementID,
-                        method:'unifiedAttribute',
-                        argumentList:[{ 
+                lower_band.elements.forEach((element,index) => {
+                    let t = Math.PI*( (lower_band.tick+index*lower_band.wavelength)/lower_band.elements.length );
+                    element.unifiedAttribute({ 
                             width:30 + 25*Math.sin(t),
                             y:75 + canvasSize.height/2 + 30 + 25*Math.cos(t),
                             colour:lower_band.colour.history[index]
-                        }],
-                    });
+                        }
+                    );
                 });
 
             upper_band.tick+=upper_band.tickStep;
             middle_band.tick+=middle_band.tickStep;
             lower_band.tick+=lower_band.tickStep;
-            _canvas_.core.boatload.element.executeMethod.ship();
         },1000/40);
 
 
@@ -180,12 +174,4 @@ _canvas_.core.meta.go = function(){
         //         console.log( 'rollingAverage:', averages.reduce( ( p, c ) => p + c, 0 ) / averages.length, data.framesPerSecond );
         //     });
         // },1000);
-
-
-
-
-
-
-
-
 };

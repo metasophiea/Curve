@@ -1,4 +1,4 @@
-this.group = function(name,_id){
+this.group = function(_id,_name){
     const self = this;
 
     //attributes 
@@ -9,7 +9,7 @@ this.group = function(name,_id){
             this.getId = function(){return id;}
 
         //simple attributes
-            this.name = name;
+            this.name = _name;
             this.parent = undefined;
             this.dotFrame = false;
             this.extremities = { points:[], boundingBox:{bottomRight:{x:0, y:0}, topLeft:{x:0, y:0}} };
@@ -78,8 +78,12 @@ this.group = function(name,_id){
 
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+attributes[key]); //#development
-                    self[key](attributes[key]);
+                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                    try{
+                        self[key](attributes[key]);
+                    }catch(err){
+                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                    }
                 });
                 allowComputeExtremities = true;
 
@@ -110,28 +114,32 @@ this.group = function(name,_id){
         this.children = function(){return children;};
         this.getChildByName = function(name){return getChildByName(name);};
         this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
-        this.contains = checkForElement;
+        this.contains = function(element){ return checkForElement(element) != undefined; };
         this.append = function(newElement){
             dev.log.elementLibrary(type,self.getAddress(),'.append('+JSON.stringify(newElement)+')'); //#development
 
-            if( !isValidElement(newElement) ){ return; }
+            if( !isValidElement(newElement) ){ return false; } 
 
             children.push(newElement); 
             newElement.parent = this;
             augmentExtremities_add(newElement);
 
             childRegistry[newElement.name] = newElement;
+
+            return true;
         };
         this.prepend = function(newElement){
             dev.log.elementLibrary(type,self.getAddress(),'.prepend('+JSON.stringify(newElement)+')'); //#development
 
-            if( !isValidElement(newElement) ){ return; }
+            if( !isValidElement(newElement) ){ return false; }
 
             children.unshift(newElement); 
             newElement.parent = this;
             augmentExtremities_add(newElement);
 
             childRegistry[newElement.name] = newElement;
+
+            return true;
         };
         this.remove = function(newElement){
             dev.log.elementLibrary(type,self.getAddress(),'.remove('+JSON.stringify(newElement)+')'); //#development
@@ -148,7 +156,7 @@ this.group = function(name,_id){
 
             let returnList = [];
 
-            //run though children backwords (thus, front to back)
+            //run though children backwards (thus, front to back)
             for(let a = children.length-1; a >= 0; a--){
                 //if child wants to be ignored, just move on to the next one
                     if( children[a].ignored() ){ continue; }
@@ -188,7 +196,7 @@ this.group = function(name,_id){
             return returnList;
         };
         this.getTree = function(){
-            const result = {name:this.name,type:type,id:this.getId(),children:[]};
+            const result = {name:self.name, type:type, id:self.getId(), children:[]};
 
             children.forEach(function(a){
                 if(a.getType() == 'group'){ result.children.push( a.getTree() ); }
@@ -497,8 +505,8 @@ this.group = function(name,_id){
             this.prepend = function(elementId){ return self.prepend(element.getElementFromId(elementId)); };
             this.remove = function(elementId){ return self.remove(element.getElementFromId(elementId)); };
             this.clear = self.clear;
-            this.getElementsUnderPoint = function(x,y){ return element.getIdFromElement(self.getElementsUnderPoint(x,y)); };
-            this.getElementsUnderArea = function(points){ return element.getIdFromElement(self.getElementsUnderArea(points)); };
+            this.getElementsUnderPoint = function(x,y){ return self.getElementsUnderPoint(x,y).map(ele => element.getIdFromElement(ele)); };
+            this.getElementsUnderArea = function(points){ return self.getElementsUnderArea(points).map(ele => element.getIdFromElement(ele)); };
             this.getTree = self.getTree;
             this.stencil = function(elementId){ return self.stencil(element.getElementFromId(elementId)); };
             this.clipActive = self.clipActive;

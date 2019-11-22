@@ -1,3 +1,19 @@
+_canvas_.layers = new function(){
+    const layerRegistry = {};
+
+    this.registerLayerLoaded = function(layerName, layer){
+        if(layerRegistry[layerName] == undefined){ layerRegistry[layerName] = {}; }
+        layerRegistry[layerName].isLoaded = true;
+        layerRegistry[layerName].versionInformation = layer.versionInformation;
+        if(this.onLayerLoad){this.onLayerLoad(layerName,layerRegistry);}
+    };
+    this.onLayerLoad = function(layerName,layerRegistry){};
+
+    this.getVersionInformation = function(){
+        return Object.keys(layerRegistry).map(key => { return {name:key, data:layerRegistry[key].versionInformation} });
+    };
+};
+
 _canvas_.library = new function(){
     this.versionInformation = { tick:0, lastDateModified:{y:'????',m:'??',d:'??'} };
     const library = this;
@@ -8,11 +24,11 @@ _canvas_.library = new function(){
         countActive:!false,
         countMemory:{},
     
-        math:{active:false,fontStyle:'color:rgb(87, 161, 80); font-style:italic;'},
-        structure:{active:false,fontStyle:'color:rgb(129, 80, 161); font-style:italic;'},
-        audio:{active:false,fontStyle:'color:rgb(80, 161, 141); font-style:italic;'},
-        font:{active:false,fontStyle:'color:rgb(161, 84, 80); font-style:italic;'},
-        misc:{active:false,fontStyle:'color:rgb(80, 134, 161); font-style:italic;'},
+        math:{active:false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
+        structure:{active:false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
+        audio:{active:false,fontStyle:'color:rgb(229, 96, 83); font-style:italic;'},
+        font:{active:false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
+        misc:{active:false,fontStyle:'color:rgb(243, 194, 95); font-style:italic;'},
     
         log:{
             math:function(data){
@@ -44,6 +60,31 @@ _canvas_.library = new function(){
     };
     this.dev = {
         countResults:function(){ return dev.countMemory; },
+        testLoggers:function(){
+            const math = dev.math.active;
+            const structure = dev.structure.active;
+            const audio = dev.audio.active;
+            const font = dev.font.active;
+            const misc = dev.misc.active;
+
+            dev.math.active = true;
+            dev.structure.active = true;
+            dev.audio.active = true;
+            dev.font.active = true;
+            dev.misc.active = true;
+
+            dev.log.math('.testLoggers -> math');
+            dev.log.structure('.testLoggers -> structure');
+            dev.log.audio('.testLoggers -> audio');
+            dev.log.font('.testLoggers -> font');
+            dev.log.misc('.testLoggers -> misc');
+
+            dev.math.active = math;
+            dev.structure.active = structure;
+            dev.audio.active = audio;
+            dev.font.active = font;
+            dev.misc.active = misc;
+        },
     };
 
     this.math = new function(){
@@ -68,8 +109,6 @@ _canvas_.library = new function(){
         const thirdparty = this;
         {{include:modules/thirdparty/*}} /**/
     };
-};
 
-_canvas_.getVersionInformation = function(){
-    return Object.keys(_canvas_).filter(item => item!='getVersionInformation').map(item => ({name:item,data:_canvas_[item].versionInformation}));
+    _canvas_.layers.registerLayerLoaded('library',this);
 };
