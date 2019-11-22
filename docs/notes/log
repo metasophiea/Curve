@@ -11,6 +11,11 @@
       been copied, and I've gotten together all the 'basic' parts (which of
       course is a rather simple task now thanks to the proxy elements)
 
+  - for some reason, the queryString code was still using reference to a canvas
+    with a particular name, instead of the generic "_canvas_" object, which was
+    causing URL requested demos to not load (infact, they crashed the whole app)
+    Tis all fix now, my liege
+
 
 2019-11-18
   CoreV3

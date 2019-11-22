@@ -50,7 +50,7 @@
                 if( typeof parseInt(demoURL) == 'number' ){
                     demoURL = 'https://curve.metasophiea.com/demos/'+demoURL+'.crv';
                 }
-                document.getElementById('workspaceCanvas').control.scene.load(demoURL);
+                _canvas_.control.scene.load(demoURL);
             }
         }
         loadDemo();

@@ -10,4 +10,4 @@
 // {{include:3.js}} //development units - testing image-based units
 // {{include:4.js}} //alpha units
 // {{include:5.js}} //unit validator
-{{include:6.js}} //curveTech units
+// {{include:6.js}} //curveTech units

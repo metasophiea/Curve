@@ -40550,9 +40550,9 @@
                                 if(demoURL == undefined){
                                     return;
                                 }else if( !isNaN(parseInt(demoURL)) ){
-                                    document.getElementById('workspaceCanvas').control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
+                                    _canvas_.control.scene.load(_canvas_.control.queryString.defaultDemoUrlPrefix+parseInt(demoURL)+'.crv',loadingCompleteCallback);
                                 }else{ 
-                                    document.getElementById('workspaceCanvas').control.scene.load(demoURL,loadingCompleteCallback);
+                                    _canvas_.control.scene.load(demoURL,loadingCompleteCallback);
                                 }
                             }
                             function waiter(){
