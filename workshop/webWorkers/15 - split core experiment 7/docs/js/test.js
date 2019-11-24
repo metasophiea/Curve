@@ -21494,7 +21494,7 @@
                             return executeMethod('append',[element.getId()],result => {if(result){ cashedAttributes.children.push(element); }});
                         };
                         this.prepend = function(element){
-                            return executeMethod('prepend',[element.getId(),result => {if(result){ cashedAttributes.children.unshift(element); }}]);
+                            return executeMethod('prepend',[element.getId()],result => {if(result){ cashedAttributes.children.unshift(element); }});
                         };
                         this.remove = function(element){
                             cashedAttributes.children.splice(cashedAttributes.children.indexOf(element), 1);
@@ -22076,7 +22076,7 @@
                             if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
                             return executeMethod('points',[points]);
                         }; 
-                        this.pointsAsXYArray = function(points,useCache=useCache_default){
+                        this.pointsAsXYArray = function(pointsXY,useCache=useCache_default){
                             function pointsToXYArray(points){ 
                                 const output = [];
                                 for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }
@@ -22210,6 +22210,119 @@
                         this.unifiedAttribute = function(attributes,useCache=useCache_default){
                             if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
                             Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            return executeMethod('unifiedAttribute',[attributes]);
+                        };
+                        this.getAddress = function(){
+                            return executeMethod('getAddress',[]);
+                        };
+                    
+                        this._dump = function(){
+                            return executeMethod('_dump',[]);
+                        };
+                    };
+                    this.canvas = function(_id,_name){
+                    
+                        const id = _id;
+                        this.getId = function(){return id;};
+                        const name = _name;
+                        this.getName = function(){return name;};
+                        this.getType = function(){return 'canvas';};
+                    
+                        const useCache_default = true;
+                        const cashedAttributes = {
+                            ignored: false,
+                            colour: {r:1,g:0,b:0,a:1},
+                            x: 0,
+                            y: 0,
+                            angle: 0,
+                            anchor: {x:0,y:0},
+                            width: 10,
+                            height: 10,
+                            scale: 1,
+                            static: false,
+                            resolution: 1,
+                        };
+                        function resolvedPromise(data){
+                            return new Promise((resolve,reject) => {resolve(data)});
+                        }
+                        function executeMethod(method,argumentList,postProcessing,transferables){
+                            return new Promise((resolve, reject) => { 
+                                communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
+                                    if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
+                                },transferables);
+                            });
+                        }
+                    
+                        //subCanvas
+                            const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
+                            subCanvas.context = subCanvas.object.getContext('2d');
+                    
+                            function updateDimentions(){
+                                subCanvas.object.setAttribute('width',cashedAttributes.width*subCanvas.resolution);
+                                subCanvas.object.setAttribute('height',cashedAttributes.height*subCanvas.resolution);
+                            }
+                            updateDimentions();
+                    
+                            this._ = subCanvas.context;
+                            this.$ = function(a){return a*subCanvas.resolution;};
+                            this.resolution = function(a){
+                                if(a == undefined){return subCanvas.resolution;}
+                                subCanvas.resolution = a;
+                                updateDimentions();
+                            };
+                            this.requestUpdate = function(){
+                                createImageBitmap(subCanvas.object).then(bitmap => {
+                                    executeMethod('imageBitmap',[bitmap],undefined,bitmap);
+                                });
+                            };
+                            this.requestUpdate();
+                    
+                        this.ignored = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
+                            return executeMethod('ignored',[bool]);
+                        };
+                        this.x = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
+                            return executeMethod('x',[number]);
+                        };
+                        this.y = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
+                            return executeMethod('y',[number]);
+                        };
+                        this.angle = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
+                            return executeMethod('angle',[number]);
+                        };
+                        this.anchor = function(anchor,useCache=useCache_default){
+                            if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
+                            return executeMethod('anchor',[newAnchor]);
+                        };
+                        this.width = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+                            updateDimentions();
+                            return executeMethod('width',[number]);
+                        };
+                        this.height = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+                            updateDimentions();
+                            return executeMethod('height',[number]);
+                        };
+                        this.scale = function(number,useCache=useCache_default){
+                            if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
+                            return executeMethod('scale',[number]);
+                        };
+                        this.static = function(bool,useCache=useCache_default){
+                            if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
+                            return executeMethod('static',[bool]);
+                        };
+                        this.unifiedAttribute = function(attributes,useCache=useCache_default){
+                            if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
+                            Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+                            if(attributes.resolution != undefined){
+                                this.resolution(attributes.resolution);
+                                delete attributes.resolution;
+                            }
+                            updateDimentions();
                             return executeMethod('unifiedAttribute',[attributes]);
                         };
                         this.getAddress = function(){
@@ -22494,12 +22607,12 @@
                 
                     this.create = function(type,name){
                         return new Promise((resolve, reject) => {
+                            if(elementLibrary[type] == undefined){
+                                console.warn('interface.element.create - unknown element type "'+type+'"');
+                                resolve();
+                                return;
+                            }
                             communicationModule.run('element.create',[type,name],id => {
-                                if(elementLibrary[type] == undefined){
-                                    console.warn('interface.element.create - unknown element type "'+type+'"');
-                                    resolve();
-                                    return;
-                                }
                                 resolve( elementRegistry[id] = new elementLibrary[type](id,name,communicationModule,dev) )
                             });
                         });
@@ -22982,43 +23095,30 @@
             
                 const dev = {
                     prefix:'interface',
-            
-                    circuit:{active:!false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-                    part:{active:!false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-                    unit:{active:!false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
-            
-                    log:{
-                        circuit:function(data){
-                            if(!dev.circuit.active){return;}
-                            console.log('%c'+dev.prefix+'.circuit'+(new Array(...arguments).join(' ')), dev.circuit.fontStyle );
-                        },
-                        part:function(data){
-                            if(!dev.part.active){return;}
-                            console.log('%c'+dev.prefix+'.part'+(new Array(...arguments).join(' ')), dev.part.fontStyle );
-                        },
-                        unit:function(data){
-                            if(!dev.unit.active){return;}
-                            console.log('%c'+dev.prefix+'.unit'+(new Array(...arguments).join(' ')), dev.unit.fontStyle );
-                        },
+                    channels:{
+                        circuit:{       prefix:'circuit',                   active:false,   fontStyle:'color:rgb(195, 81, 172); font-style:italic;' },
+                        part:{          prefix:'part',                      active:!false,  fontStyle:'color:rgb(81, 178, 223); font-style:italic;' },
+                        partBasic:{     prefix:'part.collection.basic',     active:!false,  fontStyle:'color:rgb(229, 96, 83); font-style:italic;'  },
+                        partDisplay:{   prefix:'part.collection.display',   active:!false,  fontStyle:'color:rgb(99, 196, 129); font-style:italic;' },
+                        partControl:{   prefix:'part.collection.control',   active:!false,  fontStyle:'color:rgb(243, 194, 95); font-style:italic;' },
+                        partDynamic:{   prefix:'part.collection.display',   active:!false,  fontStyle:'color:rgb(24, 53, 157); font-style:italic;'  },
+                        unit:{          prefix:'unit',                      active:false,   fontStyle:'color:rgb(66, 145, 115); font-style:italic;' },
                     },
-            
-                    testLoggers:function(){
-                        const circuit = dev.circuit.active;
-                        const part = dev.part.active;
-                        const unit = dev.unit.active;
-            
-                        dev.circuit.active = true;
-                        dev.part.active = true;
-                        dev.unit.active = true;
-            
-                        dev.log.circuit('.testLoggers -> circuit');
-                        dev.log.part('.testLoggers -> part');
-                        dev.log.unit('.testLoggers -> unit');
-            
-                        dev.circuit.active = circuit;
-                        dev.part.active = part;
-                        dev.unit.active = unit;
-                    },
+                    log: {},
+                };
+                Object.keys(dev.channels).forEach(channel => {
+                    dev.log[channel]  = function(data){
+                        if(!dev.channels[channel].active){return;}
+                        console.log('%c'+dev.prefix+'.'+dev.channels[channel].prefix+(new Array(...arguments).join(' ')), dev.channels[channel].fontStyle );
+                    }
+                });
+                dev.testLoggers = function(){
+                    Object.keys(dev.channels).forEach(channel => {
+                        const temp = dev.circuit[channel];
+                        dev.channels[channel].active = true;
+                        dev.log[channel]('.testLoggers -> '+channel);
+                        dev.channels[channel].active = temp;
+                    });
                 };
             
                 this.circuit = new function(){
@@ -24219,7 +24319,8 @@
                     this.collection = new function(){
                         this.basic = new function(){
                             interfacePart.partLibrary.basic = {};
-                            this.polygon = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                            this.polygon = function(name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}){
+                                
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('polygon',name).then(polygon => { 
                                         polygon.unifiedAttribute({ ignored:ignored, colour:colour });
@@ -24231,9 +24332,12 @@
                             }
                             
                             interfacePart.partLibrary.basic.polygon = function(name,data){ 
-                                return interfacePart.collection.basic.polygon( name, data.points, data.pointsAsXYArray, data.ignored, data.colour );
+                                return interfacePart.collection.basic.polygon(
+                                    name, data.points, data.pointsAsXYArray, data.ignored, data.colour
+                                );
                             };
-                            this.rectangleWithOutline = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                            this.rectangleWithOutline = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('rectangleWithOutline',name).then(rectangleWithOutline => { 
                                         rectangleWithOutline.unifiedAttribute({ 
@@ -24254,9 +24358,12 @@
                             };
                             
                             interfacePart.partLibrary.basic.rectangleWithOutline = function(name,data){ 
-                                return interfacePart.collection.basic.rectangleWithOutline( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour );
+                                return interfacePart.collection.basic.rectangleWithOutline(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour, data.thickness, data.lineColour
+                                );
                             };
-                            this.circle = function( name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1} ){
+                            this.circle = function(name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}){
+                                
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('circle',name).then(circle => { 
                                         circle.unifiedAttribute({ 
@@ -24273,9 +24380,12 @@
                             };
                             
                             interfacePart.partLibrary.basic.circle = function(name,data){ 
-                                return interfacePart.collection.basic.circle( name, data.x, data.y, data.radius, data.detail, data.ignored, data.colour );
+                                return interfacePart.collection.basic.circle(
+                                    name, data.x, data.y, data.radius, data.detail, data.ignored, data.colour
+                                );
                             };
-                            this.polygonWithOutline = function( name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                            this.polygonWithOutline = function(name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('polygonWithOutline',name).then(polygonWithOutline => { 
                                         polygonWithOutline.unifiedAttribute({ ignored:ignored, colour:colour, lineColour:lineColour, thickness:thickness });
@@ -24287,9 +24397,36 @@
                             }
                             
                             interfacePart.partLibrary.basic.polygonWithOutline = function(name,data){ 
-                                return interfacePart.collection.basic.polygonWithOutline( name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour );
+                                return interfacePart.collection.basic.polygonWithOutline(
+                                    name, data.points, data.pointsAsXYArray, data.ignored, data.colour, data.thickness, data.lineColour
+                                );
                             };
-                            this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url='' ){
+                            this.canvas = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, resolution=1){
+                                
+                                return new Promise((resolve, reject) => {
+                                    _canvas_.core.element.create('canvas',name).then(canvas => { 
+                                        canvas.unifiedAttribute({ 
+                                            x:x, 
+                                            y:y, 
+                                            width:width, 
+                                            height:height, 
+                                            angle:angle, 
+                                            anchor:anchor, 
+                                            ignored:ignored, 
+                                            resolution:resolution,
+                                        });
+                                        resolve(canvas);
+                                    });
+                                });
+                            };
+                            
+                            interfacePart.partLibrary.basic.canvas = function(name,data){ 
+                                return interfacePart.collection.basic.canvas(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.resolution
+                                );
+                            };
+                            this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('image',name).then(image => { 
                                         image.unifiedAttribute({ 
@@ -24308,9 +24445,12 @@
                             };
                             
                             interfacePart.partLibrary.basic.image = function(name,data){ 
-                                return interfacePart.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
+                                return interfacePart.collection.basic.image(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url
+                                );
                             };
-                            this.path = function( name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[], jointType='sharp', capType='none', looping=false, jointDetail=25, sharpLimit=4 ){
+                            this.path = function(name=null, points=[], thickness=1, ignored=false, colour={r:0,g:0,b:0,a:1}, pointsAsXYArray=[], jointType='sharp', capType='none', looping=false, jointDetail=25, sharpLimit=4){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('path',name).then(path => { 
                                         path.unifiedAttribute({ 
@@ -24331,9 +24471,12 @@
                             }
                             
                             interfacePart.partLibrary.basic.path = function(name,data){ 
-                                return interfacePart.collection.basic.path( name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray, data.jointType, data.capType, data.looping, data.jointDetail, data.sharpLimit );
+                                return interfacePart.collection.basic.path(
+                                    name, data.points, data.thickness, data.ignored, data.colour, data.pointsAsXYArray, data.jointType, data.capType, data.looping, data.jointDetail, data.sharpLimit
+                                );
                             };
                             this.rectangle = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, colour={r:1,g:0,b:1,a:1}){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('rectangle',name).then(rectangle => { 
                                         rectangle.unifiedAttribute({ 
@@ -24352,9 +24495,12 @@
                             };
                             
                             interfacePart.partLibrary.basic.rectangle = function(name,data){ 
-                                return interfacePart.collection.basic.rectangle( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour );
+                                return interfacePart.collection.basic.rectangle(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.colour
+                                );
                             };
                             this.group = function(name=null, x=0, y=0, angle=0, ignored=false){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('group',name).then(group => { 
                                         group.unifiedAttribute({ 
@@ -24369,9 +24515,12 @@
                             }
                             
                             interfacePart.partLibrary.basic.group = function(name,data){ 
-                                return interfacePart.collection.basic.group(name, data.x, data.y, data.angle, data.ignored);
+                                return interfacePart.collection.basic.group(
+                                    name, data.x, data.y, data.angle, data.ignored
+                                );
                             };
-                            this.text = function( name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0 ){
+                            this.text = function(name=null, text='Hello', x=0, y=0, width=10, height=10, angle=0, ignored=false, colour={r:1,g:0,b:1,a:1}, fontName='Roboto-Regular', printingMode={widthCalculation:'filling', horizontal:'left', vertical:'top'}, spacing=0.5, interCharacterSpacing=0.0){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('characterString',name).then(characterString => { 
                                         characterString.unifiedAttribute({ 
@@ -24394,9 +24543,12 @@
                             };
                             
                             interfacePart.partLibrary.basic.text = function(name,data){ 
-                                return interfacePart.collection.basic.text( name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing );
+                                return interfacePart.collection.basic.text(
+                                    name, data.text, data.x, data.y, data.width, data.height, data.angle, data.ignored, data.colour, data.font, data.printingMode, data.spacing, data.interCharacterSpacing
+                                );
                             };
-                            this.circleWithOutline = function( name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1} ){
+                            this.circleWithOutline = function(name=null, x=0, y=0, radius=10, detail=25, ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
+                            
                                 return new Promise((resolve, reject) => {
                                     _canvas_.core.element.create('circleWithOutline',name).then(circleWithOutline => { 
                                         circleWithOutline.unifiedAttribute({ 
@@ -24415,12 +24567,1440 @@
                             };
                             
                             interfacePart.partLibrary.basic.circleWithOutline = function(name,data){ 
-                                return interfacePart.collection.basic.circleWithOutline( name, data.x, data.y, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour );
+                                return interfacePart.collection.basic.circleWithOutline(
+                                    name, data.x, data.y, data.radius, data.detail, data.ignored, data.colour, data.thickness, data.lineColour
+                                );
                             };
                         };
-                        // this.display = new function(){
-                        //     interfacePart.partLibrary.display = {};
-                        // };
+                        this.display = new function(){
+                            interfacePart.partLibrary.display = {};
+                            this.glowbox_rectangle = function(
+                                name='glowbox_rectangle',
+                                x=0, y=0, width=30, height=30, angle=0,
+                                glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                            ){
+                                return new Promise((resolve, reject) => { (async () => {
+                                    
+                                    //elements
+                                        const [object, rectangle] = await Promise.all([
+                                            _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y}),
+                                            _canvas_.interface.part.builder('basic', 'rectangle', 'light', {width:width, height:height, angle:angle, colour:dimStyle}),
+                                        ]);
+                                        object.append(rectangle);
+                            
+                                    //methods
+                                        object.on = function(){ 
+                                            rectangle.colour(glowStyle);
+                                        };
+                                        object.off = function(){ 
+                                            rectangle.colour(dimStyle);
+                                        };
+                            
+                                    resolve(object);
+                                })() });
+                            };
+                            
+                            interfacePart.partLibrary.display.glowbox_rectangle = function(name,data){ 
+                                return interfacePart.collection.display.glowbox_rectangle(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim
+                                );
+                            };
+                            this.glowbox_polygon = function(
+                                name='glowbox_polygon',
+                                x=0, y=0, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, 
+                                glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                            ){
+                                return new Promise((resolve, reject) => { (async () => {
+                                    
+                                    //elements 
+                                        const [object, polygon] = await Promise.all([
+                                            _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                            _canvas_.interface.part.builder('basic', 'polygon', 'light', {pointsAsXYArray:points, colour:dimStyle}),
+                                        ]);
+                                        object.append(polygon);
+                            
+                                    //methods
+                                        object.on = function(){ 
+                                            polygon.colour(glowStyle);
+                                        };
+                                        object.off = function(){ 
+                                            polygon.colour(dimStyle);
+                                        };
+                            
+                                    resolve(object);
+                                })() });
+                            };
+                            
+                            interfacePart.partLibrary.display.glowbox_polygon = function(name,data){ 
+                                return interfacePart.collection.display.glowbox_polygon(
+                                    name, data.x, data.y, data.points, data.angle, data.style.glow, data.style.dim
+                                );
+                            };
+                            this.glowbox_image = function(
+                                name='glowbox_image',
+                                x=0, y=0, width=30, height=30, angle=0,
+                                glowURL='',
+                                dimURL='',
+                            ){
+                                return new Promise((resolve, reject) => { (async () => {
+                            
+                                    //elements
+                                        const [object, image] = await Promise.all([
+                                            _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y}),
+                                            _canvas_.interface.part.builder('basic', 'image', 'light', {width:width, height:height, angle:angle, url:dimURL}),
+                                        ]);
+                                        object.append(image);
+                            
+                                    //methods
+                                        object.on = function(){
+                                            image.imageURL(glowURL);
+                                        };
+                                        object.off = function(){
+                                            image.imageURL(dimURL);
+                                        };
+                            
+                                    resolve(object);
+                                })() });
+                            };
+                            
+                            interfacePart.partLibrary.display.glowbox_image = function(name,data){ 
+                                return interfacePart.collection.display.glowbox_image(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.glowURL, data.dimURL
+                                );
+                            };
+                            this.glowbox_circle = function(
+                                name='glowbox_circle',
+                                x=0, y=0, radius=12.5,
+                                glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                            ){
+                                return new Promise((resolve, reject) => { (async () => {
+                                    
+                                    //elements 
+                                        const [object, circle] = await Promise.all([
+                                            _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y}),
+                                            _canvas_.interface.part.builder('basic', 'circle', 'light', {radius:radius, colour:dimStyle}),
+                                        ]);
+                                        object.append(circle);
+                            
+                                    //methods
+                                        object.on = function(){ 
+                                            circle.colour(glowStyle);
+                                        };
+                                        object.off = function(){ 
+                                            circle.colour(dimStyle);
+                                        };
+                            
+                                    resolve(object);
+                                })() });
+                            };
+                            
+                            interfacePart.partLibrary.display.glowbox_circle = function(name,data){ 
+                                return interfacePart.collection.display.glowbox_circle(
+                                    name, data.x, data.y, data.width, data.height, data.angle, data.style.glow, data.style.dim
+                                );
+                            };
+                            this.glowbox_path = function(
+                                name='glowbox_path',
+                                x=0, y=0, points=[{x:0,y:5},{x:5,y:0}, {x:25,y:0},{x:30,y:5}, {x:30,y:25},{x:25,y:30}, {x:5,y:30},{x:0,y:25}], angle=0, 
+                                looping=false, jointType='sharp', capType='none', 
+                                glowStyle = {r:0.95,g:0.91,b:0.55,a:1},
+                                dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
+                            ){
+                                return new Promise((resolve, reject) => { (async () => {
+                                    
+                                    //elements 
+                                        const [object, polygon] = await Promise.all([
+                                            _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                            _canvas_.interface.part.builder('basic', 'path', 'light', {pointsAsXYArray:points, looping:looping, jointType:jointType, capType:capType, colour:dimStyle}),
+                                        ]);
+                                        object.append(polygon);
+                            
+                                    //methods
+                                        object.on = function(){ 
+                                            polygon.colour(glowStyle);
+                                        };
+                                        object.off = function(){ 
+                                            polygon.colour(dimStyle);
+                                        };
+                            
+                                    resolve(object);
+                                })() });
+                            };
+                            
+                            interfacePart.partLibrary.display.glowbox_path = function(name,data){ 
+                                return interfacePart.collection.display.glowbox_path(
+                                    name, data.x, data.y, data.points, data.angle, data.style.glow, data.style.dim
+                                );
+                            };
+                            this.readout_sevenSegmentDisplay = function(
+                                name='readout_sevenSegmentDisplay', static=false, resolution=2, 
+                                x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=false,
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
+                            ){
+                                
+                                //values
+                                    let text = '';
+                                    let displayInterval = null;
+                                    const displayIntervalTime = 150;
+                            
+                                return new Promise((resolve, reject) => { (async () => {
+                                    //elements 
+                                        //main
+                                            const [object] = await Promise.all([
+                                                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                            ]);
+                                        //display units
+                                            const units = await Promise.all(
+                                                (new Array(count)).fill().map((a,index) => {
+                                                    return _canvas_.interface.part.builder('display', 'sevenSegmentDisplay', ''+index, {
+                                                        x:(width/count)*index, width:width/count, height:height, 
+                                                        static:static, resolution:resolution,
+                                                        style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                                    });
+                                                }) 
+                                            );
+                                            units.forEach(object.append);
+                                        //decimal point
+                                            let decimalPoints = [];
+                                            if(decimalPlaces){
+                                                decimalPoints = await Promise.all(
+                                                    (new Array(count)).fill().map((a,index) => {
+                                                        return _canvas_.interface.part.builder('display', 'glowbox_circle', 'decimalPoint_'+index, {
+                                                            x:(width/count)*index, y:height*0.9, radius:((width/count)/8)/2,
+                                                            style:{glow:glowStyle, dim:dimStyle},
+                                                        });
+                                                    }) 
+                                                );
+                                                units.forEach(decimalPoints);
+                                            }
+                            
+                                    //methods
+                                        function print(style,offset=0,dontClear=false){
+                                            decimalPoints.forEach(point => point.off());
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                            
+                                            switch(style){
+                                                case 'smart':
+                                                    if(text.replace('.','').length > units.length){print('r2lSweep');}
+                                                    else{print('regular');}
+                                                break;
+                                                case 'r2lSweep':
+                                                    var displayStage = -units.length;
+                            
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    var textIndex = 0;
+                                                    for(var a = offset; a < units.length; a++){
+                                                        if(units[a] == undefined){ textIndex++; continue; }
+                            
+                                                        if(text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
+                                                            a--;
+                                                        }else{ units[a].enterCharacter(text[textIndex]); }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                            
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                        object.print = function(style){
+                                            print(style);
+                                        };  
+                            
+                                    resolve(object);
+                                })() });
+                            };
+                            
+                            interfacePart.partLibrary.display.readout_sevenSegmentDisplay = function(name,data){ 
+                                return interfacePart.collection.display.readout_sevenSegmentDisplay(
+                                    name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
+                                    data.style.background, data.style.glow, data.style.dim,
+                                ); 
+                            };
+                            this.sevenSegmentDisplay = function(
+                                name='sevenSegmentDisplay', static=false, resolution=2, 
+                                x=0, y=0, width=20, height=30, angle=0,
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
+                            ){
+                                
+                                const margin = width/8;
+                                const division = width/8;
+                                const shapes = {
+                                    segments:{
+                                        points: {
+                                            top:{
+                                                left:[
+                                                    {x:division*1.0+margin,         y:division*1.0+margin},
+                                                    {x:division*0.5+margin,         y:division*0.5+margin},
+                                                    {x:division*1.0+margin,         y:division*0.0+margin},
+                                                    {x:division*0.0+margin,         y:division*1.0+margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},
+                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},
+                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},
+                                                    {x:width-division*0.0-margin,   y:division*1.0+margin}
+                                                ]
+                                            },
+                                            middle: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.5+margin,         y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:division*1.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:division*0.0+margin,         y:height*0.5-division*0.0+margin*0.5},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.0+margin*0.5},
+                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.5+margin*0.5},
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*1.0+margin*0.5},
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.0+margin*0.5}
+                                                ]
+                                            },
+                                            bottom: {
+                                                left:[
+                                                    {x:division*1.0+margin,         y:height-division*1.0-margin},
+                                                    {x:division*0.5+margin,         y:height-division*0.5-margin},
+                                                    {x:division*1.0+margin,         y:height-division*0.0-margin},
+                                                    {x:division*0.0+margin,         y:height-division*1.0-margin},
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin},
+                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin},
+                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin},
+                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}
+                                                ]
+                                            }
+                                        }
+                                    }
+                                };
+                                const points = [
+                                    [
+                                        shapes.segments.points.top.left[0],
+                                        shapes.segments.points.top.right[2],
+                                        shapes.segments.points.top.right[1],
+                                        shapes.segments.points.top.right[0],
+                                        shapes.segments.points.top.left[2],
+                                        shapes.segments.points.top.left[1],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.left[1],
+                                        shapes.segments.points.top.left[3],
+                                        shapes.segments.points.middle.left[3],
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[0],
+                                        shapes.segments.points.top.left[0],  
+                                    ],
+                                    [
+                                        shapes.segments.points.top.right[1],  
+                                        shapes.segments.points.top.right[3],  
+                                        shapes.segments.points.middle.right[3],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.top.right[2],  
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[0], 
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[0],
+                                        shapes.segments.points.middle.left[2], 
+                                        shapes.segments.points.middle.left[1], 
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.left[4],
+                                        shapes.segments.points.bottom.left[3],
+                                        shapes.segments.points.bottom.left[1],
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.middle.left[2],
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[4],
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.middle.right[0],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[0],
+                                        shapes.segments.points.bottom.left[2],
+                                        shapes.segments.points.bottom.left[1],
+                                    ]
+                                ];
+                                function getStamp(character){
+                                    switch(character){
+                                        case 0: case '0': return [1,1,1,0,1,1,1];
+                                        case 1: case '1': return [0,0,1,0,0,1,0];
+                                        case 2: case '2': return [1,0,1,1,1,0,1];
+                                        case 3: case '3': return [1,0,1,1,0,1,1];
+                                        case 4: case '4': return [0,1,1,1,0,1,0];
+                                        case 5: case '5': return [1,1,0,1,0,1,1];
+                                        case 6: case '6': return [1,1,0,1,1,1,1];
+                                        case 7: case '7': return [1,0,1,0,0,1,0];
+                                        case 8: case '8': return [1,1,1,1,1,1,1];
+                                        case 9: case '9': return [1,1,1,1,0,1,1];
+                                        default: return [0,0,0,0,0,0,0];
+                                    }
+                                }
+                            
+                                if(static){
+                                    return new Promise((resolve, reject) => { (async () => {
+                                        let stamp = [0,0,0,0,0,0,0];
+                            
+                                        //elements 
+                                            const [object, canvas] = await Promise.all([
+                                                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                                _canvas_.interface.part.builder('basic', 'canvas', 'backing', {width:width, height:height, colour:backgroundStyle,resolution:resolution}),
+                                            ]);
+                                            object.append(canvas);
+                            
+                                        //graphics
+                                            function clear(){
+                                                canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
+                                                canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                                canvas.requestUpdate();
+                                            };
+                                            function drawChar(){
+                                                //draw segments in 
+                                                    for(let a = 0; a < points.length; a++){
+                                                        canvas._.beginPath(); 
+                                                        canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
+                                                        for(let b = 1; b < points[a].length; b++){
+                                                            canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
+                                                        }
+                                                        canvas._.closePath(); 
+                                                        canvas._.fillStyle = stamp[a] == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
+                                                        canvas._.fill(); 
+                                                    }
+                                                    canvas.requestUpdate();
+                                            }
+                            
+                                        //methods
+                                            object.set = function(segment,state){
+                                                clear();
+                                                stamp[segment] = state;
+                                                drawChar();
+                                            };
+                                            object.get = function(segment){ 
+                                                if(segment==undefined){
+                                                    console.error('sevenSegmentDisplay_static::get: must provide segment value'); 
+                                                    return;
+                                                } 
+                                                return stamp[segment].state;
+                                            };
+                                            object.clear = function(){
+                                                clear();
+                                                for(var a = 0; a < stamp.length; a++){
+                                                    this.set(a,false);
+                                                }
+                                                drawChar();
+                                            };
+                            
+                                            object.enterCharacter = function(char){
+                                                stamp = getStamp(char);
+                            
+                                                clear();
+                                                drawChar();
+                                            };
+                            
+                                        //setup
+                                            clear();
+                                            drawChar();
+                            
+                                        resolve(object);
+                                    })() });
+                                }else{
+                                    return new Promise((resolve, reject) => { (async () => {
+                                        //elements 
+                                            const [object, backing] = await Promise.all([
+                                                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                                _canvas_.interface.part.builder('basic', 'rectangle', 'backing', {width:width, height:height, colour:backgroundStyle}),
+                                            ]);
+                                            object.append(backing);
+                            
+                                            //segments
+                                                const segments = [];
+                                                for(let a = 0; a < points.length; a++){
+                                                    _canvas_.interface.part.builder('basic', 'polygon', 'segment_'+a, {pointsAsXYArray:points[a], colour:dimStyle}).then(obj => {
+                                                        segments[a] = {segment:obj, state:false};
+                                                        object.append(obj);
+                                                    });
+                                                }
+                            
+                                        //methods
+                                            object.set = function(segment,state){
+                                                segments[segment].state = state;
+                                                if(state){ segments[segment].segment.colour(glowStyle); }
+                                                else{ segments[segment].segment.colour(dimStyle); }
+                                            };
+                                            object.get = function(segment){
+                                                return segments[segment].state;
+                                            };
+                                            object.clear = function(){
+                                                for(var a = 0; a < segments.length; a++){
+                                                    this.set(a,false);
+                                                }
+                                            };
+                            
+                                            object.enterCharacter = function(char){
+                                                stamp = getStamp(char);
+                            
+                                                for(let a = 0; a < stamp.length; a++){
+                                                    this.set(a, stamp[a]==1);
+                                                }
+                                            };
+                            
+                                        resolve(object);
+                                    })() });
+                                }
+                            };
+                            
+                            interfacePart.partLibrary.display.sevenSegmentDisplay = function(name,data){ 
+                                return interfacePart.collection.display.sevenSegmentDisplay(
+                                    name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.background, data.style.glow, data.style.dim
+                                );
+                            };
+                            this.sixteenSegmentDisplay = function(
+                                name='sixteenSegmentDisplay', static=false, resolution=2, 
+                                x=0, y=0, width=20, height=30, angle=0,
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
+                            ){
+                                
+                                const margin = width/8;
+                                const division = width/8;
+                                const shapes = {
+                                    segments:{
+                                        points: {
+                                            top:{
+                                                left:[
+                                                    {x:division*0.5+margin,         y:division*0.5+margin},  //centre
+                                                    {x:division*1.0+margin,         y:division*0.0+margin},  //top
+                                                    {x:division*0.0+margin,         y:division*1.0+margin},  //left
+                                                    {x:division*1.0+margin,         y:division*1.0+margin},  //inner point
+                                                    {x:division*1.75+margin,        y:division*1.0+margin},  //inner point right
+                                                    {x:division*1.0+margin,         y:division*1.75+margin}, //inner point down
+                                                ],
+                                                centre:[
+                                                    {x:width/2,                     y:division*0.5+margin}, //central point
+                                                    {x:width/2-division*0.5,        y:division*1.0+margin}, //lower left
+                                                    {x:width/2+division*0.5,        y:division*1.0+margin}, //lower right
+                                                    {x:width/2-division*0.5,        y:division*0.0+margin}, //upper left
+                                                    {x:width/2+division*0.5,        y:division*0.0+margin}, //upper right
+                                                ],
+                                                right:[
+                                                    {x:width-division*0.5-margin,   y:division*0.5+margin},  //centre
+                                                    {x:width-division*1.0-margin,   y:division*0.0+margin},  //top
+                                                    {x:width-division*0.0-margin,   y:division*1.0+margin},  //right
+                                                    {x:width-division*1.0-margin,   y:division*1.0+margin},  //inner point
+                                                    {x:width-division*1.0-margin,   y:division*1.75+margin}, //inner point down
+                                                    {x:width-division*1.75-margin,  y:division*1.0+margin},  //inner point left
+                                                ]
+                                            },
+                                            middle:{
+                                                left:[
+                                                    {x:division*0.0+margin,         y:height*0.5-division*0.5}, //top left
+                                                    {x:division*1.0+margin,         y:height*0.5-division*0.5}, //top right
+                                                    {x:division*0.5+margin,         y:height*0.5-division*0.0}, //centre
+                                                    {x:division*0.0+margin,         y:height*0.5+division*0.5}, //bottom left
+                                                    {x:division*1.0+margin,         y:height*0.5+division*0.5}, //bottom right
+                                                ],
+                                                centre:[
+                                                    {x:width/2,                     y:height/2},                //central point
+                                                    {x:width/2-division*0.5,        y:division*0.5+height/2},   //lower left
+                                                    {x:width/2-division*0.25,       y:division*1.25+height/2},  //lower left down
+                                                    {x:width/2-division*1.0,        y:division*0.5+height/2},   //lower left left
+                                                    {x:width/2+division*0.5,        y:division*0.5+height/2},   //lower right
+                                                    {x:width/2+division*0.5,        y:division*1.75+height/2},  //lower right down
+                                                    {x:width/2+division*1.0,        y:division*0.5+height/2},   //lower right right
+                                                    {x:width/2-division*0.5,        y:-division*0.5+height/2},  //upper left
+                                                    {x:width/2-division*0.25,       y:-division*1.25+height/2}, //upper left up
+                                                    {x:width/2-division*1.0,        y:-division*0.25+height/2}, //upper left left
+                                                    {x:width/2+division*0.5,        y:-division*0.5+height/2},  //upper right
+                                                    {x:width/2+division*0.5,        y:-division*1.75+height/2}, //upper right up
+                                                    {x:width/2+division*1.0,        y:-division*0.25+height/2}, //upper right right
+                                                ],
+                                                right:[
+                                                    {x:width-division*1.0-margin,   y:height*0.5-division*0.5}, //top left
+                                                    {x:width-division*0.0-margin,   y:height*0.5-division*0.5}, //top right
+                                                    {x:width-division*0.5-margin,   y:height*0.5-division*0.0}, //centre
+                                                    {x:width-division*1.0-margin,   y:height*0.5+division*0.5}, //bottom left
+                                                    {x:width-division*0.0-margin,   y:height*0.5+division*0.5}  //bottom right
+                                                ]
+                                            },
+                                            bottom: {
+                                                left:[
+                                                    {x:division*0.5+margin,         y:height-division*0.5-margin}, //centre
+                                                    {x:division*0.0+margin,         y:height-division*1.0-margin}, //left
+                                                    {x:division*1.0+margin,         y:height-division*0.0-margin}, //bottom
+                                                    {x:division*1.0+margin,         y:height-division*1.0-margin}, //inner point
+                                                    {x:division*1.0+margin,         y:height-division*1.75-margin},//inner point up
+                                                    {x:division*1.75+margin,        y:height-division*1.0-margin}, //inner point right
+                                                ],
+                                                centre:[
+                                                    {x:width/2-division*0.5,        y:height-division*1.0-margin}, //upper left
+                                                    {x:width/2+division*0.5,        y:height-division*1.0-margin}, //upper right
+                                                    {x:width/2,                     y:height-division*0.5-margin}, //central point
+                                                    {x:width/2-division*0.5,        y:height-division*0.0-margin}, //lower left
+                                                    {x:width/2+division*0.5,        y:height-division*0.0-margin}, //lower right
+                                                ],
+                                                right:[
+                                                    {x:width-division*0.5-margin,   y:height-division*0.5-margin}, //centre
+                                                    {x:width-division*0.0-margin,   y:height-division*1.0-margin}, //right
+                                                    {x:width-division*1.0-margin,   y:height-division*0.0-margin}, //bottom
+                                                    {x:width-division*1.0-margin,   y:height-division*1.0-margin}, //inner point
+                                                    {x:width-division*1.0-margin,   y:height-division*1.75-margin},//inner point up
+                                                    {x:width-division*1.75-margin,  y:height-division*1.0-margin}, //inner point left
+                                                ]
+                                            }
+                                        }
+                                    }
+                                };
+                                const points = [
+                                    [
+                                        shapes.segments.points.top.left[1],
+                                        shapes.segments.points.top.left[0],
+                                        shapes.segments.points.top.left[3],
+                                        shapes.segments.points.top.centre[1],
+                                        shapes.segments.points.top.centre[0],
+                                        shapes.segments.points.top.centre[3],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.centre[4],
+                                        shapes.segments.points.top.centre[0],
+                                        shapes.segments.points.top.centre[2],
+                                        shapes.segments.points.top.right[3],
+                                        shapes.segments.points.top.right[0],
+                                        shapes.segments.points.top.right[1],
+                                    ],
+                            
+                                    [
+                                        shapes.segments.points.top.left[0],
+                                        shapes.segments.points.top.left[2],
+                                        shapes.segments.points.middle.left[0],
+                                        shapes.segments.points.middle.left[2],
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.top.left[3],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.left[4],
+                                        shapes.segments.points.top.left[3],
+                                        shapes.segments.points.top.left[5],
+                                        shapes.segments.points.middle.centre[9],
+                                        shapes.segments.points.middle.centre[7],
+                                        shapes.segments.points.middle.centre[8],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.centre[0],
+                                        shapes.segments.points.top.centre[1],
+                                        shapes.segments.points.middle.centre[7],
+                                        shapes.segments.points.middle.centre[0],
+                                        shapes.segments.points.middle.centre[10],
+                                        shapes.segments.points.top.centre[2],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.right[4],
+                                        shapes.segments.points.top.right[3],
+                                        shapes.segments.points.top.right[5],
+                                        shapes.segments.points.middle.centre[11],
+                                        shapes.segments.points.middle.centre[10],
+                                        shapes.segments.points.middle.centre[12],
+                                    ],
+                                    [
+                                        shapes.segments.points.top.right[0],
+                                        shapes.segments.points.top.right[2],
+                                        shapes.segments.points.middle.right[1],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[0],
+                                        shapes.segments.points.top.right[3],
+                                    ],
+                            
+                                    [
+                                        shapes.segments.points.middle.left[4],
+                                        shapes.segments.points.middle.left[2],
+                                        shapes.segments.points.middle.left[1],
+                                        shapes.segments.points.middle.centre[7],
+                                        shapes.segments.points.middle.centre[0],
+                                        shapes.segments.points.middle.centre[1],
+                                    ],
+                                    [
+                                        shapes.segments.points.middle.right[3],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[0],
+                                        shapes.segments.points.middle.centre[10],
+                                        shapes.segments.points.middle.centre[0],
+                                        shapes.segments.points.middle.centre[4],
+                                    ],
+                            
+                                    [
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.bottom.left[1],
+                                        shapes.segments.points.middle.left[3],
+                                        shapes.segments.points.middle.left[2],
+                                        shapes.segments.points.middle.left[4],
+                                        shapes.segments.points.bottom.left[3],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.left[4],
+                                        shapes.segments.points.bottom.left[3],
+                                        shapes.segments.points.bottom.left[5],
+                                        shapes.segments.points.middle.centre[2],
+                                        shapes.segments.points.middle.centre[1],
+                                        shapes.segments.points.middle.centre[3],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.centre[0],
+                                        shapes.segments.points.bottom.centre[2],
+                                        shapes.segments.points.bottom.centre[1],
+                                        shapes.segments.points.middle.centre[4],
+                                        shapes.segments.points.middle.centre[0],
+                                        shapes.segments.points.middle.centre[1],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.right[4],
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.bottom.right[5],
+                                        shapes.segments.points.middle.centre[5],
+                                        shapes.segments.points.middle.centre[4],
+                                        shapes.segments.points.middle.centre[6],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.middle.right[3],
+                                        shapes.segments.points.middle.right[2],
+                                        shapes.segments.points.middle.right[4],
+                                        shapes.segments.points.bottom.right[1],
+                                        shapes.segments.points.bottom.right[0],
+                                    ],
+                            
+                                    [
+                                        shapes.segments.points.bottom.left[2],
+                                        shapes.segments.points.bottom.left[0],
+                                        shapes.segments.points.bottom.left[3],
+                                        shapes.segments.points.bottom.centre[0],
+                                        shapes.segments.points.bottom.centre[2],
+                                        shapes.segments.points.bottom.centre[3],
+                                    ],
+                                    [
+                                        shapes.segments.points.bottom.right[2],
+                                        shapes.segments.points.bottom.right[0],
+                                        shapes.segments.points.bottom.right[3],
+                                        shapes.segments.points.bottom.centre[1],
+                                        shapes.segments.points.bottom.centre[2],
+                                        shapes.segments.points.bottom.centre[4],
+                                    ],
+                                ];
+                                function getStamp(character){
+                                    switch(character){
+                                        case '!': 
+                                            return [
+                                                1,1,
+                                                0,1,1,1,0,
+                                                0,0,
+                                                0,0,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case '?': 
+                                            return [
+                                                1,1,
+                                                0,0,0,0,1,
+                                                0,1,
+                                                0,0,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case '.': 
+                                            return [
+                                                0,0,
+                                                0,0,0,0,0,
+                                                0,0,
+                                                0,0,0,0,0,
+                                                1,0,
+                                            ]; 
+                                        case ',': 
+                                            return [
+                                                0,0,
+                                                0,0,0,0,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                0,0,
+                                            ]; 
+                                        case '\'': 
+                                            return [
+                                                0,0,
+                                                1,0,0,0,0,
+                                                0,0,
+                                                0,0,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case ':':
+                                            return [
+                                                0,0,
+                                                0,1,0,1,0,
+                                                0,0,
+                                                0,1,0,1,0,
+                                                0,0,
+                                            ]; 
+                                        case '"': 
+                                            return [
+                                                0,0,
+                                                1,0,1,0,0,
+                                                0,0,
+                                                0,0,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case '_': 
+                                            return [
+                                                0,0,
+                                                0,0,0,0,0,
+                                                0,0,
+                                                0,0,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case '-': 
+                                            return [
+                                                0,0,
+                                                0,0,0,0,0,
+                                                1,1,
+                                                0,0,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case '\\': 
+                                            return [
+                                                0,0,
+                                                0,1,0,0,0,
+                                                0,0,
+                                                0,0,0,1,0,
+                                                0,0,
+                                            ]; 
+                                        case '/': 
+                                            return [
+                                                0,0,
+                                                0,0,0,1,0,
+                                                0,0,
+                                                0,1,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case '*': 
+                                            return [
+                                                0,0,
+                                                0,1,1,1,0,
+                                                1,1,
+                                                0,1,1,1,0,
+                                                0,0,
+                                            ]; 
+                                        case '#': 
+                                            return [
+                                                1,1,
+                                                1,0,1,0,1,
+                                                1,1,
+                                                1,0,1,0,1,
+                                                1,1,
+                                            ]; 
+                                        case '<': 
+                                            return [
+                                                0,0,
+                                                0,0,0,1,0,
+                                                0,0,
+                                                0,0,0,1,0,
+                                                0,0,
+                                            ]; 
+                                        case '>': 
+                                            return [
+                                                0,0,
+                                                0,1,0,0,0,
+                                                0,0,
+                                                0,1,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case '(': 
+                                            return [
+                                                0,1,
+                                                0,0,1,0,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                0,1,
+                                            ]; 
+                                        case ')': 
+                                            return [
+                                                1,0,
+                                                0,0,1,0,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                1,0,
+                                            ]; 
+                                        case '[': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                0,0,
+                                                1,0,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case ']': 
+                                            return [
+                                                1,1,
+                                                0,0,0,0,1,
+                                                0,0,
+                                                0,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case '{': 
+                                            return [
+                                                1,1,
+                                                0,1,0,0,0,
+                                                1,0,
+                                                0,1,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case '}': 
+                                            return [
+                                                1,1,
+                                                0,0,0,1,0,
+                                                0,1,
+                                                0,0,0,1,0,
+                                                1,1,
+                                            ]; 
+                            
+                                        case '0': case 0: 
+                                            return [
+                                                1,1,
+                                                1,0,0,1,1,
+                                                0,0,
+                                                1,1,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case '1': case 1: 
+                                            return [
+                                                1,0,
+                                                0,0,1,0,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                1,1,
+                                            ]; 
+                                        case '2': case 2: 
+                                            return [
+                                                1,1,
+                                                0,0,0,0,1,
+                                                0,1,
+                                                0,1,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case '3': case 3:
+                                            return [
+                                                1,1,
+                                                0,0,0,0,1,
+                                                1,1,
+                                                0,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case '4': case 4:
+                                            return [
+                                                0,0,
+                                                1,0,0,0,1,
+                                                1,1,
+                                                0,0,0,0,1,
+                                                0,0,
+                                            ]; 
+                                        case '5': case 5:
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                1,1,
+                                                0,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case '6': case 6:
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                1,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case '7': case 7:
+                                            return [
+                                                1,1,
+                                                0,0,0,1,0,
+                                                0,0,
+                                                0,1,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case '8': case 8:
+                                            return [
+                                                1,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case '9': case 9:
+                                            return [
+                                                1,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                                0,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                            
+                                        case 'a': case 'A': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                                1,0,0,0,1,
+                                                0,0,
+                                            ]; 
+                                        case 'b': case 'B': 
+                                            return [
+                                                1,1,
+                                                0,0,1,0,1,
+                                                0,1,
+                                                0,0,1,0,1,
+                                                1,1,
+                                            ]; 
+                                        case 'c': case 'C': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                0,0,
+                                                1,0,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case 'd': case 'D': 
+                                            return [
+                                                1,1,
+                                                0,0,1,0,1,
+                                                0,0,
+                                                0,0,1,0,1,
+                                                1,1,
+                                            ]; 
+                                        case 'e': case 'E': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                1,1,
+                                                1,0,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case 'f': case 'F': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                1,1,
+                                                1,0,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case 'g': case 'G': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                0,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case 'h': case 'H': 
+                                            return [
+                                                0,0,
+                                                1,0,0,0,1,
+                                                1,1,
+                                                1,0,0,0,1,
+                                                0,0,
+                                            ]; 
+                                        case 'i': case 'I': 
+                                            return [
+                                                1,1,
+                                                0,0,1,0,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                1,1,
+                                            ]; 
+                                        case 'j': case 'J': 
+                                            return [
+                                                1,1,
+                                                0,0,1,0,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                1,0,
+                                            ]; 
+                                        case 'k': case 'K': 
+                                            return [
+                                                0,0,
+                                                1,0,0,1,0,
+                                                1,0,
+                                                1,0,0,1,0,
+                                                0,0,
+                                            ]; 
+                                        case 'l': case 'L': 
+                                            return [
+                                                0,0,
+                                                1,0,0,0,0,
+                                                0,0,
+                                                1,0,0,0,0,
+                                                1,1,
+                                            ]; 
+                                        case 'm': case 'M': 
+                                            return [
+                                                0,0,
+                                                1,1,0,1,1,
+                                                0,0,
+                                                1,0,0,0,1,
+                                                0,0,
+                                            ]; 
+                                        case 'n': case 'N': 
+                                            return [
+                                                0,0,
+                                                1,1,0,0,1,
+                                                0,0,
+                                                1,0,0,1,1,
+                                                0,0,
+                                            ]; 
+                                        case 'o': case 'O': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,1,
+                                                0,0,
+                                                1,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case 'p': case 'P': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                                1,0,0,0,0,
+                                                0,0,
+                                            ];
+                                        case 'q': case 'Q': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,1,
+                                                0,0,
+                                                1,0,0,1,1,
+                                                1,1,
+                                            ]; 
+                                        case 'r': case 'R': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,1,
+                                                1,1,
+                                                1,0,0,1,0,
+                                                0,0,
+                                            ]; 
+                                        case 's': case 'S': 
+                                            return [
+                                                1,1,
+                                                1,0,0,0,0,
+                                                1,1,
+                                                0,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case 't': case 'T': 
+                                            return [
+                                                1,1,
+                                                0,0,1,0,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                0,0,
+                                            ]; 
+                                        case 'u': case 'U': 
+                                            return [
+                                                0,0,
+                                                1,0,0,0,1,
+                                                0,0,
+                                                1,0,0,0,1,
+                                                1,1,
+                                            ]; 
+                                        case 'v': case 'V': 
+                                            return [
+                                                0,0,
+                                                1,0,0,1,0,
+                                                0,0,
+                                                1,1,0,0,0,
+                                                0,0,
+                                            ]; 
+                                        case 'w': case 'W': 
+                                            return [
+                                                0,0,
+                                                1,0,0,0,1,
+                                                0,0,
+                                                1,1,0,1,1,
+                                                0,0,
+                                            ]; 
+                                        case 'x': case 'X': 
+                                            return [
+                                                0,0,
+                                                0,1,0,1,0,
+                                                0,0,
+                                                0,1,0,1,0,
+                                                0,0,
+                                            ]; 
+                                        case 'y': case 'Y': 
+                                            return [
+                                                0,0,
+                                                0,1,0,1,0,
+                                                0,0,
+                                                0,0,1,0,0,
+                                                0,0,
+                                            ]; 
+                                        case 'z': case 'Z': 
+                                            return [
+                                                1,1,
+                                                0,0,0,1,0,
+                                                0,0,
+                                                0,1,0,0,0,
+                                                1,1,
+                                            ]; 
+                            
+                                        case 'all': 
+                                            return [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+                                        default:
+                                            return [
+                                                0,0,
+                                                0,0,0,0,0,
+                                                0,0,
+                                                0,0,0,0,0,
+                                                0,0,
+                                            ];
+                                    }
+                                }
+                            
+                                if(static){
+                                    return new Promise((resolve, reject) => { (async () => {
+                                        let stamp = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+                            
+                                        //elements 
+                                            const [object, canvas] = await Promise.all([
+                                                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                                _canvas_.interface.part.builder('basic', 'canvas', 'backing', {width:width, height:height, colour:backgroundStyle,resolution:resolution}),
+                                            ]);
+                                            object.append(canvas);
+                            
+                                        //graphics
+                                            function clear(){
+                                                canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba(backgroundStyle);
+                                                canvas._.fillRect(0,0,canvas.$(width),canvas.$(height));
+                                                canvas.requestUpdate();
+                                            };
+                                            function drawChar(){
+                                                //draw segments in 
+                                                    for(let a = 0; a < points.length; a++){
+                                                        canvas._.beginPath(); 
+                                                        canvas._.moveTo(canvas.$(points[a][0].x),canvas.$(points[a][0].y));
+                                                        for(let b = 1; b < points[a].length; b++){
+                                                            canvas._.lineTo(canvas.$(points[a][b].x),canvas.$(points[a][b].y));
+                                                        }
+                                                        canvas._.closePath(); 
+                                                        canvas._.fillStyle = stamp[a] == 0 ? _canvas_.library.math.convertColour.obj2rgba(dimStyle) : _canvas_.library.math.convertColour.obj2rgba(glowStyle);
+                                                        canvas._.fill(); 
+                                                    }
+                                                    canvas.requestUpdate();
+                                            }
+                            
+                                        //methods
+                                            object.set = function(segment,state){
+                                                clear();
+                                                stamp[segment] = state;
+                                                drawChar();
+                                            };
+                                            object.get = function(segment){ 
+                                                if(segment==undefined){
+                                                    console.error('sevenSegmentDisplay_static::get: must provide segment value'); 
+                                                    return;
+                                                } 
+                                                return stamp[segment].state;
+                                            };
+                                            object.clear = function(){
+                                                clear();
+                                                for(var a = 0; a < stamp.length; a++){
+                                                    this.set(a,false);
+                                                }
+                                                drawChar();
+                                            };
+                            
+                                            object.enterCharacter = function(char){
+                                                stamp = getStamp(char);
+                            
+                                                clear();
+                                                drawChar();
+                                            };
+                            
+                                        //setup
+                                            clear();
+                                            drawChar();
+                            
+                                        resolve(object);
+                                    })() });
+                                }else{
+                                    return new Promise((resolve, reject) => { (async () => {
+                                        //elements 
+                                            const [object, backing] = await Promise.all([
+                                                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                                _canvas_.interface.part.builder('basic', 'rectangle', 'backing', {width:width, height:height, colour:backgroundStyle}),
+                                            ]);
+                                            object.append(backing);
+                            
+                                            //segments
+                                                const segments = [];
+                                                for(let a = 0; a < points.length; a++){
+                                                    _canvas_.interface.part.builder('basic', 'polygon', 'segment_'+a, {pointsAsXYArray:points[a], colour:dimStyle}).then(obj => {
+                                                        segments[a] = {segment:obj, state:false};
+                                                        object.append(obj);
+                                                    });
+                                                }
+                            
+                                        //methods
+                                            object.set = function(segment,state){
+                                                segments[segment].state = state;
+                                                if(state){ segments[segment].segment.colour(glowStyle); }
+                                                else{ segments[segment].segment.colour(dimStyle); }
+                                            };
+                                            object.get = function(segment){
+                                                return segments[segment].state;
+                                            };
+                                            object.clear = function(){
+                                                for(var a = 0; a < segments.length; a++){
+                                                    this.set(a,false);
+                                                }
+                                            };
+                            
+                                            object.enterCharacter = function(char){
+                                                stamp = getStamp(char);
+                            
+                                                for(let a = 0; a < stamp.length; a++){
+                                                    this.set(a, stamp[a]==1);
+                                                }
+                                            };
+                            
+                                        resolve(object);
+                                    })() });
+                                }
+                            };
+                            
+                            interfacePart.partLibrary.display.sixteenSegmentDisplay = function(name,data){ 
+                                return interfacePart.collection.display.sixteenSegmentDisplay(
+                                    name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.angle,
+                                    data.style.background, data.style.glow, data.style.dim
+                                );
+                            };
+                            this.readout_sixteenSegmentDisplay = function(
+                                name='readout_sixteenSegmentDisplay', static=false, resolution=2, 
+                                x=0, y=0, width=100, height=30, count=5, angle=0, decimalPlaces=false,
+                                backgroundStyle={r:0,g:0,b:0,a:1},
+                                glowStyle={r:0.78,g:0.78,b:0.78,a:1},
+                                dimStyle={r:0.1,g:0.1,b:0.1,a:1},
+                            ){
+                                
+                                //values
+                                    let text = '';
+                                    let displayInterval = null;
+                                    const displayIntervalTime = 150;
+                            
+                                return new Promise((resolve, reject) => { (async () => {
+                                    //elements 
+                                        //main
+                                            const [object] = await Promise.all([
+                                                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
+                                            ]);
+                                        //display units
+                                            const units = await Promise.all(
+                                                (new Array(count)).fill().map((a,index) => {
+                                                    return _canvas_.interface.part.builder('display', 'sixteenSegmentDisplay', ''+index, {
+                                                        x:(width/count)*index, width:width/count, height:height, 
+                                                        static:static, resolution:resolution,
+                                                        style:{background:backgroundStyle, glow:glowStyle, dim:dimStyle}
+                                                    });
+                                                }) 
+                                            );
+                                            units.forEach(object.append);
+                                        //decimal point
+                                            let decimalPoints = [];
+                                            if(decimalPlaces){
+                                                decimalPoints = await Promise.all(
+                                                    (new Array(count)).fill().map((a,index) => {
+                                                        return _canvas_.interface.part.builder('display', 'glowbox_circle', 'decimalPoint_'+index, {
+                                                            x:(width/count)*index, y:height*0.9, radius:((width/count)/8)/2,
+                                                            style:{glow:glowStyle, dim:dimStyle},
+                                                        });
+                                                    }) 
+                                                );
+                                                units.forEach(decimalPoints);
+                                            }
+                            
+                                    //methods
+                                        function print(style,offset=0,dontClear=false){
+                                            decimalPoints.forEach(point => point.off());
+                                            if(!dontClear){ clearInterval(displayInterval); }
+                            
+                                            switch(style){
+                                                case 'smart':
+                                                    if(text.replace('.','').length > units.length){print('r2lSweep');}
+                                                    else{print('regular');}
+                                                break;
+                                                case 'r2lSweep':
+                                                    var displayStage = -units.length;
+                            
+                                                    displayInterval = setInterval(function(){
+                                                        print('regular',-displayStage,true);
+                                                        displayStage++;if(displayStage > units.length+text.length-1){displayStage=-units.length;}
+                                                    },displayIntervalTime);
+                                                break;
+                                                case 'regular': default:
+                                                    var textIndex = 0;
+                                                    for(var a = offset; a < units.length; a++){
+                                                        if(units[a] == undefined){ textIndex++; continue; }
+                            
+                                                        if(text[textIndex] == '.'){
+                                                            if(decimalPoints[a-1] != undefined){decimalPoints[a-1].on();}
+                                                            a--;
+                                                        }else{ units[a].enterCharacter(text[textIndex]); }
+                                                        textIndex++;
+                                                    }
+                                                break;
+                                            }
+                                        }
+                            
+                                        object.text = function(a){
+                                            if(a==null){return text;}
+                                            text = a;
+                                        };
+                                        object.print = function(style){
+                                            print(style);
+                                        };  
+                            
+                                    resolve(object);
+                                })() });
+                            };
+                            
+                            interfacePart.partLibrary.display.readout_sixteenSegmentDisplay = function(name,data){ 
+                                return interfacePart.collection.display.readout_sixteenSegmentDisplay(
+                                    name, data.static, data.resolution, data.x, data.y, data.width, data.height, data.count, data.angle, data.decimalPlaces,
+                                    data.style.background, data.style.glow, data.style.dim,
+                                ); 
+                            };
+                        };
                         // this.control = new function(){
                         //     interfacePart.partLibrary.control = {};
                         // };
@@ -24439,57 +26019,281 @@
                 if(_canvas_.interface.go){_canvas_.interface.go();}
             };
             
+            var partsCreated = {};
+            
             _canvas_.interface.go = function(){
                 _canvas_.core.render.active(true);
+                _canvas_.core.render.activeLimitToFrameRate(true);
+                _canvas_.core.render.frameRateLimit(10);
+            
+                _canvas_.core.viewport.scale(4);
+                _canvas_.core.viewport.position(0,-550);
             
                 //basic
-                    _canvas_.interface.part.builder( 'basic', 'group', 'basicGroup_1', { x:10, y:10 } ).then(basicGroup => {
+                    partsCreated.basic = {};
+                    _canvas_.interface.part.builder( 'basic', 'group', 'basicGroup', { x:10, y:10 } ).then(basicGroup => {
+                        partsCreated.basic.basicGroup = basicGroup;
                         _canvas_.system.pane.mm.append(basicGroup);
             
-                        _canvas_.interface.part.builder('basic', 'rectangle', 'testRectangle', { 
-                            x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1}
-                        }).then(rectangle => { basicGroup.append(rectangle); });
-                        _canvas_.interface.part.builder('basic', 'circle', 'testCircle', { 
-                            x:20, y:55, radius:15
-                        }).then(circle => { basicGroup.append(circle); });
-                        _canvas_.interface.part.builder('basic', 'image', 'testImage', { 
-                            x:40, y:40, width:30, height:30, url:'/images/testImages/Dore-munchausen-illustration.jpg'
-                        }).then(image => { basicGroup.append(image); });
-            
-                        _canvas_.interface.part.builder( 'basic', 'group', 'clippingGroup', { x:75, y:5 } ).then(clippingGroup => {
-                            basicGroup.append(clippingGroup);
-                            clippingGroup.clipActive(true);
-            
+                        //rectangle
+                            _canvas_.interface.part.builder('basic', 'rectangle', 'testRectangle', { 
+                                x:5, y:5, width:30, height:30, colour:{r:1,g:0,b:0,a:1}
+                            }).then(obj => {
+                                partsCreated.basic.rectangle = obj;
+                                basicGroup.append(obj);
+                            });
+                        //circle
+                            _canvas_.interface.part.builder('basic', 'circle', 'testCircle', { 
+                                x:20, y:55, radius:15
+                            }).then(obj => {
+                                partsCreated.basic.circle = obj;
+                                basicGroup.append(obj);
+                            });
+                        //polygon
                             _canvas_.interface.part.builder('basic', 'polygon', 'testPolygon', { 
-                                points:[0,0, 50,0, 50,50], 
-                            }).then(polygon => { clippingGroup.stencil(polygon); });
-                            _canvas_.interface.part.builder('basic', 'image', 'clippedImage', { 
-                                width:50, height:50, url:'/images/testImages/mikeandbrian.jpg'
-                            }).then(image => { clippingGroup.append(image); });
-                        });
+                                points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1},
+                            }).then(obj => {
+                                partsCreated.basic.polygon = obj;
+                                basicGroup.append(obj);
+                            });
+                        //path
+                            _canvas_.interface.part.builder('basic', 'path', 'testPath', { 
+                                points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1.25, jointType:'round', capType:'round',
+                            }).then(obj => {
+                                partsCreated.basic.path = obj;
+                                basicGroup.append(obj);
+                            });
+                        //image
+                            _canvas_.interface.part.builder('basic', 'image', 'testImage', { 
+                                x:40, y:40, width:30, height:30, url:'/images/testImages/Dore-munchausen-illustration.jpg'
+                            }).then(obj => {
+                                partsCreated.basic.image = obj;
+                                basicGroup.append(obj);
+                            });
+                        //text
+                            _canvas_.interface.part.builder('basic', 'text', 'testText', { 
+                                x:5, y:75, text:'Hello', height:15, width:70, colour:{r:150/255,g:150/255,b:1,a:1},
+                            }).then(obj => {
+                                partsCreated.basic.text = obj;
+                                basicGroup.append(obj);
+                            });
+                        //rectangleWithOutline
+                            _canvas_.interface.part.builder('basic', 'rectangleWithOutline', 'testRectangleWithOutline', { 
+                                x:105, y:60, width:30, height:30,
+                            }).then(obj => {
+                                partsCreated.basic.rectangleWithOutline = obj;
+                                basicGroup.append(obj);
+                            });
+                        //circleWithOutline
+                            _canvas_.interface.part.builder('basic', 'circleWithOutline', 'testCircleWithOutline', { 
+                                x:90, y:70, radius:10,
+                            }).then(obj => {
+                                partsCreated.basic.circleWithOutline = obj;
+                                basicGroup.append(obj);
+                            });
+                        //polygonWithOutline
+                            _canvas_.interface.part.builder('basic', 'polygonWithOutline', 'testPolygonWithOutline', { 
+                                points:[75,15, 75,55, 115,55], thickness:1, colour:{r:1,g:0,b:0.5,a:1}, lineColour:{r:0,g:0,b:0,a:1},
+                            }).then(obj => {
+                                partsCreated.basic.polygonWithOutline = obj;
+                                basicGroup.append(obj);
+                            });
+                        //canvas
+                            _canvas_.interface.part.builder('basic', 'canvas', 'testCanvas', { 
+                                x:130, y:5, width:30, height:30,
+                            }).then(obj => {
+                                partsCreated.basic.canvas = obj;
+                                basicGroup.append(obj);
             
-                        _canvas_.interface.part.builder('basic', 'polygon', 'testPolygon', { 
-                            points:[55,5, 70,35, 40,35], colour:{r:0,g:1,b:0,a:1},
-                        }).then(polygon => { basicGroup.append(polygon); });
-                        _canvas_.interface.part.builder('basic', 'polygonWithOutline', 'testPolygonWithOutline', { 
-                            points:[75,15, 75,55, 115,55], thickness:1, colour:{r:1,g:0,b:0.5,a:1}, lineColour:{r:0,g:0,b:0,a:1},
-                        }).then(polygonWithOutline => { basicGroup.append(polygonWithOutline); });
-                        _canvas_.interface.part.builder('basic', 'text', 'testText', { 
-                            x:5, y:75, text:'Hello', height:15, width:70, colour:{r:150/255,g:150/255,b:1,a:1},
-                        }).then(text => { basicGroup.append(text); });
-                        _canvas_.interface.part.builder('basic', 'path', 'testPath', { 
-                            points:[0,0, 0,90, 2.5,90, 2.5,72.5, 75,72.5], thickness:1.25, jointType:'round', capType:'round',
-                        }).then(path => { basicGroup.append(path); });
-                        _canvas_.interface.part.builder('basic', 'circleWithOutline', 'testCircleWithOutline', { 
-                            x:90, y:70, radius:10,
-                        }).then(circleWithOutline => { basicGroup.append(circleWithOutline); });
-                        _canvas_.interface.part.builder('basic', 'rectangleWithOutline', 'testRectangleWithOutline', { 
-                            x:105, y:60, width:30, height:30,
-                        }).then(rectangleWithOutline => { basicGroup.append(rectangleWithOutline); });
+                                const $ = partsCreated.basic.canvas.$;
+                                partsCreated.basic.canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.9,g:0.9,b:0.9,a:1});
+                                partsCreated.basic.canvas._.fillRect($(0),$(0),$(30),$(30));
+                                partsCreated.basic.canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.732,g:0.756,b:0.892,a:1});
+                                partsCreated.basic.canvas._.fillRect($(0),$(0),$(10),$(10));
+                                partsCreated.basic.canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.107,g:0.722,b:0.945,a:1});
+                                partsCreated.basic.canvas._.fillRect($(20),$(0),$(10),$(10));
+                                partsCreated.basic.canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.859,g:0.573,b:0.754,a:1});
+                                partsCreated.basic.canvas._.fillRect($(0),$(20),$(10),$(10));
+                                partsCreated.basic.canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.754,g:0.859,b:0.573,a:1});
+                                partsCreated.basic.canvas._.fillRect($(20),$(20),$(10),$(10));
+                                partsCreated.basic.canvas.requestUpdate();
+                            });
+                        //clipped group
+                            _canvas_.interface.part.builder( 'basic', 'group', 'clippingGroup', { x:75, y:5 } ).then(clippingGroup => {
+                                partsCreated.basic.clippingGroup = clippingGroup;
+                                basicGroup.append(clippingGroup);
+                                clippingGroup.clipActive(true);
+            
+                                _canvas_.interface.part.builder('basic', 'polygon', 'testPolygon', { 
+                                    points:[0,0, 50,0, 50,50], 
+                                }).then( clippingGroup.stencil );
+                                _canvas_.interface.part.builder('basic', 'image', 'clippedImage', { 
+                                    width:50, height:50, url:'/images/testImages/mikeandbrian.jpg'
+                                }).then( clippingGroup.append );
+                            });
                     });
             
             
             
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+                //display
+                    partsCreated.display = {};
+                    _canvas_.interface.part.builder( 'basic', 'group', 'displayGroup', {x:10, y:150} ).then(displayGroup => {
+                        partsCreated.display.displayGroup = displayGroup;
+                        _canvas_.system.pane.mm.append(displayGroup);
+            
+                        //glowbox
+                            //the parts
+                                _canvas_.interface.part.builder('display', 'glowbox_rectangle', 'test_glowbox_rectangle', {x:0, y:0}).then(obj => {
+                                    partsCreated.display.glowbox_rectangle = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'glowbox_circle', 'test_glowbox_circle', {x:15, y:45}).then(obj => {
+                                    partsCreated.display.glowbox_circle = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'glowbox_image', 'test_glowbox_image', {x:0, y:60, glowURL:'/images/testImages/Dore-munchausen-illustration.jpg', dimURL:'/images/testImages/mikeandbrian.jpg'}).then(obj => {
+                                    partsCreated.display.glowbox_image = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'glowbox_polygon', 'test_glowbox_polygon', {x:0, y:95}).then(obj => {
+                                    partsCreated.display.glowbox_polygon = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'glowbox_path', 'test_glowbox_path', {x:0, y:130}).then(obj => {
+                                    partsCreated.display.glowbox_path = obj;
+                                    displayGroup.append(obj);
+                                });
+                            // //test of functionality
+                            //     let display_glowbox_state = false;
+                            //     setInterval(() => {
+                            //         if(display_glowbox_state){
+                            //             partsCreated.display.glowbox_rectangle.off();
+                            //             partsCreated.display.glowbox_circle.off();
+                            //             partsCreated.display.glowbox_image.off();
+                            //             partsCreated.display.glowbox_polygon.off();
+                            //             partsCreated.display.glowbox_path.off();
+                            //         }else{
+                            //             partsCreated.display.glowbox_rectangle.on();
+                            //             partsCreated.display.glowbox_circle.on();
+                            //             partsCreated.display.glowbox_image.on();
+                            //             partsCreated.display.glowbox_polygon.on();
+                            //             partsCreated.display.glowbox_path.on();
+                            //         }
+                            //         display_glowbox_state = !display_glowbox_state;
+                            //     }, 1000);
+            
+                        //segment displays
+                            //the parts
+                                _canvas_.interface.part.builder('display', 'sevenSegmentDisplay', 'test_sevenSegmentDisplay', {x:35, y:0}).then(obj => {
+                                    partsCreated.display.sevenSegmentDisplay = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'sevenSegmentDisplay', 'test_sevenSegmentDisplay_static', {x:35, y:35,static:true}).then(obj => {
+                                    partsCreated.display.sevenSegmentDisplay_static = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay', {x:60, y:0}).then(obj => {
+                                    partsCreated.display.sixteenSegmentDisplay = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'sixteenSegmentDisplay', 'test_sixteenSegmentDisplay_static', {x:60, y:35, static:true}).then(obj => {
+                                    partsCreated.display.sixteenSegmentDisplay_static = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'readout_sevenSegmentDisplay', 'test_readout_sevenSegmentDisplay', {x:85, y:0}).then(obj => {
+                                    partsCreated.display.readout_sevenSegmentDisplay = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'readout_sevenSegmentDisplay', 'test_readout_sevenSegmentDisplay_static', {x:85, y:35, static:true}).then(obj => {
+                                    partsCreated.display.readout_sevenSegmentDisplay_static = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay', {x:190, y:0}).then(obj => {
+                                    partsCreated.display.readout_sixteenSegmentDisplay = obj;
+                                    displayGroup.append(obj);
+                                });
+                                _canvas_.interface.part.builder('display', 'readout_sixteenSegmentDisplay', 'test_readout_sixteenSegmentDisplay_static', {x:190, y:35, static:true}).then(obj => {
+                                    partsCreated.display.readout_sixteenSegmentDisplay_static = obj;
+                                    displayGroup.append(obj);
+                                });
+                        //     //test of functionality
+                        //         let display_sevenSegmentDisplay_state = 0;
+                        //         let display_sixteenSegmentDisplay_state_index = 0;
+                        //         let display_sixteenSegmentDisplay_state_glyphs = ['!','?','.',',','\'',':','"','_','-','\\','/','*','#','<','>','(',')','[',']','{','}','0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
+            
+                        //         setInterval(() => {
+                        //             partsCreated.display.sevenSegmentDisplay.enterCharacter(display_sevenSegmentDisplay_state);
+                        //             partsCreated.display.sevenSegmentDisplay_static.enterCharacter(display_sevenSegmentDisplay_state);
+                        //             display_sevenSegmentDisplay_state++;
+                        //             if(display_sevenSegmentDisplay_state > 9){display_sevenSegmentDisplay_state = 0;}
+            
+                        //             partsCreated.display.sixteenSegmentDisplay.enterCharacter(display_sixteenSegmentDisplay_state_glyphs[display_sixteenSegmentDisplay_state_index]);
+                        //             partsCreated.display.sixteenSegmentDisplay_static.enterCharacter(display_sixteenSegmentDisplay_state_glyphs[display_sixteenSegmentDisplay_state_index]);
+                        //             display_sixteenSegmentDisplay_state_index++;
+                        //             if(display_sixteenSegmentDisplay_state_index >= display_sixteenSegmentDisplay_state_glyphs.length){display_sixteenSegmentDisplay_state_index = 0;}
+                        //         },500);
+            
+                        //         setTimeout(() => {
+                        //             partsCreated.display.readout_sevenSegmentDisplay.text('1234567890');
+                        //             partsCreated.display.readout_sevenSegmentDisplay.print('smart');
+                        //             partsCreated.display.readout_sevenSegmentDisplay_static.text('1234567890');
+                        //             partsCreated.display.readout_sevenSegmentDisplay_static.print('smart');
+                        //             partsCreated.display.readout_sixteenSegmentDisplay.text('!?.,\':"_-\\/*#<>()[]{}0123456789abcdefghijklmnopqrstuvwxyz');
+                        //             partsCreated.display.readout_sixteenSegmentDisplay.print('smart');
+                        //             partsCreated.display.readout_sixteenSegmentDisplay_static.text('!?.,\':"_-\\/*#<>()[]{}0123456789abcdefghijklmnopqrstuvwxyz');
+                        //             partsCreated.display.readout_sixteenSegmentDisplay_static.print('smart');
+                        //         },500);
+            
+                        // //levels
+                            // level
+                            // meter_level
+                            // audio_meter_level
+                        //gauge
+                            // gauge
+                            // gauge_image
+                            // meter_gauge
+                            // meter_gauge_image
+                        //rastor
+                            // rastorDisplay
+                        //grapher
+                            // grapher
+                            // grapher_static
+                            // grapher_periodicWave
+                            // grapher_periodicWave_static
+                            // grapher_audioScope
+                            // grapher_audioScope_static
+                   });
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+                
             };
 
 

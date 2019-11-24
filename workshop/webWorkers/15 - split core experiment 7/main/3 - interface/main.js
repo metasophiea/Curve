@@ -4,43 +4,30 @@ _canvas_.interface = new function(){
 
     const dev = {
         prefix:'interface',
-
-        circuit:{active:!false,fontStyle:'color:rgb(195, 81, 172); font-style:italic;'},
-        part:{active:!false,fontStyle:'color:rgb(81, 178, 223); font-style:italic;'},
-        unit:{active:!false,fontStyle:'color:rgb(99, 196, 129); font-style:italic;'},
-
-        log:{
-            circuit:function(data){
-                if(!dev.circuit.active){return;}
-                console.log('%c'+dev.prefix+'.circuit'+(new Array(...arguments).join(' ')), dev.circuit.fontStyle );
-            },
-            part:function(data){
-                if(!dev.part.active){return;}
-                console.log('%c'+dev.prefix+'.part'+(new Array(...arguments).join(' ')), dev.part.fontStyle );
-            },
-            unit:function(data){
-                if(!dev.unit.active){return;}
-                console.log('%c'+dev.prefix+'.unit'+(new Array(...arguments).join(' ')), dev.unit.fontStyle );
-            },
+        channels:{
+            circuit:{       prefix:'circuit',                   active:false,   fontStyle:'color:rgb(195, 81, 172); font-style:italic;' },
+            part:{          prefix:'part',                      active:!false,  fontStyle:'color:rgb(81, 178, 223); font-style:italic;' },
+            partBasic:{     prefix:'part.collection.basic',     active:!false,  fontStyle:'color:rgb(229, 96, 83); font-style:italic;'  },
+            partDisplay:{   prefix:'part.collection.display',   active:!false,  fontStyle:'color:rgb(99, 196, 129); font-style:italic;' },
+            partControl:{   prefix:'part.collection.control',   active:!false,  fontStyle:'color:rgb(243, 194, 95); font-style:italic;' },
+            partDynamic:{   prefix:'part.collection.display',   active:!false,  fontStyle:'color:rgb(24, 53, 157); font-style:italic;'  },
+            unit:{          prefix:'unit',                      active:false,   fontStyle:'color:rgb(66, 145, 115); font-style:italic;' },
         },
-
-        testLoggers:function(){
-            const circuit = dev.circuit.active;
-            const part = dev.part.active;
-            const unit = dev.unit.active;
-
-            dev.circuit.active = true;
-            dev.part.active = true;
-            dev.unit.active = true;
-
-            dev.log.circuit('.testLoggers -> circuit');
-            dev.log.part('.testLoggers -> part');
-            dev.log.unit('.testLoggers -> unit');
-
-            dev.circuit.active = circuit;
-            dev.part.active = part;
-            dev.unit.active = unit;
-        },
+        log: {},
+    };
+    Object.keys(dev.channels).forEach(channel => {
+        dev.log[channel]  = function(data){
+            if(!dev.channels[channel].active){return;}
+            console.log('%c'+dev.prefix+'.'+dev.channels[channel].prefix+(new Array(...arguments).join(' ')), dev.channels[channel].fontStyle );
+        }
+    });
+    dev.testLoggers = function(){
+        Object.keys(dev.channels).forEach(channel => {
+            const temp = dev.circuit[channel];
+            dev.channels[channel].active = true;
+            dev.log[channel]('.testLoggers -> '+channel);
+            dev.channels[channel].active = temp;
+        });
     };
 
     this.circuit = new function(){

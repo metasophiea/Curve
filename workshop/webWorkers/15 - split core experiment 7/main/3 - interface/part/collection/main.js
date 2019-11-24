@@ -3,10 +3,10 @@ this.collection = new function(){
         interfacePart.partLibrary.basic = {};
         {{include:basic/*}} /**/
     };
-    // this.display = new function(){
-    //     interfacePart.partLibrary.display = {};
-    //     {{include:display/*}} /**/
-    // };
+    this.display = new function(){
+        interfacePart.partLibrary.display = {};
+        {{include:display/*}} /**/
+    };
     // this.control = new function(){
     //     interfacePart.partLibrary.control = {};
     //     {{include:control/*}} /**/

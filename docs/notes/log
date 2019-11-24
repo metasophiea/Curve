@@ -1,4 +1,27 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-11-24
+  CoreV3
+    - removed that extra code and just made a clone of the image element with
+      the name changed to 'canvas'
+    - added the sevenSegmentDisplay and sevenSegmentDisplay_static display parts
+      as a sinlge part where one can choose whether you want the static version
+      or not with an argument
+    - same as above, but for the sixteenSegmentDisplay
+    - created all the readout parts for all types. Same idea with the argument
+      to choose whether its static or not 
+
+
+2019-11-23
+  CoreV3
+    - added all the basic interface, glowbox parts and the sevenSegmentDisplay
+    - added the canvas element as a proxy object to the core layer (which uses
+      the image element behind the scenes, which means there's a little extra
+      code in the 'element' section of the console to handle this odd
+      situation.. I might look into that. Maybe creating a 'canvas' element in
+      the engine that is just a copy of the image element, but has a different
+      name)
+
+
 2019-11-22
   CoreV3
     - redid the core interface to use proxy elements

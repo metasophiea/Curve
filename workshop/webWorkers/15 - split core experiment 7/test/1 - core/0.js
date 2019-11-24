@@ -97,6 +97,7 @@ _canvas_.core.meta.go = function(){
         });
         setTimeout(_canvas_.core.render.frame,1100);
     //canvas
+        //this is a method of using the image element as a destination for canvas data
         _canvas_.core.element.create('image','test_image_2').then(image => {
             image.unifiedAttribute({
                 x:80, y:150, width:60, height:60, 
@@ -115,6 +116,20 @@ _canvas_.core.meta.go = function(){
             canvasContext.fillRect(0,15,40,20);
 
             createImageBitmap(canvas).then(bitmap => { image.imageBitmap(bitmap); }).then(() => { _canvas_.core.render.frame(); });
+        });
+        _canvas_.core.element.create('canvas','test_canvas_1').then(canvas => {
+            _canvas_.core.arrangement.append(canvas);
+            canvas.unifiedAttribute({
+                x:150, y:150, width:60, height:60, 
+            }).then(() => {
+                canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.732,g:0.756,b:0.892,a:1});
+                canvas._.fillRect(canvas.$(5),canvas.$(5),canvas.$(60),canvas.$(60));
+                canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.107,g:0.722,b:0.945,a:1});
+                canvas._.fillRect(canvas.$(0),canvas.$(0),canvas.$(20),canvas.$(20));
+                canvas._.fillStyle = _canvas_.library.math.convertColour.obj2rgba({r:0.859,g:0.573,b:0.754,a:1});
+                canvas._.fillRect(canvas.$(0),canvas.$(15),canvas.$(40),canvas.$(20));
+                canvas.requestUpdate();
+            });
         });
     //clipping
         _canvas_.core.element.create('group','test_clippingGroup_1').then(clippingGroup => {

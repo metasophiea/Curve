@@ -1,4 +1,6 @@
-this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url='' ){
+this.image = function(name=null, x=0, y=0, width=10, height=10, angle=0, anchor={x:0,y:0}, ignored=false, url=''){
+    dev.log.partBasic('.image('+name+','+x+','+y+','+width+','+height+','+angle+','+JSON.stringify(anchor)+','+ignored+','+url+')'); //#development
+
     return new Promise((resolve, reject) => {
         _canvas_.core.element.create('image',name).then(image => { 
             image.unifiedAttribute({ 
@@ -17,5 +19,7 @@ this.image = function( name=null, x=0, y=0, width=10, height=10, angle=0, anchor
 };
 
 interfacePart.partLibrary.basic.image = function(name,data){ 
-    return interfacePart.collection.basic.image( name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url );
+    return interfacePart.collection.basic.image(
+        name, data.x, data.y, data.width, data.height, data.angle, data.anchor, data.ignored, data.url
+    );
 };

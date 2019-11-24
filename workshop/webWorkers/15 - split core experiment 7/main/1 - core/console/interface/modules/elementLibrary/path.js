@@ -49,8 +49,8 @@ this.path = function(_id,_name){
         if(useCache && points == undefined){ return resolvedPromise(cashedAttributes.points); } cashedAttributes.points = points;
         return executeMethod('points',[points]);
     }; 
-    this.pointsAsXYArray = function(points,useCache=useCache_default){
-        dev.log.elementLibrary(' - path.pointsAsXYArray('+points+')'); //#development
+    this.pointsAsXYArray = function(pointsXY,useCache=useCache_default){
+        dev.log.elementLibrary(' - path.pointsAsXYArray('+pointsXY+')'); //#development
         function pointsToXYArray(points){ 
             const output = [];
             for(let a = 0; a < points.length; a+=2){ output.push({x:points[a], y:points[a+1]}); }

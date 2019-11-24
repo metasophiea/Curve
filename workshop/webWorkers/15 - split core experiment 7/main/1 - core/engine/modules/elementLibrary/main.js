@@ -10,6 +10,7 @@
 {{include:path.js}}
 
 {{include:image.js}}
+{{include:canvas.js}}
 
 {{include:character.js}}
 {{include:characterString.js}}

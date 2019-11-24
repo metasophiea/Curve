@@ -26,12 +26,12 @@ this.element = new function(){
     this.create = function(type,name){
         dev.log.interface('.element.create('+type+','+name+')'); //#development
         return new Promise((resolve, reject) => {
+            if(elementLibrary[type] == undefined){
+                console.warn('interface.element.create - unknown element type "'+type+'"');
+                resolve();
+                return;
+            }
             communicationModule.run('element.create',[type,name],id => {
-                if(elementLibrary[type] == undefined){
-                    console.warn('interface.element.create - unknown element type "'+type+'"');
-                    resolve();
-                    return;
-                }
                 resolve( elementRegistry[id] = new elementLibrary[type](id,name,communicationModule,dev) )
             });
         });

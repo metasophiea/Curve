@@ -99,7 +99,7 @@ this.group = function(_id,_name){
     };
     this.prepend = function(element){
         dev.log.elementLibrary(' - group.prepend('+JSON.stringify(element)+')'); //#development
-        return executeMethod('prepend',[element.getId(),result => {if(result){ cashedAttributes.children.unshift(element); }}]);
+        return executeMethod('prepend',[element.getId()],result => {if(result){ cashedAttributes.children.unshift(element); }});
     };
     this.remove = function(element){
         dev.log.elementLibrary(' - group.remove('+JSON.stringify(element)+')'); //#development
