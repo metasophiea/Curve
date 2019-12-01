@@ -6,27 +6,29 @@ this.glowbox_path = function(
     dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
 ){
     dev.log.partDisplay('.glowbox_path('+name+','+x+','+y+','+JSON.stringify(points)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
-    return new Promise((resolve, reject) => { (async () => {
-        
-        //elements 
-            const [object, polygon] = await Promise.all([
-                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
-                _canvas_.interface.part.builder('basic', 'path', 'light', {pointsAsXYArray:points, looping:looping, jointType:jointType, capType:capType, colour:dimStyle}),
-            ]);
-            object.append(polygon);
+    
+    //elements 
+        const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+        const path = interfacePart.builder('basic','path','light',{ 
+            pointsAsXYArray:points, 
+            looping:looping, 
+            colour:dimStyle,
+            jointType:jointType,
+            capType:capType,
+        });
+            object.append(path);
 
-        //methods
-            object.on = function(){ 
-                dev.log.partDisplay('.glowbox_path.on()'); //#development
-                polygon.colour(glowStyle);
-            };
-            object.off = function(){ 
-                dev.log.partDisplay('.glowbox_path.off()'); //#development
-                polygon.colour(dimStyle);
-            };
+    //methods
+        object.on = function(){
+            dev.log.partDisplay('.glowbox_path.on()'); //#development
+            path.colour(glowStyle);
+        };
+        object.off = function(){
+            dev.log.partDisplay('.glowbox_path.off()'); //#development
+            path.colour(dimStyle);
+        };
 
-        resolve(object);
-    })() });
+    return object;
 };
 
 interfacePart.partLibrary.display.glowbox_path = function(name,data){ 

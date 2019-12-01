@@ -82,6 +82,14 @@
     };
     communicationModule.function['element.executeMethod'] = function(id,method,argumentList=[]){
         dev.log.service('.element.executeMethod('+id+','+method+','+JSON.stringify(argumentList)+')'); //#development
+        if(id == -1){
+            dev.log.service('.element.executeMethod -> id was -1, no action will be attempted'); //#development
+            return null;
+        }
+        if(id == undefined){
+            dev.log.service('.element.executeMethod -> id was undefined, no action will be attempted'); //#development
+            return null;
+        }
         return element.getElementFromId(id).interface[method](...argumentList);
     };
 

@@ -1,7 +1,7 @@
 const callback = new function(){
     const self = this; 
 
-    var callbacks = [
+    const callbacks = [
         'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'onwheel', 'onclick', 'ondblclick',
         'onmouseenterelement', 'onmouseleaveelement',
         'onkeydown', 'onkeyup',
@@ -10,7 +10,7 @@ const callback = new function(){
         return callbacks;
     };
 
-    var elementCallbackStates = {}; 
+    let elementCallbackStates = {}; 
     callbacks.forEach(callbackType => elementCallbackStates[callbackType] = true);
     this.getElementCallbackState = function(type){
         dev.log.callback('.getElementCallbackState('+type+')'); //#development
@@ -58,11 +58,11 @@ const callback = new function(){
         this.coupling = {};
 
     //default
-        for(var a = 0; a < callbacks.length; a++){
+        for(let a = 0; a < callbacks.length; a++){
             this.coupling[callbacks[a]] = function(callbackName){
                 return function(event){
                     dev.log.callback('.coupling.'+callbackName+'('+JSON.stringify(event)+')'); //#development
-                    var data = gatherDetails(event,callbackName,self.functions[callbackName].length);
+                    const data = gatherDetails(event,callbackName,self.functions[callbackName].length);
                     self.functions[callbackName]( data.point.x, data.point.y, event, data.elements );
                 }
             }(callbacks[a]);
@@ -73,13 +73,13 @@ const callback = new function(){
             this.coupling.onmouseenter = function(event){
                 //if appropriate, remove the window scrollbars
                     if(viewport.stopMouseScroll()){ 
-                        interface['document.body.style.overflow']('hidden');
+                        interface.setDocumentAttributes(['body.style.overflow'],['hidden']);
                     }
             };
             this.coupling.onmouseleave = function(event){
                 //if appropriate, replace the window scrollbars
                     if(viewport.stopMouseScroll()){ 
-                        interface['document.body.style.overflow']('');
+                        interface.setDocumentAttributes(['body.style.overflow'],['']);
                     }
             };
 

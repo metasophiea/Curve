@@ -99,7 +99,7 @@ this.group = function(_id,_name){
         function checkForElement(element){ return children.find(a => a == element); }
         function isValidElement(element){
             if( element == undefined ){ return false; }
-            if( element.name.length == 0 ){
+            if( element.name == undefined || element.name.length == 0 ){
                 console.warn('group error: element with no name being inserted into group "'+self.getAddress()+'", therefore; the element will not be added');
                 return false;
             }
@@ -112,11 +112,22 @@ this.group = function(_id,_name){
         }
 
         this.children = function(){return children;};
+        this.syncChildren = function(foreignChildren){
+            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren('+JSON.stringify(foreignChildren)+')'); //#development
+            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
+            this.clear();
+            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
+            foreignChildren.forEach(child => {
+                this.append(child);
+            });
+            dev.log.elementLibrary(type,self.getAddress(),'.syncChildren -> children:'+JSON.stringify(children)); //#development
+        };
         this.getChildByName = function(name){return getChildByName(name);};
         this.getChildIndexByName = function(name){return children.indexOf(children.find(a => a.name == name)); };
         this.contains = function(element){ return checkForElement(element) != undefined; };
         this.append = function(newElement){
             dev.log.elementLibrary(type,self.getAddress(),'.append('+JSON.stringify(newElement)+')'); //#development
+            dev.log.elementLibrary(type,self.getAddress(),'.append -> children: ['+children.map(child => JSON.stringify(child))+']','newElement.name: '+(newElement!=undefined?newElement.name:'')); //#development
 
             if( !isValidElement(newElement) ){ return false; } 
 
@@ -150,7 +161,12 @@ this.group = function(_id,_name){
             newElement.parent = undefined;
             delete childRegistry[newElement.name];
         };
-        this.clear = function(){ children = []; childRegistry = {} };
+        this.clear = function(){
+            dev.log.elementLibrary(type,self.getAddress(),'.clear()'); //#development
+            children = [];
+            childRegistry = {};
+            return true;
+        };
         this.getElementsUnderPoint = function(x,y){
             dev.log.elementLibrary(type,self.getAddress(),'.getElementsUnderPoint('+x+','+y+')'); //#development
 
@@ -250,7 +266,7 @@ this.group = function(_id,_name){
             dev.log.elementLibrary(type,self.getAddress(),'::calculateExtremitiesBox -> self.extremities.points: '+JSON.stringify(self.extremities.points)); //#development
         }
         function updateExtremities(informParent=true){
-            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities()'); //#development
+            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities('+informParent+')'); //#development
            
             //generate extremity points
                 self.extremities.points = [];
@@ -319,6 +335,7 @@ this.group = function(_id,_name){
 
             //get offset from parent
                 const offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                dev.log.elementLibrary(type,self.getAddress(),'::augmentExtremities_add -> generated offset: '+JSON.stringify(offset)); //#development
             //combine offset with group's position, angle and scale to produce new offset for children
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const newOffset = { 
@@ -390,16 +407,27 @@ this.group = function(_id,_name){
         }
 
         this.getOffset = function(){
+            dev.log.elementLibrary(type,self.getAddress(),'.getOffset()'); //#development
+
+            let output = {x:0,y:0,scale:1,angle:0};
+
             if(this.parent){
+                dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> parent found'); //#development
                 const offset = this.parent.getOffset();
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
-                return { 
+                output = { 
                     x: point.x*offset.scale + offset.x,
                     y: point.y*offset.scale + offset.y,
                     scale: offset.scale * scale,
                     angle: offset.angle + angle,
                 };
-            }else{ return {x:x ,y:y ,scale:scale ,angle:angle}; }
+            }else{
+                dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> no parent found'); //#development
+                output = {x:x ,y:y ,scale:scale ,angle:angle};
+            }
+
+            dev.log.elementLibrary(type,self.getAddress(),'.getOffset -> output: '+JSON.stringify(output)); //#development
+            return output;
         };
         this.computeExtremities = computeExtremities;
         this.updateExtremities = updateExtremities;
@@ -498,6 +526,7 @@ this.group = function(_id,_name){
             this.getAddress = self.getAddress;
 
             this.children = function(){ return self.children().map(e => element.getIdFromElement(e)) };
+            this.syncChildren = function(childIds){ self.syncChildren(childIds.map(id => element.getElementFromId(id))); };
             this.getChildByName = function(name){ return element.getIdFromElement(self.getChildByName(name)); };
             this.getChildIndexByName = self.getChildIndexByName;
             this.contains = function(elementId){ return self.contains(element.getElementFromId(elementId)); };

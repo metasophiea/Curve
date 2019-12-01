@@ -1,16 +1,23 @@
-this.canvas = function(_id,_name){
-    dev.log.elementLibrary(' - new canvas('+_id+')'); //#development
+this.canvas = function(_name){
+    dev.log.elementLibrary(' - new canvas('+_name+')'); //#development
 
-    const id = _id;
+    let id = -1;
     this.getId = function(){return id;};
-    const name = _name;
+    this.__idRecieved = function(){};
+    this.__id = function(a){
+        dev.log.elementLibrary(' - canvas.__id('+a+')'); //#development
+        id = a;
+        repush(this);
+        if(this.__idRecieved){this.__idRecieved();}
+    };
+    let name = _name;
     this.getName = function(){return name;};
+    this.setName = function(a){name = a;};
     this.getType = function(){return 'canvas';};
+    this.parent = undefined;
 
-    const useCache_default = true;
     const cashedAttributes = {
         ignored: false,
-        colour: {r:1,g:0,b:0,a:1},
         x: 0,
         y: 0,
         angle: 0,
@@ -19,18 +26,42 @@ this.canvas = function(_id,_name){
         height: 10,
         scale: 1,
         static: false,
-        resolution: 1,
     };
-    function resolvedPromise(data){
-        return new Promise((resolve,reject) => {resolve(data)});
+    const cashedCallbacks = {};
+
+    function repush(self){ 
+        dev.log.elementLibrary(' - image::repush()'); //#development
+        communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+        Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
+        self.requestUpdate();
     }
-    function executeMethod(method,argumentList,postProcessing,transferables){
-        return new Promise((resolve, reject) => { 
-            communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
-                if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
-            },transferables);
-        });
-    }
+
+    this.getAddress = function(){
+        return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
+    };
+    this.getOffset = function(){
+        dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
+
+        let output = {x:0,y:0,scale:1,angle:0};
+
+        if(this.parent){
+            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
+            const offset = this.parent.getOffset();
+            const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
+            output = { 
+                x: point.x*offset.scale + offset.x,
+                y: point.y*offset.scale + offset.y,
+                scale: offset.scale * cashedAttributes.scale,
+                angle: offset.angle + cashedAttributes.angle,
+            };
+        }else{
+            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
+            output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
+        }
+
+        dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+        return output;
+    };
 
     //subCanvas
         const subCanvas = { object:document.createElement('canvas'), context:undefined, resolution:1 };
@@ -51,76 +82,81 @@ this.canvas = function(_id,_name){
         };
         this.requestUpdate = function(){
             createImageBitmap(subCanvas.object).then(bitmap => {
-                executeMethod('imageBitmap',[bitmap],undefined,bitmap);
+                if(id != -1){ communicationModule.run('element.executeMethod',[id,'imageBitmap',[bitmap]],undefined,[bitmap]); }
             });
         };
         this.requestUpdate();
 
-    this.ignored = function(bool,useCache=useCache_default){
+    this.ignored = function(bool){
+        if(bool == undefined){ return cashedAttributes.ignored; }
         dev.log.elementLibrary(' - image.ignored('+bool+')'); //#development
-        if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
-        return executeMethod('ignored',[bool]);
+        cashedAttributes.ignored = bool;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
     };
-    this.x = function(number,useCache=useCache_default){
+    this.x = function(number){
+        if(number == undefined){ return cashedAttributes.x; }
         dev.log.elementLibrary(' - image.x('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
-        return executeMethod('x',[number]);
+        cashedAttributes.x = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
     };
-    this.y = function(number,useCache=useCache_default){
+    this.y = function(number){
+        if(number == undefined){ return cashedAttributes.y; }
         dev.log.elementLibrary(' - image.y('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
-        return executeMethod('y',[number]);
+        cashedAttributes.y = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
     };
-    this.angle = function(number,useCache=useCache_default){
+    this.angle = function(number){
+        if(number == undefined){ return cashedAttributes.angle; }
         dev.log.elementLibrary(' - image.angle('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
-        return executeMethod('angle',[number]);
+        cashedAttributes.angle = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
     };
-    this.anchor = function(anchor,useCache=useCache_default){
+    this.anchor = function(anchor){
+        if(anchor == undefined){ return cashedAttributes.anchor; }
         dev.log.elementLibrary(' - image.anchor('+anchor+')'); //#development
-        if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
-        return executeMethod('anchor',[newAnchor]);
+        cashedAttributes.anchor = anchor;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
     };
-    this.width = function(number,useCache=useCache_default){
+    this.width = function(number){
+        if(number == undefined){ return cashedAttributes.width; }
         dev.log.elementLibrary(' - image.width('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
+        cashedAttributes.width = number;
         updateDimentions();
-        return executeMethod('width',[number]);
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
     };
-    this.height = function(number,useCache=useCache_default){
+    this.height = function(number){
+        if(number == undefined){ return cashedAttributes.height; }
         dev.log.elementLibrary(' - image.height('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
+        cashedAttributes.height = number;
         updateDimentions();
-        return executeMethod('height',[number]);
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
     };
-    this.scale = function(number,useCache=useCache_default){
+    this.scale = function(number){
+        if(number == undefined){ return cashedAttributes.scale; }
         dev.log.elementLibrary(' - image.scale('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
-        return executeMethod('scale',[number]);
+        cashedAttributes.scale = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
     };
-    this.static = function(bool,useCache=useCache_default){
+    this.static = function(bool){
+        if(bool == undefined){ return cashedAttributes.static; }
         dev.log.elementLibrary(' - image.static('+bool+')'); //#development
-        if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
-        return executeMethod('static',[bool]);
+        cashedAttributes.static = bool;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'static',[bool]]); }
     };
-    this.unifiedAttribute = function(attributes,useCache=useCache_default){
+    this.unifiedAttribute = function(attributes){
+        if(attributes == undefined){ return cashedAttributes; }
         dev.log.elementLibrary(' - image.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-        if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
-        Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
         if(attributes.resolution != undefined){
             this.resolution(attributes.resolution);
             delete attributes.resolution;
         }
+        Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
         updateDimentions();
-        return executeMethod('unifiedAttribute',[attributes]);
-    };
-    this.getAddress = function(){
-        dev.log.elementLibrary(' - canvas.getAddress()'); //#development
-        return executeMethod('getAddress',[]);
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
     };
 
     this._dump = function(){
         dev.log.elementLibrary(' - canvas._dump()'); //#development
-        return executeMethod('_dump',[]);
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'_dump',[]]); }
     };
 };

@@ -3,187 +3,113 @@ if(fontName == undefined){fontName = 'Roboto-Regular';}
 var customText = new URL(window.location.href).searchParams.get("text");
 if(customText == undefined){customText = 'How are you today?';}
 
+function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
+
 _canvas_.core.meta.go = function(){
-    _canvas_.core.element.create('rectangle','rectangle_1').then(rectangle => {
-        rectangle.unifiedAttribute({
-            x:10, y:125, width:100, height:100, 
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(rectangle);
-    });
-    _canvas_.core.element.create('character','character_1').then(character => {
-        character.unifiedAttribute({
-            character:'A',
-            font:fontName,
-            x:10, y:125, width:300, height:300, 
-            printingMode:{horizontal:'left',vertical:'top'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(character);
-    });
 
-    _canvas_.core.element.create('rectangle','rectangle_2').then(rectangle => {
-        rectangle.unifiedAttribute({
-            x:200, y:125, width:100, height:100, 
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(rectangle);
-    });
-    _canvas_.core.element.create('character','character_2').then(character => {
-        character.unifiedAttribute({
-            character:'A',
-            font:fontName,
-            x:200, y:125, width:300, height:300, anchor:{x:0,y:0},
-            printingMode:{horizontal:'middle',vertical:'middle'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(character);
-    });
+    let group_1 = _canvas_.core.element.create('group','group_1');
+    group_1.heedCamera(true);
+    _canvas_.core.arrangement.append(group_1);
 
-    _canvas_.core.element.create('rectangle','rectangle_3').then(rectangle => {
-        rectangle.unifiedAttribute({
-            x:350, y:320, width:200, height:200, 
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(rectangle);
-    });
-    _canvas_.core.element.create('character','character_3').then(character => {
-        character.unifiedAttribute({
-            character:'o',
-            font:fontName,
-            x:350, y:320, width:200, height:200,  anchor:{x:0,y:0},
-            printingMode:{horizontal:'left',vertical:'top'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(character);
-    });
+    setTimeout(() => {
+        _canvas_.core.viewport.scale(2);
 
-    _canvas_.core.element.create('rectangle','rectangle_4').then(rectangle => {
-        rectangle.unifiedAttribute({
-            x:600, y:370, width:300, height:100, 
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
+        let rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+        rectangle_1.unifiedAttribute({ x:10, y:10, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_1);
+        let characterString_1 = _canvas_.core.element.create('characterString','characterString_1');
+        characterString_1.unifiedAttribute({
+            string:'circle', font:fontName, x:10, y:10, width:50, height:50, colour:rc(),
+            printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'top'},
         });
-        _canvas_.core.arrangement.append(rectangle);
-    });
-    _canvas_.core.element.create('characterString','characterString_1').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'hcave',
-            font:fontName,
-            x:600, y:370, width:200, height:100, 
-            printingMode:{widthCalculation:'filling', horizontal:'left', vertical:'middle'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(characterString);
-    });
-    _canvas_.core.element.create('characterString','characterString_2').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'cave',
-            font:fontName,
-            x:800, y:370, width:200, height:100, 
-            printingMode:{widthCalculation:'filling', horizontal:'left', vertical:'middle'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(characterString);
-    });
+        group_1.append(characterString_1);
 
-    _canvas_.core.element.create('rectangle','rectangle_5').then(rectangle => {
-        rectangle.unifiedAttribute({
-            x:10, y:400, width:300, height:100, 
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(rectangle);
-    });
-    _canvas_.core.element.create('characterString','characterString_3').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-            font:fontName,
-            x:10, y:500, width:300, height:100, 
-            printingMode:{widthCalculation:'filling', horizontal:'left', vertical:'middle'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(characterString);
-    });
-
-    _canvas_.core.element.create('characterString','characterString_4').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'abcdefghijklmnopqrstuvwxyz',
-            font:fontName,
-            x:10, y:600, width:100, height:100, 
+        let rectangle_2 = _canvas_.core.element.create('rectangle','rectangle_2');
+        rectangle_2.unifiedAttribute({ x:10, y:95, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_2);
+        let characterString_2 = _canvas_.core.element.create('characterString','characterString_2');
+        characterString_2.unifiedAttribute({
+            string:'circle', font:fontName, x:10, y:95, width:50, height:50, colour:rc(),
             printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
-        _canvas_.core.arrangement.append(characterString);
-    });
+        group_1.append(characterString_2);
 
-    _canvas_.core.element.create('characterString','characterString_5').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'0123456789',
-            font:fontName,
-            x:10, y:700, width:100, height:100, 
+        let rectangle_3 = _canvas_.core.element.create('rectangle','rectangle_3');
+        rectangle_3.unifiedAttribute({ x:10, y:160, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_3);
+        let characterString_3 = _canvas_.core.element.create('characterString','characterString_3');
+        characterString_3.unifiedAttribute({
+            string:'circle', font:fontName, x:10, y:160, width:50, height:50, colour:rc(),
             printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'bottom'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
         });
-        _canvas_.core.arrangement.append(characterString);
-    });
+        group_1.append(characterString_3);
 
-    _canvas_.core.element.create('characterString','characterString_6').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'.,:;?!/\\()[]{}#-_\'"|><+=&*~%',
-            font:fontName,
-            x:10, y:800, width:100, height:100, 
-            printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'bottom'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(characterString);
-    });
 
-    _canvas_.core.element.create('characterString','characterString_7').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'Look',
-            font:fontName,
-            x:10, y:900, width:100, height:100, 
-            printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'bottom'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
+        let rectangle_4 = _canvas_.core.element.create('rectangle','rectangle_4');
+        rectangle_4.unifiedAttribute({ x:275, y:10, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_4);
+        let characterString_4 = _canvas_.core.element.create('characterString','characterString_4');
+        characterString_4.unifiedAttribute({
+            string:'circle', font:fontName, x:275, y:10, width:50, height:50, colour:rc(),
+            printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'top'},
         });
-        _canvas_.core.arrangement.append(characterString);
-    });
+        group_1.append(characterString_4);
 
-    _canvas_.core.element.create('rectangle','rectangle_6').then(rectangle => {
-        rectangle.unifiedAttribute({
-            x:350, y:100, width:100, height:100, 
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
+        let rectangle_5 = _canvas_.core.element.create('rectangle','rectangle_5');
+        rectangle_5.unifiedAttribute({ x:275, y:95, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_5);
+        let characterString_5 = _canvas_.core.element.create('characterString','characterString_5');
+        characterString_5.unifiedAttribute({
+            string:'circle', font:fontName, x:275, y:95, width:50, height:50, colour:rc(),
+            printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'middle'},
         });
-        _canvas_.core.arrangement.append(rectangle);
-    });
-    _canvas_.core.element.create('characterString','characterString_8').then(characterString => {
-        characterString.unifiedAttribute({
-            string:customText,
-            font:fontName,
-            x:350, y:100, width:100, height:100, 
-            printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'bottom'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(characterString);
-    });
+        group_1.append(characterString_5);
 
-    _canvas_.core.element.create('rectangle','rectangle_7').then(rectangle => {
-        rectangle.unifiedAttribute({
-            x:350, y:200, width:200, height:100, 
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
+        let rectangle_6 = _canvas_.core.element.create('rectangle','rectangle_6');
+        rectangle_6.unifiedAttribute({ x:275, y:160, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_6);
+        let characterString_6 = _canvas_.core.element.create('characterString','characterString_6');
+        characterString_6.unifiedAttribute({
+            string:'circle', font:fontName, x:275, y:160, width:50, height:50, colour:rc(),
+            printingMode:{widthCalculation:'absolute', horizontal:'middle', vertical:'bottom'},
         });
-        _canvas_.core.arrangement.append(rectangle);
-    });
-    _canvas_.core.element.create('characterString','characterString_9').then(characterString => {
-        characterString.unifiedAttribute({
-            string:'How are you today?',
-            font:fontName,
-            x:350, y:200, width:100, height:100, 
-            printingMode:{widthCalculation:'absolute', horizontal:'left', vertical:'middle'},
-            colour:{r:Math.random(),g:Math.random(),b:Math.random(),a:1}
-        });
-        _canvas_.core.arrangement.append(characterString);
-    });
+        group_1.append(characterString_6);
 
-    setTimeout(()=>{_canvas_.core.render.frame();},500);
-    setTimeout(()=>{ _canvas_.core.render.frame();},1500);
+
+        let rectangle_7 = _canvas_.core.element.create('rectangle','rectangle_7');
+        rectangle_7.unifiedAttribute({ x:540, y:10, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_7);
+        let characterString_7 = _canvas_.core.element.create('characterString','characterString_7');
+        characterString_7.unifiedAttribute({
+            string:'circle', font:fontName, x:540, y:10, width:50, height:50, colour:rc(),
+            printingMode:{widthCalculation:'absolute', horizontal:'right', vertical:'top'},
+        });
+        group_1.append(characterString_7);
+
+        let rectangle_8 = _canvas_.core.element.create('rectangle','rectangle_8');
+        rectangle_8.unifiedAttribute({ x:540, y:95, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_8);
+        let characterString_8 = _canvas_.core.element.create('characterString','characterString_8');
+        characterString_8.unifiedAttribute({
+            string:'circle', font:fontName, x:540, y:95, width:50, height:50, colour:rc(),
+            printingMode:{widthCalculation:'absolute', horizontal:'right', vertical:'middle'},
+        });
+        group_1.append(characterString_8);
+
+        let rectangle_9 = _canvas_.core.element.create('rectangle','rectangle_9');
+        rectangle_9.unifiedAttribute({ x:540, y:160, width:50, height:50, colour:rc() });
+        group_1.append(rectangle_9);
+        let characterString_9 = _canvas_.core.element.create('characterString','characterString_9');
+        characterString_9.unifiedAttribute({
+            string:'circle', font:fontName, x:540, y:160, width:50, height:50, colour:rc(),
+            printingMode:{widthCalculation:'absolute', horizontal:'right', vertical:'bottom'},
+        });
+        group_1.append(characterString_9);
+
+
+    
+
+        setTimeout(()=>{_canvas_.core.render.frame();},200);
+
+    }, 500);
 };

@@ -5,27 +5,23 @@ this.glowbox_circle = function(
     dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
 ){
     dev.log.partDisplay('.glowbox_circle('+name+','+x+','+y+','+radius+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
-    return new Promise((resolve, reject) => { (async () => {
-        
-        //elements 
-            const [object, circle] = await Promise.all([
-                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y}),
-                _canvas_.interface.part.builder('basic', 'circle', 'light', {radius:radius, colour:dimStyle}),
-            ]);
+
+    //elements 
+        const object = interfacePart.builder('basic','group',name,{x:x, y:y});
+        const circle = interfacePart.builder('basic','circle','light',{ radius:radius, colour:dimStyle });
             object.append(circle);
 
-        //methods
-            object.on = function(){ 
-                dev.log.partDisplay('.glowbox_circle.on()'); //#development
-                circle.colour(glowStyle);
-            };
-            object.off = function(){ 
-                dev.log.partDisplay('.glowbox_circle.off()'); //#development
-                circle.colour(dimStyle);
-            };
+    //methods
+        object.on = function(){
+            dev.log.partDisplay('.glowbox_circle.on()'); //#development
+            circle.colour(glowStyle);
+        };
+        object.off = function(){
+            dev.log.partDisplay('.glowbox_circle.off()'); //#development
+            circle.colour(dimStyle);
+        };
 
-        resolve(object);
-    })() });
+    return object;
 };
 
 interfacePart.partLibrary.display.glowbox_circle = function(name,data){ 

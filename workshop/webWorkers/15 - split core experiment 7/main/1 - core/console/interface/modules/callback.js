@@ -64,11 +64,11 @@ this.callback = new function(){
         communicationModule.run('callback.removeCallback',[element.getId(),callbackType]);
     };
 
-    let allowDeepElementCallback = false;
-    this.allowDeepElementCallback = function(bool){
-        dev.log.interface('.callback.allowDeepElementCallback('+bool+')'); //#development
-        if(bool==undefined){return allowDeepElementCallback;}
-        allowDeepElementCallback = bool;
+    let allowHiddenElementCallback = true;
+    this.allowHiddenElementCallback = function(bool){
+        dev.log.interface('.callback.allowHiddenElementCallback('+bool+')'); //#development
+        if(bool==undefined){return allowHiddenElementCallback;}
+        allowHiddenElementCallback = bool;
     };
 
     this.functions = {};
@@ -106,7 +106,7 @@ this.callback = new function(){
                 communicationModule.run('callback.coupling.'+callbackName,[sudoEvent]);
             };
             communicationModule.function['callback.'+callbackName] = function(x,y,event,elements){
-                if(allowDeepElementCallback){
+                if(allowHiddenElementCallback){
                     elements.forEach(id => { callbackRegistry.call(id,callbackName,x,y,event); });
                 }else{
                     callbackRegistry.call(elements[0],callbackName,x,y,event);

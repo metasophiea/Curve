@@ -7,10 +7,10 @@ this.collection = new function(){
         interfacePart.partLibrary.display = {};
         {{include:display/*}} /**/
     };
-    // this.control = new function(){
-    //     interfacePart.partLibrary.control = {};
-    //     {{include:control/*}} /**/
-    // };
+    this.control = new function(){
+        interfacePart.partLibrary.control = {};
+        {{include:control/*}} /**/
+    };
     // this.dynamic = new function(){
     //     interfacePart.partLibrary.dynamic = {};
     //     {{include:dynamic/*}} /**/

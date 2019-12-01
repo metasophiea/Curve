@@ -1,53 +1,46 @@
-let dynamicGroup;
-function rc(){return {r:Math.random(),g:Math.random(),b:Math.random(),a:1};}
+let group_1;
+let group_2;
+let rectangle_1;
+let rectangle_2;
+let rectangle_3;
 
 _canvas_.core.meta.go = function(){
 
-    _canvas_.core.element.create('group','dynamicGroup').then(group => {
-        dynamicGroup = group;
-        group.unifiedAttribute({ heedCamera:true });
-        _canvas_.core.arrangement.append(group);
+    group_1 = _canvas_.core.element.create('group','group_1');
+    group_1.unifiedAttribute({ x:100, y:100 });
+    _canvas_.core.arrangement.append(group_1);
 
+    group_2 = _canvas_.core.element.create('group','group_2');
+    group_2.unifiedAttribute({ x:50 });
+    group_1.append(group_2);
 
+    rectangle_1 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_1.unifiedAttribute({ width:30, height:30, colour:{r:1,g:0,b:0,a:1} });
+    group_1.append(rectangle_1);
 
-        _canvas_.core.element.create('rectangle','rectangle_1').then(rectangle => {
-            rectangle.unifiedAttribute({ width:200, height:20, colour:rc() });
-            dynamicGroup.append(rectangle);
-        });
-        _canvas_.core.element.create('rectangle','rectangle_2').then(rectangle => {
-            rectangle.unifiedAttribute({ width:30, height:30, colour:rc() });
-            dynamicGroup.append(rectangle);
-        });
-        _canvas_.core.element.create('rectangle','rectangle_3').then(rectangle => {
-            rectangle.unifiedAttribute({ x:30, y:30, width:30, height:30, colour:rc() });
-            dynamicGroup.append(rectangle);
-        });
-        _canvas_.core.element.create('rectangle','rectangle_4').then(rectangle => {
-            rectangle.unifiedAttribute({ x:60, y:60, width:30, height:30, colour:rc() });
-            dynamicGroup.append(rectangle);
-        });
-        _canvas_.core.element.create('rectangle','rectangle_5').then(rectangle => {
-            rectangle.unifiedAttribute({ x:90, y:90, width:30, height:30, colour:rc() });
-            dynamicGroup.append(rectangle);
-        });
-        _canvas_.core.element.create('rectangle','rectangle_6').then(rectangle => {
-            rectangle.unifiedAttribute({ x:120, y:120, width:200, height:20, colour:rc() });
-            dynamicGroup.append(rectangle);
-        });
-    });
+    rectangle_2 = _canvas_.core.element.create('rectangle','rectangle_2');
+    rectangle_2.unifiedAttribute({ width:30, height:30, colour:{r:0,g:1,b:0,a:1} });
+    group_2.append(rectangle_2);
 
-    var tick = 0;
-    var tickStep = 0.005;
+    rectangle_3 = _canvas_.core.element.create('rectangle','rectangle_1');
+    rectangle_3.unifiedAttribute({ x:50, width:30, height:30, colour:{r:0,g:0,b:1,a:1} });
+    group_2.append(rectangle_3);
+
+    let tick = 0;
     setInterval(function(){
-        var s_1 = ( 1 + Math.sin( Math.PI*tick ) );
-        var s_2 = ( 1 + Math.sin( Math.PI*0.5 + Math.PI*tick ) );
-    
-        _canvas_.core.viewport.scale( 1 + (s_2-0.5) );
-        _canvas_.core.viewport.position(s_1*50,s_1*250);
-        _canvas_.core.viewport.angle(-s_1);
-    
-        tick+=tickStep;
+        group_1.angle(group_1.angle()+0.04);
+        group_1.scale(1 + 0.5*Math.sin( 2*Math.PI*tick ));
+
+        group_2.angle(group_2.angle()+0.04);
+        group_2.scale(1 + 0.5*Math.sin( 2*Math.PI*tick ));
+
+        rectangle_3.angle(rectangle_3.angle()+0.04);
+        rectangle_3.scale(1 + 0.5*Math.sin( 2*Math.PI*tick + Math.PI/2));
+
+        tick += 0.01;
     },1000/40);
-    
-    _canvas_.core.render.active(true);
 };
+
+_canvas_.core.render.active(true);
+
+setTimeout(()=>{_canvas_.core.arrangement.printTree()},500);

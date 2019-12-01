@@ -96,11 +96,12 @@ this.image = function(_id,_name){
             };
             function loadImage(url){
                 dev.log.elementLibrary(type,self.getAddress(),'::loadImage('+url+')'); //#development
-                image.url = url;
                 fetch(url).then( response => {
+
                     if(response.status != 200){
                         dev.log.elementLibrary(type,self.getAddress(),'::loadImage -> image was not found at url: '+url); //#development
-                        console.warn(type,id,self.getAddress(),'cound not find image at: '+url);
+                        console.warn(type,id,self.getAddress(),'could not find image at: '+url);
+                        loadImage(image.defaultURL);
                         return;
                     }
 
@@ -117,10 +118,10 @@ this.image = function(_id,_name){
                 });
                 image.isLoaded = false; 
             }
-            setTimeout(()=>{ if(image.bitmap == undefined){ loadImage(image.defaultURL); } },1000);
+            setTimeout(()=>{ if(image.url == undefined){ loadImage(image.defaultURL); } },100);
 
-            this.imageURL = function(a){
-                dev.log.elementLibrary(type,self.getAddress(),'.imageURL('+a+')'); //#development
+            this.url = function(a){
+                dev.log.elementLibrary(type,self.getAddress(),'.url('+a+')'); //#development
 
                 if(a==undefined){return image.url;}
                 if(a==image.url){return;} //no need to reload the same image
@@ -130,8 +131,8 @@ this.image = function(_id,_name){
 
                 loadImage(image.url);
             };
-            this.imageBitmap = function(a){
-                dev.log.elementLibrary(type,self.getAddress(),'.imageBitmap('+JSON.stringify(a)+')'); //#development
+            this.bitmap = function(a){
+                dev.log.elementLibrary(type,self.getAddress(),'.bitmap('+JSON.stringify(a)+')'); //#development
 
                 if(a==undefined){return image.bitmap;}
                 image.bitmap = a;
@@ -143,7 +144,7 @@ this.image = function(_id,_name){
 
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static }; } 
+                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, angle:angle, anchor:anchor, width:width, height:height, scale:scale, static:static, url:image.url }; } 
                 dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
 
                 allowComputeExtremities = false;
@@ -289,7 +290,7 @@ this.image = function(_id,_name){
             dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> point'+JSON.stringify(point)); //#development
@@ -380,8 +381,8 @@ this.image = function(_id,_name){
             this.height = self.height;
             this.scale = self.scale;
             this.static = self.static;
-            this.imageURL = self.imageURL;
-            this.imageBitmap = self.imageBitmap;
+            this.url = self.url;
+            this.bitmap = self.bitmap;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
             this._dump = self._dump;

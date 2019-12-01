@@ -1,21 +1,33 @@
 this.viewport = new function(){
+    const cachedValues = {
+        position:{x:0,y:0},
+        scale:1,
+        angle:0,
+    };
+
     this.refresh = function(){
         dev.log.interface('.viewport.refresh()'); //#development
         communicationModule.run('viewport.refresh',[]);
     };
     this.position = function(x,y){
+        if(x==undefined || y==undefined){ return cachedValues.position; }
+        cachedValues.position = {x:x,y:y};
         dev.log.interface('.viewport.position('+x+','+y+')'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.position',[x,y],resolve);
         });
     };
     this.scale = function(s){
+        if(s==undefined){ return cachedValues.scale; }
+        cachedValues.scale = s;
         dev.log.interface('.viewport.scale('+s+')'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.scale',[s],resolve);
         });
     };
     this.angle = function(a){
+        if(a==undefined){ return cachedValues.angle; }
+        cachedValues.angle = a;
         dev.log.interface('.viewport.angle('+a+')'); //#development
         return new Promise((resolve, reject) => {
             communicationModule.run('viewport.angle',[a],resolve);

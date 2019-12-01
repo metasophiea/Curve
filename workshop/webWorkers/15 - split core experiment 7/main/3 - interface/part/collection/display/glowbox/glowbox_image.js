@@ -5,27 +5,23 @@ this.glowbox_image = function(
     dimURL='',
 ){
     dev.log.partDisplay('.glowbox_image('+name+','+x+','+y+','+width+','+height+','+angle+','+glowURL+','+dimURL+')'); //#development
-    return new Promise((resolve, reject) => { (async () => {
+    
+    //elements 
+        const object = interfacePart.builder('basic','group',name,{x:x, y:y});
+        const backing = interfacePart.builder('basic','image','backing',{width:width, height:height, angle:angle, url:dimURL});
+        object.append(backing);
 
-        //elements
-            const [object, image] = await Promise.all([
-                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y}),
-                _canvas_.interface.part.builder('basic', 'image', 'light', {width:width, height:height, angle:angle, url:dimURL}),
-            ]);
-            object.append(image);
+    //methods
+        object.on = function(){
+            dev.log.partDisplay('.glowbox_image.on()'); //#development
+            backing.url(glowURL);
+        };
+        object.off = function(){
+            dev.log.partDisplay('.glowbox_image.off()'); //#development
+            backing.url(dimURL);
+        };
 
-        //methods
-            object.on = function(){
-                dev.log.partDisplay('.glowbox_image.on()'); //#development
-                image.imageURL(glowURL);
-            };
-            object.off = function(){
-                dev.log.partDisplay('.glowbox_image.off()'); //#development
-                image.imageURL(dimURL);
-            };
-
-        resolve(object);
-    })() });
+    return object;
 };
 
 interfacePart.partLibrary.display.glowbox_image = function(name,data){ 

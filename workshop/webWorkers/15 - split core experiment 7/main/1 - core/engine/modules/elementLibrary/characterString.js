@@ -2,178 +2,161 @@ this.characterString = function(_id,_name){
     const self = this;
 
     //attributes 
+        const innerGroup = element.create_skipDatabase('group','innerGroup');
+            innerGroup.parent = this;
+        const vectorLibrary = elementLibrary.character.vectorLibrary;
         //protected attributes
             const type = 'characterString'; 
             this.getType = function(){return type;}
             const id = _id; 
             this.getId = function(){return id;}
-            const vectorLibrary = elementLibrary.character.vectorLibrary;
-            const defaultFontName = 'defaultThin';
-            const group = element.create_skipDatabase('group','characterString_group');
-
-        //simple attributes
             this.name = _name;
-            this.parent = undefined;
-            this.dotFrame = false; group.dotFrame = this.dotFrame;
-            this.extremities = group.extremities;
-            let ignored = false;
-            this.ignored = function(a){
-                if(a==undefined){return ignored;}     
-                ignored = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.ignored('+a+')'); //#development
-                group.ignored(a);
-            };
-            let colour = {r:1,g:0,b:0,a:1};
-            this.colour = function(a){
-                if(a==undefined){return colour;}     
-                colour = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
-                recolourCharacters();
-            };
 
-        //addressing
-            this.getAddress = function(){ return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + this.name; };
-        
-        //attributes pertinent to extremity calculation
-            let x = 0;
-            let y = 0;
-            let angle = 0;
-            let anchor = {x:0,y:0};
+            this.parent = undefined;
+            this.dotFrame = false; innerGroup.dotFrame = this.dotFrame;
+            this.extremities = innerGroup.extremities;
+            this.ignored = innerGroup.ignored;
+            this.getAddress = innerGroup.getAddress;
+        //simple attributes
+            let colour = {r:1,g:0,b:0,a:1};
             let width = 10;
             let height = 10;
-            let scale = 1;
-            let font = defaultFontName;
-            let string = ''; 
-            let spacing = 0.5; 
+            let font = 'defaultThin';
+            let string = 'Hello';
+            let spacing = 0.5;
             let interCharacterSpacing = 0;
-            let printingMode = {
+            let printingMode =  {
                 widthCalculation:'absolute', //filling / absolute
                 horizontal:'left', //left / middle / right
                 vertical:'bottom', //top  / middle / bottom
             };
-            let static = false;
-            this.x = function(a){ 
-                if(a==undefined){return scale;} 
-                dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
-                x = a;
-                group.x(a);
-            };
-            this.y = function(a){ 
-                if(a==undefined){return scale;} 
-                y = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
-                group.y(a);
-            };
-            this.angle = function(a){ 
-                if(a==undefined){return angle;} 
-                angle = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
-                group.angle(a);
-            };
-            this.anchor = function(a){ 
-                if(a==undefined){return anchor;} 
-                anchor = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.anchor('+a+')'); //#development
-                group.anchor(a);
-            };
-            this.width = function(a){
-                if(a==undefined){return width;}  
-                width = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
-                generateStringCharacters(); 
-            };
-            this.height = function(a){
-                if(a==undefined){return height;} 
-                height = a; 
-                dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
-                generateStringCharacters(); 
-            };
-            this.scale = function(a){ 
-                if(a==undefined){return scale;} 
-                scale = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.scale('+a+')'); //#development
-                group.scale(a);
-            };
-            this.font = function(newFont){
-                if(newFont==undefined){return font;}
-                dev.log.elementLibrary(type,self.getAddress(),'.font('+newFont+')'); //#development
-
-                if( elementLibrary.character.isApprovedFont(newFont) ){
-                    if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
-                    if( !elementLibrary.character.isFontLoaded(newFont) ){ setTimeout(function(){ self.font(newFont); },100,newFont); }
-                    dev.log.elementLibrary(type,self.getAddress(),'.font() -> isLoaded:'+elementLibrary.character.isFontLoaded(newFont)); //#development
-
-                    font = !elementLibrary.character.isFontLoaded(newFont) ? defaultFontName : newFont;
-                }else{
-                    report.warning('elementLibrary.character : error : unknown font:',newFont);
-                    font = defaultFontName;
-                }
-
-                generateStringCharacters(); 
-            };
-            this.string = function(a){ 
-                if(a==undefined){return string;} 
-                string = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.string('+a+')'); //#development
-                generateStringCharacters(); 
-            };
-            this.spacing = function(a){ 
-                if(a==undefined){return spacing;} 
-                spacing = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.spacing('+a+')'); //#development
-                generateStringCharacters(); 
-            };
-            this.character = function(a){
-                if(a==undefined){return character;} 
-                dev.log.elementLibrary(type,self.getAddress(),'.character('+a+')'); //#development
-                character = a; 
-                producePoints();
-            };
-            this.interCharacterSpacing = function(a){
-                if(a==undefined){return interCharacterSpacing;}
-                interCharacterSpacing = a;
-                dev.log.elementLibrary(type,self.getAddress(),'.interCharacterSpacing('+a+')'); //#development
-                generateStringCharacters();
-            }
-            this.printingMode = function(a){
-                if(a==undefined){return printingMode;} 
-                printingMode = {
-                    widthCalculation: a.widthCalculation != undefined || a.widthCalculation != '' ? a.widthCalculation : printingMode.widthCalculation,
-                    horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
-                    vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
+        //advanced use attributes
+            let allowGenerateStringCharacters = true;
+        //addressing
+            this.getAddress = function(){ return (self.parent != undefined ? self.parent.getAddress() : '') + '/' + self.name; };
+        //attributes pertinent to extremity calculation
+            this.x = innerGroup.x;
+            this.y = innerGroup.y;
+            this.angle = innerGroup.angle;
+            this.scale = innerGroup.scale;
+                this.colour = function(a){
+                    if(a==undefined){return colour;}     
+                    colour = a;
+                    dev.log.elementLibrary(type,self.getAddress(),'.colour('+JSON.stringify(a)+')'); //#development
+                    recolourCharacters();
                 };
-                dev.log.elementLibrary(type,self.getAddress(),'.printingMode('+JSON.stringify(printingMode)+')'); //#development
-
-                generateStringCharacters();
-            };
-            this.static = function(a){
-                if(a==undefined){return static;}  
-                static = a;  
-                dev.log.elementLibrary(type,self.getAddress(),'.static('+a+')'); //#development
-                group.static(a);
-            };
-
+                this.width = function(a){
+                    if(a==undefined){return width;}  
+                    width = a;  
+                    dev.log.elementLibrary(type,self.getAddress(),'.width('+a+')'); //#development
+                    if(allowGenerateStringCharacters){generateStringCharacters();} 
+                };
+                this.height = function(a){
+                    if(a==undefined){return height;} 
+                    height = a; 
+                    dev.log.elementLibrary(type,self.getAddress(),'.height('+a+')'); //#development
+                    if(allowGenerateStringCharacters){generateStringCharacters();} 
+                };
+                this.font = function(newFont){
+                    if(newFont==undefined){return font;}
+                    dev.log.elementLibrary(type,self.getAddress(),'.font('+newFont+')'); //#development
+    
+                    if( elementLibrary.character.isApprovedFont(newFont) ){
+                        dev.log.elementLibrary(type,self.getAddress(),'.font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
+                        if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
+                        dev.log.elementLibrary(type,self.getAddress(),'.font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
+                        if( !elementLibrary.character.isFontLoaded(newFont) ){ 
+                            const timeoutId = setTimeout(function(){ 
+                                dev.log.elementLibrary(type,self.getAddress(),'.font() -> internal rerun < '+timeoutId); //#development
+                                self.font(newFont);
+                            }, 100, newFont);
+                            dev.log.elementLibrary(type,self.getAddress(),'.font() -> internal rerun > '+timeoutId); //#development
+                            return;
+                        }
+    
+                        font = !elementLibrary.character.isFontLoaded(newFont) ? defaultFontName : newFont;
+                    }else{
+                        report.warning('elementLibrary.character : error : unknown font:',newFont);
+                        font = defaultFontName;
+                    }
+    
+                    if(allowGenerateStringCharacters){generateStringCharacters();} 
+                };
+                this.string = function(a){ 
+                    if(a==undefined){return string;} 
+                    string = a;
+                    dev.log.elementLibrary(type,self.getAddress(),'.string('+a+')'); //#development
+                    if(allowGenerateStringCharacters){generateStringCharacters();} 
+                };
+                this.spacing = function(a){ 
+                    if(a==undefined){return spacing;} 
+                    spacing = a;
+                    dev.log.elementLibrary(type,self.getAddress(),'.spacing('+a+')'); //#development
+                    if(allowGenerateStringCharacters){generateStringCharacters();} 
+                };
+                this.interCharacterSpacing = function(a){
+                    if(a==undefined){return interCharacterSpacing;}
+                    interCharacterSpacing = a;
+                    dev.log.elementLibrary(type,self.getAddress(),'.interCharacterSpacing('+a+')'); //#development
+                    if(allowGenerateStringCharacters){generateStringCharacters();}
+                };
+                this.printingMode = function(a){
+                    if(a==undefined){return printingMode;} 
+                    printingMode = {
+                        widthCalculation: a.widthCalculation != undefined || a.widthCalculation != '' ? a.widthCalculation : printingMode.widthCalculation,
+                        horizontal: a.horizontal != undefined || a.horizontal != '' ? a.horizontal : printingMode.horizontal,
+                        vertical: a.vertical != undefined || a.vertical != '' ? a.vertical : printingMode.vertical,
+                    };
+                    dev.log.elementLibrary(type,self.getAddress(),'.printingMode('+JSON.stringify(printingMode)+')'); //#development
+    
+                    if(allowGenerateStringCharacters){generateStringCharacters();}
+                };
+            this.static = innerGroup.static;
         //unifiedAttribute
             this.unifiedAttribute = function(attributes){
-                if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
+                if(attributes==undefined){ 
+                    return Object.assign(
+                        {   
+                            colour:colour,
+                            width:width,
+                            height:height,
+                            font:font,
+                            string:string,
+                            spacing:spacing,
+                            interCharacterSpacing:interCharacterSpacing,
+                            printingMode:printingMode,
+                        },
+                        innerGroup.unifiedAttribute()
+                    );
+                } 
                 dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
 
-                Object.keys(attributes).forEach(key => {
-                    dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
-                    try{
-                        self[key](attributes[key]);
-                    }catch(err){
-                        console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                allowGenerateStringCharacters = false;
+                ['colour', 'width', 'height', 'font', 'string', 'spacing', 'interCharacterSpacing', 'printingMode' ].forEach(key => {
+                    if(key in attributes){
+                        dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
+                        try{
+                            self[key](attributes[key]);
+                        }catch(err){
+                            console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
+                            console.warn(err);
+                        }
                     }
+                    delete attributes[key];
                 });
-            };
-         
+                innerGroup.unifiedAttribute(attributes);
+                allowGenerateStringCharacters = true;
+
+                generateStringCharacters();
+            }
     //string
-        var resultingWidth = 0;
-        this.resultingWidth = function(){ return resultingWidth; };
-        function recolourCharacters(){ group.children().forEach(ele => ele.colour(colour)); }
+        let resultingWidth = 0;
+        function recolourCharacters(){
+            innerGroup.children().forEach(ele => ele.colour(colour));
+        }
         function generateStringCharacters(){
-            group.clear();
+            dev.log.elementLibrary(type,self.getAddress(),'::generateStringCharacters()'); //#development
+            innerGroup.clear();
             const tmpString = String(string).split('');
             let characterWidth = width;
 
@@ -221,7 +204,7 @@ this.characterString = function(_id,_name){
                         height:height,
                         colour:colour,
                     });
-                    group.append(tmp);
+                    innerGroup.append(tmp);
 
                     cumulativeWidth += (interCharacterSpacing + tmp.right()) * characterWidth;
                 }
@@ -229,46 +212,44 @@ this.characterString = function(_id,_name){
                 resultingWidth = cumulativeWidth;
 
             //printingMode - horizontal
-                if( printingMode.horizontal == 'middle' ){ children.forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
-                else if( printingMode.horizontal == 'right' ){ children.forEach(a => a.x( a.x() - cumulativeWidth) ); }
+                if( printingMode.horizontal == 'middle' ){ innerGroup.children().forEach(a => a.x( a.x() - cumulativeWidth/2 ) ); }
+                else if( printingMode.horizontal == 'right' ){ innerGroup.children().forEach(a => a.x( a.x() - cumulativeWidth) ); }
+                else{ innerGroup.computeExtremities(); }
         }
-
-    //extremities
-        this.getOffset = group.getOffset;
-        this.computeExtremities = group.computeExtremities;
-        this.updateExtremities = group.updateExtremities;
-
-    //lead render
-        this.render = function(context, offset){ group.render(context, offset); };
-
-    //info dump
-        this._dump = function(){
-            report.info(self.getAddress(),'._dump()');
-            report.info(self.getAddress(),'._dump -> id: '+id);
-            report.info(self.getAddress(),'._dump -> type: '+type);
-            report.info(self.getAddress(),'._dump -> name: '+self.name);
-            report.info(self.getAddress(),'._dump -> address: '+self.getAddress());
-            report.info(self.getAddress(),'._dump -> parent: '+JSON.stringify(self.parent));
-            report.info(self.getAddress(),'._dump -> dotFrame: '+self.dotFrame);
-            report.info(self.getAddress(),'._dump -> extremities: '+JSON.stringify(self.extremities));
-            report.info(self.getAddress(),'._dump -> ignored: '+ignored);
-            report.info(self.getAddress(),'._dump -> colour: '+JSON.stringify(colour));
-            report.info(self.getAddress(),'._dump -> x: '+x);
-            report.info(self.getAddress(),'._dump -> y: '+y);
-            report.info(self.getAddress(),'._dump -> angle: '+angle);
-            report.info(self.getAddress(),'._dump -> anchor: '+anchor);
-            report.info(self.getAddress(),'._dump -> width: '+width);
-            report.info(self.getAddress(),'._dump -> height: '+height);
-            report.info(self.getAddress(),'._dump -> scale: '+scale);
-            report.info(self.getAddress(),'._dump -> font: '+font);
-            report.info(self.getAddress(),'._dump -> string: '+string);
-            report.info(self.getAddress(),'._dump -> interCharacterSpacing: '+interCharacterSpacing);
-            report.info(self.getAddress(),'._dump -> printingMode: '+JSON.stringify(printingMode));
-            report.info(self.getAddress(),'._dump -> string: '+string);
-            report.info(self.getAddress(),'._dump -> printingMode: '+JSON.stringify(printingMode));
-            report.info(self.getAddress(),'._dump -> static: '+static);
+        this.resultingWidth = function(){
+            return resultingWidth;
         };
+    //extremities
+        this.getElementsUnderPoint = innerGroup.getElementsUnderPoint;
+        this.getElementsUnderArea = innerGroup.getElementsUnderArea;
+        this.computeExtremities = function(informParent=true,offset){
+            dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
 
+            //run computeExtremities on inner group, passing the offset values through
+                innerGroup.computeExtremities(false,offset);
+            //update extremities
+                this.updateExtremities(informParent,offset);
+        }
+        this.updateExtremities = function(informParent=true){
+            dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities('+informParent+')'); //#development
+           
+            //grab extremity points and bounding box from inner group
+                self.extremities.points = innerGroup.extremities.points;
+                dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> extremities.points.length: '+self.extremities.points.length); //#development
+                dev.log.elementLibrary(type,self.getAddress(),'::updateExtremities -> self.extremities.boundingBox: '+JSON.stringify(self.extremities.boundingBox)); //#development
+
+            //update parent
+                if(informParent){ if(self.parent){self.parent.updateExtremities();} }
+        }
+        this.getOffset = function(){
+            dev.log.elementLibrary(type,self.getAddress(),'.getOffset()'); //#development
+            return this.parent ? this.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+        };
+    //lead render
+        this.render = innerGroup.render;
+    //info dump
+        this.getTree = innerGroup.getTree;
+        this._dump = innerGroup._dump;
     //interface
         this.interface = new function(){
             this.ignored = self.ignored;
@@ -276,7 +257,6 @@ this.characterString = function(_id,_name){
             this.x = self.x;
             this.y = self.y;
             this.angle = self.angle;
-            this.anchor = self.anchor;
             this.width = self.width;
             this.height = self.height;
             this.scale = self.scale;
@@ -287,6 +267,7 @@ this.characterString = function(_id,_name){
             this.static = self.static;
             this.unifiedAttribute = self.unifiedAttribute;
             this.getAddress = self.getAddress;
+            this.resultingWidth = self.resultingWidth;
             this._dump = self._dump;
         };
 };

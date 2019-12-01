@@ -30,6 +30,7 @@ this.character = function(_id,_name){
             };
             
         //advanced use attributes
+            let allowProducePoints = true;
             let allowComputeExtremities = true;
 
         //addressing
@@ -51,19 +52,19 @@ this.character = function(_id,_name){
             };
             let static = false;
             this.x = function(a){ 
-                if(a==undefined){return scale;} 
+                if(a==undefined){return x;} 
                 x = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.x('+a+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.y = function(a){ 
-                if(a==undefined){return scale;} 
+                if(a==undefined){return y;} 
                 y = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.y('+a+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
             };
             this.angle = function(a){ 
-                if(a==undefined){return scale;} 
+                if(a==undefined){return angle;} 
                 angle = a;
                 dev.log.elementLibrary(type,self.getAddress(),'.angle('+a+')'); //#development
                 if(allowComputeExtremities){computeExtremities();}
@@ -99,26 +100,27 @@ this.character = function(_id,_name){
                 if( elementLibrary.character.isApprovedFont(newFont) ){
                     dev.log.elementLibrary(type,self.getAddress(),'.font() -> fontLoadAttempted: '+elementLibrary.character.fontLoadAttempted(newFont)); //#development
                     if( !elementLibrary.character.fontLoadAttempted(newFont) ){ elementLibrary.character.loadFont(newFont); }
-                    if( !elementLibrary.character.isFontLoaded(newFont) ){
-                        dev.log.elementLibrary(type,self.getAddress(),'.font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
-                        setTimeout(function(){ self.font(newFont); },500,newFont);
-                    }
                     dev.log.elementLibrary(type,self.getAddress(),'.font() -> isLoaded: '+elementLibrary.character.isFontLoaded(newFont)); //#development
+                    if( !elementLibrary.character.isFontLoaded(newFont) ){
+                        setTimeout(function(){ self.font(newFont); },500,newFont);
+                        return;
+                    }
 
                     font = !elementLibrary.character.isFontLoaded(newFont) ? defaultFontName : newFont;
+                    dev.log.elementLibrary(type,self.getAddress(),'.font() -> font set to: "'+font+'"'); //#development
                 }else{
                     report.warning('elementLibrary.character : error : unknown font:',newFont);
                     font = defaultFontName;
                 }
 
-                producePoints();
+                if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
             };
             this.character = function(a){
                 if(a==undefined){return character;} 
                 dev.log.elementLibrary(type,self.getAddress(),'.character('+a+')'); //#development
                 character = a; 
-                producePoints();
+                if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
             };
             this.printingMode = function(a){
@@ -129,7 +131,7 @@ this.character = function(_id,_name){
                 };
                 dev.log.elementLibrary(type,self.getAddress(),'.printingMode('+JSON.stringify(printingMode)+')'); //#development
 
-                producePoints();
+                if(allowProducePoints){producePoints();}
                 if(allowComputeExtremities){computeExtremities();} 
             };
             this.static = function(a){
@@ -144,6 +146,7 @@ this.character = function(_id,_name){
                 if(attributes==undefined){ return { ignored:ignored, colour:colour, x:x, y:y, radius:radius, detail:detail, scale:scale, static:static }; } 
                 dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
 
+                allowProducePoints = false;
                 allowComputeExtremities = false;
                 Object.keys(attributes).forEach(key => {
                     dev.log.elementLibrary(type,self.getAddress(),'.unifiedAttribute -> updating "'+key+'" to '+JSON.stringify(attributes[key])); //#development
@@ -153,8 +156,10 @@ this.character = function(_id,_name){
                         console.warn(type,id,self.getAddress(),'.unifiedAttribute -> unknown attribute "'+key+'" which was being set to "'+JSON.stringify(attributes[key])+'"');
                     }
                 });
+                allowProducePoints = true;
                 allowComputeExtremities = true;
 
+                producePoints();
                 computeExtremities();
             };
 
@@ -166,7 +171,7 @@ this.character = function(_id,_name){
         function producePoints(){
             dev.log.elementLibrary(type,self.getAddress(),'::producePoints()'); //#development
             points = (vectorLibrary[font][character] == undefined ? vectorLibrary[font]['default'].vector : vectorLibrary[font][character].vector).concat([]); //the concat, differentiates the point data
-            if(self.devMode && vectorLibrary[font][character] == undefined){ console.log(self.getAddress()+'::character - unknown character: "'+character+'"'); }
+            dev.log.elementLibrary(type,self.getAddress(),'::producePoints -> vectorLibrary['+font+']['+character+']:'+JSON.stringify(vectorLibrary[font][character])); //#development
 
             //adjust for vertical printingMode
                 let horizontalAdjust = vectorLibrary[font][character] == undefined ? 0 : vectorLibrary[font][character].right;
@@ -290,11 +295,15 @@ this.character = function(_id,_name){
         }
 
     //extremities
-        function computeExtremities(informParent=true,offset){
+        function computeExtremities(informParent=true,offset){ 
             dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
             
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }    
+                if(offset == undefined){
+                    offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0};
+                    dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> no offset provided; generated offset: '+JSON.stringify(offset)); //#development
+                }
+                else{ dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities -> offset provided: '+JSON.stringify(offset)); }//#development
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 const adjusted = { 
@@ -319,7 +328,7 @@ this.character = function(_id,_name){
                 self.extremities.boundingBox = library.math.boundingBoxFromPoints(self.extremities.points);
 
             //// "point in poly" detection currently doesn't understand polys with holes in them, so these complex
-            //// shapes are being simplified to their boudning boxes
+            //// shapes are being simplified to their bounding boxes
                 self.extremities.points = [
                     {x:self.extremities.boundingBox.topLeft.x,y:self.extremities.boundingBox.topLeft.y},
                     {x:self.extremities.boundingBox.bottomRight.x,y:self.extremities.boundingBox.bottomRight.y},

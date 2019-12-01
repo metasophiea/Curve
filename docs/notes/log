@@ -1,10 +1,81 @@
  ------- ------- ------- ------- ------- ------- ------- ------- ------- -------
+2019-12-01
+  CoreV3
+    - got together the checkboxes, the checkboxgrid, the dials and the slides
+    - also the rangeslides
+    - switched-up how callbacks work, so now elements behind other elements,
+      that have a mouse or keyboard interaction, are called. Before; if the
+      element wasn't at the surface it wouldn't be called. This means I need to
+      go over the already created control parts a bit; bit it does make things
+      more like they were in the past, which is great because the list part is
+      next and that relies on non-surface element callbacks being called pretty
+      heavily. And the list part in a behemoth so, I want to change that as
+      little as possible
+
+
+2019-11-30
+  CoreV3
+    - after a couple days of work, I've kinda gotten the group element to work
+      again. There were all sorts of issues with it, regarding elements being
+      added to it at bad times, but hopefully I've worked that stuff out. It's
+      a little messy so, I'm just hoping it holds. I also fixed up the
+      characterString element as that was having issues too, ended up rewriting
+      it and things are pretty smooth now.
+    - got the rest of the graphers in and all the buttons
+
+
+2019-11-27
+  CoreV3
+    - finished up on the proxy elements.. I'm still a little shaky about it, but
+      things seem good so far
+    - redid all the core tests for these new proxy elements
+    - redid the system layer and its tests
+    - began work on redoing the interface layer (little needs to be changed,
+      thankfully. Infact, it's going to be a lot like the old system anyway)
+    - put all the basic interface parts in
+    - glowbox parts are in
+    - added segment display and readout parts
+    - added gauge parts
+    - had a big issue with rapid group addition/removal/clearing, which seems
+      to have been solved. The "__idRecieved" callback that the
+      append/prepend/remove methods set up when the incoming element doesn't
+      have an id, wasn't checking that the element was still to be added when
+      the callback was finally run. In the error's case; the element was being
+      created, added and removed before the element was given it's id; thus when
+      the id arrived the callback was addition was still being performed
+    - encountered another issue with the image element and timing.. it was
+      checking the image.bitmap value to see if anything was there, and if not
+      loading the default image. Of course, if a url had been provided and the
+      data was being collected and extracted, the bitmap value would still be
+      empty when the timer went off, so the url would be overwritten with the
+      one for the default image. Thus it would look like the correct image was
+      set, then suddenly switch to the default image. Now, the timer checks the
+      url value instead, which is a little more sensible.
+    - anyway, first grapher is in
+
+
+2019-11-26
+  CoreV3
+    - started a new version of the element proxies, to remove all Promises and
+      such asynchronous interaction. These new proxies handle all that work
+      themselves allowing the user to work with the elements as was done in the
+      past
+
+
+2019-11-25
+  CoreV3
+    - changed some things in core's proxy objects so that the cached values are
+      returned immediately when requested, instead of being passed through a
+      resolved promise
+    - added the level and gauges display parts
+
+
 2019-11-24
   CoreV3
     - removed that extra code and just made a clone of the image element with
       the name changed to 'canvas'
     - added the sevenSegmentDisplay and sevenSegmentDisplay_static display parts
-      as a sinlge part where one can choose whether you want the static version
+      as a single part where one can choose whether you want the static version
       or not with an argument
     - same as above, but for the sixteenSegmentDisplay
     - created all the readout parts for all types. Same idea with the argument

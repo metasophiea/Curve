@@ -5,15 +5,33 @@ this.arrangement = new function(){
     };
     this.prepend = function(element){
         dev.log.interface('.arrangement.prepend('+JSON.stringify(element)+')'); //#development
-        communicationModule.run('arrangement.prepend',[element.getId()]);
+        if(element.getId() == -1){
+            dev.log.interface('.arrangement.prepend -> element ID is -1'); //#development
+            setTimeout(() => {this.prepend(element);},1);
+        }else{
+            dev.log.interface('.arrangement.prepend -> element ID is '+element.getId()); //#development
+            communicationModule.run('arrangement.prepend',[element.getId()]);
+        }
     };
     this.append = function(element){
         dev.log.interface('.arrangement.append('+JSON.stringify(element)+')'); //#development
-        communicationModule.run('arrangement.append',[element.getId()]);
+        if(element.getId() == -1){
+            dev.log.interface('.arrangement.append -> element ID is -1'); //#development
+            setTimeout(() => {this.append(element);},1);
+        }else{
+            dev.log.interface('.arrangement.append -> element ID is '+element.getId()); //#development
+            communicationModule.run('arrangement.append',[element.getId()]);
+        }
     };
     this.remove = function(element){
         dev.log.interface('.arrangement.remove('+JSON.stringify(element)+')'); //#development
-        communicationModule.run('arrangement.remove',[element.getId()]);
+        if(element.getId() == -1){
+            dev.log.interface('.arrangement.remove -> element ID is -1'); //#development
+            setTimeout(() => {this.remove(element);},1);
+        }else{
+            dev.log.interface('.arrangement.remove -> element ID is '+element.getId()); //#development
+            communicationModule.run('arrangement.remove',[element.getId()]);
+        }
     };
     this.clear = function(){
         dev.log.interface('.arrangement.clear()'); //#development

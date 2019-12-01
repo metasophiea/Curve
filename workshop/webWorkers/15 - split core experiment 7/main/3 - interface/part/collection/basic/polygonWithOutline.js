@@ -1,14 +1,16 @@
 this.polygonWithOutline = function(name=null, points=[], pointsAsXYArray=[], ignored=false, colour={r:1,g:0,b:1,a:1}, thickness=1, lineColour={r:0,g:0,b:0,a:1}){
     dev.log.partBasic('.polygonWithOutline('+name+','+JSON.stringify(points)+','+JSON.stringify(pointsAsXYArray)+','+ignored+','+JSON.stringify(colour)+','+thickness+','+JSON.stringify(lineColour)+')'); //#development
 
-    return new Promise((resolve, reject) => {
-        _canvas_.core.element.create('polygonWithOutline',name).then(polygonWithOutline => { 
-            polygonWithOutline.unifiedAttribute({ ignored:ignored, colour:colour, lineColour:lineColour, thickness:thickness });
-            if(points.length != 0){ polygonWithOutline.points(points); }
-            else{ polygonWithOutline.pointsAsXYArray(pointsAsXYArray); }
-            resolve(polygonWithOutline);
-        });
+    const element = _canvas_.core.element.create('polygonWithOutline',name);
+    element.unifiedAttribute({
+        ignored:ignored,
+        colour:colour,
+        lineColour:lineColour,
+        thickness:thickness,
     });
+    if(points.length != 0){ element.points(points); }
+    else{ element.pointsAsXYArray(pointsAsXYArray); }
+    return element;
 }
 
 interfacePart.partLibrary.basic.polygonWithOutline = function(name,data){ 

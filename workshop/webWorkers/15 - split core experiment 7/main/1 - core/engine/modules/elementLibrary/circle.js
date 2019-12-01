@@ -209,7 +209,7 @@ this.circle = function(_id,_name){
             if(self.devMode){console.log(self.getAddress()+'::computeExtremities');}
 
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
+                if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }
             //calculate adjusted offset based on the offset
                 const point = library.math.cartesianAngleAdjust(x,y,offset.angle);
                 let adjusted = { 

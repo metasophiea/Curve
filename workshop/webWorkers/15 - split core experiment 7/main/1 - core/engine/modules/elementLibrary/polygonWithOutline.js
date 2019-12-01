@@ -258,7 +258,7 @@ this.polygonWithOutline = function(_id,_name){
             dev.log.elementLibrary(type,self.getAddress(),'::computeExtremities('+informParent+','+JSON.stringify(offset)+')'); //#development
              
             //get offset from parent, if one isn't provided
-                if(offset == undefined){ offset = self.parent && !self.static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
+                if(offset == undefined){ offset = self.parent && !static ? self.parent.getOffset() : {x:0,y:0,scale:1,angle:0}; }                
             //calculate points based on the offset
                 self.extremities.points = [];
                 for(let a = 0; a < points.length; a+=2){

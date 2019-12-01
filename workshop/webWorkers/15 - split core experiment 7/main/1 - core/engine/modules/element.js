@@ -27,8 +27,14 @@ const element = new function(){
                 let id = createdElements.findIndex(item => item==undefined);
                 return id != -1 ? id : createdElements.length;
             }
-            function getElementFromId(id){ return createdElements[id]; }
-            function getIdFromElement(element){ return element.getId(); }
+            function getElementFromId(id){ 
+                if(id == undefined){return;}
+                return createdElements[id];
+            }
+            function getIdFromElement(element){ 
+                if(element == undefined){return;}
+                return element.getId();
+            }
 
             this.getElementFromId = getElementFromId;
             this.getIdFromElement = getIdFromElement;

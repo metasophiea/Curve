@@ -5,27 +5,23 @@ this.glowbox_polygon = function(
     dimStyle = {r:0.31,g:0.31,b:0.31,a:1},
 ){
     dev.log.partDisplay('.glowbox_polygon('+name+','+x+','+y+','+JSON.stringify(points)+','+JSON.stringify(glowStyle)+','+JSON.stringify(dimStyle)+')'); //#development
-    return new Promise((resolve, reject) => { (async () => {
-        
-        //elements 
-            const [object, polygon] = await Promise.all([
-                _canvas_.interface.part.builder('basic', 'group', name, {x:x, y:y, angle:angle}),
-                _canvas_.interface.part.builder('basic', 'polygon', 'light', {pointsAsXYArray:points, colour:dimStyle}),
-            ]);
+    
+    //elements 
+        const object = interfacePart.builder('basic','group',name,{x:x, y:y, angle:angle});
+        const polygon = interfacePart.builder('basic','polygon','light',{ pointsAsXYArray:points, colour:dimStyle });
             object.append(polygon);
 
-        //methods
-            object.on = function(){ 
-                dev.log.partDisplay('.glowbox_polygon.on()'); //#development
-                polygon.colour(glowStyle);
-            };
-            object.off = function(){ 
-                dev.log.partDisplay('.glowbox_polygon.off()'); //#development
-                polygon.colour(dimStyle);
-            };
+    //methods
+        object.on = function(){
+            dev.log.partDisplay('.glowbox_polygon.on()'); //#development
+            polygon.colour(glowStyle);
+        };
+        object.off = function(){
+            dev.log.partDisplay('.glowbox_polygon.off()'); //#development
+            polygon.colour(dimStyle);
+        };
 
-        resolve(object);
-    })() });
+    return object;
 };
 
 interfacePart.partLibrary.display.glowbox_polygon = function(name,data){ 

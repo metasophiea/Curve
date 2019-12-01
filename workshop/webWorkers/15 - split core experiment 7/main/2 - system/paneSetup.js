@@ -2,60 +2,51 @@
 _canvas_.system.pane = {};
 
 _canvas_.core.meta.go = function(){
+
     //background
-        _canvas_.core.element.create('group','background').then(group => {
-            _canvas_.core.arrangement.append(group);
-            group.ignored(true);
-            _canvas_.system.pane.background = group;
-            _canvas_.system.pane.b = group;
-        });
+        _canvas_.system.pane.background = _canvas_.core.element.create('group','background');
+        _canvas_.system.pane.background.ignored(true);
+        _canvas_.core.arrangement.append( _canvas_.system.pane.background );
 
     //middleground
-        _canvas_.core.element.create('group','middleground').then(group => {
-            _canvas_.core.arrangement.append(group);
-            _canvas_.system.pane.middleground = group;
-        }).then(() => {
-            //back
-                _canvas_.core.element.create('group','back').then(group => {
-                    _canvas_.system.pane.middleground.append(group);
-                    _canvas_.system.pane.middleground.back = group;
-                    _canvas_.system.pane.mb = group;
-                });
-            //middle
-                _canvas_.core.element.create('group','middle').then(group => {
-                    _canvas_.system.pane.middleground.append(group);
-                    _canvas_.system.pane.middleground.middle = group;
-                    _canvas_.system.pane.mm = group;
-                });
-            //front
-                _canvas_.core.element.create('group','front').then(group => {
-                    _canvas_.system.pane.middleground.append(group);
-                    _canvas_.system.pane.middleground.front = group;
-                    _canvas_.system.pane.mf = group;
-                });
-        });
+        _canvas_.system.pane.middleground = _canvas_.core.element.create('group','middleground');
+        _canvas_.system.pane.middleground.heedCamera(true);
+        _canvas_.core.arrangement.append( _canvas_.system.pane.middleground );
+        //back
+            _canvas_.system.pane.middleground_back = _canvas_.core.element.create('group','back');
+            _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground_back );
+        //middle
+            _canvas_.system.pane.middleground_middle = _canvas_.core.element.create('group','middle');
+            _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground_middle );
+        //front
+            _canvas_.system.pane.middleground_front = _canvas_.core.element.create('group','front');
+            _canvas_.system.pane.middleground.append( _canvas_.system.pane.middleground_front );
 
     //foreground
-        _canvas_.core.element.create('group','foreground').then(group => {
-            _canvas_.core.arrangement.append(group);
-            group.ignored(true);
-            _canvas_.system.pane.foreground = group;
-            _canvas_.system.pane.f = group;
-        });
+        _canvas_.system.pane.foreground = _canvas_.core.element.create('group','foreground');
+        _canvas_.system.pane.foreground.ignored(true);
+        _canvas_.core.arrangement.append( _canvas_.system.pane.foreground );
+
+    //shortcuts
+        _canvas_.system.pane.b = _canvas_.system.pane.background;
+        _canvas_.system.pane.mb = _canvas_.system.pane.middleground_back;
+        _canvas_.system.pane.mm = _canvas_.system.pane.middleground_middle;
+        _canvas_.system.pane.mf = _canvas_.system.pane.middleground_front;
+        _canvas_.system.pane.f = _canvas_.system.pane.foreground;
 
     const checkingInterval = setInterval(() => {
         if(
-            _canvas_.system.pane.b != undefined &&
-            _canvas_.system.pane.mb != undefined &&
-            _canvas_.system.pane.mm != undefined &&
-            _canvas_.system.pane.mf != undefined &&
-            _canvas_.system.pane.f != undefined
+            _canvas_.system.pane.b.getId() != -1 &&
+            _canvas_.system.pane.mb.getId() != -1 &&
+            _canvas_.system.pane.mm.getId() != -1 &&
+            _canvas_.system.pane.mf.getId() != -1 &&
+            _canvas_.system.pane.f.getId() != -1
         ){
             clearInterval(checkingInterval);
             _canvas_.layers.registerLayerLoaded('system',_canvas_.system);
             if(_canvas_.system.go){_canvas_.system.go();}
         }
-    }, 1);
+    }, 1000);
 };
 
 //utility

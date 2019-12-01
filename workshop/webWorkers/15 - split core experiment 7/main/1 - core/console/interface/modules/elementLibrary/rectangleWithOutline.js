@@ -1,13 +1,21 @@
-this.rectangleWithOutline = function(_id,_name){
-    dev.log.elementLibrary(' - new rectangleWithOutline('+_id+')'); //#development
+this.rectangleWithOutline = function(_name){
+    dev.log.elementLibrary(' - new rectangleWithOutline('+_name+')'); //#development
 
-    const id = _id;
+    let id = -1;
     this.getId = function(){return id;};
-    const name = _name;
+    this.__idRecieved = function(){};
+    this.__id = function(a){
+        dev.log.elementLibrary(' - rectangleWithOutline.__id('+a+')'); //#development
+        id = a;
+        repush(this);
+        if(this.__idRecieved){this.__idRecieved();}
+    };
+    let name = _name;
     this.getName = function(){return name;};
+    this.setName = function(a){name = a;};
     this.getType = function(){return 'rectangleWithOutline';};
+    this.parent = undefined;
 
-    const useCache_default = true;
     const cashedAttributes = {
         ignored: false,
         colour: {r:1,g:0,b:0,a:1},
@@ -22,90 +30,136 @@ this.rectangleWithOutline = function(_id,_name){
         thickness: 0,
         static: false,
     };
-    function resolvedPromise(data){
-        return new Promise((resolve,reject) => {resolve(data)});
-    }
-    function executeMethod(method,argumentList,postProcessing){
-        return new Promise((resolve, reject) => { 
-            communicationModule.run('element.executeMethod',[id,method,argumentList],result => {
-                if(postProcessing){resolve(postProcessing(result));}else{resolve(result);}
-            });
-        });
+    const cashedCallbacks = {};
+
+    function repush(self){ 
+        dev.log.elementLibrary(' - rectangleWithOutline::repush()'); //#development
+        communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[cashedAttributes]]);
+        Object.entries(cashedCallbacks).forEach(entry => { _canvas_.core.callback.attachCallback(self,entry[0],entry[1]); });
     }
 
-    this.ignored = function(bool,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.ignored('+bool+')'); //#development
-        if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.ignored); } cashedAttributes.ignored = bool;
-        return executeMethod('ignored',[bool]);
-    };
-    this.colour = function(colour,useCache=useCache_default){
-        dev.log.elementLibrary(' - polygon.colour('+JSON.stringify(colour)+')'); //#development
-        if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.colour); } cashedAttributes.colour = colour;
-        return executeMethod('colour',[colour]);
-    };
-    this.lineColour = function(colour,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
-        if(useCache && colour == undefined){ return resolvedPromise(cashedAttributes.lineColour); } cashedAttributes.lineColour = colour;
-        return executeMethod('lineColour',[colour]);
-    };
-    this.x = function(number,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.x('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.x); } cashedAttributes.x = number;
-        return executeMethod('x',[number]);
-    };
-    this.y = function(number,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.y('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.y); } cashedAttributes.y = number;
-        return executeMethod('y',[number]);
-    };
-    this.angle = function(number,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.angle('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.angle); } cashedAttributes.angle = number;
-        return executeMethod('angle',[number]);
-    };
-    this.anchor = function(anchor,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.anchor('+anchor+')'); //#development
-        if(useCache && newAnchor == undefined){ return resolvedPromise(cashedAttributes.anchor); } cashedAttributes.anchor = newAnchor;
-        return executeMethod('anchor',[newAnchor]);
-    };
-    this.width = function(number,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.width('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.width); } cashedAttributes.width = number;
-        return executeMethod('width',[number]);
-    };
-    this.height = function(number,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.height('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.height); } cashedAttributes.height = number;
-        return executeMethod('height',[number]);
-    };
-    this.scale = function(number,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.scale('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.scale); } cashedAttributes.scale = number;
-        return executeMethod('scale',[number]);
-    };
-    this.thickness = function(number,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.thickness('+number+')'); //#development
-        if(useCache && number == undefined){ return resolvedPromise(cashedAttributes.thickness); } cashedAttributes.thickness = number;
-        return executeMethod('thickness',[number]);
-    };
-    this.static = function(bool,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.static('+bool+')'); //#development
-        if(useCache && bool == undefined){ return resolvedPromise(cashedAttributes.static); } cashedAttributes.static = bool;
-        return executeMethod('static',[bool]);
-    };
-    this.unifiedAttribute = function(attributes,useCache=useCache_default){
-        dev.log.elementLibrary(' - rectangleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
-        if(useCache && attributes == undefined){ return resolvedPromise(cashedAttributes); } 
-        Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
-        return executeMethod('unifiedAttribute',[attributes]);
-    };
     this.getAddress = function(){
-        dev.log.elementLibrary(' - rectangleWithOutline.getAddress()'); //#development
-        return executeMethod('getAddress',[]);
+        return (this.parent != undefined ? this.parent.getAddress() : '') + '/' + name;
     };
+    this.getOffset = function(){
+        dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset()'); //#development
+
+        let output = {x:0,y:0,scale:1,angle:0};
+
+        if(this.parent){
+            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset() -> parent found'); //#development
+            const offset = this.parent.getOffset();
+            const point = _canvas_.library.math.cartesianAngleAdjust(cashedAttributes.x,cashedAttributes.y,offset.angle);
+            output = { 
+                x: point.x*offset.scale + offset.x,
+                y: point.y*offset.scale + offset.y,
+                scale: offset.scale * cashedAttributes.scale,
+                angle: offset.angle + cashedAttributes.angle,
+            };
+        }else{
+            dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> no parent found'); //#development
+            output = {x:cashedAttributes.x ,y:cashedAttributes.y ,scale:cashedAttributes.scale ,angle:cashedAttributes.angle};
+        }
+
+        dev.log.elementLibrary('['+this.getAddress()+'] - '+this.getType()+'.getOffset -> output: '+JSON.stringify(output)); //#development
+        return output;
+    };
+
+    this.ignored = function(bool){
+        if(bool == undefined){ return cashedAttributes.ignored; }
+        dev.log.elementLibrary(' - rectangleWithOutline.ignored('+bool+')'); //#development
+        cashedAttributes.ignored = bool;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'ignored',[bool]]); }
+    };
+    this.colour = function(colour){
+        if(colour == undefined){ return cashedAttributes.colour; }
+        dev.log.elementLibrary(' - rectangleWithOutline.colour('+JSON.stringify(colour)+')'); //#development
+        cashedAttributes.colour = colour;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'colour',[colour]]); }
+    };
+    this.lineColour = function(colour){
+        if(colour == undefined){ return cashedAttributes.lineColour; }
+        dev.log.elementLibrary(' - rectangleWithOutline.lineColour('+JSON.stringify(colour)+')'); //#development
+        cashedAttributes.lineColour = colour;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'lineColour',[colour]]); }
+    };
+    this.x = function(number){
+        if(number == undefined){ return cashedAttributes.x; }
+        dev.log.elementLibrary(' - rectangleWithOutline.x('+number+')'); //#development
+        cashedAttributes.x = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'x',[number]]); }
+    };
+    this.y = function(number){
+        if(number == undefined){ return cashedAttributes.y; }
+        dev.log.elementLibrary(' - rectangleWithOutline.y('+number+')'); //#development
+        cashedAttributes.y = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'y',[number]]); }
+    };
+    this.angle = function(number){
+        if(number == undefined){ return cashedAttributes.angle; }
+        dev.log.elementLibrary(' - rectangleWithOutline.angle('+number+')'); //#development
+        cashedAttributes.angle = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'angle',[number]]); }
+    };
+    this.anchor = function(anchor){
+        if(newAnchor == undefined){ return cashedAttributes.anchor; }
+        dev.log.elementLibrary(' - rectangleWithOutline.anchor('+anchor+')'); //#development
+        cashedAttributes.anchor = anchor;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'anchor',[anchor]]); }
+    };
+    this.width = function(number){
+        if(number == undefined){ return cashedAttributes.width; }
+        dev.log.elementLibrary(' - rectangleWithOutline.width('+number+')'); //#development
+        cashedAttributes.width = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'width',[number]]); }
+    };
+    this.height = function(number){
+        if(number == undefined){ return cashedAttributes.height; }
+        dev.log.elementLibrary(' - rectangleWithOutline.height('+number+')'); //#development
+        cashedAttributes.height = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'height',[number]]); }
+    };
+    this.scale = function(number){
+        if(number == undefined){ return cashedAttributes.scale; }
+        dev.log.elementLibrary(' - rectangleWithOutline.scale('+number+')'); //#development
+        cashedAttributes.scale = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[number]]); }
+    };
+    this.thickness = function(number){
+        if(number == undefined){ return cashedAttributes.thickness; }
+        dev.log.elementLibrary(' - rectangleWithOutline.thickness('+number+')'); //#development
+        cashedAttributes.thickness = number;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'thickness',[number]]); }
+    };
+    this.static = function(bool){
+        if(bool == undefined){ return cashedAttributes.static; }
+        dev.log.elementLibrary(' - rectangleWithOutline.static('+bool+')'); //#development
+        if(bool == undefined){ return cashedAttributes.static; } cashedAttributes.static = bool;
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'scale',[bool]]); }
+    };
+    this.unifiedAttribute = function(attributes){
+        if(attributes == undefined){ return cashedAttributes; }
+        dev.log.elementLibrary(' - rectangleWithOutline.unifiedAttribute('+JSON.stringify(attributes)+')'); //#development
+        Object.keys(attributes).forEach(key => { cashedAttributes[key] = attributes[key]; });
+        if(id != -1){ communicationModule.run('element.executeMethod',[id,'unifiedAttribute',[attributes]]); }
+    };
+
+    this.getCallback = function(callbackType){
+        return cashedCallbacks[callbackType];
+    };
+    this.attachCallback = function(callbackType, callback){
+        dev.log.elementLibrary(' - rectangleWithOutline.attachCallback('+callbackType+','+callback+')'); //#development
+        cashedCallbacks[callbackType] = callback;
+        if(id != -1){ _canvas_.core.callback.attachCallback(this,callbackType,callback); }
+    }
+    this.removeCallback = function(callbackType){
+        dev.log.elementLibrary(' - rectangleWithOutline.removeCallback('+callbackType+')'); //#development
+        delete cashedCallbacks[callbackType];
+        if(id != -1){ _canvas_.core.callback.removeCallback(this,callbackType); }
+    }
 
     this._dump = function(){
         dev.log.elementLibrary(' - rectangleWithOutline._dump()'); //#development
-        return executeMethod('_dump',[]);
+        communicationModule.run('element.executeMethod',[id,'_dump',[]]);
     };
 };

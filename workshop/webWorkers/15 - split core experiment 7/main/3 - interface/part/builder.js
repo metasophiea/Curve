@@ -1,6 +1,6 @@
 this.partLibrary = {};
 this.builder = function(collection,type,name,data){
-    dev.log.part('.builder('+collection+','+type+','+name+','+JSON.stringify(data)+')'); //#development
+    dev.log.part('.builder('+collection+','+type+','+name+','+data+')'); //#development
     if(!data){data={};}
     if(data.style == undefined){data.style={};}
 
